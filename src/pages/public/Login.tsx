@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
+import { Button } from "@mui/material";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -56,12 +57,13 @@ const Login = () => {
                 Forgot password
               </a>
             </div>
-            <button
+            <Button
+              variant="contained"
               onClick={handleLogin}
-              className="bg-secondary w-full p-3 rounded-md content-center bg-new text-white"
+              className="bg-secondary w-full p-3 h-11 rounded-md content-center text-white"
             >
               Sign in
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ const index = () => {
       {/* Hamburger */}
       <div
         onClick={() => setOpen((prev) => !prev)}
-        className="absolute top-1/2 right-0 flex justify-center items-center translate-x-5 rounded-r-xl -translate-y-1/2 bg-primary w-6 h-18"
+        className="absolute cursor-pointer top-1/2   right-0 flex justify-center items-center translate-x-5 rounded-r-xl -translate-y-1/2 bg-primary w-6 h-18"
       >
         <LuChevronsLeft
           size={23}

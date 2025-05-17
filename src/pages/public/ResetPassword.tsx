@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 import { useState } from "react";
+import { Button } from "@mui/material";
 
 const ResetPassword = () => {
   const name = "Mani";
@@ -50,12 +51,13 @@ const ResetPassword = () => {
               ></input>
             </div>
           </div>
-          <button
-            className="bg-secondary w-full p-3 rounded-md content-center bg-new text-white"
+          <Button
+            variant="contained"
+            className="bg-secondary w-full p-3 rounded-md content-center h-11 text-white"
             onClick={handleSignIn}
           >
             Sign in
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="flex flex-col gap-5 w-3/5">
@@ -79,12 +81,13 @@ const ResetPassword = () => {
               ></input>
             </div>
           </div>
-          <button
-            className="bg-secondary w-full p-3 rounded-md content-center bg-new text-white"
+          <Button
+            variant="contained"
+            className="bg-secondary w-full p-3 h-11 rounded-md content-center bg-new text-white"
             onClick={handleVerify}
           >
             Verify OTP
-          </button>
+          </Button>
         </div>
       )}
     </div>

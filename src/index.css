@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #002f53;
+  --color-secondary: #1366d9;
+  --color-button: #002f53;
+}
+
+.menu-active {
+  color: #1366d9;
+}
+
+.menu-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background-color: #1366d9;
+}

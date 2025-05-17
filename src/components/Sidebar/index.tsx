@@ -24,15 +24,16 @@ const index = () => {
   return (
     <div className="w-fit h-auto relative">
       <motion.div
-        initial={{ width: "17rem" }}
-        animate={{ width: open ? "17rem" : "0px" }}
+        initial={{ width: "17rem", padding: "2rem 1.5rem" }}
+        animate={{
+          width: open ? "17rem" : "0px",
+          padding: open ? "2rem 1.5rem" : "0rem",
+        }}
         transition={{
           duration: 0.2,
           ease: "easeInOut",
         }}
-        className={`relative h-full bg-primary rounded-r-3xl overflow-hidden ${
-          open ? "px-6 py-8" : "p-1"
-        }`}
+        className="relative h-full bg-primary rounded-r-3xl overflow-hidden"
       >
         <motion.div
           initial={{ opacity: open ? 1 : 0 }}

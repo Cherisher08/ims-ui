@@ -4,10 +4,12 @@ import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
   return (
-    <div className="relative">
-      <Header />
+    <div className="relative flex h-screen w-screen">
       <Sidebar />
-      <Outlet />
+      <div className="w-full">
+        <Header />
+        <Outlet />
+      </div>
     </div>
   );
 };

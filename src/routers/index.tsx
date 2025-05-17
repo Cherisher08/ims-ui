@@ -53,7 +53,8 @@ const privateRoutes = [
     children: [
       {
         index: true,
-        element: <Login />,
+        path: "/",
+        element: <Dashboard />,
       },
       {
         path: "/orders",

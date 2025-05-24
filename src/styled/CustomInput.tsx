@@ -1,6 +1,6 @@
 import { InputAdornment, TextField } from "@mui/material";
 
-interface customInputProps {
+interface CustomInputProps {
   value: string;
   onChange: (val: string) => void;
   placeholder: string;
@@ -12,7 +12,7 @@ interface customInputProps {
   helperText?: string;
 }
 
-const CustomInput: React.FC<customInputProps> = ({
+const CustomInput: React.FC<CustomInputProps> = ({
   value,
   onChange,
   error = false,

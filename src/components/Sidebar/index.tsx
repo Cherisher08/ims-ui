@@ -7,7 +7,7 @@ import { useMenu } from "../../contexts/MenuContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const index = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(true);
   const navigate = useNavigate();
   const { active, setActive } = useMenu();
   const location = useLocation();
@@ -23,7 +23,7 @@ const index = () => {
   return (
     <div className="w-fit h-full relative">
       <motion.div
-        initial={{ width: "17rem", padding: "2rem 1.5rem" }}
+        initial={{ width: "17rem", padding: "1rem 1.5rem" }}
         animate={{
           width: open ? "17rem" : "6rem",
           padding: open ? "1rem 1.5rem" : "1rem .5rem ",
@@ -40,40 +40,38 @@ const index = () => {
           transition={{ duration: 0.3, delay: 0.2 }}
           className="flex flex-col gap-8"
         >
-          <>
-            <div className="flex items-center justify-center">
-              <div
-                className={`rounded-full overflow-hidden min-w-15 h-15 aspect-square content-center bg-white`}
-              >
-                <img src={Logo} className="w-15 h-15" />
-              </div>
-              {open && (
-                <p className="text-2xl text-white text-center w-fit text-wrap">
-                  Mani Power Tools
-                </p>
-              )}
+          <div className="flex items-center justify-center">
+            <div
+              className={`rounded-full overflow-hidden min-w-15 h-15 aspect-square content-center bg-white`}
+            >
+              <img src={Logo} className="w-15 h-15" />
             </div>
+            {open && (
+              <p className="text-2xl text-white text-center w-fit text-wrap">
+                Mani Power Tools
+              </p>
+            )}
+          </div>
 
-            <ul className="flex flex-col gap-2 px-2">
-              {MenuItems.map((item) => {
-                const Icon = item.logo;
-                return (
-                  <li
-                    key={item.path}
-                    onClick={() => navigate(item.path)}
-                    className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white hover:rounded-md rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
-                      item.id === active ? "menu-active bg-[#006fc431]" : ""
-                    }`}
-                  >
-                    {Icon}
-                    {open && (
-                      <p className="text-lg font-semibold">{item.title}</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+          <ul className="flex flex-col gap-2 px-2">
+            {MenuItems.map((item) => {
+              const Icon = item.logo;
+              return (
+                <li
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white hover:rounded-md rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
+                    item.id === active ? "menu-active bg-[#006fc431]" : ""
+                  }`}
+                >
+                  {Icon}
+                  {open && (
+                    <p className="text-lg font-semibold">{item.title}</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </motion.div>
       </motion.div>
 

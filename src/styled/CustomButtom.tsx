@@ -1,12 +1,12 @@
 import { Button } from "@mui/material";
 
-interface customButtonProps {
+interface CustomButtonProps {
   label: string;
   className?: string;
   icon: React.ReactNode;
 }
 
-const CustomButton: React.FC<customButtonProps> = ({
+const CustomButton: React.FC<CustomButtonProps> = ({
   label,
   className = "",
   icon,

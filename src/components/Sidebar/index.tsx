@@ -2,13 +2,12 @@ import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { LuChevronsLeft } from "react-icons/lu";
 import Logo from "../../assets/logo.svg";
-
 import { MenuItems } from "../../constants/MenuItems";
 import { useMenu } from "../../contexts/MenuContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const index = () => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { active, setActive } = useMenu();
   const location = useLocation();
@@ -26,8 +25,8 @@ const index = () => {
       <motion.div
         initial={{ width: "17rem", padding: "2rem 1.5rem" }}
         animate={{
-          width: open ? "17rem" : "0px",
-          padding: open ? "2rem 1.5rem" : "0rem",
+          width: open ? "17rem" : "6rem",
+          padding: open ? "1rem 1.5rem" : "1rem .5rem ",
         }}
         transition={{
           duration: 0.2,
@@ -36,43 +35,45 @@ const index = () => {
         className="relative h-full bg-primary rounded-r-3xl overflow-hidden"
       >
         <motion.div
-          initial={{ opacity: open ? 1 : 0 }}
-          animate={{ opacity: open ? 1 : 0 }}
+          // initial={{ opacity: open ? 1 : 0 }}
+          // animate={{ opacity: open ? 1 : 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className={`flex flex-col gap-8 ${
-            open ? "pointer-events-auto" : "pointer-events-none"
-          }`}
+          className="flex flex-col gap-8"
         >
-          {open && (
-            <>
-              <div className="flex items-center justify-center">
-                <div className="rounded-full overflow-hidden w-18 h-15 content-center bg-white">
-                  <img src={Logo} className="w-full h-full" />
-                </div>
-                <p className="text-2xl text-white text-center w-fit">
+          <>
+            <div className="flex items-center justify-center">
+              <div
+                className={`rounded-full overflow-hidden min-w-15 h-15 aspect-square content-center bg-white`}
+              >
+                <img src={Logo} className="w-15 h-15" />
+              </div>
+              {open && (
+                <p className="text-2xl text-white text-center w-fit text-wrap">
                   Mani Power Tools
                 </p>
-              </div>
+              )}
+            </div>
 
-              <ul className="flex flex-col gap-2">
-                {MenuItems.map((item) => {
-                  const Icon = item.logo;
-                  return (
-                    <li
-                      key={item.path}
-                      onClick={() => navigate(item.path)}
-                      className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
-                        item.id === active ? "menu-active bg-[#006fc431]" : ""
-                      }`}
-                    >
-                      <Icon className="w-5 h-5 text-gray-500" />
+            <ul className="flex flex-col gap-2 px-2">
+              {MenuItems.map((item) => {
+                const Icon = item.logo;
+                return (
+                  <li
+                    key={item.path}
+                    onClick={() => navigate(item.path)}
+                    className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
+                      item.id === active ? "menu-active bg-[#006fc431]" : ""
+                    }`}
+                  >
+                    {Icon}
+                    {open && (
                       <p className="text-lg font-semibold">{item.title}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         </motion.div>
       </motion.div>
 

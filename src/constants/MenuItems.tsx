@@ -1,14 +1,12 @@
-import React from "react";
-import ContactIcon from "../assets/icons/contact.svg?react";
-import DashboardIcon from "../assets/icons/dashboard.svg?react";
-import OrdersIcon from "../assets/icons/orders.svg?react";
-import InventoryIcon from "../assets/icons/inventory.svg?react";
+import { IoIosContact } from "react-icons/io";
+import { LuClipboardList, LuShoppingBag } from "react-icons/lu";
+import { MdDashboardCustomize } from "react-icons/md";
 
 type MenuItemsType = {
   id: number;
   title: string;
   path: string;
-  logo: React.FC<React.SVGProps<SVGSVGElement>>;
+  logo: React.ReactNode;
 };
 
 export const MenuItems: MenuItemsType[] = [
@@ -16,24 +14,24 @@ export const MenuItems: MenuItemsType[] = [
     id: 1,
     title: "Dashboard",
     path: "/",
-    logo: DashboardIcon,
+    logo: <MdDashboardCustomize size={30} />,
   },
   {
     id: 2,
     title: "Inventory",
     path: "/inventory",
-    logo: InventoryIcon,
+    logo: <LuShoppingBag size={30} />,
   },
   {
     id: 3,
     title: "Contacts",
     path: "/contacts",
-    logo: ContactIcon,
+    logo: <IoIosContact size={30} />,
   },
   {
     id: 4,
     title: "Orders",
     path: "/orders",
-    logo: OrdersIcon,
+    logo: <LuClipboardList size={30} />,
   },
 ];

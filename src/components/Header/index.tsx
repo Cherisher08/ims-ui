@@ -1,4 +1,4 @@
-import { Divider, Modal, Popover } from "@mui/material";
+import { Divider, Popover } from "@mui/material";
 import { useRef, useState } from "react";
 import { FaUserPlus } from "react-icons/fa";
 import { IoIosNotificationsOutline, IoMdMore } from "react-icons/io";
@@ -11,13 +11,14 @@ const index = () => {
   const handleMenu = () => {
     setModalOpen(true);
   };
+
   return (
-    <div className="w-full px-6 h-18 flex justify-end">
+    <div className="w-full bg-red-400 px-6 h-18 flex justify-end">
       <div className="flex items-center gap-4">
-        <IoIosNotificationsOutline size={24} />
-        <div className="bg-green-400 min-w-10 h-10 rounded-full"></div>
+        <IoIosNotificationsOutline size={28} className="cursor-pointer" />
+        <div className="bg-green-400 min-w-12 h-12 rounded-full"></div>
         <div ref={ref} onClick={handleMenu}>
-          <IoMdMore size={24} />
+          <IoMdMore size={28} className="cursor-pointer" />
         </div>
         <Popover
           anchorEl={ref.current}
@@ -33,13 +34,13 @@ const index = () => {
             horizontal: "right",
           }}
         >
-          <div className="p-2 gap-1 flex flex-col bg-[#f3edf7]">
-            <div className="flex gap-3 p-2 items-center cursor-pointer">
+          <div className="p-2 gap-1 flex flex-col ">
+            <div className="flex gap-3 p-2 items-center cursor-pointer hover:bg-[#f3f3f3] rounded-sm">
               <FaUserPlus />
               <p>Add User</p>
             </div>
             <Divider />
-            <div className="flex gap-3 p-2 items-center cursor-pointer">
+            <div className="flex gap-3 p-2 items-center cursor-pointer hover:bg-[#f3f3f3] rounded-sm">
               <PiSignOut />
               <p>Sign out</p>
             </div>

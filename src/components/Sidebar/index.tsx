@@ -61,7 +61,7 @@ const index = () => {
                   <li
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
+                    className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white hover:rounded-md rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
                       item.id === active ? "menu-active bg-[#006fc431]" : ""
                     }`}
                   >

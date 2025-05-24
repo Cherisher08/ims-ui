@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="min-w-screen min-h-screen h-fit">
       <MenuProvider>
-        <AppRoutes />
+      <AppRoutes />
       </MenuProvider>
     </div>
   );

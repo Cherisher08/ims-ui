@@ -2,22 +2,33 @@ import { Button } from "@mui/material";
 
 interface CustomButtonProps {
   label: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+  variant?: "outlined" | "contained" | "text";
   className?: string;
-  icon: React.ReactNode;
 }
+
+const buttonStyles = {
+  outlined: "border-primary text-primary ",
+  contained: "bg-primary",
+  text: "text-primary",
+};
 
 const CustomButton: React.FC<CustomButtonProps> = ({
   label,
+  onClick,
   className = "",
+  variant = "contained",
   icon,
 }) => {
   return (
     <Button
       classes={{
-        root: `${className} bg-primary normal-case`,
+        root: `${className} ${buttonStyles[variant]} normal-case text-nowrap hover:bg-`,
       }}
+      onClick={onClick}
       startIcon={icon}
-      variant="contained"
+      variant={variant}
     >
       {label}
     </Button>

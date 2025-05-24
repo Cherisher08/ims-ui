@@ -6,9 +6,11 @@ const MainLayout = () => {
   return (
     <div className="relative flex h-screen w-screen">
       <Sidebar />
-      <div className="w-full">
+      <div className="w-full h-full overflow-hidden">
         <Header />
-        <Outlet />
+        <div className="p-6 h-auto overflow-hidden">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ const index = () => {
   }, [pathname]);
 
   return (
-    <div className="w-fit h-auto relative">
+    <div className="w-fit h-full relative">
       <motion.div
         initial={{ width: "17rem", padding: "2rem 1.5rem" }}
         animate={{

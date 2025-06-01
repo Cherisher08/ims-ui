@@ -7,6 +7,7 @@
   --color-success: #34a853;
   --color-error: #ea4235;
   --color-warning: #fbbd06;
+  --color-highlight: #cae0ff;
 }
 
 body {
@@ -15,6 +16,7 @@ body {
 
 .menu-active {
   color: #1366d9;
+  /* color: #cae0ff; */
 }
 
 .menu-active::after {

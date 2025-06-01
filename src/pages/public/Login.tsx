@@ -1,27 +1,48 @@
 import { useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
 import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 
-import { Button } from "@mui/material";
+import Button from "@mui/material/Button";
+import { useAuthorizeUserMutation } from "../../services/LoginService";
+import type { UserRequest } from "../../types/user";
+import { useEffect, useState } from "react";
+import { Typography } from "@mui/material";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
+import type { ErrorResponse } from "../../types/common";
 
 const Login = () => {
+  const [user, setUser] = useState<UserRequest>({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
+  const [
+    authorizeUser,
+    {
+      isSuccess: isValidUser,
+      isError: isInvalidUser,
+      error: authorizationErrorMessage,
+    },
+  ] = useAuthorizeUserMutation();
 
+  console.log("authorizationErrorMessage: ", authorizationErrorMessage);
   const handleLogin = () => {
-    navigate("/");
+    authorizeUser(user);
   };
+
+  useEffect(() => {
+    if (isValidUser) {
+      navigate("/");
+    }
+  }, [isValidUser, navigate]);
 
   return (
     <>
-      <Helmet>
-        <title>Login</title>
-      </Helmet>
       <div className="bg-white w-full min-h-screen items-center px-3 grid grid-cols-[60%_40%]">
         <div className="flex justify-center items-center">
           <img src={NamedLogo} />
         </div>
-        <div className="flex flex-col gap-5 w-3/5">
+        <div className="flex flex-col w-3/5 gap-5">
           <div className="flex justify-center">
             <img src={Logo} className="w-20 h-20" />
           </div>
@@ -39,6 +60,14 @@ const Login = () => {
               <input
                 className="w-full px-3 py-2 rounded-md border border-outline outline-none"
                 placeholder="Enter your email"
+                onChange={(event) =>
+                  setUser((prev) => {
+                    return {
+                      ...prev,
+                      email: event.target.value,
+                    };
+                  })
+                }
               ></input>
             </div>
             <div className="flex flex-col gap-1">
@@ -46,11 +75,19 @@ const Login = () => {
               <input
                 className="w-full px-3 py-2 rounded-md border border-outline outline-none"
                 placeholder="Enter your password"
+                onChange={(event) =>
+                  setUser((prev) => {
+                    return {
+                      ...prev,
+                      password: event.target.value,
+                    };
+                  })
+                }
               ></input>
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center rounded-md hover:bg-highlight">
               <a
                 className="text-new p-2 w-fit cursor-pointer"
                 onClick={() => navigate("/auth/forgot-password")}
@@ -65,6 +102,16 @@ const Login = () => {
             >
               Sign in
             </Button>
+            {isInvalidUser && (
+              <div className="flex flex-col items-center">
+                <Typography color="error" className="flex" fontSize={"0.75rem"}>
+                  {(
+                    (authorizationErrorMessage as FetchBaseQueryError)
+                      ?.data as ErrorResponse
+                  )?.detail ?? "An error occurred"}
+                </Typography>
+              </div>
+            )}
           </div>
         </div>
       </div>

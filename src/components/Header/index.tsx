@@ -22,7 +22,7 @@ type NewUserErrorType = {
 const index = () => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [addUserModelOpen, setAddUserModelOpen] = useState<boolean>(true);
+  const [addUserModelOpen, setAddUserModelOpen] = useState<boolean>(false);
   const [newUserData, setNewUserData] = useState<NewUserDataType>({
     username: "",
     email: "",

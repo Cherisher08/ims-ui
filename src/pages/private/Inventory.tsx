@@ -3,11 +3,24 @@ import { LuPlus } from "react-icons/lu";
 import CustomInput from "../../styled/CustomInput";
 import { useState } from "react";
 import { BsSearch } from "react-icons/bs";
-import { Modal } from "@mui/material";
+import { FormControl, Modal } from "@mui/material";
 
 const inventory = () => {
   const [search, setSearch] = useState<string>("");
-  const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
+  const [addProductOpen, setAddProductOpen] = useState<boolean>(true);
+  const [newproductData, setNewproductData] = useState({
+    product_code: "",
+    product_name: "",
+    quantity: "",
+    purchase_date: "",
+    price: "",
+    unit: "",
+    category: "",
+    total: "",
+    type: "",
+    seller: "",
+    rental_price: "",
+  });
 
   const handleSearch = (searchText: string) => {
     console.log(searchText);
@@ -16,6 +29,10 @@ const inventory = () => {
 
   const addProduct = () => {
     console.log("val");
+  };
+
+  const handleProductChange = (key: string, value: string | number) => {
+    setNewproductData((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -46,7 +63,46 @@ const inventory = () => {
           <p className="text-primary text-xl font-semibold w-full text-start">
             New Product
           </p>
+          <FormControl className="grid grid-cols-3 gap-3">
+            <CustomInput
+              label="Product Name"
+              value={newproductData.product_name}
+              onChange={(value) => handleProductChange("product_name", value)}
+              placeholder="Enter Product Name"
+            />
+            <CustomInput
+              label="Product Code"
+              value={newproductData.product_code}
+              onChange={(value) => handleProductChange("product_code", value)}
+              placeholder="Enter Product Code"
+            />
+            <CustomInput
+              label="Quantity"
+              value={newproductData.quantity}
+              onChange={(value) => handleProductChange("quantity", value)}
+              placeholder="Enter Product Quantity"
+            />
 
+            <CustomInput
+              label="Purchase Date"
+              value={newproductData.purchase_date}
+              onChange={(value) => handleProductChange("purchase_date", value)}
+              placeholder="Enter Purchase Date"
+            />
+            <CustomInput
+              label="Price"
+              value={newproductData.price}
+              onChange={(value) => handleProductChange("price", value)}
+              placeholder="Enter Product Price"
+            />
+
+            <CustomInput
+              label="Total"
+              value={newproductData.total}
+              onChange={(value) => handleProductChange("total", value)}
+              placeholder="Rs. 0.0"
+            />
+          </FormControl>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
               onClick={() => setAddProductOpen(false)}
@@ -54,10 +110,7 @@ const inventory = () => {
               variant="outlined"
               className="bg-white"
             />
-            <CustomButton
-              onClick={addProduct}
-              label="Add Product"
-            />
+            <CustomButton onClick={addProduct} label="Add Product" />
           </div>
         </div>
       </Modal>

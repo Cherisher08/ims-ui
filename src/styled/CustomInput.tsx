@@ -24,7 +24,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   startIcon = null,
 }) => {
   return (
-    <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
+    <div className="grid grid-cols-[auto_2fr] justify-between w-fit gap-2 h-[3.5rem]">
       <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
         {label}
       </label>

@@ -102,7 +102,6 @@ const inventory = () => {
   ]);
 
   const handleSearch = (searchText: string) => {
-    console.log(searchText);
     setSearch(searchText);
   };
 
@@ -315,7 +314,7 @@ const inventory = () => {
           onChange={handleSearch}
           startIcon={<BsSearch />}
           placeholder="Search Product"
-          className="w-60"
+          className=""
         />
       </div>
       <div className="w-full h-fit overflow-y-auto">

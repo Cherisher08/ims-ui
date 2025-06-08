@@ -25,8 +25,8 @@ const index = () => {
       <motion.div
         initial={{ width: "17rem", padding: "1rem 1.5rem" }}
         animate={{
-          width: open ? "17rem" : "6rem",
-          padding: open ? "1rem 1.5rem" : "1rem .5rem ",
+          width: open ? "15rem" : "5rem",
+          padding: open ? "1rem 1rem" : "1rem .5rem ",
         }}
         transition={{
           duration: 0.2,
@@ -35,22 +35,29 @@ const index = () => {
         className="relative h-full bg-primary rounded-r-3xl overflow-hidden"
       >
         <motion.div
-          // initial={{ opacity: open ? 1 : 0 }}
-          // animate={{ opacity: open ? 1 : 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
           className="flex flex-col gap-8"
         >
-          <div className="flex items-center justify-center">
+          <div
+            className={`relative flex items-center ${
+              open ? "" : "justify-center"
+            }`}
+          >
             <div
-              className={`rounded-full overflow-hidden min-w-15 h-15 aspect-square content-center bg-white`}
+              className={` rounded-full overflow-hidden min-w-12 h-12 aspect-square content-center bg-white`}
             >
-              <img src={Logo} className="w-15 h-15" />
+              <img src={Logo} className="w-12 h-12" />
             </div>
-            {open && (
-              <p className="text-2xl text-white text-center w-fit text-wrap">
-                Mani Power Tools
-              </p>
-            )}
+            <p
+              className={`text-2xl text-white text-center text-wrap absolute w-3/4 right-0 ease-in-out
+    ${
+      open
+        ? "opacity-100 visible transition-opacity duration-700"
+        : "opacity-0 invisible transition-none"
+    }`}
+            >
+              Mani Power Tools
+            </p>
           </div>
 
           <ul className="flex flex-col gap-2 px-2">
@@ -60,7 +67,7 @@ const index = () => {
                 <li
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`relative cursor-pointer flex items-center gap-3 w-full pl-5 py-2 text-white hover:rounded-md rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
+                  className={`relative cursor-pointer flex items-center gap-3 w-full pl-3 py-2 text-white hover:rounded-md rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
                     item.id === active ? "menu-active bg-[#006fc431]" : ""
                   }`}
                 >

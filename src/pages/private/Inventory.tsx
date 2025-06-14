@@ -123,6 +123,7 @@ const inventory = () => {
     { id: "2", value: "Sales" },
     { id: "3", value: "Service" },
   ]);
+  
   const [rowData, setRowData] = useState<ProductType[]>([
     {
       productName: "Wireless Mouse",
@@ -269,14 +270,35 @@ const inventory = () => {
   const [filteredData, setFilteredData] = useState<ProductType[]>([]);
 
   const [colDefs, setColDefs] = useState<ColDef<ProductType>[]>([
-    { field: "productName", headerName: "Product Name", flex: 1 },
-    { field: "productCode", headerName: "Product Code", flex: 1 },
-    { field: "category", headerName: "Category", flex: 1 },
-    { field: "availableStock", headerName: "Available Stock", flex: 1 },
-    { field: "type", headerName: "Type", flex: 1 },
+    {
+      field: "productName",
+      headerName: "Product Name",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 100,
+    },
+    {
+      field: "productCode",
+      headerName: "Product Code",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 80,
+    },
+    { field: "category", headerName: "Category", flex: 1, minWidth: 90 },
+    {
+      field: "availableStock",
+      headerName: "Available Stock",
+      flex: 1,
+      minWidth: 100,
+      headerClass: "ag-header-wrap",
+    },
+    { field: "type", headerName: "Type", flex: 1, minWidth: 100 },
     {
       field: "actions",
       headerName: "Actions",
+      flex: 1,
+      minWidth: 100,
+      maxWidth: 120,
       cellRenderer: (params: ICellRendererParams) => {
         const rowData = params.data;
 
@@ -360,6 +382,7 @@ const inventory = () => {
         <CustomTable rowData={filteredData} colDefs={colDefs} />
       </div>
 
+      {/* Add Product */}
       <Modal
         open={addProductOpen}
         onClose={() => setAddProductOpen(false)}
@@ -561,6 +584,7 @@ const inventory = () => {
         </div>
       </Modal>
 
+      {/* Update Stock */}
       <Modal
         open={addStockOpen}
         onClose={() => setAddStockOpen(false)}
@@ -776,6 +800,7 @@ const inventory = () => {
         </div>
       </Modal>
 
+      {/* Update Modal */}
       <Modal
         open={updateModalOpen}
         onClose={() => {
@@ -1088,6 +1113,7 @@ const inventory = () => {
         </div>
       </Modal>
 
+      {/* Delete Modal */}
       <Modal
         open={deleteData ? true : false}
         onClose={() => setDeleteData(null)}

@@ -1,4 +1,3 @@
-import React from "react";
 import { IoIosTrendingDown, IoIosTrendingUp } from "react-icons/io";
 
 type CardProps = {

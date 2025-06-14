@@ -1,4 +1,5 @@
 import { Provider } from "react-redux";
+
 import "./App.css";
 import MenuProvider from "./contexts/MenuContext";
 import AppRoutes from "./routers/index";

@@ -20,4 +20,14 @@ export interface UserRequest{
 export interface AuthorizeUserResponse{
     access_token: string
     token_type: string
+    _id: string
+}
+
+export interface GeneralResponse {
+    detail: string
+}
+
+export interface UpdateUserPasswordRequest {
+    email: string
+    password: string
 }

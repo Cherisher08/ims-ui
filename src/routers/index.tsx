@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Loader from "../components/Loader";
+import { ToastContainer } from "react-toastify";
 
 const MainLayout = React.lazy(() => import("../components/Layouts/MainLayout"));
 const AuthLayout = React.lazy(() => import("../components/Layouts/AuthLayout"));
@@ -91,6 +92,7 @@ const Index = () => {
     <BrowserRouter>
       <Suspense fallback={<Loader />}>
         <Routes>{appRoutes(newRoutes)}</Routes>
+        <ToastContainer />
       </Suspense>
     </BrowserRouter>
   );

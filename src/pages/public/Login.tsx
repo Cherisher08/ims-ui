@@ -3,14 +3,19 @@ import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 
 import Button from "@mui/material/Button";
-import { useAuthorizeUserMutation } from "../../services/LoginService";
+import { useAuthorizeUserMutation } from "../../services/ApiService";
 import type { UserRequest } from "../../types/user";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import type { ErrorResponse } from "../../types/common";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { updateUser } from "../../store/UserSlice";
+import { TOAST_IDS } from "../../constants/constants";
 
 const Login = () => {
+  const dispatch = useDispatch();
   const [user, setUser] = useState<UserRequest>({
     email: "",
     password: "",
@@ -25,16 +30,24 @@ const Login = () => {
     },
   ] = useAuthorizeUserMutation();
 
-  console.log("authorizationErrorMessage: ", authorizationErrorMessage);
   const handleLogin = () => {
     authorizeUser(user);
   };
 
   useEffect(() => {
     if (isValidUser) {
+      dispatch(
+        updateUser({
+          email: user.email,
+          loggedTime: new Date().toISOString(),
+        })
+      );
+      toast("Logged in successfully", {
+        toastId: TOAST_IDS.SUCCESS_LOGIN,
+      });
       navigate("/");
     }
-  }, [isValidUser, navigate]);
+  }, [dispatch, isValidUser, navigate, user.email]);
 
   return (
     <>
@@ -68,6 +81,7 @@ const Login = () => {
                     };
                   })
                 }
+                value={user.email}
               ></input>
             </div>
             <div className="flex flex-col gap-1">
@@ -83,6 +97,7 @@ const Login = () => {
                     };
                   })
                 }
+                value={user.password}
               ></input>
             </div>
           </div>
@@ -98,7 +113,10 @@ const Login = () => {
             <Button
               variant="contained"
               onClick={handleLogin}
-              className="bg-secondary w-full p-3 h-11 rounded-md content-center text-white"
+              disabled={!(user.email && user.password)}
+              className={` w-full p-3 h-11 rounded-md content-center text-white ${
+                !(user.email && user.password) ? "bg-disabled" : "bg-secondary"
+              }`}
             >
               Sign in
             </Button>

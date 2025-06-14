@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import CustomSelect from "../../styled/CustomSelect";
 import CustomCard from "../../styled/CustomCard";
 

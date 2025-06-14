@@ -11,16 +11,30 @@ import { VerifyOtpRequest } from "../types/common";
 // Define a service using a base URL and expected endpoints
 export const loginApi = createApi({
   reducerPath: "loginApi",
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:8000/" }),
+  baseQuery: fetchBaseQuery({
+    baseUrl: "http://localhost:8000/",
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("access_token");
+      console.log("token: ", token);
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   endpoints: (build) => ({
-    getUser: build.query<User, null>({
+    getUser: build.query<User, void>({
       query: () => `auth/users/me`,
     }),
     authorizeUser: build.mutation<AuthorizeUserResponse, UserRequest>({
-      query: ({ ...user }) => ({
+      query: ({ email, password }) => ({
         url: `auth/users/tokens`,
         method: "POST",
-        body: user,
+        body: new URLSearchParams({
+          grant_type: "password",
+          username: email,
+          password,
+        }),
       }),
     }),
     registerUser: build.mutation<User, User>({

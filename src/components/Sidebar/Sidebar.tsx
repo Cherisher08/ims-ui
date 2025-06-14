@@ -6,7 +6,7 @@ import { MenuItems } from "../../constants/MenuItems";
 import { useMenu } from "../../contexts/MenuContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const index = () => {
+const SideBar: React.FC = () => {
   const [open, setOpen] = useState<boolean>(true);
   const navigate = useNavigate();
   const { active, setActive } = useMenu();
@@ -18,7 +18,7 @@ const index = () => {
     if (activeMenuItem) {
       setActive(activeMenuItem.id);
     }
-  }, [pathname]);
+  }, [pathname, setActive]);
 
   return (
     <div className="w-fit h-full relative">
@@ -99,4 +99,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default SideBar;

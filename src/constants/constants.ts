@@ -3,5 +3,6 @@ export const TOAST_IDS = {
     "SUCCESS_OTP_GENERATION": "success_otp_generation",
     "OTP_VALID": "otp_valid",
     "OTP_INVALID": "otp_invalid",
-    "SUCCESS_PASSWORD_UPDATE": "success_password_update"
+    "SUCCESS_PASSWORD_UPDATE": "success_password_update",
+    "SUCCESS_REGISTER_USER": "success_register_user"
 }

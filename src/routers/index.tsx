@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Loader from "../components/Loader";
 import { ToastContainer } from "react-toastify";
+import RequireAuth from "../components/RequireAuth/RequireAuth";
 
 const MainLayout = React.lazy(() => import("../components/Layouts/MainLayout"));
 const AuthLayout = React.lazy(() => import("../components/Layouts/AuthLayout"));
@@ -50,7 +51,11 @@ const publicRoutes = [
 const privateRoutes = [
   {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <RequireAuth>
+        <MainLayout />
+      </RequireAuth>
+    ),
     children: [
       {
         index: true,

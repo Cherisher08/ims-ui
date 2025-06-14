@@ -1,49 +1,70 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaUserPlus } from "react-icons/fa";
 import { IoIosNotificationsOutline, IoMdMore } from "react-icons/io";
 import { PiSignOut } from "react-icons/pi";
 import CustomMenu, { type CustomMenuItemProps } from "../../styled/CustomMenu";
-import { Modal } from "@mui/material";
+import { Avatar, Modal } from "@mui/material";
 import CustomInput from "../../styled/CustomInput";
-import CustomButton from "../../styled/CustomButtom";
-
-type NewUserDataType = {
-  username: string;
-  email: string;
-  password: string;
-};
+import CustomButton from "../../styled/CustomButton";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import { User, UserRole } from "../../types/user";
+import { useNavigate } from "react-router-dom";
+import { loginApi, useRegisterUserMutation } from "../../services/ApiService";
+import { clearUser } from "../../store/UserSlice";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../constants/constants";
 
 type NewUserErrorType = {
-  username: boolean;
+  name: boolean;
   email: boolean;
   password: boolean;
 };
 
-const index = () => {
+const Header: React.FC = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [
+    registerUser,
+    { isLoading: isRegisteringUser, isSuccess: isUserRegisterSuccess },
+  ] = useRegisterUserMutation();
+
+  const userData = useSelector((state: RootState) => state.user);
   const ref = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addUserModelOpen, setAddUserModelOpen] = useState<boolean>(false);
-  const [newUserData, setNewUserData] = useState<NewUserDataType>({
-    username: "",
+  const [newUserData, setNewUserData] = useState<User>({
+    name: "",
     email: "",
     password: "",
+    role: UserRole.User,
   });
   const [errors, setErrors] = useState<NewUserErrorType>({
-    username: false,
+    name: false,
     email: false,
     password: false,
   });
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    dispatch(clearUser());
+    dispatch(loginApi.util.resetApiState());
+    navigate("/auth/login");
+  };
 
   const menuItems: CustomMenuItemProps[] = [
     {
       label: "Add User",
       icon: <FaUserPlus />,
       handleItem: () => handleAddUserModal(true),
+      key: "add-user",
+      disabled: userData.role !== UserRole.Admin,
     },
     {
       label: "Sign Out",
       icon: <PiSignOut />,
-      handleItem: () => console.log(1),
+      handleItem: () => handleLogout(),
+      key: "sign-out",
     },
   ];
 
@@ -55,13 +76,30 @@ const index = () => {
     setAddUserModelOpen(value);
   };
 
-  const addUser = () => {};
+  const addUser = () => {
+    registerUser(newUserData);
+    handleAddUserModal(false);
+  };
+
+  const strippedUserName = userData.name
+    ? (userData.name[0] + userData.name[1]).toUpperCase()
+    : "";
+
+  useEffect(() => {
+    if (!isRegisteringUser && isUserRegisterSuccess) {
+      toast("User Created Successfully", {
+        toastId: TOAST_IDS.SUCCESS_REGISTER_USER,
+      });
+    }
+  }, [isRegisteringUser, isUserRegisterSuccess]);
 
   return (
     <div className="w-full px-6 h-18 flex justify-end">
       <div className="flex items-center gap-4">
         <IoIosNotificationsOutline size={28} className="cursor-pointer" />
-        <div className="bg-green-400 min-w-12 h-12 rounded-full"></div>
+        <Avatar className="min-w-12 h-12 rounded-full">
+          {strippedUserName}
+        </Avatar>
         <div ref={ref} onClick={() => handleMenu(true)}>
           <IoMdMore size={28} className="cursor-pointer" />
         </div>
@@ -90,12 +128,12 @@ const index = () => {
           </p>
           <div className="flex flex-col w-[30rem] px-10 gap-y-2 justify-center items-start">
             <CustomInput
-              label="UserName"
-              error={errors.username}
+              label="User Name"
+              error={errors.name}
               placeholder="Enter User Name"
-              value={newUserData.username}
-              onChange={(username) =>
-                setNewUserData((prev) => ({ ...prev, username: username }))
+              value={newUserData.name}
+              onChange={(name) =>
+                setNewUserData((prev) => ({ ...prev, name: name }))
               }
               className="w-60 rounded-lg"
               helperText="Enter User Name"
@@ -139,4 +177,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default Header;

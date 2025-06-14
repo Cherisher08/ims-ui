@@ -3,7 +3,7 @@ import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 
 import Button from "@mui/material/Button";
-import { useAuthorizeUserMutation } from "../../services/ApiService";
+import { loginApi, useAuthorizeUserMutation } from "../../services/ApiService";
 import type { UserRequest } from "../../types/user";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
@@ -24,6 +24,7 @@ const Login = () => {
   const [
     authorizeUser,
     {
+      data: headerData,
       isSuccess: isValidUser,
       isError: isInvalidUser,
       error: authorizationErrorMessage,
@@ -31,11 +32,13 @@ const Login = () => {
   ] = useAuthorizeUserMutation();
 
   const handleLogin = () => {
+    localStorage.removeItem("access_token");
     authorizeUser(user);
   };
 
   useEffect(() => {
     if (isValidUser) {
+      localStorage.setItem("access_token", headerData.access_token);
       dispatch(
         updateUser({
           email: user.email,
@@ -45,9 +48,10 @@ const Login = () => {
       toast("Logged in successfully", {
         toastId: TOAST_IDS.SUCCESS_LOGIN,
       });
+      dispatch(loginApi.util.resetApiState());
       navigate("/");
     }
-  }, [dispatch, isValidUser, navigate, user.email]);
+  }, [dispatch, headerData, isValidUser, navigate, user.email]);
 
   return (
     <>

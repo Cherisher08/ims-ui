@@ -1,13 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { UserRole } from "../types/user";
 
 export interface UserState {
   email: string;
   loggedTime: string;
+  id: string;
+  role: UserRole;
+  name: string;
 }
 
 const initialState: UserState = {
   email: "",
+  id: "",
+  role: UserRole.User,
   loggedTime: "",
+  name: "",
 };
 
 export const userSlice = createSlice({
@@ -26,9 +33,15 @@ export const userSlice = createSlice({
         ...payload.payload,
       });
     },
+    clearUser: (state) => {
+      return (state = {
+        ...state,
+        ...initialState,
+      });
+    },
   },
 });
 
-export const { updateUser } = userSlice.actions;
+export const { updateUser, clearUser } = userSlice.actions;
 
 export default userSlice.reducer;

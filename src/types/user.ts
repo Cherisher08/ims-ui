@@ -5,11 +5,11 @@ export enum UserRole{
 }
 
 export interface User{
-    _id: string
     email: string
     name: string
     password: string
     role: UserRole
+    _id?: string
 }
 
 export interface UserRequest{
@@ -20,7 +20,6 @@ export interface UserRequest{
 export interface AuthorizeUserResponse{
     access_token: string
     token_type: string
-    _id: string
 }
 
 export interface GeneralResponse {

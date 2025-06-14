@@ -1,4 +1,4 @@
-import CustomButton from "../../styled/CustomButtom";
+import CustomButton from "../../styled/CustomButton";
 import { LuPlus } from "react-icons/lu";
 import CustomInput from "../../styled/CustomInput";
 import { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ interface Product {
   actions?: string;
 }
 
-const inventory = () => {
+const Inventory = () => {
   const [search, setSearch] = useState<string>("");
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [addSellerOpen, setAddSellerOpen] = useState<boolean>(false);
@@ -765,4 +765,4 @@ const inventory = () => {
   );
 };
 
-export default inventory;
+export default Inventory;

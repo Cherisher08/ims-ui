@@ -5,33 +5,35 @@ interface CustomInputProps {
   onChange: (val: string) => void;
   placeholder: string;
   label: string;
+  type?: string;
   className?: string;
   startIcon?: React.ReactNode;
   error?: boolean;
-  defaultValue?: string;
   helperText?: string;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
   value,
   onChange,
+  label,
   error = false,
   helperText = "",
-  defaultValue = "",
-  label,
+  type = "text",
   className = "",
   placeholder = "",
   startIcon = null,
 }) => {
   return (
-    <div className="flex justify-between w-full gap-2">
-      <label className="pt-2">{label}</label>
+    <div className="grid grid-cols-[auto_2fr] justify-between w-fit gap-2 h-[3.5rem]">
+      <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
+        {label}
+      </label>
       <TextField
         onChange={(e) => onChange(e.target.value)}
         value={value}
         error={error}
+        type={type}
         variant="outlined"
-        defaultValue={defaultValue}
         helperText={error ? helperText : helperText ? " " : ""}
         placeholder={placeholder}
         slotProps={{
@@ -43,7 +45,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
             }),
           },
           htmlInput: {
-            className: `p-2 ${className}`,
+            className: `p-2 h-[2.5rem] box-border ${className}`,
           },
         }}
       />

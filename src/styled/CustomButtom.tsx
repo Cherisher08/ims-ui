@@ -24,7 +24,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   return (
     <Button
       classes={{
-        root: `${className} ${buttonStyles[variant]} normal-case text-nowrap hover:bg-`,
+        root: `${className} ${buttonStyles[variant]} normal-case text-nowrap hover:bg-highlight h-[2.5rem]`,
       }}
       onClick={onClick}
       startIcon={icon}

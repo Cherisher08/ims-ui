@@ -13,8 +13,9 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { MdClose, MdOutlineAddShoppingCart } from "react-icons/md";
 import type { ICellRendererParams } from "ag-grid-community";
 import { PiWarningFill } from "react-icons/pi";
+import CustomDatePicker from "../../styled/CustomDatePicker";
 
-interface Product {
+interface ProductType {
   productName: string;
   productCode: string;
   category: string;
@@ -23,28 +24,50 @@ interface Product {
   actions?: string;
 }
 
+interface AddProductType {
+  productName: string;
+  productCode: string;
+  unit: string;
+  category: string;
+  type: string;
+  quantity: number;
+  purchaseDate: string;
+  price: number;
+  rentalPrice: number;
+  discount: number;
+  discountType: string;
+  total: number;
+  availableStock: number;
+  seller?: string;
+  purchaseOrder?: boolean;
+}
+
 const inventory = () => {
   const [search, setSearch] = useState<string>("");
-  const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
-  const [addSellerOpen, setAddSellerOpen] = useState<boolean>(false);
-  const [deleteData, setDeleteData] = useState<any>(null);
-  const [addStockOpen, setAddStockOpen] = useState<boolean>(false);
-  const [newproductData, setNewproductData] = useState({
-    product_code: "",
-    product_name: "",
-    quantity: "",
-    purchase_date: "",
-    price: "",
+  const [newproductData, setNewproductData] = useState<AddProductType>({
+    productCode: "",
+    productName: "",
+    quantity: 0,
+    purchaseDate: "",
+    price: 0,
     unit: "",
     category: "",
-    total: "",
+    total: 0,
     type: "",
     seller: "",
-    rental_price: "",
-    discount: "",
-    discount_type: "1",
-    purchase_order: false,
+    rentalPrice: 0,
+    discount: 0,
+    discountType: "1",
+    purchaseOrder: false,
+    availableStock: 0,
   });
+  const [deleteData, setDeleteData] = useState<ProductType | null>(null);
+  const [updateData, setUpdateData] = useState<AddProductType | null>(null);
+
+  const [addSellerOpen, setAddSellerOpen] = useState<boolean>(false);
+  const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
+  const [addStockOpen, setAddStockOpen] = useState<boolean>(false);
 
   const [productCategories, setProductCategories] = useState([
     {
@@ -118,11 +141,7 @@ const inventory = () => {
     setNewproductData((prev) => ({ ...prev, [key]: value }));
   };
 
-  useEffect(() => {
-    console.log(newproductData.discount_type);
-  }, [newproductData]);
-
-  const [rowData, setRowData] = useState<Product[]>([
+  const [rowData, setRowData] = useState<ProductType[]>([
     {
       productName: "Wireless Mouse",
       productCode: "WM123",
@@ -265,7 +284,7 @@ const inventory = () => {
     },
   ]);
 
-  const [colDefs, setColDefs] = useState<ColDef<Product>[]>([
+  const [colDefs, setColDefs] = useState<ColDef<ProductType>[]>([
     { field: "productName", headerName: "Product Name", flex: 1 },
     { field: "productCode", headerName: "Product Code", flex: 1 },
     { field: "category", headerName: "Category", flex: 1 },
@@ -282,7 +301,10 @@ const inventory = () => {
             <FiEdit
               size={19}
               className="cursor-pointer"
-              onClick={() => console.log("Edit", rowData)}
+              onClick={() => {
+                setUpdateData(rowData);
+                setUpdateModalOpen(true);
+              }}
             />
             <AiOutlineDelete
               size={20}
@@ -341,8 +363,8 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"
-                value={newproductData.product_name}
-                onChange={(value) => handleProductChange("product_name", value)}
+                value={newproductData.productName}
+                onChange={(value) => handleProductChange("productName", value)}
                 placeholder="Enter Product Name"
               />
               <CustomAutoComplete
@@ -381,16 +403,14 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Code"
-                value={newproductData.product_code}
-                onChange={(value) => handleProductChange("product_code", value)}
+                value={newproductData.productCode}
+                onChange={(value) => handleProductChange("productCode", value)}
                 placeholder="Enter Product Code"
               />
-              <CustomInput
+              <CustomDatePicker
                 label="Purchase Date"
-                value={newproductData.purchase_date}
-                onChange={(value) =>
-                  handleProductChange("purchase_date", value)
-                }
+                value={newproductData.purchaseDate}
+                onChange={(value) => handleProductChange("purchaseDate", value)}
                 placeholder="Enter Purchase Date"
               />
               <CustomAutoComplete
@@ -420,7 +440,7 @@ const inventory = () => {
               />
               <CustomInput
                 label="Rental Price"
-                value={newproductData.rental_price}
+                value={newproductData.rentalPrice}
                 onChange={(value) => handleProductChange("rental_price", value)}
                 placeholder="Enter Rental Price"
               />
@@ -462,9 +482,9 @@ const inventory = () => {
                     },
                   ]}
                   defaultValue="%"
-                  value={newproductData.discount_type}
+                  value={newproductData.discountType}
                   onChange={(value) =>
-                    handleProductChange("discount_type", value)
+                    handleProductChange("discountType", value)
                   }
                 />
               </div>
@@ -479,8 +499,8 @@ const inventory = () => {
 
             <div className="flex gap-2 items-center font-semibold h-fit">
               <Checkbox
-                name="purchase_order"
-                id="purchase_order"
+                name="purchaseOrder"
+                id="purchaseOrder"
                 className="w-fit h-fit"
                 sx={{
                   color: "#000000",
@@ -488,27 +508,29 @@ const inventory = () => {
                     color: "#000000",
                   },
                 }}
-                value={newproductData.purchase_order}
+                value={newproductData.purchaseOrder}
                 onChange={(_, value) =>
                   setNewproductData((prev) => ({
                     ...prev,
-                    purchase_order: value,
+                    purchaseOrder: value,
                   }))
                 }
               />
               <label
-                htmlFor="purchase_order"
+                htmlFor="purchaseOrder"
                 className="cursor-pointer select-none"
               >
                 Mark as Purchase Order
               </label>
             </div>
-            <CustomSelect
-              label="Seller"
-              value={newproductData.seller}
-              options={sellers}
-              onChange={(value) => handleProductChange("seller", value)}
-            />
+            {newproductData.purchaseOrder && (
+              <CustomSelect
+                label="Seller"
+                value={newproductData.seller ?? ""}
+                options={sellers}
+                onChange={(value) => handleProductChange("seller", value)}
+              />
+            )}
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
@@ -542,8 +564,8 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"
-                value={newproductData.product_name}
-                onChange={(value) => handleProductChange("product_name", value)}
+                value={newproductData.productName}
+                onChange={(value) => handleProductChange("productName", value)}
                 placeholder="Enter Product Name"
               />
               <CustomAutoComplete
@@ -582,16 +604,14 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Code"
-                value={newproductData.product_code}
-                onChange={(value) => handleProductChange("product_code", value)}
+                value={newproductData.productCode}
+                onChange={(value) => handleProductChange("productCode", value)}
                 placeholder="Enter Product Code"
               />
-              <CustomInput
+              <CustomDatePicker
                 label="Purchase Date"
-                value={newproductData.purchase_date}
-                onChange={(value) =>
-                  handleProductChange("purchase_date", value)
-                }
+                value={newproductData.purchaseDate}
+                onChange={(value) => handleProductChange("purchaseDate", value)}
                 placeholder="Enter Purchase Date"
               />
               <CustomAutoComplete
@@ -621,8 +641,11 @@ const inventory = () => {
               />
               <CustomInput
                 label="Rental Price"
-                value={newproductData.rental_price}
-                onChange={(value) => handleProductChange("rental_price", value)}
+                type="number"
+                value={newproductData.rentalPrice}
+                onChange={(value) =>
+                  handleProductChange("rentalPrice", parseInt(value))
+                }
                 placeholder="Enter Rental Price"
               />
             </div>
@@ -630,15 +653,21 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Quantity"
+                type="number"
                 value={newproductData.quantity}
-                onChange={(value) => handleProductChange("quantity", value)}
+                onChange={(value) =>
+                  handleProductChange("quantity", parseInt(value))
+                }
                 placeholder="Enter Product Quantity"
               />
 
               <CustomInput
                 label="Price"
+                type="number"
                 value={newproductData.price}
-                onChange={(value) => handleProductChange("price", value)}
+                onChange={(value) =>
+                  handleProductChange("price", parseInt(value))
+                }
                 placeholder="Enter Product Price"
               />
 
@@ -648,7 +677,9 @@ const inventory = () => {
                   placeholder=""
                   value={newproductData.discount}
                   type="number"
-                  onChange={(value) => handleProductChange("discount", value)}
+                  onChange={(value) =>
+                    handleProductChange("discount", parseInt(value))
+                  }
                 />
                 <CustomSelect
                   label=""
@@ -663,17 +694,20 @@ const inventory = () => {
                     },
                   ]}
                   defaultValue="%"
-                  value={newproductData.discount_type}
+                  value={newproductData.discountType}
                   onChange={(value) =>
-                    handleProductChange("discount_type", value)
+                    handleProductChange("discountType", value)
                   }
                 />
               </div>
 
               <CustomInput
                 label="Total"
+                type="number"
                 value={newproductData.total}
-                onChange={(value) => handleProductChange("total", value)}
+                onChange={(value) =>
+                  handleProductChange("total", parseInt(value))
+                }
                 placeholder="Rs. 0.0"
               />
             </div>
@@ -689,12 +723,315 @@ const inventory = () => {
                     color: "#000000",
                   },
                 }}
-                value={newproductData.purchase_order}
+                value={newproductData.purchaseOrder}
                 onChange={(_, value) =>
                   setNewproductData((prev) => ({
                     ...prev,
-                    purchase_order: value,
+                    purchaseOrder: value,
                   }))
+                }
+              />
+              <label
+                htmlFor="purchaseOrder"
+                className="cursor-pointer select-none"
+              >
+                Mark as Purchase Order
+              </label>
+            </div>
+            {newproductData.purchaseOrder && (
+              <CustomSelect
+                label="Seller"
+                value={newproductData?.seller ?? ""}
+                options={sellers}
+                onChange={(value) => handleProductChange("seller", value)}
+              />
+            )}
+          </div>
+          <div className="flex w-full gap-3 justify-end">
+            <CustomButton
+              onClick={() => setAddProductOpen(false)}
+              label="Discard"
+              variant="outlined"
+              className="bg-white"
+            />
+            <CustomButton onClick={addProduct} label="Save Product" />
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={updateModalOpen}
+        onClose={() => {
+          setUpdateData(null);
+          setUpdateModalOpen(false);
+        }}
+        className="w-screen h-screen flex justify-center items-center"
+      >
+        <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
+          <div className="flex justify-between w-full">
+            <p className="text-primary text-xl font-semibold w-full text-start">
+              Update Product
+            </p>
+            <MdClose
+              size={25}
+              className="cursor-pointer"
+              onClick={() => {
+                setUpdateData(null);
+                setUpdateModalOpen(false);
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
+            <div className="flex flex-col gap-3">
+              <CustomInput
+                label="Product Name"
+                value={updateData?.productName ?? ""}
+                onChange={(value) => handleProductChange("product_name", value)}
+                placeholder="Enter Product Name"
+              />
+              <CustomAutoComplete
+                label="Unit"
+                error={false}
+                placeholder="Select Unit"
+                helperText="Please Select The Unit"
+                value={updateData?.unit ?? ""}
+                options={productUnits}
+                className=""
+                addNewValue={(value) => {
+                  const exists =
+                    productUnits.filter(
+                      (option) =>
+                        option.value.toLocaleLowerCase() ===
+                        value.toLocaleLowerCase()
+                    ).length > 0;
+                  if (!exists && value.length > 0) {
+                    setProductUnits((prev) => [
+                      ...prev,
+                      { id: productUnits.length, value: value },
+                    ]);
+                    handleProductChange("unit", value);
+                  }
+                }}
+                onChange={(value) => handleProductChange("unit", value)}
+              />
+              <CustomSelect
+                label="Type"
+                options={productType}
+                value={newproductData.type}
+                onChange={(value) => handleProductChange("type", value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <CustomInput
+                label="Product Code"
+                value={updateData?.productCode ?? ""}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        productCode: value,
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter Product Code"
+              />
+              <CustomDatePicker
+                label="Purchase Date"
+                value={updateData?.purchaseDate ?? ""}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        purchaseDate: value,
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter Purchase Date"
+              />
+              <CustomAutoComplete
+                label="Category"
+                error={false}
+                placeholder="Select Category"
+                helperText="Please Select The Category"
+                value={updateData?.category ?? ""}
+                options={productCategories}
+                className=""
+                addNewValue={(value) => {
+                  const exists =
+                    productCategories.filter(
+                      (option) =>
+                        option.value.toLocaleLowerCase() ===
+                        value.toLocaleLowerCase()
+                    ).length > 0;
+                  if (!exists && value.length > 0) {
+                    setProductCategories((prev) => [
+                      ...prev,
+                      { id: productCategories.length, value: value },
+                    ]);
+
+                    setUpdateData((prev) => {
+                      if (prev)
+                        return {
+                          ...prev,
+                          category: value,
+                        };
+                      return prev;
+                    });
+                  }
+                }}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        category: value,
+                      };
+                    return prev;
+                  })
+                }
+              />
+              <CustomInput
+                label="Rental Price"
+                value={updateData?.rentalPrice ?? 0}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        rentalPrice: parseInt(value),
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter Rental Price"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <CustomInput
+                label="Quantity"
+                type="number"
+                value={updateData?.quantity ?? 0}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    console.log(value);
+                    // return;
+                    if (prev)
+                      return {
+                        ...prev,
+                        quantity: parseInt(value),
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter Product Quantity"
+              />
+
+              <CustomInput
+                label="Price"
+                value={updateData?.price ?? 0}
+                type="number"
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        price: parseInt(value),
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter Product Price"
+              />
+
+              <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
+                <CustomInput
+                  label="Discount"
+                  placeholder=""
+                  value={updateData?.discount ?? 0}
+                  type="number"
+                  onChange={(value) =>
+                    setUpdateData((prev) => {
+                      if (prev)
+                        return {
+                          ...prev,
+                          discount: parseInt(value),
+                        };
+                      return prev;
+                    })
+                  }
+                />
+                <CustomSelect
+                  label=""
+                  options={[
+                    {
+                      id: "1",
+                      value: "%",
+                    },
+                    {
+                      id: "2",
+                      value: "₹",
+                    },
+                  ]}
+                  defaultValue="%"
+                  value={updateData?.discountType ?? ""}
+                  onChange={(value) =>
+                    setUpdateData((prev) => {
+                      if (prev)
+                        return {
+                          ...prev,
+                          discountType: value,
+                        };
+                      return prev;
+                    })
+                  }
+                />
+              </div>
+
+              <CustomInput
+                label="Total"
+                value={updateData?.total ?? 0}
+                type="number"
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        total: parseInt(value),
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Rs. 0.0"
+              />
+            </div>
+
+            <div className="flex gap-2 items-center font-semibold h-fit">
+              <Checkbox
+                name="purchase_order"
+                id="purchase_order"
+                className="w-fit h-fit"
+                sx={{
+                  color: "#000000",
+                  "&.Mui-checked": {
+                    color: "#000000",
+                  },
+                }}
+                value={updateData?.purchaseOrder ?? false}
+                onChange={(_, value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        purchaseOrder: value,
+                      };
+                    return prev;
+                  })
                 }
               />
               <label
@@ -704,12 +1041,23 @@ const inventory = () => {
                 Mark as Purchase Order
               </label>
             </div>
-            <CustomSelect
-              label="Seller"
-              value={newproductData.seller}
-              options={sellers}
-              onChange={(value) => handleProductChange("seller", value)}
-            />
+            {updateData?.purchaseOrder && (
+              <CustomSelect
+                label="Seller"
+                value={updateData?.seller ?? ""}
+                options={sellers}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        seller: value,
+                      };
+                    return prev;
+                  })
+                }
+              />
+            )}
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton

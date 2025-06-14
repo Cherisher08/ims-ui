@@ -1,7 +1,7 @@
 import { InputAdornment, TextField } from "@mui/material";
 
 interface CustomInputProps {
-  value: string;
+  value: string | number;
   onChange: (val: string) => void;
   placeholder: string;
   label: string;
@@ -24,7 +24,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   startIcon = null,
 }) => {
   return (
-    <div className="grid grid-cols-[auto_2fr] justify-between w-fit gap-2 h-[3.5rem]">
+    <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
       <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
         {label}
       </label>
@@ -45,6 +45,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
             }),
           },
           htmlInput: {
+            min: type === "number" ? 0 : undefined,
             className: `p-2 h-[2.5rem] box-border ${className}`,
           },
         }}

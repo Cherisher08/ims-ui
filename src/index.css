@@ -48,6 +48,10 @@ body {
   color: #bfbfbf;
 }
 
+.ag-paging-page-size {
+  display: none !important;
+}
+
 .custom-header {
   background-color: #f0f4ff;
   color: #2c387e;

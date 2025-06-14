@@ -123,24 +123,6 @@ const inventory = () => {
     { id: "2", value: "Sales" },
     { id: "3", value: "Service" },
   ]);
-
-  const handleSearch = (searchText: string) => {
-    setSearch(searchText);
-  };
-
-  const addProduct = () => {
-    console.log("val");
-  };
-
-  const deleteProduct = () => {
-    console.log("val");
-  };
-
-  const handleProductChange = (key: string, value: string | number) => {
-    console.log(key, value);
-    setNewproductData((prev) => ({ ...prev, [key]: value }));
-  };
-
   const [rowData, setRowData] = useState<ProductType[]>([
     {
       productName: "Wireless Mouse",
@@ -284,6 +266,8 @@ const inventory = () => {
     },
   ]);
 
+  const [filteredData, setFilteredData] = useState<ProductType[]>([]);
+
   const [colDefs, setColDefs] = useState<ColDef<ProductType>[]>([
     { field: "productName", headerName: "Product Name", flex: 1 },
     { field: "productCode", headerName: "Product Code", flex: 1 },
@@ -322,6 +306,38 @@ const inventory = () => {
     },
   ]);
 
+  const addProduct = () => {
+    console.log("val");
+  };
+
+  const deleteProduct = () => {
+    console.log("val");
+  };
+
+  const handleProductChange = (key: string, value: string | number) => {
+    console.log(key, value);
+    setNewproductData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  useEffect(() => {
+    setFilteredData(rowData);
+  }, [rowData]);
+
+  useEffect(() => {
+    if (search.trim()) {
+      setFilteredData(
+        rowData.filter(
+          (data) =>
+            data.productName.toLowerCase().includes(search.toLowerCase()) ||
+            data.productCode.toLowerCase().includes(search.toLowerCase()) ||
+            data.type.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredData(rowData);
+    }
+  }, [search]);
+
   return (
     <div className="h-screen">
       <div className="flex justify-between">
@@ -330,17 +346,18 @@ const inventory = () => {
           label="Add Product"
           icon={<LuPlus color="white" />}
         />
-        <CustomInput
-          label=""
-          value={search}
-          onChange={handleSearch}
-          startIcon={<BsSearch />}
-          placeholder="Search Product"
-          className=""
-        />
+        <div className="w-[20rem]">
+          <CustomInput
+            label=""
+            value={search}
+            onChange={(value) => setSearch(value)}
+            startIcon={<BsSearch />}
+            placeholder="Search Product"
+          />
+        </div>
       </div>
       <div className="w-full h-fit overflow-y-auto">
-        <CustomTable rowData={rowData} colDefs={colDefs} />
+        <CustomTable rowData={filteredData} colDefs={colDefs} />
       </div>
 
       <Modal

@@ -95,7 +95,7 @@ const Contacts = () => {
     {
       id: "d9x7h3",
       name: "David Brown",
-      type: "Intern",
+      type: "Employee",
       personalNumber: "9871234560",
       officeNumber: "01122334455",
       email: "david.brown@example.com",
@@ -142,7 +142,7 @@ const Contacts = () => {
     {
       id: "h7v9j5",
       name: "Henry Ford",
-      type: "Consultant",
+      type: "Contractor",
       personalNumber: "9911887766",
       officeNumber: "01144556677",
       email: "henry.ford@example.com",
@@ -154,7 +154,7 @@ const Contacts = () => {
     {
       id: "i6t2p3",
       name: "Ivy Chen",
-      type: "Intern",
+      type: "Employee",
       personalNumber: "9788112233",
       officeNumber: "03322334411",
       email: "ivy.chen@example.com",
@@ -212,7 +212,7 @@ const Contacts = () => {
     {
       id: "n2c7x6",
       name: "Noah Wilson",
-      type: "Intern",
+      type: "Vendor",
       personalNumber: "9755544332",
       officeNumber: "04066778899",
       email: "noah.wilson@example.com",
@@ -235,7 +235,7 @@ const Contacts = () => {
     {
       id: "p6r4y8",
       name: "Paul Harris",
-      type: "Consultant",
+      type: "Contractor",
       personalNumber: "9911223344",
       officeNumber: "02212345678",
       email: "paul.harris@example.com",
@@ -281,7 +281,7 @@ const Contacts = () => {
     {
       id: "t7d5l4",
       name: "Tina Brooks",
-      type: "Intern",
+      type: "Vendor",
       personalNumber: "9755511223",
       officeNumber: "04055667788",
       email: "tina.brooks@example.com",
@@ -291,7 +291,8 @@ const Contacts = () => {
         "https://upload.wikimedia.org/wikipedia/commons/2/2e/Indian_Passport_Cover.jpg",
     },
   ]);
-  const [newContactData, setNewContactData] = useState<NewContactType | null>({
+  const [newContactData, setNewContactData] = useState<ContactInfoType | null>({
+    id: "",
     name: "",
     type: "",
     personalNumber: "",
@@ -299,15 +300,13 @@ const Contacts = () => {
     email: "",
     address: "",
     pincode: "",
-    addressProof: "",
-    companyName: "",
   });
 
   const [deleteContact, setDeleteContact] = useState<ContactInfoType | null>(
     null
   );
   const [filteredData, setFilteredData] = useState<ContactInfoType[]>([]);
-  const [UpdateContact, setUpdateContact] = useState<ContactInfoType | null>(
+  const [updateContact, setUpdateContact] = useState<ContactInfoType | null>(
     null
   );
 
@@ -354,6 +353,7 @@ const Contacts = () => {
               size={19}
               className="cursor-pointer"
               onClick={() => {
+                console.log(rowData);
                 setUpdateContact(rowData);
                 setUpdateContactOpen(true);
               }}
@@ -373,9 +373,9 @@ const Contacts = () => {
   ]);
 
   const [contactType, setContactType] = useState([
-    { id: "1", value: "Rental" },
-    { id: "2", value: "Sales" },
-    { id: "3", value: "Service" },
+    { id: "1", value: "Employee" },
+    { id: "2", value: "Contractor" },
+    { id: "3", value: "Vendor" },
   ]);
 
   useEffect(() => {
@@ -398,15 +398,6 @@ const Contacts = () => {
     }
   }, [search]);
 
-  const handleDeleteContact = () => {
-    setFilteredData((prev) =>
-      prev.filter((contact) => contact.id !== deleteContact?.id)
-    );
-    console.log("deleted");
-    setDeleteContact(null);
-    setDeleteContactOpen(false);
-  };
-
   const handleContactChange = (key: string, value: string | number) => {
     setNewContactData((prev) => {
       if (prev)
@@ -427,11 +418,29 @@ const Contacts = () => {
   };
 
   const handleAddContact = () => {
-    console.log("add");
+    if (newContactData) setFilteredData((prev) => [newContactData, ...prev]);
+    setNewContactData(null);
+    setAddContactOpen(false);
   };
 
   const handleUpdateContact = () => {
-    console.log("update");
+    if (updateContact) {
+      const newData = filteredData.map((data) =>
+        data.id === updateContact.id ? updateContact : data
+      );
+      setContactData(newData);
+      setUpdateContact(null);
+      setUpdateContactOpen(false);
+    }
+  };
+
+  const handleDeleteContact = () => {
+    setFilteredData((prev) =>
+      prev.filter((contact) => contact.id !== deleteContact?.id)
+    );
+    console.log("deleted");
+    setDeleteContact(null);
+    setDeleteContactOpen(false);
   };
 
   return (
@@ -646,7 +655,7 @@ const Contacts = () => {
               <div className="flex flex-col gap-3">
                 <CustomInput
                   label="Name"
-                  value={UpdateContact?.name ?? ""}
+                  value={updateContact?.name ?? ""}
                   onChange={(value) =>
                     setUpdateContact((prev) => {
                       if (prev) return { ...prev, name: value };
@@ -658,7 +667,7 @@ const Contacts = () => {
                 <CustomSelect
                   label="Type"
                   options={contactType}
-                  value={UpdateContact?.type ?? ""}
+                  value={updateContact?.type ?? ""}
                   onChange={(value) =>
                     setUpdateContact((prev) => {
                       if (prev) return { ...prev, type: value };
@@ -671,7 +680,7 @@ const Contacts = () => {
               <div className="flex flex-col gap-3">
                 <CustomInput
                   label="Personal Number"
-                  value={UpdateContact?.personalNumber ?? ""}
+                  value={updateContact?.personalNumber ?? ""}
                   onChange={(value) =>
                     setUpdateContact((prev) => {
                       if (prev) return { ...prev, personalNumber: value };
@@ -682,7 +691,7 @@ const Contacts = () => {
                 />
                 <CustomInput
                   label="Office Number"
-                  value={UpdateContact?.officeNumber ?? ""}
+                  value={updateContact?.officeNumber ?? ""}
                   onChange={(value) =>
                     setUpdateContact((prev) => {
                       if (prev) return { ...prev, officeNumber: value };
@@ -696,7 +705,7 @@ const Contacts = () => {
               <div className="flex flex-col gap-3">
                 <CustomInput
                   label="Company"
-                  value={UpdateContact?.companyName ?? ""}
+                  value={updateContact?.companyName ?? ""}
                   onChange={(value) =>
                     setUpdateContact((prev) => {
                       if (prev) return { ...prev, companyName: value };
@@ -708,7 +717,7 @@ const Contacts = () => {
 
                 <CustomInput
                   label="Email"
-                  value={UpdateContact?.email ?? ""}
+                  value={updateContact?.email ?? ""}
                   onChange={(value) =>
                     setUpdateContact((prev) => {
                       if (prev) return { ...prev, email: value };
@@ -726,7 +735,7 @@ const Contacts = () => {
                   <CustomInput
                     label="Address"
                     multiline
-                    value={UpdateContact?.address ?? ""}
+                    value={updateContact?.address ?? ""}
                     onChange={(value) =>
                       setUpdateContact((prev) => {
                         if (prev) return { ...prev, address: value };
@@ -740,7 +749,7 @@ const Contacts = () => {
                 <div className="lg:w-1/2">
                   <CustomInput
                     label="Pincode"
-                    value={UpdateContact?.pincode ?? ""}
+                    value={updateContact?.pincode ?? ""}
                     onChange={(value) =>
                       setUpdateContact((prev) => {
                         if (prev) return { ...prev, pincode: value };
@@ -802,7 +811,10 @@ const Contacts = () => {
               variant="outlined"
               className="bg-white"
             />
-            <CustomButton onClick={handleUpdateContact} label="Add Product" />
+            <CustomButton
+              onClick={handleUpdateContact}
+              label="Update Contact"
+            />
           </div>
         </div>
       </Modal>

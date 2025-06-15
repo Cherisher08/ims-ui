@@ -39,7 +39,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <Select
           className="h-[2.5rem]"
           error={error}
-          value={value}
+          value={options.find((option) => option.value === value)?.value}
           defaultValue={defaultValue}
           onChange={(e) => onChange(e.target.value)}
           displayEmpty
@@ -47,7 +47,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           classes={{ root: ` ${className}` }}
         >
           {options.map((option) => (
-            <MenuItem value={option.id} key={option.id}>
+            <MenuItem value={option.value} key={option.id}>
               {option.value}
             </MenuItem>
           ))}

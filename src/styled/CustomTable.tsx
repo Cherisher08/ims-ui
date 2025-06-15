@@ -12,7 +12,6 @@ type CustomTableProps<T> = {
 };
 
 const CustomTable = <T,>({ rowData, colDefs }: CustomTableProps<T>) => {
-  console.log(rowData);
   return (
     <div
       className="ag-theme-alpine"

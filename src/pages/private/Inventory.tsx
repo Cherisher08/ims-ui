@@ -338,7 +338,12 @@ const Inventory = () => {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_UPDATE,
       });
     }
-  }, [isProductCreated, isProductUpdated]);
+    if (isProductDeleted) {
+      toast.success("Product Deleted Successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_DELETE,
+      });
+    }
+  }, [isProductCreated, isProductDeleted, isProductUpdated]);
 
   return (
     <div className="h-screen">

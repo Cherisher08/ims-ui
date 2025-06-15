@@ -39,7 +39,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <Select
           className="h-[2.5rem]"
           error={error}
-          value={options.find((option) => option.value === value)?.id}
+          value={options.find((option) => option.value === value)?.value}
           defaultValue={defaultValue}
           onChange={(e) => onChange(e.target.value)}
           displayEmpty

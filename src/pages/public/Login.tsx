@@ -7,6 +7,8 @@ import { loginApi, useAuthorizeUserMutation } from "../../services/ApiService";
 import type { UserRequest } from "../../types/user";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
+import { IoEye, IoEyeOff } from "react-icons/io5";
+import { useState } from "react";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import type { ErrorResponse } from "../../types/common";
 import { toast } from "react-toastify";
@@ -30,7 +32,7 @@ const Login = () => {
       error: authorizationErrorMessage,
     },
   ] = useAuthorizeUserMutation();
-
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const handleLogin = () => {
     localStorage.removeItem("access_token");
     authorizeUser(user);
@@ -90,19 +92,35 @@ const Login = () => {
             </div>
             <div className="flex flex-col gap-1">
               <p>Password</p>
-              <input
-                className="w-full px-3 py-2 rounded-md border border-outline outline-none"
-                placeholder="Enter your password"
-                onChange={(event) =>
-                  setUser((prev) => {
-                    return {
-                      ...prev,
-                      password: event.target.value,
-                    };
-                  })
-                }
-                value={user.password}
-              ></input>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full px-3 py-2 pr-10 rounded-md border border-outline outline-none"
+                  placeholder="Enter your password"
+                  onChange={(event) =>
+                    setUser((prev) => {
+                      return {
+                        ...prev,
+                        password: event.target.value,
+                      };
+                    })
+                  }
+                  value={user.password}
+                ></input>
+                {showPassword ? (
+                  <IoEye
+                    size={25}
+                    className="absolute right-0 top-1/2 -translate-1/2"
+                    onClick={() => setShowPassword(false)}
+                  />
+                ) : (
+                  <IoEyeOff
+                    size={25}
+                    className="absolute right-0 top-1/2 -translate-1/2"
+                    onClick={() => setShowPassword(true)}
+                  />
+                )}
+              </div>
             </div>
           </div>
           <div className="flex flex-col gap-3">

@@ -346,7 +346,7 @@ const Inventory = () => {
   }, [isProductCreated, isProductDeleted, isProductUpdated]);
 
   return (
-    <div className="h-screen">
+    <div className="h-fit">
       <div className="flex justify-between">
         <CustomButton
           onClick={() => setAddProductOpen(true)}
@@ -842,7 +842,7 @@ const Inventory = () => {
                 error={false}
                 placeholder="Select Unit"
                 helperText="Please Select The Unit"
-                value={updateData?.unit ?? ""}
+                value={"cm"}
                 options={productUnits}
                 className=""
                 addNewValue={(value) => {

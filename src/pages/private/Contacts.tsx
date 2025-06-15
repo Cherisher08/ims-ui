@@ -54,6 +54,7 @@ const Contacts = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [updateContactOpen, setUpdateContactOpen] = useState<boolean>(false);
   const [deleteContactOpen, setDeleteContactOpen] = useState<boolean>(false);
+  const [addressProof, setAddressProof] = useState<File | null>(null);
   const [contactData, setContactData] = useState<ContactInfoType[]>([
     {
       id: "a1f9k2",
@@ -302,9 +303,13 @@ const Contacts = () => {
     companyName: "",
   });
 
-  const [deleteData, setDeleteData] = useState<ContactInfoType | null>(null);
+  const [deleteContact, setDeleteContact] = useState<ContactInfoType | null>(
+    null
+  );
   const [filteredData, setFilteredData] = useState<ContactInfoType[]>([]);
-  const [UpdateContact, setUpdateContact] = useState<ContactInfoType>();
+  const [UpdateContact, setUpdateContact] = useState<ContactInfoType | null>(
+    null
+  );
 
   const [colDefs, setColDefs] = useState<ColDef<ContactInfoType>[]>([
     {
@@ -358,7 +363,7 @@ const Contacts = () => {
               className="cursor-pointer"
               onClick={() => {
                 setDeleteContactOpen(true);
-                setDeleteData(rowData);
+                setDeleteContact(rowData);
               }}
             />
           </div>
@@ -395,10 +400,10 @@ const Contacts = () => {
 
   const handleDeleteContact = () => {
     setFilteredData((prev) =>
-      prev.filter((contact) => contact.id !== deleteData?.id)
+      prev.filter((contact) => contact.id !== deleteContact?.id)
     );
     console.log("deleted");
-    setDeleteData(null);
+    setDeleteContact(null);
     setDeleteContactOpen(false);
   };
 
@@ -413,8 +418,20 @@ const Contacts = () => {
     });
   };
 
+  const handelProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    if (files) {
+      setAddressProof(files[0]);
+    }
+  };
+
   const handleAddContact = () => {
     console.log("add");
+  };
+
+  const handleUpdateContact = () => {
+    console.log("update");
   };
 
   return (
@@ -443,7 +460,11 @@ const Contacts = () => {
       {/* Add Contact */}
       <Modal
         open={addContactOpen}
-        onClose={() => setAddContactOpen(false)}
+        onClose={() => {
+          setAddContactOpen(false);
+          setNewContactData(null);
+          setAddressProof(null);
+        }}
         className="w-screen h-screen flex justify-center items-center"
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
@@ -454,7 +475,11 @@ const Contacts = () => {
             <MdClose
               size={25}
               className="cursor-pointer"
-              onClick={() => setAddContactOpen(false)}
+              onClick={() => {
+                setAddContactOpen(false);
+                setNewContactData(null);
+                setAddressProof(null);
+              }}
             />
           </div>
 
@@ -513,7 +538,7 @@ const Contacts = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 w-1/2 lg:w-full lg:grid-cols-3">
+            <div className="grid grid-cols-1 w-full md:w-1/2 lg:w-full lg:grid-cols-3">
               <div className="flex flex-col lg:col-span-2">
                 <div className="lg:w-2/3">
                   <CustomInput
@@ -535,32 +560,51 @@ const Contacts = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[auto_2fr] justify-center items-center h-4/5 w-full gap-2">
+              <div className="grid grid-cols-1 lg:grid-cols-[auto_2fr] justify-center items-center sm:h-4/5 w-full gap-4">
                 <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
                   Upload Proof
                 </label>
-                <input
-                  id="new-contact-proof"
-                  name="new-contact-proof"
-                  className="hidden"
-                  type="file"
-                  onChange={(e) => console.log(e.target.value)}
-                ></input>
-                <label
-                  htmlFor="new-contact-proof"
-                  className="border rounded-sm flex flex-col items-center justify-center h-full"
-                >
-                  <LuUpload />
-                  <p>Upload Proof</p>
-                </label>
+                {addressProof === null ? (
+                  <div className="h-full">
+                    <input
+                      id="new-contact-proof"
+                      name="new-contact-proof"
+                      className="hidden"
+                      type="file"
+                      onChange={handelProofChange}
+                    ></input>
+                    <label
+                      htmlFor="new-contact-proof"
+                      className="border rounded-sm flex flex-col items-center justify-center h-full"
+                    >
+                      <LuUpload />
+                      <p>Upload Proof</p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="aspect-square relative">
+                    <FaTimesCircle
+                      size={20}
+                      color="red"
+                      colorInterpolation="green"
+                      className="absolute top-2 right-2 cursor-pointer"
+                      onClick={() => setAddressProof(null)}
+                    />
+                    <img
+                      src={URL.createObjectURL(addressProof)}
+                      className="rounded-sm aspect-square w-full"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
               onClick={() => {
-                setNewContactData(null);
                 setAddContactOpen(false);
+                setNewContactData(null);
+                setAddressProof(null);
               }}
               label="Discard"
               variant="outlined"
@@ -571,11 +615,203 @@ const Contacts = () => {
         </div>
       </Modal>
 
+      {/* Edit Contact */}
+      <Modal
+        open={updateContactOpen}
+        onClose={() => {
+          setUpdateContactOpen(false);
+          setUpdateContact(null);
+          setAddressProof(null);
+        }}
+        className="w-screen h-screen flex justify-center items-center"
+      >
+        <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
+          <div className="flex justify-between w-full">
+            <p className="text-primary text-xl font-semibold w-full text-start">
+              Update Contact
+            </p>
+            <MdClose
+              size={25}
+              className="cursor-pointer"
+              onClick={() => {
+                setUpdateContactOpen(false);
+                setUpdateContact(null);
+                setAddressProof(null);
+              }}
+            />
+          </div>
+
+          <div className=" flex flex-col gap-3 h-4/5 px-3 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ">
+              <div className="flex flex-col gap-3">
+                <CustomInput
+                  label="Name"
+                  value={UpdateContact?.name ?? ""}
+                  onChange={(value) =>
+                    setUpdateContact((prev) => {
+                      if (prev) return { ...prev, name: value };
+                      return null;
+                    })
+                  }
+                  placeholder="Enter Name"
+                />
+                <CustomSelect
+                  label="Type"
+                  options={contactType}
+                  value={UpdateContact?.type ?? ""}
+                  onChange={(value) =>
+                    setUpdateContact((prev) => {
+                      if (prev) return { ...prev, type: value };
+                      return null;
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <CustomInput
+                  label="Personal Number"
+                  value={UpdateContact?.personalNumber ?? ""}
+                  onChange={(value) =>
+                    setUpdateContact((prev) => {
+                      if (prev) return { ...prev, personalNumber: value };
+                      return null;
+                    })
+                  }
+                  placeholder="Enter Personal Number"
+                />
+                <CustomInput
+                  label="Office Number"
+                  value={UpdateContact?.officeNumber ?? ""}
+                  onChange={(value) =>
+                    setUpdateContact((prev) => {
+                      if (prev) return { ...prev, officeNumber: value };
+                      return null;
+                    })
+                  }
+                  placeholder="Enter Office Number"
+                />
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <CustomInput
+                  label="Company"
+                  value={UpdateContact?.companyName ?? ""}
+                  onChange={(value) =>
+                    setUpdateContact((prev) => {
+                      if (prev) return { ...prev, companyName: value };
+                      return null;
+                    })
+                  }
+                  placeholder="Enter Company Name"
+                />
+
+                <CustomInput
+                  label="Email"
+                  value={UpdateContact?.email ?? ""}
+                  onChange={(value) =>
+                    setUpdateContact((prev) => {
+                      if (prev) return { ...prev, email: value };
+                      return null;
+                    })
+                  }
+                  placeholder="Enter Email"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 w-1/2 lg:w-full lg:grid-cols-3">
+              <div className="flex flex-col lg:col-span-2">
+                <div className="lg:w-2/3">
+                  <CustomInput
+                    label="Address"
+                    multiline
+                    value={UpdateContact?.address ?? ""}
+                    onChange={(value) =>
+                      setUpdateContact((prev) => {
+                        if (prev) return { ...prev, address: value };
+                        return null;
+                      })
+                    }
+                    placeholder="Enter Address"
+                  />
+                </div>
+
+                <div className="lg:w-1/2">
+                  <CustomInput
+                    label="Pincode"
+                    value={UpdateContact?.pincode ?? ""}
+                    onChange={(value) =>
+                      setUpdateContact((prev) => {
+                        if (prev) return { ...prev, pincode: value };
+                        return null;
+                      })
+                    }
+                    placeholder="Enter Pincode"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[auto_2fr] justify-center items-center h-4/5 w-full gap-4">
+                <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
+                  Upload Proof
+                </label>
+                {addressProof === null ? (
+                  <div className="h-full">
+                    <input
+                      id="new-contact-proof"
+                      name="new-contact-proof"
+                      className="hidden"
+                      type="file"
+                      onChange={handelProofChange}
+                    ></input>
+                    <label
+                      htmlFor="new-contact-proof"
+                      className="border rounded-sm flex flex-col items-center justify-center h-full"
+                    >
+                      <LuUpload />
+                      <p>Upload Proof</p>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="aspect-square relative">
+                    <FaTimesCircle
+                      size={20}
+                      color="red"
+                      colorInterpolation="green"
+                      className="absolute top-2 right-2 cursor-pointer"
+                      onClick={() => setAddressProof(null)}
+                    />
+                    <img
+                      src={URL.createObjectURL(addressProof)}
+                      className="rounded-sm aspect-square w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full gap-3 justify-end">
+            <CustomButton
+              onClick={() => {
+                setAddContactOpen(false);
+                setUpdateContact(null);
+                setAddressProof(null);
+              }}
+              label="Discard"
+              variant="outlined"
+              className="bg-white"
+            />
+            <CustomButton onClick={handleUpdateContact} label="Add Product" />
+          </div>
+        </div>
+      </Modal>
+
       {/* Delete Modal */}
       <Modal
         open={deleteContactOpen}
         onClose={() => {
-          setDeleteData(null);
+          setDeleteContact(null);
           setDeleteContactOpen(false);
         }}
         className="w-screen h-screen flex justify-center items-center"
@@ -589,7 +825,7 @@ const Contacts = () => {
               size={25}
               className="cursor-pointer"
               onClick={() => {
-                setDeleteData(null);
+                setDeleteContact(null);
                 setDeleteContactOpen(false);
               }}
             />
@@ -605,7 +841,7 @@ const Contacts = () => {
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
               onClick={() => {
-                setDeleteData(null);
+                setDeleteContact(null);
                 setDeleteContactOpen(false);
               }}
               label="Cancel"

@@ -4,10 +4,12 @@ import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 
 import { Button } from "@mui/material";
+import { IoEye, IoEyeOff } from "react-icons/io5";
+import { useState } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
-
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const handleLogin = () => {
     navigate("/");
   };
@@ -43,10 +45,26 @@ const Login = () => {
             </div>
             <div className="flex flex-col gap-1">
               <p>Password</p>
-              <input
-                className="w-full px-3 py-2 rounded-md border border-outline outline-none"
-                placeholder="Enter your password"
-              ></input>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full px-3 py-2 pr-10 rounded-md border border-outline outline-none"
+                  placeholder="Enter your password"
+                ></input>
+                {showPassword ? (
+                  <IoEye
+                    size={25}
+                    className="absolute right-0 top-1/2 -translate-1/2"
+                    onClick={() => setShowPassword(false)}
+                  />
+                ) : (
+                  <IoEyeOff
+                    size={25}
+                    className="absolute right-0 top-1/2 -translate-1/2"
+                    onClick={() => setShowPassword(true)}
+                  />
+                )}
+              </div>
             </div>
           </div>
           <div className="flex flex-col gap-3">

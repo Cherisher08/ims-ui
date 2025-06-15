@@ -8,7 +8,6 @@ import type { UserRequest } from "../../types/user";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import { IoEye, IoEyeOff } from "react-icons/io5";
-import { useState } from "react";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import type { ErrorResponse } from "../../types/common";
 import { toast } from "react-toastify";

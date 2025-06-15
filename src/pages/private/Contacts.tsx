@@ -435,7 +435,7 @@ const Contacts = () => {
   };
 
   return (
-    <div className="h-screen">
+    <div className="h-fit">
       <div className="flex justify-between">
         <CustomButton
           onClick={() => setAddContactOpen(true)}

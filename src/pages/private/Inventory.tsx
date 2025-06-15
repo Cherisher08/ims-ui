@@ -19,6 +19,7 @@ interface ProductType {
   productName: string;
   productCode: string;
   category: string;
+  unit?: string;
   availableStock: number;
   type: string;
   actions?: string;
@@ -123,12 +124,13 @@ const inventory = () => {
     { id: "2", value: "Sales" },
     { id: "3", value: "Service" },
   ]);
-  
+
   const [rowData, setRowData] = useState<ProductType[]>([
     {
       productName: "Wireless Mouse",
       productCode: "WM123",
       category: "Electronics",
+      unit: "cm",
       availableStock: 45,
       type: "Accessory",
     },
@@ -361,7 +363,7 @@ const inventory = () => {
   }, [search]);
 
   return (
-    <div className="h-screen">
+    <div className="h-fit">
       <div className="flex justify-between">
         <CustomButton
           onClick={() => setAddProductOpen(true)}
@@ -836,7 +838,7 @@ const inventory = () => {
                 error={false}
                 placeholder="Select Unit"
                 helperText="Please Select The Unit"
-                value={updateData?.unit ?? ""}
+                value={"cm"}
                 options={productUnits}
                 className=""
                 addNewValue={(value) => {

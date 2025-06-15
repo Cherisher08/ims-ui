@@ -63,6 +63,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
         <Autocomplete
           autoHighlight
           disableClearable
+          value={options.filter((option) => option.value == value)[0]}
           options={createOption ? customOptions : options}
           filterOptions={customFilterOptions}
           getOptionLabel={(option) => {

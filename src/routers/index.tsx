@@ -10,9 +10,18 @@ const ForgotPassword = React.lazy(
 );
 const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
 const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
-const Orders = React.lazy(() => import("../pages/private/Orders"));
 const Inventory = React.lazy(() => import("../pages/private/Inventory"));
 const Contacts = React.lazy(() => import("../pages/private/Contacts"));
+const Orders = React.lazy(() => import("../pages/private/Orders"));
+const NewRentalOrder = React.lazy(
+  () => import("../pages/private/Orders/NewRentalOrder")
+);
+const NewSalesOrder = React.lazy(
+  () => import("../pages/private/Orders/NewSalesOrder")
+);
+const OrderInvoice = React.lazy(
+  () => import("../pages/private/Orders/OrderInvoice")
+);
 
 type RouteType = {
   path: string;
@@ -57,16 +66,28 @@ const privateRoutes = [
         element: <Dashboard />,
       },
       {
-        path: "/orders",
-        element: <Orders />,
-      },
-      {
         path: "/inventory",
         element: <Inventory />,
       },
       {
         path: "/contacts",
         element: <Contacts />,
+      },
+      {
+        path: "/orders",
+        element: <Orders />,
+      },
+      {
+        path: "/orders/new-rental-order",
+        element: <NewRentalOrder />,
+      },
+      {
+        path: "/orders/new-sales-order",
+        element: <NewSalesOrder />,
+      },
+      {
+        path: "/orders/invoice",
+        element: <OrderInvoice />,
       },
       {
         path: "*",

@@ -783,7 +783,7 @@ const Contacts = () => {
                     </label>
                   </div>
                 ) : (
-                  <div className="aspect-square relative">
+                  <div className="aspect-square w-full overflow-hidden relative">
                     <FaTimesCircle
                       size={20}
                       color="red"

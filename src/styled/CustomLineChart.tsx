@@ -120,7 +120,7 @@ const CustomLineChart: React.FC<CustomLineChartProps> = ({
     <Line
       data={data}
       options={options}
-      className="max-w-full max-h-[28rem] rounded-sm"
+      className="max-w-full max-h-[24rem] rounded-sm"
     />
   );
 };

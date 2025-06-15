@@ -77,8 +77,8 @@ const Dashboard = () => {
             change={11.2}
           />
         </div>
-        <div className="grid grid-cols-[70%_auto] w-full gap-3 pb-4">
-          <div className="flex flex-col bg-gray-50 rounded-xl gap-1 px-3 py-2 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[75%_auto] w-full gap-3 pb-4">
+          <div className="flex flex-col bg-gray-50 rounded-xl gap-1 px-3 max-h-[26rem] py-2 h-full">
             <ul className="flex flex-row text-sm gap-3">
               <li
                 className={`cursor-pointer ${
@@ -107,7 +107,7 @@ const Dashboard = () => {
             </ul>
             <CustomLineChart chartData={sampleData} />
           </div>
-          <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[28rem] overflow-y-auto">
+          <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Title</p>
             <ul className="flex flex-col gap-3 px-4 h-full overflow-y-auto">
               {[

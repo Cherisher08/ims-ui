@@ -9,7 +9,7 @@ const MainLayout = () => {
       <Sidebar />
       <div className="ml-3 flex flex-col w-full h-full">
         <Header />
-        <div className="flex-1 overflow-y-auto px-6 py-1">
+        <div className="flex-1 overflow-y-auto px-6 w-full py-1">
           <Outlet />
         </div>
       </div>

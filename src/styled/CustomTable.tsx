@@ -26,6 +26,7 @@ const CustomTable = <T,>({ rowData, colDefs }: CustomTableProps<T>) => {
         paginationPageSize={10}
         rowHeight={40}
         domLayout="autoHeight"
+         localeText={{ noRowsToShow: "No data Found..." }}
       />
     </div>
   );

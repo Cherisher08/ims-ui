@@ -51,6 +51,10 @@ body {
   color: #bfbfbf;
 }
 
+.ag-paging-page-size {
+  display: none !important;
+}
+
 .custom-header {
   background-color: #f0f4ff;
   color: #2c387e;
@@ -68,8 +72,13 @@ body {
   white-space: normal;
   word-wrap: break-word;
   padding: 5px 3px;
+  height: 100%;
 }
-
+.ag-header-wrap .ag-header-cell-label {
+  white-space: normal !important;
+  line-height: 1.2;
+  text-align: center;
+}
 .ag-paging-panel {
   padding-top: 0.5rem;
   height: fit-content !important ;

@@ -6,7 +6,7 @@ import type {
   GeneralResponse,
   UpdateUserPasswordRequest,
 } from "../types/user";
-import { VerifyOtpRequest } from "../types/common";
+import { Product, VerifyOtpRequest } from "../types/common";
 
 // Define a service using a base URL and expected endpoints
 export const loginApi = createApi({
@@ -15,13 +15,13 @@ export const loginApi = createApi({
     baseUrl: "http://localhost:8000/",
     prepareHeaders: (headers) => {
       const token = localStorage.getItem("access_token");
-      console.log("token: ", token);
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
+  tagTypes: ["Product"],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
       query: () => `auth/users/me`,
@@ -68,6 +68,36 @@ export const loginApi = createApi({
         body: body,
       }),
     }),
+    getProducts: build.query<Product[], void>({
+      query: () => `products`,
+      providesTags: ["Product"],
+    }),
+    createProduct: build.mutation<Product, Product>({
+      query: (body) => ({
+        url: `products`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["Product"],
+    }),
+    getProductById: build.query<Product, string>({
+      query: (id) => `products/${id}`,
+    }),
+    updateProduct: build.mutation<Product, Product>({
+      query: ({ _id, ...product }) => ({
+        url: `products/${_id}`,
+        method: "POST",
+        body: product,
+      }),
+      invalidatesTags: ["Product"],
+    }),
+    deleteProduct: build.mutation<void, string>({
+      query: (id) => ({
+        url: `products/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Product"],
+    }),
   }),
 });
 
@@ -78,4 +108,9 @@ export const {
   useResetPasswordMutation,
   useVerifyOtpMutation,
   useUpdateUserPasswordMutation,
+  useCreateProductMutation,
+  useDeleteProductMutation,
+  useGetProductByIdQuery,
+  useGetProductsQuery,
+  useUpdateProductMutation,
 } = loginApi;

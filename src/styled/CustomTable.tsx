@@ -1,6 +1,6 @@
 import type { ColDef } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import "ag-grid-community/styles/ag-grid.css";
+// import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 
@@ -9,10 +9,14 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 type CustomTableProps<T> = {
   rowData: T[];
   colDefs: ColDef<T>[];
+  isLoading: boolean;
 };
 
-const CustomTable = <T,>({ rowData, colDefs }: CustomTableProps<T>) => {
-  console.log(rowData);
+const CustomTable = <T,>({
+  rowData,
+  colDefs,
+  isLoading,
+}: CustomTableProps<T>) => {
   return (
     <div
       className="ag-theme-alpine"
@@ -26,7 +30,8 @@ const CustomTable = <T,>({ rowData, colDefs }: CustomTableProps<T>) => {
         paginationPageSize={10}
         rowHeight={40}
         domLayout="autoHeight"
-         localeText={{ noRowsToShow: "No data Found..." }}
+        localeText={{ noRowsToShow: "No data Found..." }}
+        loading={isLoading}
       />
     </div>
   );

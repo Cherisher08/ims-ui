@@ -1,5 +1,5 @@
 import { Autocomplete, TextField } from "@mui/material";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type CustomOptionProps = {
   id: number;
@@ -54,6 +54,10 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
     ];
   };
 
+  const currentValue = useMemo(() => {
+    return options.find((option) => option.value === value);
+  }, [options, value]);
+
   return (
     <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
       <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
@@ -63,6 +67,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
         <Autocomplete
           autoHighlight
           disableClearable
+          value={currentValue}
           options={createOption ? customOptions : options}
           filterOptions={customFilterOptions}
           getOptionLabel={(option) => {

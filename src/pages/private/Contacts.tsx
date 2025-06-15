@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import CustomButton from "../../styled/CustomButtom";
+import CustomButton from "../../styled/CustomButton";
 import CustomInput from "../../styled/CustomInput";
 import { LuPlus, LuUpload } from "react-icons/lu";
 import { BsSearch } from "react-icons/bs";

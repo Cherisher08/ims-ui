@@ -12,6 +12,7 @@ interface CustomInputProps {
   multiline?: boolean;
   minRows?: number;
   helperText?: string;
+  disabled?: boolean;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -26,6 +27,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   multiline = false,
   minRows = 4,
   startIcon = null,
+  disabled = false,
 }) => {
   return (
     <div
@@ -44,6 +46,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
         variant="outlined"
         multiline={multiline}
         minRows={minRows}
+        disabled={disabled}
         helperText={error ? helperText : helperText ? " " : ""}
         placeholder={placeholder}
         slotProps={{

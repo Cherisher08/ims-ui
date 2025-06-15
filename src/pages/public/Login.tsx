@@ -45,7 +45,7 @@ const Login = () => {
           loggedTime: new Date().toISOString(),
         })
       );
-      toast("Logged in successfully", {
+      toast.success("Logged in successfully", {
         toastId: TOAST_IDS.SUCCESS_LOGIN,
       });
       dispatch(loginApi.util.resetApiState());

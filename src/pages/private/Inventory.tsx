@@ -30,7 +30,10 @@ interface AddProductType {
   productCode: string;
   unit: string;
   category: string;
-  type: string;
+  type: {
+    id: string;
+    value: string;
+  } | null;
   quantity: number;
   purchaseDate: string;
   price: number;
@@ -54,7 +57,7 @@ const inventory = () => {
     unit: "",
     category: "",
     total: 0,
-    type: "",
+    type: null,
     seller: "",
     rentalPrice: 0,
     discount: 0,
@@ -271,65 +274,6 @@ const inventory = () => {
 
   const [filteredData, setFilteredData] = useState<ProductType[]>([]);
 
-  const [colDefs, setColDefs] = useState<ColDef<ProductType>[]>([
-    {
-      field: "productName",
-      headerName: "Product Name",
-      flex: 1,
-      headerClass: "ag-header-wrap",
-      minWidth: 100,
-    },
-    {
-      field: "productCode",
-      headerName: "Product Code",
-      flex: 1,
-      headerClass: "ag-header-wrap",
-      minWidth: 80,
-    },
-    { field: "category", headerName: "Category", flex: 1, minWidth: 90 },
-    {
-      field: "availableStock",
-      headerName: "Available Stock",
-      flex: 1,
-      minWidth: 100,
-      headerClass: "ag-header-wrap",
-    },
-    { field: "type", headerName: "Type", flex: 1, minWidth: 100 },
-    {
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
-      minWidth: 100,
-      maxWidth: 120,
-      cellRenderer: (params: ICellRendererParams) => {
-        const rowData = params.data;
-
-        return (
-          <div className="flex gap-2 h-[2rem] items-center">
-            <FiEdit
-              size={19}
-              className="cursor-pointer"
-              onClick={() => {
-                setUpdateData(rowData);
-                setUpdateModalOpen(true);
-              }}
-            />
-            <AiOutlineDelete
-              size={20}
-              className="cursor-pointer"
-              onClick={() => setDeleteData(rowData)}
-            />
-            <MdOutlineAddShoppingCart
-              size={20}
-              className="cursor-pointer"
-              onClick={() => setAddStockOpen(true)}
-            />
-          </div>
-        );
-      },
-    },
-  ]);
-
   const addProduct = () => {
     console.log("val");
   };
@@ -339,7 +283,6 @@ const inventory = () => {
   };
 
   const handleProductChange = (key: string, value: string | number) => {
-    console.log(key, value);
     setNewproductData((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -639,7 +582,7 @@ const inventory = () => {
               <CustomSelect
                 label="Type"
                 options={productType}
-                value={newproductData.type}
+                value={newproductData.type ?? { id: "", value: "" }}
                 onChange={(value) => handleProductChange("type", value)}
               />
             </div>
@@ -737,7 +680,7 @@ const inventory = () => {
                     },
                   ]}
                   defaultValue="%"
-                  value={newproductData.discountType}
+                  value={newproductData.discountType ?? { id: "", value: "" }}
                   onChange={(value) =>
                     handleProductChange("discountType", value)
                   }
@@ -784,7 +727,7 @@ const inventory = () => {
             {newproductData.purchaseOrder && (
               <CustomSelect
                 label="Seller"
-                value={newproductData?.seller ?? ""}
+                value={newproductData?.seller ?? { id: "", value: "" }}
                 options={sellers}
                 onChange={(value) => handleProductChange("seller", value)}
               />

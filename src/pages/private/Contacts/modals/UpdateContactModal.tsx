@@ -5,7 +5,7 @@ import CustomInput from "../../../../styled/CustomInput";
 import { FaTimesCircle } from "react-icons/fa";
 import { LuUpload } from "react-icons/lu";
 import type { UpdateContactModalType } from "../../../../types/contact";
-import CustomButton from "../../../../styled/CustomButtom";
+import CustomButton from "../../../../styled/CustomButton";
 
 const UpdateContactModal = ({
   updateContactOpen,

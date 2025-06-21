@@ -39,7 +39,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
       </Box>
     );
 
-  // Handle unauthenticated access
+
   if (
     !user &&
     error &&

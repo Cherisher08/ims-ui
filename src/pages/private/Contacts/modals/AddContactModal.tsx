@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import CustomButton from "../../../../styled/CustomButtom";
+import CustomButton from "../../../../styled/CustomButton";
 import { FaTimesCircle } from "react-icons/fa";
 import { LuUpload } from "react-icons/lu";
 import CustomInput from "../../../../styled/CustomInput";

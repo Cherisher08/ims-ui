@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import CustomButton from "../../../styled/CustomButtom";
+import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
 import { LuPlus } from "react-icons/lu";
 import { BsSearch } from "react-icons/bs";
@@ -376,7 +376,11 @@ const Contacts = () => {
       </div>
 
       <div className="w-full h-fit overflow-y-auto">
-        <CustomTable rowData={filteredData} colDefs={colDefs} />
+        <CustomTable
+          rowData={filteredData}
+          colDefs={colDefs}
+          isLoading={false}
+        />
       </div>
 
       <AddContactModal

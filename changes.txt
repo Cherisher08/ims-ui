@@ -1,0 +1,13 @@
+Changes:
+
+1. Customer Entry -> Product
+2. 9 to 7 timing
+3. Order page late indicator
+4. Including tax for B2C
+5. Rental main priority
+6. Working or event address on Order
+7. Deprecation and damage report and remarks
+8. Logs for products
+9. Dashboard page for mobile - highlight Issues
+
+table la delay highlight paniralaam

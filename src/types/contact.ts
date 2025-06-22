@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 
 export type ContactInfoType = {
-  id: string;
+  id?: string;
   name: string;
   personalNumber: string;
   officeNumber: string;
@@ -9,10 +9,12 @@ export type ContactInfoType = {
   email: string;
   address: string;
   pincode: string;
-  addressProof?: string;
   companyName?: string;
-  actions?: string;
+  addressProof?: string;
 };
+
+export type ContactInfoWithActions = ContactInfoType & { actions?: unknown };
+export type UpdateContactInfoType = ContactInfoType & { id: string };
 
 export type AddContactModalType = {
   addContactOpen: boolean;
@@ -22,8 +24,8 @@ export type AddContactModalType = {
 export type UpdateContactModalType = {
   updateContactOpen: boolean;
   setUpdateContactOpen: (value: boolean) => void;
-  updateContactData: ContactInfoType | null;
-  setUpdateContactData: Dispatch<SetStateAction<ContactInfoType | null>>;
+  updateContactData: UpdateContactInfoType;
+  setUpdateContactData: Dispatch<SetStateAction<UpdateContactInfoType>>;
 };
 
 export type DeleteContactType = {

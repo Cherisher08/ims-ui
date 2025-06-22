@@ -35,10 +35,9 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   if (isGetUserLoading)
     return (
       <Box className="flex h-screen w-screen justify-center items-center">
-        <CircularProgress />;
+        <CircularProgress />
       </Box>
     );
-
 
   if (
     !user &&

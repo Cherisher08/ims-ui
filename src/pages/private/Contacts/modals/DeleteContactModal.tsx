@@ -1,5 +1,4 @@
 import { Modal } from "@mui/material";
-import React from "react";
 import { MdClose } from "react-icons/md";
 import { PiWarningFill } from "react-icons/pi";
 import CustomButton from "../../../../styled/CustomButton";
@@ -12,12 +11,9 @@ const DeleteContactModal = ({
   setDeleteContactId,
 }: DeleteContactType) => {
   const handleDeleteContact = () => {
-    try {
-    } catch (error) {
-    } finally {
-      setDeleteContactId("");
-      setDeleteContactOpen(false);
-    }
+    console.log(deleteContactId);
+    setDeleteContactId("");
+    setDeleteContactOpen(false);
   };
 
   return (

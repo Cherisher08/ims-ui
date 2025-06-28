@@ -1,16 +1,16 @@
 import type { Dispatch, SetStateAction } from "react";
 
 export type ContactInfoType = {
-  id?: string;
+  _id?: string;
   name: string;
-  personalNumber: string;
-  officeNumber: string;
+  personal_number: string;
+  office_number: string;
   gstin: string;
   email: string;
   address: string;
   pincode: string;
-  companyName?: string;
-  addressProof?: string;
+  company_name?: string;
+  address_proof?: string;
 };
 
 export type ContactInfoWithActions = ContactInfoType & { actions?: unknown };

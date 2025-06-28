@@ -48,10 +48,10 @@ const baseQueryWith401Handler: BaseQueryFn<
 };
 
 // Define a service using a base URL and expected endpoints
-export const loginApi = createApi({
-  reducerPath: "loginApi",
+export const rootApi = createApi({
+  reducerPath: "rootApi",
   baseQuery: baseQueryWith401Handler,
-  tagTypes: ["Product", "Product-Category", "Unit"],
+  tagTypes: ["Product", "Product-Category", "Unit", "Contact"],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
       query: () => `auth/users/me`,
@@ -179,4 +179,4 @@ export const {
   useGetUnitByIdQuery,
   useGetUnitsQuery,
   useCreateUnitMutation,
-} = loginApi;
+} = rootApi;

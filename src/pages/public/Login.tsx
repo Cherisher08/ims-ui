@@ -3,7 +3,7 @@ import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 
 import Button from "@mui/material/Button";
-import { loginApi, useAuthorizeUserMutation } from "../../services/ApiService";
+import { rootApi, useAuthorizeUserMutation } from "../../services/ApiService";
 import type { UserRequest } from "../../types/user";
 import { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
@@ -49,7 +49,7 @@ const Login = () => {
       toast.success("Logged in successfully", {
         toastId: TOAST_IDS.SUCCESS_LOGIN,
       });
-      dispatch(loginApi.util.resetApiState());
+      dispatch(rootApi.util.resetApiState());
       navigate("/");
     }
   }, [dispatch, headerData, isValidUser, navigate, user.email]);

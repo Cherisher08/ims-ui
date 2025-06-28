@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { User, UserRole } from "../../types/user";
 import { useNavigate } from "react-router-dom";
-import { loginApi, useRegisterUserMutation } from "../../services/ApiService";
+import { rootApi, useRegisterUserMutation } from "../../services/ApiService";
 import { clearUser } from "../../store/UserSlice";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../constants/constants";
@@ -48,7 +48,7 @@ const Header: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     dispatch(clearUser());
-    dispatch(loginApi.util.resetApiState());
+    dispatch(rootApi.util.resetApiState());
     navigate("/auth/login");
   };
 

@@ -18,19 +18,25 @@ export const MenuItems: MenuItemsType[] = [
   },
   {
     id: 2,
+    title: "Orders",
+    path: "/orders/new-order",
+    logo: <LuClipboardList size={30} />,
+  },
+  {
+    id: 3,
     title: "Inventory",
     path: "/inventory",
     logo: <LuShoppingBag size={30} />,
   },
   {
-    id: 3,
+    id: 4,
     title: "Contacts",
     path: "/contacts",
     logo: <IoIosContact size={30} />,
   },
   {
-    id: 4,
-    title: "Orders",
+    id: 5,
+    title: "Summary",
     path: "/orders",
     logo: <LuClipboardList size={30} />,
   },

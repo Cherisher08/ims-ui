@@ -1,6 +1,6 @@
 import { MenuItem, Select } from "@mui/material";
 
-type CustomSelectOptionProps = {
+export type CustomSelectOptionProps = {
   id: string;
   value: string;
 };
@@ -14,9 +14,10 @@ type CustomSelectProps = {
   error?: boolean;
   helperText?: string;
   className?: string;
+  labelClass?: string;
 };
 
-const CustomSelect: React.FC<CustomSelectProps> = ({
+const CustomSelect = <T extends CustomSelectOptionProps>({
   value,
   options,
   label,
@@ -25,11 +26,12 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   error = false,
   helperText = "",
   className = "",
-}) => {
+  labelClass = "",
+}: CustomSelectProps<T>) => {
   return (
     <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
       <label
-        className={`pt-2 line-clamp-2 break-words h-fit ${
+        className={`pt-2 line-clamp-2 break-words h-fit ${labelClass} ${
           label ? "w-[5rem]" : "w-0"
         }`}
       >
@@ -37,14 +39,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       </label>
       <div className="flex flex-col gap-2 w-full">
         <Select
-          className="h-[2.5rem]"
+          className={`h-[2.5rem] ${className}`}
           error={error}
           value={value}
           defaultValue={defaultValue}
           onChange={(e) => onChange(e.target.value)}
           displayEmpty
           inputProps={{ "aria-label": "Without label" }}
-          classes={{ root: ` ${className}` }}
         >
           {options.map((option) => (
             <MenuItem value={option.id} key={option.id}>

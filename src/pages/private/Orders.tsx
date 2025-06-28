@@ -356,7 +356,11 @@ const Orders = () => {
         </Tabs>
       </Box>
       <div role="tabpanel" hidden={activeTab !== 1}>
-        <CustomTable colDefs={rentalOrderColDefs} rowData={rentalOrders} />
+        <CustomTable
+          isLoading={true}
+          colDefs={rentalOrderColDefs}
+          rowData={rentalOrders}
+        />
       </div>
       <div role="tabpanel" hidden={activeTab !== 2}>
         Item Two

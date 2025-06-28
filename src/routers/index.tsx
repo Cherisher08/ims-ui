@@ -15,12 +15,7 @@ const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
 const Inventory = React.lazy(() => import("../pages/private/Inventory"));
 const Contacts = React.lazy(() => import("../pages/private/Contacts/Contacts"));
 const Orders = React.lazy(() => import("../pages/private/Orders"));
-const NewRentalOrder = React.lazy(
-  () => import("../pages/private/Orders/NewRentalOrder")
-);
-const NewSalesOrder = React.lazy(
-  () => import("../pages/private/Orders/NewSalesOrder")
-);
+const NewOrder = React.lazy(() => import("../pages/private/Orders/NewOrder"));
 const OrderInvoice = React.lazy(
   () => import("../pages/private/Orders/OrderInvoice")
 );
@@ -84,12 +79,8 @@ const privateRoutes = [
         element: <Orders />,
       },
       {
-        path: "/orders/new-rental-order",
-        element: <NewRentalOrder />,
-      },
-      {
-        path: "/orders/new-sales-order",
-        element: <NewSalesOrder />,
+        path: "/orders/new-order",
+        element: <NewOrder />,
       },
       {
         path: "/orders/invoice",

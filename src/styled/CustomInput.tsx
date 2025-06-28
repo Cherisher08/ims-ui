@@ -14,6 +14,8 @@ interface CustomInputProps {
   minRows?: number;
   helperText?: string;
   disabled?: boolean;
+  wrapperClass?: string;
+  labelClass?: string;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -30,14 +32,18 @@ const CustomInput: React.FC<CustomInputProps> = ({
   startIcon = null,
   maxLength = 120,
   disabled = false,
+  wrapperClass = "",
+  labelClass = "",
 }) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr]  justify-between w-full gap-2 ${
+      className={`grid grid-cols-[auto_2fr]  justify-between min-w-fit gap-2 ${wrapperClass} ${
         multiline ? "h-fit pb-8" : "h-[3.5rem]"
       }`}
     >
-      <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
+      <label
+        className={`1pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+      >
         {label}
       </label>
       <TextField

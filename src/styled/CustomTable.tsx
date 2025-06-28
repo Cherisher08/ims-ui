@@ -10,12 +10,14 @@ type CustomTableProps<T> = {
   rowData: T[];
   colDefs: ColDef<T>[];
   isLoading: boolean;
+  pagination?: boolean;
 };
 
 const CustomTable = <T,>({
   rowData,
   colDefs,
   isLoading,
+  pagination = true,
 }: CustomTableProps<T>) => {
   return (
     <div
@@ -25,7 +27,7 @@ const CustomTable = <T,>({
       <AgGridReact<T>
         rowData={rowData}
         columnDefs={colDefs}
-        pagination={true}
+        pagination={pagination}
         headerHeight={40}
         paginationPageSize={10}
         rowHeight={40}

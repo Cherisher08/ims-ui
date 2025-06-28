@@ -1,22 +1,23 @@
 import { MenuItem, Select } from "@mui/material";
 
-type CustomSelectOptionProps = {
+export type CustomSelectOptionProps = {
   id: string;
   value: string;
 };
 
-type CustomSelectProps = {
-  value: CustomSelectOptionProps;
-  options: CustomSelectOptionProps[];
-  onChange: (value: string) => void;
+type CustomSelectProps<T extends CustomSelectOptionProps> = {
+  value?: T;
+  options: T[];
+  onChange: (value: T) => void;
   label: string;
   defaultValue?: string;
   error?: boolean;
   helperText?: string;
   className?: string;
+  labelClass?: string;
 };
 
-const CustomSelect: React.FC<CustomSelectProps> = ({
+const CustomSelect = <T extends CustomSelectOptionProps>({
   value,
   options,
   label,
@@ -25,11 +26,12 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   error = false,
   helperText = "",
   className = "",
-}) => {
+  labelClass = "",
+}: CustomSelectProps<T>) => {
   return (
     <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
       <label
-        className={`pt-2 line-clamp-2 break-words h-fit ${
+        className={`pt-2 line-clamp-2 break-words h-fit ${labelClass} ${
           label ? "w-[5rem]" : "w-0"
         }`}
       >
@@ -37,18 +39,19 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       </label>
       <div className="flex flex-col gap-2 w-full">
         <Select
-          className="h-[2.5rem]"
+          className={`h-[2.5rem] ${className}`}
           error={error}
-          value={JSON.stringify(value)}
-          defaultValue={defaultValue}
-          onChange={(e) => onChange(JSON.parse(e.target.value))}
+          value={value?.id || defaultValue}
+          onChange={(e) => {
+            const selected = options.find((opt) => opt.id === e.target.value);
+            if (selected) onChange(selected);
+          }}
           displayEmpty
           inputProps={{ "aria-label": "Without label" }}
-          classes={{ root: ` ${className}` }}
         >
           {options.map((option) => (
-            <MenuItem value={JSON.stringify(option)} key={option.id}>
-              {JSON.stringify(option.value)}
+            <MenuItem value={option.id} key={option.id}>
+              {option.value}
             </MenuItem>
           ))}
         </Select>

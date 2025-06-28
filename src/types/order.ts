@@ -1,4 +1,5 @@
-import { ProductType } from "./common";
+import { Product, Unit } from "./common";
+import { ContactInfoType } from "./contact";
 export enum BillingMode {
   RETAIL = "Retail",
   BUSINESS = "Business",
@@ -28,27 +29,67 @@ export enum OrderType {
 }
 
 export type ProductDetails = {
-  id: string;
+  _id: string;
+  name: string;
+  category: string;
+  billing_unit: BillingUnit;
+  product_unit: Unit;
   inDate: string;
   outDate: string;
+  order_repair_count: number;
+  order_quantity: number;
+  rent_per_unit: number;
 };
 
 export type ContactSelectionType = {
-  id: string;
+  _id: string;
   value: string;
 };
 
 export type DepositType = {
   amount: number;
   date: string;
-  product: number;
+  product: Product;
   mode: PaymentMode;
+};
+
+export type RentalOrderType = {
+  orderId: string;
+  contact: string;
+  deposit: number;
+  orderInDate: string;
+  orderOutDate: string;
+  productId: string;
+  productUnit: number;
+  inDate: string;
+  outDate: string;
+};
+
+export type RentalType = {
+  orderId: string;
+  contact: string;
+  deposit: number;
+  orderInDate: string;
+  orderOutDate: string;
+  productId: string;
+  productUnit: number;
+  inDate: string;
+  outDate: string;
+  actions?: string;
+};
+
+export type OrderSummaryType = {
+  no: number;
+  product: Product;
+  repair_count: number;
+  quantity: number;
+  unit_price: number;
+  final_amount: number;
 };
 
 export type OrderInfo = {
   orderId: string;
-  customer: ContactSelectionType;
-  product: ProductType[];
+  customer: ContactInfoType;
   eventAddress: string;
   eventPincode: string;
   billingMode: BillingMode;
@@ -70,6 +111,7 @@ export type RentalOrderInfo = OrderInfo & {
 export type SalesOrderInfo = OrderInfo & {
   type: OrderType.SALES;
   outTime: string;
+  productDetails: Product[];
 };
 
 export type ServiceOrderInfo = OrderInfo & {

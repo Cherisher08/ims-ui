@@ -7,6 +7,7 @@ interface CustomDatePickerProps {
   placeholder?: string;
   className?: string;
   wrapperClass?: string;
+  labelClass?: string;
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
@@ -16,12 +17,15 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   placeholder = "",
   className = "",
   wrapperClass = "",
+  labelClass = "",
 }) => {
   return (
     <div
       className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${wrapperClass}`}
     >
-      <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
+      <label
+        className={`pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+      >
         {label}
       </label>
       <input

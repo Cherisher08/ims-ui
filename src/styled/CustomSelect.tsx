@@ -14,6 +14,7 @@ type CustomSelectProps = {
   error?: boolean;
   helperText?: string;
   className?: string;
+  wrapperClass?: string;
   labelClass?: string;
 };
 
@@ -27,9 +28,12 @@ const CustomSelect = ({
   helperText = "",
   className = "",
   labelClass = "",
+  wrapperClass = "",
 }: CustomSelectProps) => {
   return (
-    <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
+    <div
+      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${wrapperClass}`}
+    >
       <label
         className={`pt-2 line-clamp-2 break-words h-fit ${labelClass} ${
           label ? "w-[5rem]" : "w-0"

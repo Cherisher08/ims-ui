@@ -5,7 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import { Checkbox, Modal } from "@mui/material";
 import CustomSelect from "../../styled/CustomSelect";
-import CustomAutoComplete from "../../styled/CustomAutoComplete";
+import CustomAutoComplete, {
+  CustomOptionProps,
+} from "../../styled/CustomAutoComplete";
 import CustomTable from "../../styled/CustomTable";
 import type { ColDef } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
@@ -15,8 +17,10 @@ import type { ICellRendererParams } from "ag-grid-community";
 import { PiWarningFill } from "react-icons/pi";
 import CustomDatePicker from "../../styled/CustomDatePicker";
 import {
+  useCreateProductCategoryMutation,
   useCreateProductMutation,
   useDeleteProductMutation,
+  useGetProductCategoriesQuery,
   useGetProductsQuery,
   useUpdateProductMutation,
 } from "../../services/ApiService";
@@ -24,9 +28,9 @@ import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../constants/constants";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store/store";
-import { Product } from "../../types/common";
+import { DiscountType, Product, ProductType } from "../../types/common";
 
-interface ProductType {
+interface OneProduct {
   _id: string;
   name: string;
   product_code: string;
@@ -36,12 +40,36 @@ interface ProductType {
   actions?: string;
 }
 
+interface IdNamePair {
+  _id?: string;
+  name: string;
+}
+
+const transformIdNamePair = (idNamePairs: IdNamePair[]) => {
+  return idNamePairs.map((pair) => ({
+    id: pair._id!,
+    value: pair.name,
+  }));
+};
+
+const transformIdValuePair = (idValuePair: CustomOptionProps) => {
+  return {
+    _id: idValuePair.id,
+    name: idValuePair.value,
+  };
+};
+
 const Inventory = () => {
   const userEmail = useSelector((state: RootState) => state.user.email);
   const { data: productData, isLoading: isProductsLoading } =
     useGetProductsQuery();
+  const {
+    data: productCategoryData,
+    isSuccess: isProductCategoryQuerySuccess,
+  } = useGetProductCategoriesQuery();
   const [createProduct, { isSuccess: isProductCreated }] =
     useCreateProductMutation();
+  const [createProductCategory] = useCreateProductCategoryMutation();
   const [updateProduct, { isSuccess: isProductUpdated }] =
     useUpdateProductMutation();
   const [deleteProduct, { isSuccess: isProductDeleted }] =
@@ -54,18 +82,23 @@ const Inventory = () => {
     quantity: 0,
     purchase_date: "",
     price: 0,
-    unit: "",
-    category: "",
-    type: "",
+    unit: {
+      _id: "",
+      name: "",
+    },
+    category: {
+      _id: "",
+      name: "",
+    },
+    type: ProductType.Rental,
     seller: "",
     rent_per_unit: 0,
     discount: 0,
-    discount_type: "1",
+    discount_type: DiscountType.Percent,
     purchaseOrder: false,
   });
   const [deleteData, setDeleteData] = useState<ProductType | null>(null);
   const [updateData, setUpdateData] = useState<Product | null>(null);
-  console.log("updateData: ", updateData);
 
   const [addSellerOpen, setAddSellerOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
@@ -73,16 +106,9 @@ const Inventory = () => {
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
   const [addStockOpen, setAddStockOpen] = useState<boolean>(false);
 
-  const [productCategories, setProductCategories] = useState([
-    {
-      id: 1,
-      value: "heavy machineries",
-    },
-    {
-      id: 2,
-      value: "light machineries",
-    },
-  ]);
+  const [productCategories, setProductCategories] = useState<
+    CustomOptionProps[]
+  >([]);
 
   const [productUnits, setProductUnits] = useState([
     {
@@ -128,22 +154,22 @@ const Inventory = () => {
     { id: "3", value: "Service" },
   ]);
 
-  const rowData = useMemo<ProductType[]>(() => {
+  const rowData = useMemo<OneProduct[]>(() => {
     return productData
       ? productData.map((product) => ({
           _id: product._id!,
           name: product.name,
           product_code: product.product_code,
-          category: product.category,
+          category: product.category.name,
           quantity: product.quantity,
           type: product.type,
         }))
       : [];
   }, [productData]);
 
-  const [filteredData, setFilteredData] = useState<ProductType[]>([]);
+  const [filteredData, setFilteredData] = useState<OneProduct[]>([]);
 
-  const colDefs = useMemo<ColDef<ProductType>[]>(
+  const colDefs = useMemo<ColDef<OneProduct>[]>(
     () => [
       {
         field: "name",
@@ -300,13 +326,23 @@ const Inventory = () => {
     updateModalOpen,
   ]);
 
-  const handleProductChange = (key: string, value: string | number) => {
+  const handleProductChange = (
+    key: string,
+    value: string | number | undefined
+  ) => {
     setNewProductData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleUpdateProduct = (key: string, value: string | number) => {
     setUpdateData((prev) => ({ ...prev!, [key]: value }));
   };
+
+  useEffect(() => {
+    if (isProductCategoryQuerySuccess)
+      setProductCategories(() => {
+        return transformIdNamePair(productCategoryData);
+      });
+  }, [isProductCategoryQuerySuccess, productCategoryData]);
 
   useEffect(() => {
     setFilteredData(rowData);
@@ -460,10 +496,9 @@ const Inventory = () => {
                         value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
-                    setProductCategories((prev) => [
-                      ...prev,
-                      { id: productCategories.length, value: value },
-                    ]);
+                    createProductCategory({
+                      name: value,
+                    });
                     handleProductChange("category", value);
                   }
                 }}

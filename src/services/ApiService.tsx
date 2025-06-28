@@ -12,7 +12,7 @@ import type {
   GeneralResponse,
   UpdateUserPasswordRequest,
 } from "../types/user";
-import { Product, VerifyOtpRequest } from "../types/common";
+import { Product, ProductCategory, VerifyOtpRequest } from "../types/common";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://localhost:8000/",
@@ -46,7 +46,7 @@ const baseQueryWith401Handler: BaseQueryFn<
 export const loginApi = createApi({
   reducerPath: "loginApi",
   baseQuery: baseQueryWith401Handler,
-  tagTypes: ["Product"],
+  tagTypes: ["Product", "Product-Category"],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
       query: () => `auth/users/me`,
@@ -123,6 +123,21 @@ export const loginApi = createApi({
       }),
       invalidatesTags: ["Product"],
     }),
+    getProductCategories: build.query<ProductCategory[], void>({
+      query: () => `product-category`,
+      providesTags: ["Product-Category"],
+    }),
+    createProductCategory: build.mutation<ProductCategory, ProductCategory>({
+      query: (body) => ({
+        url: `product-category`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["Product-Category"],
+    }),
+    getProductCategoryById: build.query<ProductCategory, string>({
+      query: (id) => `product-category/${id}`,
+    }),
   }),
 });
 
@@ -138,4 +153,7 @@ export const {
   useGetProductByIdQuery,
   useGetProductsQuery,
   useUpdateProductMutation,
+  useGetProductCategoriesQuery,
+  useGetProductCategoryByIdQuery,
+  useCreateProductCategoryMutation,
 } = loginApi;

@@ -21,12 +21,15 @@ const DepositModal = ({
   setDepositData,
 }: DepositModalType) => {
   const handleAddDeposit = () => {
-    depositData.push({
-      amount: 0,
-      date: "",
-      mode: PaymentMode.CASH,
-      product: 0,
-    });
+    setDepositData([
+      ...depositData,
+      {
+        amount: 0,
+        date: "",
+        mode: PaymentMode.CASH,
+        product: 0,
+      },
+    ]);
   };
 
   const handleDepositChange = <K extends keyof DepositType>(
@@ -74,7 +77,7 @@ const DepositModal = ({
           <CustomButton label="Add deposit" onClick={handleAddDeposit} />
         </div>
 
-        <div className="bg-gray-200 rounded-sm px-2 py-4 w-full flex flex-col">
+        <div className="bg-gray-200 rounded-sm px-2 py-4 w-full flex flex-col overflow-y-auto">
           {depositData.map((deposit: DepositType, index: number) => (
             <div className="flex justify-between">
               <CustomInput
@@ -92,29 +95,38 @@ const DepositModal = ({
                 value={deposit.date}
                 onChange={(value) => handleDepositChange("date", value, index)}
               />
-              <CustomSelect
+              {/* <CustomSelect
                 label="Product"
                 value={deposit.product}
                 onChange={(value) =>
                   handleDepositChange("product", parseInt(value), index)
                 }
-              />
-              <CustomSelect
+              /> */}
+              {/* <CustomSelect
                 label="Payment Status"
                 className="w-[15rem]"
                 labelClass="w-fit"
-                // options={deposit.mode}
-                // value={
-                //   paymentStatusOptions.find(
-                //     (opt) => opt.id === orderInfo?.status
-                //   ) ?? paymentStatusOptions[0]
-                // }
-                // onChange={(selected) =>
-                //   handleValueChange("status", selected.id as PaymentStatus)
-                // }
-              />
+                options={deposit.mode}
+                value={
+                  paymentStatusOptions.find(
+                    (opt) => opt.id === orderInfo?.status
+                  ) ?? paymentStatusOptions[0]
+                }
+                onChange={(selected) =>
+                  handleValueChange("status", selected.id as PaymentStatus)
+                }
+              /> */}
             </div>
           ))}
+        </div>
+
+        <div className="flex gap-4 my-3 w-full justify-end">
+          <CustomButton
+            label="Cancel"
+            onClick={() => setDepositOpen(false)}
+            variant="outlined"
+          />
+          <CustomButton label="Done" onClick={() => {}} />
         </div>
       </div>
     </Modal>

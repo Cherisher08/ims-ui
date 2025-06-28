@@ -1,7 +1,7 @@
 import CustomButton from "../../styled/CustomButton";
 import { LuPlus } from "react-icons/lu";
 import CustomInput from "../../styled/CustomInput";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import { Modal } from "@mui/material";
@@ -85,7 +85,7 @@ const Inventory = () => {
     product_code: "",
     name: "",
     quantity: 0,
-    purchase_date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+    purchase_date: dayjs().format("YYYY-MM-DDTHH:mm"),
     repair_count: 0,
     available_stock: 0,
     price: 0,

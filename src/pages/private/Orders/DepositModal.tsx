@@ -27,7 +27,7 @@ const DepositModal = ({
         amount: 0,
         date: "",
         mode: PaymentMode.CASH,
-        product: 0,
+        product: {},
       },
     ]);
   };

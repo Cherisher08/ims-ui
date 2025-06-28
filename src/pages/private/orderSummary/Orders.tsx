@@ -1,43 +1,19 @@
 import { useState } from "react";
-import CustomButton from "../../styled/CustomButton";
+import CustomButton from "../../../styled/CustomButton";
 import { LuPlus } from "react-icons/lu";
 import { FaWhatsapp } from "react-icons/fa";
 import { MdOutlineMail } from "react-icons/md";
 import { Box, Tab, Tabs } from "@mui/material";
-import CustomTable from "../../styled/CustomTable";
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
-import { FiEdit } from "react-icons/fi";
-import { IoPrintOutline } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
-
-type RentalOrderType = {
-  orderId: string;
-  contact: string;
-  deposit: number;
-  orderInDate: string;
-  orderOutDate: string;
-  productId: string;
-  productUnit: number;
-  inDate: string;
-  outDate: string;
-};
-
-interface RentalType {
-  orderId: string;
-  contact: string;
-  deposit: number;
-  orderInDate: string;
-  orderOutDate: string;
-  productId: string;
-  productUnit: number;
-  inDate: string;
-  outDate: string;
-  actions?: string;
-}
+import RentalOrderTable from "./RentalOrderTable";
+import { RentalOrderType } from "../../../types/order";
+import SalesOrderTable from "./SalesOrderTable";
+import ServiceOrderTable from "./ServiceOrderTable";
 
 const Orders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
+
   const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([
     {
       orderId: "ORD001",
@@ -261,65 +237,6 @@ const Orders = () => {
     },
   ]);
 
-  const [rentalOrderColDefs, setRentalOrderColDefs] = useState<
-    ColDef<RentalType>[]
-  >([
-    {
-      field: "orderId",
-      headerName: "Id",
-      flex: 1,
-      headerClass: "ag-header-wrap",
-      minWidth: 100,
-    },
-    {
-      field: "contact",
-      headerName: "Customer",
-      flex: 1,
-      headerClass: "ag-header-wrap",
-      minWidth: 80,
-    },
-    { field: "productId", headerName: "Product", flex: 1, minWidth: 90 },
-    {
-      field: "orderInDate",
-      headerName: "M/C InDate",
-      flex: 1,
-      minWidth: 100,
-      headerClass: "ag-header-wrap",
-    },
-    {
-      field: "orderOutDate",
-      headerName: "M/C OutDate",
-      flex: 1,
-      minWidth: 100,
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
-      minWidth: 100,
-      maxWidth: 120,
-      cellRenderer: (params: ICellRendererParams) => {
-        const rowData = params.data;
-
-        return (
-          <div className="flex gap-2 h-[2rem] items-center">
-            <FiEdit size={19} className="cursor-pointer" onClick={() => {}} />
-            {/* <AiOutlineDelete
-              size={20}
-              className="cursor-pointer"
-              onClick={() => setDeleteOrderData(rowData)}
-            /> */}
-            <IoPrintOutline
-              size={20}
-              className="cursor-pointer"
-              onClick={() => console.log("print")}
-            />
-          </div>
-        );
-      },
-    },
-  ]);
-
   return (
     <div className="h-fit flex gap-3 flex-col">
       {/* Header */}
@@ -356,17 +273,13 @@ const Orders = () => {
         </Tabs>
       </Box>
       <div role="tabpanel" hidden={activeTab !== 1}>
-        <CustomTable
-          isLoading={true}
-          colDefs={rentalOrderColDefs}
-          rowData={rentalOrders}
-        />
+        <RentalOrderTable rentalOrders={rentalOrders} />
       </div>
       <div role="tabpanel" hidden={activeTab !== 2}>
-        Item Two
+        <SalesOrderTable rentalOrders={rentalOrders} />
       </div>
       <div role="tabpanel" hidden={activeTab !== 3}>
-        Item Three
+        <ServiceOrderTable rentalOrders={rentalOrders} />
       </div>
     </div>
   );

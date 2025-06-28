@@ -9,37 +9,41 @@ export interface VerifyOtpRequest {
 }
 
 export interface ProductCategory {
-  id?: string;
+  _id?: string;
   name: string;
 }
 
 export interface Unit {
-  id?: string;
+  _id?: string;
   name: string;
-  symbol: string;
 }
 
 export enum ProductType {
-  Rental="rental",
-  Sales="sales",
-  Service="service",
+  RENTAL = "rental",
+  SALES = "sales",
+  SERVICE = "service",
+}
+
+export enum DiscountType {
+  RUPEES = "rupees",
+  PERCENT = "percent",
 }
 
 export interface Product {
   _id?: string;
   name: string;
-  product_code: string;
-  created_by?: string,
-  created_at?: string,
-  unit: string;
-  category: string;
-  type: string;
+  created_at?: string;
   quantity: number;
-  purchase_date: string;
+  available_stock: number;
+  repair_count: number;
+  product_code: string;
+  category: ProductCategory;
   price: number;
+  type: ProductType;
+  purchase_date: string;
+  unit: Unit;
   rent_per_unit: number;
   discount: number;
-  discount_type: string;
-  seller?: string;
-  purchaseOrder?: boolean;
+  discount_type: DiscountType;
+  created_by?: string;
 }

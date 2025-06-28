@@ -1,3 +1,4 @@
+import React from "react";
 import { Modal } from "@mui/material";
 import { MdClose } from "react-icons/md";
 import { PiWarningFill } from "react-icons/pi";

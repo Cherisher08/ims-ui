@@ -5,10 +5,10 @@ export type CustomSelectOptionProps = {
   value: string;
 };
 
-type CustomSelectProps<T extends CustomSelectOptionProps> = {
-  value?: T;
-  options: T[];
-  onChange: (value: T) => void;
+type CustomSelectProps = {
+  value: string;
+  options: CustomSelectOptionProps[];
+  onChange: (value: string) => void;
   label: string;
   defaultValue?: string;
   error?: boolean;
@@ -17,7 +17,7 @@ type CustomSelectProps<T extends CustomSelectOptionProps> = {
   labelClass?: string;
 };
 
-const CustomSelect = <T extends CustomSelectOptionProps>({
+const CustomSelect = ({
   value,
   options,
   label,
@@ -27,7 +27,7 @@ const CustomSelect = <T extends CustomSelectOptionProps>({
   helperText = "",
   className = "",
   labelClass = "",
-}: CustomSelectProps<T>) => {
+}: CustomSelectProps) => {
   return (
     <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
       <label
@@ -41,11 +41,9 @@ const CustomSelect = <T extends CustomSelectOptionProps>({
         <Select
           className={`h-[2.5rem] ${className}`}
           error={error}
-          value={value?.id || defaultValue}
-          onChange={(e) => {
-            const selected = options.find((opt) => opt.id === e.target.value);
-            if (selected) onChange(selected);
-          }}
+          value={value}
+          defaultValue={defaultValue}
+          onChange={(e) => onChange(e.target.value)}
           displayEmpty
           inputProps={{ "aria-label": "Without label" }}
         >

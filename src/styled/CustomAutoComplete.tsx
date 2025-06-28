@@ -1,15 +1,15 @@
 import { Autocomplete, TextField } from "@mui/material";
 import { useMemo, useState } from "react";
 
-type CustomOptionProps = {
-  id: number;
+export type CustomOptionProps = {
+  id: string;
   value: string;
 };
 
 type CustomAutoCompleteProps = {
   value: string;
   options: CustomOptionProps[];
-  onChange: (value: string) => void;
+  onChange: (value?: string) => void;
   label: string;
   placeholder: string;
   addNewValue: (value: string) => void;
@@ -49,13 +49,18 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
     );
 
     return [
-      { id: 0, value: "add-new" },
+      { id: "0", value: "add-new" },
       ...filteredOptions.sort((a, b) => a.value.localeCompare(b.value)),
     ];
   };
 
   const currentValue = useMemo(() => {
-    return options.find((option) => option.value === value);
+    return (
+      options.find((option) => option.value === value) ?? {
+        id: "",
+        value: "",
+      }
+    );
   }, [options, value]);
 
   return (
@@ -66,7 +71,6 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
       <div className="flex flex-col gap-2 w-auto">
         <Autocomplete
           autoHighlight
-          disableClearable
           value={currentValue}
           options={createOption ? customOptions : options}
           filterOptions={customFilterOptions}
@@ -112,7 +116,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
               </li>
             )
           }
-          onChange={(_, newValue) => onChange(newValue.value)}
+          onChange={(_, newValue) => onChange(newValue?.value)}
         />
       </div>
     </div>

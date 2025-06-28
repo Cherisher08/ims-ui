@@ -1,4 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import {
+  BaseQueryFn,
+  createApi,
+  fetchBaseQuery,
+  FetchBaseQueryError,
+  FetchBaseQueryMeta,
+} from "@reduxjs/toolkit/query/react";
 import type {
   UserRequest,
   AuthorizeUserResponse,
@@ -6,22 +12,46 @@ import type {
   GeneralResponse,
   UpdateUserPasswordRequest,
 } from "../types/user";
-import { Product, VerifyOtpRequest } from "../types/common";
+import {
+  Product,
+  ProductCategory,
+  Unit,
+  VerifyOtpRequest,
+} from "../types/common";
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: "http://localhost:8000/",
+  prepareHeaders: (headers) => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    return headers;
+  },
+});
+
+const baseQueryWith401Handler: BaseQueryFn<
+  Parameters<typeof baseQuery>[0],
+  unknown,
+  FetchBaseQueryError,
+  object,
+  FetchBaseQueryMeta
+> = async (args, api, extraOptions) => {
+  const result = await baseQuery(args, api, extraOptions);
+
+  if (result?.error?.status === 401) {
+    // redirect to login page
+    window.location.href = "/auth/login";
+  }
+
+  return result;
+};
 
 // Define a service using a base URL and expected endpoints
 export const loginApi = createApi({
   reducerPath: "loginApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:8000/",
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem("access_token");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Product"],
+  baseQuery: baseQueryWith401Handler,
+  tagTypes: ["Product", "Product-Category", "Unit"],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
       query: () => `auth/users/me`,
@@ -98,6 +128,36 @@ export const loginApi = createApi({
       }),
       invalidatesTags: ["Product"],
     }),
+    getProductCategories: build.query<ProductCategory[], void>({
+      query: () => `product-category`,
+      providesTags: ["Product-Category"],
+    }),
+    createProductCategory: build.mutation<ProductCategory, ProductCategory>({
+      query: (body) => ({
+        url: `product-category`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["Product-Category"],
+    }),
+    getProductCategoryById: build.query<ProductCategory, string>({
+      query: (id) => `product-category/${id}`,
+    }),
+    getUnits: build.query<Unit[], void>({
+      query: () => `unit`,
+      providesTags: ["Unit"],
+    }),
+    createUnit: build.mutation<Unit, Unit>({
+      query: (body) => ({
+        url: `unit`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["Unit"],
+    }),
+    getUnitById: build.query<Unit, string>({
+      query: (id) => `unit/${id}`,
+    }),
   }),
 });
 
@@ -113,4 +173,10 @@ export const {
   useGetProductByIdQuery,
   useGetProductsQuery,
   useUpdateProductMutation,
+  useGetProductCategoriesQuery,
+  useGetProductCategoryByIdQuery,
+  useCreateProductCategoryMutation,
+  useGetUnitByIdQuery,
+  useGetUnitsQuery,
+  useCreateUnitMutation,
 } = loginApi;

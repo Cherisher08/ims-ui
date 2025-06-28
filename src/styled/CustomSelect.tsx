@@ -6,7 +6,7 @@ type CustomSelectOptionProps = {
 };
 
 type CustomSelectProps = {
-  value: CustomSelectOptionProps;
+  value: string;
   options: CustomSelectOptionProps[];
   onChange: (value: string) => void;
   label: string;
@@ -39,16 +39,16 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         <Select
           className="h-[2.5rem]"
           error={error}
-          value={JSON.stringify(value)}
+          value={value}
           defaultValue={defaultValue}
-          onChange={(e) => onChange(JSON.parse(e.target.value))}
+          onChange={(e) => onChange(e.target.value)}
           displayEmpty
           inputProps={{ "aria-label": "Without label" }}
           classes={{ root: ` ${className}` }}
         >
           {options.map((option) => (
-            <MenuItem value={JSON.stringify(option)} key={option.id}>
-              {JSON.stringify(option.value)}
+            <MenuItem value={option.id} key={option.id}>
+              {option.value}
             </MenuItem>
           ))}
         </Select>

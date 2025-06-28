@@ -55,7 +55,12 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   };
 
   const currentValue = useMemo(() => {
-    return options.find((option) => option.value === value);
+    return (
+      options.find((option) => option.value === value) ?? {
+        id: "",
+        value: "",
+      }
+    );
   }, [options, value]);
 
   return (

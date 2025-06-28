@@ -19,31 +19,31 @@ export interface Unit {
 }
 
 export enum ProductType {
-  Rental = "rental",
-  Sales = "sales",
-  Service = "service",
+  RENTAL = "rental",
+  SALES = "sales",
+  SERVICE = "service",
 }
 
 export enum DiscountType {
-  Rupees = "rupees",
-  Percent = "percent",
+  RUPEES = "rupees",
+  PERCENT = "percent",
 }
 
 export interface Product {
   _id?: string;
   name: string;
-  product_code: string;
-  created_by?: string;
   created_at?: string;
-  unit: Unit;
-  category: ProductCategory;
-  type: ProductType;
   quantity: number;
-  purchase_date: string;
+  available_stock: number;
+  repair_count: number;
+  product_code: string;
+  category: ProductCategory;
   price: number;
+  type: ProductType;
+  purchase_date: string;
+  unit: Unit;
   rent_per_unit: number;
   discount: number;
   discount_type: DiscountType;
-  seller?: string;
-  purchaseOrder?: boolean;
+  created_by?: string;
 }

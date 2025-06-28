@@ -17,7 +17,7 @@ type CustomSelectProps = {
   labelClass?: string;
 };
 
-const CustomSelect = <T extends CustomSelectOptionProps>({
+const CustomSelect = ({
   value,
   options,
   label,
@@ -27,7 +27,7 @@ const CustomSelect = <T extends CustomSelectOptionProps>({
   helperText = "",
   className = "",
   labelClass = "",
-}: CustomSelectProps<T>) => {
+}: CustomSelectProps) => {
   return (
     <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
       <label

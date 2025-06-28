@@ -9,15 +9,13 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { AiOutlineDelete } from "react-icons/ai";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import AddContactModal from "./modals/AddContactModal";
-import type { ContactInfoType } from "../../../types/contact";
+import type {
+  ContactInfoType,
+  ContactInfoWithActions,
+  UpdateContactInfoType,
+} from "../../../types/contact";
 import UpdateContactModal from "./modals/UpdateContactModal";
 import DeleteContactModal from "./modals/DeleteContactModal";
-
-// const contactType = useState([
-//   { id: "1", value: "Employee" },
-//   { id: "2", value: "Contractor" },
-//   { id: "3", value: "Vendor" },
-// ]);
 
 const renderIcon = (params: any) => {
   const hasProof = !!params.data?.addressProof;
@@ -274,22 +272,49 @@ const Contacts = () => {
   const [deleteContactId, setDeleteContactId] = useState<string>("");
   const [filteredData, setFilteredData] = useState<ContactInfoType[]>([]);
   const [updateContactData, setUpdateContactData] =
-    useState<ContactInfoType | null>(null);
+    useState<UpdateContactInfoType>({
+      id: "",
+      name: "",
+      email: "",
+      personalNumber: "",
+      officeNumber: "",
+      companyName: "",
+      gstin: "",
+      address: "",
+      pincode: "",
+      addressProof: "",
+    });
 
-  const colDefs: ColDef<ContactInfoType>[] = [
+  const colDefs: ColDef<ContactInfoWithActions>[] = [
     {
       field: "name",
       headerName: "Name",
+      pinned: "left",
       flex: 1,
+      maxWidth: 150,
       headerClass: "ag-header-wrap",
     },
-    // { field: "type", headerName: "Type", flex: 1, maxWidth: 80 },
-    { field: "personalNumber", headerName: "Phone Number", flex: 1 },
+    {
+      field: "personalNumber",
+      headerName: "Phone\nNumber",
+      flex: 1,
+      minWidth: 100,
+      headerClass: "ag-header-wrap",
+    },
+    {
+      field: "officeNumber",
+      headerName: "Office Number",
+      flex: 1,
+      minWidth: 100,
+      headerClass: "ag-header-wrap",
+    },
+    { field: "gstin", headerName: "GSTIN", minWidth: 100, flex: 1 },
     {
       field: "email",
       headerName: "Email",
       flex: 1,
       autoHeight: true,
+      minWidth: 120,
       cellStyle: {
         whiteSpace: "normal",
         wordBreak: "break-word",
@@ -301,15 +326,17 @@ const Contacts = () => {
       field: "addressProof",
       headerName: "Address\nProof",
       flex: 1,
-      maxWidth: 100,
+      minWidth: 100,
       cellRenderer: renderIcon,
       headerClass: "ag-header-wrap",
     },
     {
       field: "actions",
       headerName: "Actions",
+      pinned: "right",
       flex: 1,
-      maxWidth: 100,
+      minWidth: 120,
+      maxWidth: 130,
       cellRenderer: (params: ICellRendererParams) => {
         const rowData = params.data;
 
@@ -376,7 +403,11 @@ const Contacts = () => {
       </div>
 
       <div className="w-full h-fit overflow-y-auto">
-        <CustomTable rowData={filteredData} colDefs={colDefs} />
+        <CustomTable
+          rowData={filteredData}
+          colDefs={colDefs}
+          isLoading={false}
+        />
       </div>
 
       <AddContactModal

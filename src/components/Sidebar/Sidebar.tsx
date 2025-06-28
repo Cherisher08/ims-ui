@@ -21,7 +21,7 @@ const SideBar: React.FC = () => {
   }, [pathname, setActive]);
 
   return (
-    <div className="w-fit h-full relative">
+    <div className="w-fit h-full z-50 hidden sm:block relative">
       <motion.div
         initial={{ width: "17rem", padding: "1rem 1.5rem" }}
         animate={{

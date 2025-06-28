@@ -9,6 +9,7 @@ interface CustomInputProps {
   className?: string;
   startIcon?: React.ReactNode;
   error?: boolean;
+  maxLength?: number;
   multiline?: boolean;
   minRows?: number;
   helperText?: string;
@@ -27,11 +28,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
   multiline = false,
   minRows = 4,
   startIcon = null,
+  maxLength = 120,
   disabled = false,
 }) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 ${
+      className={`grid grid-cols-[auto_2fr]  justify-between w-full gap-2 ${
         multiline ? "h-fit pb-8" : "h-[3.5rem]"
       }`}
     >
@@ -59,6 +61,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
           },
           htmlInput: {
             min: type === "number" ? 0 : undefined,
+            maxLength: maxLength,
             className: `${
               multiline ? "h-fit" : "h-[2.5rem] p-2"
             } box-border ${className}`,

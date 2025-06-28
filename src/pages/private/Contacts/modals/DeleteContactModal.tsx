@@ -12,6 +12,7 @@ const DeleteContactModal = ({
   setDeleteContactId,
 }: DeleteContactType) => {
   const handleDeleteContact = () => {
+    console.log(deleteContactId);
     setDeleteContactId("");
     setDeleteContactOpen(false);
   };

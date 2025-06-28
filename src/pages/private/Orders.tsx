@@ -1,5 +1,5 @@
 import { useState } from "react";
-import CustomButton from "../../styled/CustomButtom";
+import CustomButton from "../../styled/CustomButton";
 import { LuPlus } from "react-icons/lu";
 import { FaWhatsapp } from "react-icons/fa";
 import { MdOutlineMail } from "react-icons/md";

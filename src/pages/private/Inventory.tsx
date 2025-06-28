@@ -341,7 +341,8 @@ const Inventory = () => {
           (data) =>
             data.name.toLowerCase().includes(search.toLowerCase()) ||
             data.product_code.toLowerCase().includes(search.toLowerCase()) ||
-            data.type.toLowerCase().includes(search.toLowerCase())
+            data.type.toLowerCase().includes(search.toLowerCase()) ||
+            data.category.toLowerCase().includes(search.toLowerCase())
         )
       );
     } else {

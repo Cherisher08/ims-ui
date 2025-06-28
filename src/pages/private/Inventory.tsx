@@ -70,15 +70,23 @@ const Inventory = () => {
     data: productCategoryData,
     isSuccess: isProductCategoryQuerySuccess,
   } = useGetProductCategoriesQuery();
-  const [createProductCategory] = useCreateProductCategoryMutation();
+  const [createProductCategory, { isSuccess: isProductCategoryCreateSuccess }] =
+    useCreateProductCategoryMutation();
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
-  const [createUnit] = useCreateUnitMutation();
-  const [createProduct, { isSuccess: isProductCreated }] =
-    useCreateProductMutation();
-  const [updateProduct, { isSuccess: isProductUpdated }] =
-    useUpdateProductMutation();
-  const [deleteProduct, { isSuccess: isProductDeleted }] =
-    useDeleteProductMutation();
+  const [createUnit, { isSuccess: isUnitCreateSuccess }] =
+    useCreateUnitMutation();
+  const [
+    createProduct,
+    { isSuccess: isProductCreated, isError: isProductCreateError },
+  ] = useCreateProductMutation();
+  const [
+    updateProduct,
+    { isSuccess: isProductUpdated, isError: isProductUpdateError },
+  ] = useUpdateProductMutation();
+  const [
+    deleteProduct,
+    { isSuccess: isProductDeleted, isError: isProductDeleteError },
+  ] = useDeleteProductMutation();
 
   const [search, setSearch] = useState<string>("");
   const [newProductData, setNewProductData] = useState<Product>({
@@ -102,7 +110,6 @@ const Inventory = () => {
     discount: 0,
     discount_type: DiscountType.PERCENT,
   });
-  console.log("newProductData: ", newProductData);
   const [deleteData, setDeleteData] = useState<OneProduct | null>(null);
   const [updateData, setUpdateData] = useState<Product | null>(null);
 
@@ -315,20 +322,31 @@ const Inventory = () => {
   };
 
   useEffect(() => {
-    if (isProductCategoryQuerySuccess)
+    if (isProductCategoryQuerySuccess) {
       setProductCategories(() => {
         return transformIdNamePair(productCategoryData);
       });
+    }
+    if (isProductCategoryCreateSuccess)
+      toast.success("Product Category created successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_CATEGORY_CREATE,
+      });
+  }, [
+    isProductCategoryCreateSuccess,
+    isProductCategoryQuerySuccess,
+    productCategoryData,
+  ]);
+
+  useEffect(() => {
     if (isUnitQuerySuccess)
       setProductUnits(() => {
         return transformIdNamePair(unitData);
       });
-  }, [
-    isProductCategoryQuerySuccess,
-    isUnitQuerySuccess,
-    productCategoryData,
-    unitData,
-  ]);
+    if (isUnitCreateSuccess)
+      toast.success("Product Unit created successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_UNIT_CREATE,
+      });
+  }, [isUnitCreateSuccess, isUnitQuerySuccess, unitData]);
 
   useEffect(() => {
     setFilteredData(rowData);
@@ -366,7 +384,29 @@ const Inventory = () => {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_DELETE,
       });
     }
-  }, [isProductCreated, isProductDeleted, isProductUpdated]);
+    if (isProductCreateError) {
+      toast.error("Error in Creating Product", {
+        toastId: TOAST_IDS.ERROR_PRODUCT_CREATE,
+      });
+    }
+    if (isProductUpdateError) {
+      toast.error("Error in Updating Product", {
+        toastId: TOAST_IDS.ERROR_PRODUCT_UPDATE,
+      });
+    }
+    if (isProductDeleteError) {
+      toast.error("Error in Deleting Product", {
+        toastId: TOAST_IDS.ERROR_PRODUCT_DELETE,
+      });
+    }
+  }, [
+    isProductCreateError,
+    isProductCreated,
+    isProductDeleteError,
+    isProductDeleted,
+    isProductUpdateError,
+    isProductUpdated,
+  ]);
 
   return (
     <div className="h-fit">

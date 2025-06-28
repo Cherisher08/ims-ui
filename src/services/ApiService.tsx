@@ -116,7 +116,7 @@ export const rootApi = createApi({
     updateProduct: build.mutation<Product, Product>({
       query: ({ _id, ...product }) => ({
         url: `products/${_id}`,
-        method: "POST",
+        method: "PUT",
         body: product,
       }),
       invalidatesTags: ["Product"],

@@ -1,48 +1,47 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CustomButton from "../../../../styled/CustomButton";
 import { FaTimesCircle } from "react-icons/fa";
 import { LuUpload } from "react-icons/lu";
 import CustomInput from "../../../../styled/CustomInput";
 import { Modal } from "@mui/material";
-import type {
-  AddContactModalType,
-  ContactInfoType,
+import {
+  ContactWithFile,
+  initialContactType,
+  type ContactInfoType,
 } from "../../../../types/contact";
 import { MdClose } from "react-icons/md";
+import { useCreateContactMutation } from "../../../../services/ContactService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../../../constants/constants";
+
+export type AddContactModalType = {
+  addContactOpen: boolean;
+  setAddContactOpen: (value: boolean) => void;
+};
 
 const AddContactModal = ({
   addContactOpen,
   setAddContactOpen,
 }: AddContactModalType) => {
-  const [newContactData, setNewContactData] = useState<ContactInfoType>({
-    name: "",
-    email: "",
-    personalNumber: "",
-    officeNumber: "",
-    companyName: "",
-    gstin: "",
-    address: "",
-    pincode: "",
-    addressProof: "",
-  });
+  const [newContactData, setNewContactData] =
+    useState<ContactInfoType>(initialContactType);
+  const [
+    createNewContact,
+    { isSuccess: isCreateContactSuccess, isError: isCreateContactError, reset },
+  ] = useCreateContactMutation();
   const [addressProof, setAddressProof] = useState<File | null>(null);
 
   const handleAddContact = () => {
-    setNewContactData({
-      name: "",
-      email: "",
-      personalNumber: "",
-      officeNumber: "",
-      companyName: "",
-      gstin: "",
-      address: "",
-      pincode: "",
-      addressProof: "",
-    });
-    setAddContactOpen(false);
+    const contactWithFile: ContactWithFile = {
+      ...newContactData,
+      file: addressProof,
+    };
+    createNewContact(contactWithFile);
+    setAddressProof(null);
+    setNewContactData(initialContactType);
   };
 
-  const handelProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     if (files) {
@@ -62,22 +61,30 @@ const AddContactModal = ({
     });
   };
 
+  useEffect(() => {
+    if (isCreateContactSuccess) {
+      toast.success("Contact created successfully", {
+        toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
+      });
+      reset();
+      setAddContactOpen(false);
+    }
+    console.log("isCreateContactError: ", isCreateContactError);
+    if (isCreateContactError) {
+      toast.error("Error in creating contact", {
+        toastId: TOAST_IDS.ERROR_CONTACT_CREATE,
+      });
+      reset();
+      setAddContactOpen(false);
+    }
+  }, [isCreateContactError, isCreateContactSuccess, reset, setAddContactOpen]);
+
   return (
     <Modal
       open={addContactOpen}
       onClose={() => {
         setAddContactOpen(false);
-        setNewContactData({
-          name: "",
-          email: "",
-          personalNumber: "",
-          officeNumber: "",
-          companyName: "",
-          gstin: "",
-          address: "",
-          pincode: "",
-          addressProof: "",
-        });
+        setNewContactData(initialContactType);
         setAddressProof(null);
       }}
       className="w-screen h-screen flex justify-center items-center"
@@ -92,17 +99,7 @@ const AddContactModal = ({
             className="cursor-pointer"
             onClick={() => {
               setAddContactOpen(false);
-              setNewContactData({
-                name: "",
-                email: "",
-                personalNumber: "",
-                officeNumber: "",
-                companyName: "",
-                gstin: "",
-                address: "",
-                pincode: "",
-                addressProof: "",
-              });
+              setNewContactData(initialContactType);
               setAddressProof(null);
             }}
           />
@@ -128,16 +125,18 @@ const AddContactModal = ({
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Personal Number"
-                value={newContactData?.personalNumber ?? ""}
+                value={newContactData?.personal_number ?? ""}
                 onChange={(value) =>
-                  handleContactChange("personalNumber", value)
+                  handleContactChange("personal_number", value)
                 }
                 placeholder="Enter Personal Number"
               />
               <CustomInput
                 label="Office Number"
-                value={newContactData?.officeNumber ?? ""}
-                onChange={(value) => handleContactChange("officeNumber", value)}
+                value={newContactData?.office_number ?? ""}
+                onChange={(value) =>
+                  handleContactChange("office_number", value)
+                }
                 placeholder="Enter Office Number"
               />
             </div>
@@ -145,8 +144,8 @@ const AddContactModal = ({
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Company"
-                value={newContactData?.companyName ?? ""}
-                onChange={(value) => handleContactChange("companyName", value)}
+                value={newContactData?.company_name ?? ""}
+                onChange={(value) => handleContactChange("company_name", value)}
                 placeholder="Enter Company Name"
               />
 
@@ -194,7 +193,7 @@ const AddContactModal = ({
                       name="new-contact-proof"
                       className="hidden"
                       type="file"
-                      onChange={handelProofChange}
+                      onChange={handleProofChange}
                     />
                     <label
                       htmlFor="new-contact-proof"
@@ -223,22 +222,11 @@ const AddContactModal = ({
           </div>
         </div>
 
-        
         <div className="flex w-full gap-3 justify-end">
           <CustomButton
             onClick={() => {
               setAddContactOpen(false);
-              setNewContactData({
-                name: "",
-                email: "",
-                personalNumber: "",
-                officeNumber: "",
-                companyName: "",
-                gstin: "",
-                address: "",
-                pincode: "",
-                addressProof: "",
-              });
+              setNewContactData(initialContactType);
               setAddressProof(null);
             }}
             label="Discard"

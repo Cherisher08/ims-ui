@@ -1,0 +1,184 @@
+import { Modal } from "@mui/material";
+import { BillingUnit, ProductDetails } from "../../../../types/order";
+import { MdClose } from "react-icons/md";
+import CustomButton from "../../../../styled/CustomButton";
+import { Product, Unit } from "../../../../types/common";
+import CustomSelect from "../../../../styled/CustomSelect";
+import CustomInput from "../../../../styled/CustomInput";
+import CustomDatePicker from "../../../../styled/CustomDatePicker";
+
+type UpdateProductModalOpen = {
+  updateProductOpen: boolean;
+  products: Product[];
+  updateProduct: ProductDetails;
+  units: Unit[];
+  setUpdateProduct: React.Dispatch<React.SetStateAction<ProductDetails>>;
+  setUpdateProductOpen: (value: boolean) => void;
+  updateProductToOrder: () => void;
+};
+
+const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+  id: key,
+  value,
+}));
+
+const formatProducts = (products: Product[]) => {
+  return products.map((product) => ({
+    id: product._id || "",
+    value: product.name,
+  }));
+};
+
+const formatUnits = (units: Unit[]) => {
+  return units.map((unit) => ({
+    id: unit._id || "",
+    value: unit.name,
+  }));
+};
+
+const UpdateProductModal = ({
+  updateProductOpen,
+  products,
+  units,
+  updateProduct,
+  setUpdateProduct,
+  setUpdateProductOpen,
+  updateProductToOrder,
+}: UpdateProductModalOpen) => {
+  const handleValueChange = (key: string, value: any) => {
+    setUpdateProduct((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  return (
+    <Modal
+      open={updateProductOpen}
+      onClose={() => {
+        setUpdateProductOpen(false);
+      }}
+      className="w-screen h-screen flex justify-center items-center"
+    >
+      <div className="flex flex-col gap-4 justify-center items-center w-3/5 max-h-4/5 bg-white rounded-lg p-4">
+        <div className="flex justify-between w-full">
+          <p className="text-primary text-xl font-semibold w-full text-start">
+            Add Product
+          </p>
+          <MdClose
+            size={25}
+            className="cursor-pointer"
+            onClick={() => {
+              setUpdateProductOpen(false);
+            }}
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+          <CustomSelect
+            label="Product"
+            wrapperClass="col-span-2"
+            className="w-[19rem]"
+            labelClass="w-[8rem]"
+            options={formatProducts(products)}
+            value={
+              formatProducts(products).find(
+                (val) => val.id === updateProduct?._id
+              )?.id ?? ""
+            }
+            onChange={(id) => {
+              const data = products.find((prod) => prod._id === id);
+              if (data) {
+                handleValueChange("_id", data._id);
+                handleValueChange("name", data.name);
+                handleValueChange("category", data.category.name);
+              }
+            }}
+          />
+          <CustomSelect
+            label="Product Unit"
+            className="w-[19rem]"
+            labelClass="w-[8rem]"
+            options={formatUnits(units)}
+            value={
+              formatUnits(units).find(
+                (val) => val.id === updateProduct?.product_unit._id
+              )?.id ?? ""
+            }
+            onChange={(id) => {
+              const data = units.find((unit) => unit._id === id);
+              if (data) {
+                handleValueChange("product_unit", data);
+              }
+            }}
+          />
+          <CustomSelect
+            label="Billing Unit"
+            className="w-[19rem]"
+            labelClass="w-[8rem]"
+            options={billingUnitOptions}
+            value={
+              billingUnitOptions.find(
+                (val) => val.value === updateProduct?.billing_unit
+              )?.id ?? ""
+            }
+            onChange={(id) => {
+              handleValueChange(
+                "billing_unit",
+                billingUnitOptions.find((unit) => unit.id === id)?.value
+              );
+            }}
+          />
+          <CustomDatePicker
+            value={updateProduct.out_date}
+            labelClass="w-[8rem]"
+            label="Out Date"
+            onChange={(value) => handleValueChange("out_date", value)}
+          />
+          <CustomDatePicker
+            value={updateProduct.in_date}
+            labelClass="w-[8rem]"
+            label="In Date"
+            onChange={(value) => handleValueChange("in_date", value)}
+          />
+          <CustomInput
+            label="Order Quantity"
+            type="number"
+            labelClass="w-[8rem]"
+            placeholder="Enter Order Quantity"
+            value={updateProduct.order_quantity}
+            onChange={(value) =>
+              handleValueChange("order_quantity", parseInt(value))
+            }
+          />
+          <CustomInput
+            label="Order Repair Count"
+            type="number"
+            labelClass="w-[8rem]"
+            placeholder="Enter Repair Count"
+            value={updateProduct.order_repair_count}
+            onChange={(value) =>
+              handleValueChange("order_repair_count", parseInt(value))
+            }
+          />
+        </div>
+
+        <div className="flex gap-4 my-3 w-full justify-end">
+          <CustomButton
+            label="Cancel"
+            onClick={() => setUpdateProductOpen(false)}
+            variant="outlined"
+          />
+          <CustomButton
+            label="Done"
+            onClick={() => {
+              updateProductToOrder();
+              setUpdateProductOpen(false);
+            }}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+export default UpdateProductModal;

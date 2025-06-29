@@ -11,12 +11,14 @@ type CustomTableProps<T> = {
   colDefs: ColDef<T>[];
   isLoading: boolean;
   pagination?: boolean;
+  rowHeight?: number;
 };
 
 const CustomTable = <T,>({
   rowData,
   colDefs,
   isLoading,
+  rowHeight = 40,
   pagination = true,
 }: CustomTableProps<T>) => {
   return (
@@ -30,7 +32,7 @@ const CustomTable = <T,>({
         pagination={pagination}
         headerHeight={40}
         paginationPageSize={10}
-        rowHeight={40}
+        rowHeight={rowHeight}
         domLayout="autoHeight"
         localeText={{ noRowsToShow: "No data Found..." }}
         loading={isLoading}

@@ -1,12 +1,13 @@
 import { Modal } from "@mui/material";
-import { BillingUnit, ProductDetails } from "../../../types/order";
+import { BillingUnit, ProductDetails } from "../../../../types/order";
 import { MdClose } from "react-icons/md";
-import CustomButton from "../../../styled/CustomButton";
+import CustomButton from "../../../../styled/CustomButton";
 import { useEffect, useState } from "react";
-import { Product, Unit } from "../../../types/common";
-import CustomSelect from "../../../styled/CustomSelect";
+import { Product, Unit } from "../../../../types/common";
+import CustomSelect from "../../../../styled/CustomSelect";
 import dayjs from "dayjs";
-import CustomInput from "../../../styled/CustomInput";
+import CustomInput from "../../../../styled/CustomInput";
+import CustomDatePicker from "../../../../styled/CustomDatePicker";
 
 type AddProductModalOpen = {
   addProductOpen: boolean;
@@ -30,10 +31,10 @@ const initialProductState: ProductDetails = {
     _id: "",
     name: "",
   },
-  inDate: dayjs().format("YYY-MM-DDTHH:mm"),
+  in_date: dayjs().format("YYY-MM-DDTHH:mm"),
   order_quantity: 0,
   order_repair_count: 0,
-  outDate: dayjs().format("YYY-MM-DDTHH:mm"),
+  out_date: dayjs().format("YYY-MM-DDTHH:mm"),
   rent_per_unit: 0,
 };
 
@@ -106,6 +107,7 @@ const AddProductModal = ({
                 handleValueChange("_id", data._id);
                 handleValueChange("name", data.name);
                 handleValueChange("category", data.category.name);
+                handleValueChange("rent_per_unit", data.rent_per_unit);
               }
             }}
           />
@@ -142,6 +144,18 @@ const AddProductModal = ({
                 billingUnitOptions.find((unit) => unit.id === id)?.value
               );
             }}
+          />
+          <CustomDatePicker
+            value={newProduct.out_date}
+            labelClass="w-[8rem]"
+            label="Out Date"
+            onChange={(value) => handleValueChange("out_date", value)}
+          />
+          <CustomDatePicker
+            value={newProduct.in_date}
+            labelClass="w-[8rem]"
+            label="In Date"
+            onChange={(value) => handleValueChange("in_date", value)}
           />
           <CustomInput
             label="Order Quantity"

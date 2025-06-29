@@ -16,6 +16,16 @@ body {
   font-family: "Roboto";
 }
 
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .menu-active {
   color: #1366d9;
   /* color: #5e5e5e; */

@@ -16,7 +16,7 @@ const Orders = () => {
 
   const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([
     {
-      orderId: "ORD001",
+      order_id: "ORD001",
       contact: "9876543210",
       deposit: 500,
       orderInDate: "2025-06-01T10:15:00Z",
@@ -27,7 +27,7 @@ const Orders = () => {
       outDate: "2025-06-01T16:25:00Z",
     },
     {
-      orderId: "ORD002",
+      order_id: "ORD002",
       contact: "9123456789",
       deposit: 800,
       orderInDate: "2025-06-02T09:00:00Z",
@@ -38,7 +38,7 @@ const Orders = () => {
       outDate: "2025-06-02T14:40:00Z",
     },
     {
-      orderId: "ORD003",
+      order_id: "ORD003",
       contact: "9988776655",
       deposit: 1200,
       orderInDate: "2025-06-03T11:30:00Z",
@@ -49,7 +49,7 @@ const Orders = () => {
       outDate: "2025-06-03T17:25:00Z",
     },
     {
-      orderId: "ORD004",
+      order_id: "ORD004",
       contact: "9001122334",
       deposit: 400,
       orderInDate: "2025-06-04T08:00:00Z",
@@ -60,7 +60,7 @@ const Orders = () => {
       outDate: "2025-06-04T12:10:00Z",
     },
     {
-      orderId: "ORD005",
+      order_id: "ORD005",
       contact: "9112233445",
       deposit: 950,
       orderInDate: "2025-06-05T07:45:00Z",
@@ -71,7 +71,7 @@ const Orders = () => {
       outDate: "2025-06-05T12:55:00Z",
     },
     {
-      orderId: "ORD006",
+      order_id: "ORD006",
       contact: "9090909090",
       deposit: 1100,
       orderInDate: "2025-06-06T13:15:00Z",
@@ -82,7 +82,7 @@ const Orders = () => {
       outDate: "2025-06-06T18:25:00Z",
     },
     {
-      orderId: "ORD007",
+      order_id: "ORD007",
       contact: "8888777766",
       deposit: 300,
       orderInDate: "2025-06-07T06:45:00Z",
@@ -93,7 +93,7 @@ const Orders = () => {
       outDate: "2025-06-07T10:55:00Z",
     },
     {
-      orderId: "ORD008",
+      order_id: "ORD008",
       contact: "7777666655",
       deposit: 650,
       orderInDate: "2025-06-08T15:30:00Z",
@@ -104,7 +104,7 @@ const Orders = () => {
       outDate: "2025-06-08T20:25:00Z",
     },
     {
-      orderId: "ORD009",
+      order_id: "ORD009",
       contact: "9223344556",
       deposit: 700,
       orderInDate: "2025-06-09T09:45:00Z",
@@ -115,7 +115,7 @@ const Orders = () => {
       outDate: "2025-06-09T14:55:00Z",
     },
     {
-      orderId: "ORD010",
+      order_id: "ORD010",
       contact: "9334455667",
       deposit: 480,
       orderInDate: "2025-06-10T11:00:00Z",
@@ -126,7 +126,7 @@ const Orders = () => {
       outDate: "2025-06-10T16:55:00Z",
     },
     {
-      orderId: "ORD011",
+      order_id: "ORD011",
       contact: "9445566778",
       deposit: 560,
       orderInDate: "2025-06-11T10:30:00Z",
@@ -137,7 +137,7 @@ const Orders = () => {
       outDate: "2025-06-11T15:40:00Z",
     },
     {
-      orderId: "ORD012",
+      order_id: "ORD012",
       contact: "9556677889",
       deposit: 890,
       orderInDate: "2025-06-12T08:45:00Z",
@@ -148,7 +148,7 @@ const Orders = () => {
       outDate: "2025-06-12T13:25:00Z",
     },
     {
-      orderId: "ORD013",
+      order_id: "ORD013",
       contact: "9667788990",
       deposit: 950,
       orderInDate: "2025-06-13T07:15:00Z",
@@ -159,7 +159,7 @@ const Orders = () => {
       outDate: "2025-06-13T11:40:00Z",
     },
     {
-      orderId: "ORD014",
+      order_id: "ORD014",
       contact: "9778899001",
       deposit: 610,
       orderInDate: "2025-06-14T13:45:00Z",
@@ -170,7 +170,7 @@ const Orders = () => {
       outDate: "2025-06-14T18:10:00Z",
     },
     {
-      orderId: "ORD015",
+      order_id: "ORD015",
       contact: "9889900011",
       deposit: 990,
       orderInDate: "2025-06-15T12:00:00Z",
@@ -181,7 +181,7 @@ const Orders = () => {
       outDate: "2025-06-15T17:25:00Z",
     },
     {
-      orderId: "ORD016",
+      order_id: "ORD016",
       contact: "9990011223",
       deposit: 450,
       orderInDate: "2025-06-16T09:30:00Z",
@@ -192,7 +192,7 @@ const Orders = () => {
       outDate: "2025-06-16T13:45:00Z",
     },
     {
-      orderId: "ORD017",
+      order_id: "ORD017",
       contact: "9001122233",
       deposit: 620,
       orderInDate: "2025-06-17T14:30:00Z",
@@ -203,7 +203,7 @@ const Orders = () => {
       outDate: "2025-06-17T19:55:00Z",
     },
     {
-      orderId: "ORD018",
+      order_id: "ORD018",
       contact: "9112233445",
       deposit: 700,
       orderInDate: "2025-06-18T10:00:00Z",
@@ -214,7 +214,7 @@ const Orders = () => {
       outDate: "2025-06-18T15:25:00Z",
     },
     {
-      orderId: "ORD019",
+      order_id: "ORD019",
       contact: "9223344556",
       deposit: 770,
       orderInDate: "2025-06-19T11:45:00Z",
@@ -225,7 +225,7 @@ const Orders = () => {
       outDate: "2025-06-19T17:10:00Z",
     },
     {
-      orderId: "ORD020",
+      order_id: "ORD020",
       contact: "9334455667",
       deposit: 870,
       orderInDate: "2025-06-20T09:00:00Z",

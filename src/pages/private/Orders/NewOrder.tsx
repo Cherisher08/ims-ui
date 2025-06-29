@@ -253,10 +253,10 @@ const NewOrder = () => {
   };
 
   const [orderInfo, setOrderInfo] = useState<Partial<OrderInfoType>>({
-    type: OrderType.RENTAL,
-    billingMode: BillingMode.RETAIL,
+    type: ProductType.RENTAL,
+    billing_mode: BillingMode.RETAIL,
     status: PaymentStatus.PENDING,
-    paymentMode: PaymentMode.CASH,
+    payment_mode: PaymentMode.CASH,
     out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
     expected_date: dayjs().format("YYYY-MM-DDTHH:mm"),
     in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
@@ -265,64 +265,64 @@ const NewOrder = () => {
 
   const [contacts, setContacts] = useState<ContactInfoType[]>([
     {
-      id: "c1",
+      _id: "c1",
       name: "Rahul Mehra",
-      personalNumber: "9876543210",
-      officeNumber: "02212345678",
+      personal_number: "9876543210",
+      office_number: "02212345678",
       gstin: "27AABCU9603R1ZV",
       email: "rahul.mehra@example.com",
       address: "501, Rose Residency, Andheri West, Mumbai",
       pincode: "400058",
-      companyName: "Mehra Enterprises",
-      addressProof: "Aadhar Card",
+      company_name: "Mehra Enterprises",
+      address_proof: "Aadhar Card",
     },
     {
-      id: "c2",
+      _id: "c2",
       name: "Anita Sharma",
-      personalNumber: "9123456789",
-      officeNumber: "01122446688",
+      personal_number: "9123456789",
+      office_number: "01122446688",
       gstin: "07AAACB2233M1Z2",
       email: "anita.sharma@example.in",
       address: "Flat 9B, Green Heights, Dwarka, New Delhi",
       pincode: "110075",
-      companyName: "Sharma Logistics",
-      addressProof: "Electricity Bill",
+      company_name: "Sharma Logistics",
+      address_proof: "Electricity Bill",
     },
     {
-      id: "c3",
+      _id: "c3",
       name: "Vikram Reddy",
-      personalNumber: "9988776655",
-      officeNumber: "04023456789",
+      personal_number: "9988776655",
+      office_number: "04023456789",
       gstin: "36AACCV1234B1Z9",
       email: "vikram.reddy@reddygroup.com",
       address: "Plot No. 22, Banjara Hills, Hyderabad",
       pincode: "500034",
-      companyName: "Reddy Group",
-      addressProof: "Passport",
+      company_name: "Reddy Group",
+      address_proof: "Passport",
     },
     {
-      id: "c4",
+      _id: "c4",
       name: "Priya Verma",
-      personalNumber: "9090909090",
-      officeNumber: "03398765432",
+      personal_number: "9090909090",
+      office_number: "03398765432",
       gstin: "19AAACP4065N1ZR",
       email: "priya.verma@pvsolutions.com",
       address: "23/4 Lake Gardens, Kolkata",
       pincode: "700045",
-      companyName: "PV Solutions",
-      addressProof: "Driving License",
+      company_name: "PV Solutions",
+      address_proof: "Driving License",
     },
     {
-      id: "c5",
+      _id: "c5",
       name: "Karan Joshi",
-      personalNumber: "9811122233",
-      officeNumber: "07933445566",
+      personal_number: "9811122233",
+      office_number: "07933445566",
       gstin: "24AAECS1111F1Z6",
       email: "karan.joshi@techworld.io",
       address: "5th Floor, Silicon Tower, Ahmedabad",
       pincode: "380015",
-      companyName: "TechWorld Innovations",
-      addressProof: "Rent Agreement",
+      company_name: "TechWorld Innovations",
+      address_proof: "Rent Agreement",
     },
   ]);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
@@ -489,7 +489,7 @@ const NewOrder = () => {
   };
 
   const addProductToOrder = (product: ProductDetails) => {
-    if (orderInfo.type === OrderType.RENTAL) {
+    if (orderInfo.type === ProductType.RENTAL) {
       const products = orderInfo.product_details || [];
 
       const alreadyAdded = products.some((p) => p._id === product._id);
@@ -533,7 +533,7 @@ const NewOrder = () => {
   };
 
   const removeOrderProduct = (id: string) => {
-    if (orderInfo.type === OrderType.RENTAL) {
+    if (orderInfo.type === ProductType.RENTAL) {
       const filteredProducts = (orderInfo.product_details || []).filter(
         (prod) => prod._id !== id
       );
@@ -561,7 +561,7 @@ const NewOrder = () => {
           onChange={(_, value) => handleValueChange("type", value)}
           sx={{ "& .MuiTabs-indicator": { display: "none" } }}
         >
-          {Object.values(OrderType).map((type) => (
+          {Object.values(ProductType).map((type) => (
             <Tab
               key={type}
               label={type.charAt(0) + type.slice(1).toLowerCase()}
@@ -598,10 +598,10 @@ const NewOrder = () => {
         <div className="w-full flex justify-between items-start">
           <div className="flex flex-nowrap gap-3">
             <CustomInput
-              onChange={(value) => handleValueChange("orderId", value)}
+              onChange={(value) => handleValueChange("order_id", value)}
               label="Order Id"
               placeholder="Enter Order Id"
-              value={orderInfo?.orderId ?? ""}
+              value={orderInfo?.order_id ?? ""}
               className="min-w-[15rem] max-w-[35rem]"
             />
 
@@ -627,10 +627,10 @@ const NewOrder = () => {
           <div className="flex items-center gap-2">
             <p>Retail</p>
             <AntSwitch
-              checked={orderInfo.billingMode === BillingMode.BUSINESS}
+              checked={orderInfo.billing_mode === BillingMode.BUSINESS}
               onChange={(e) =>
                 handleValueChange(
-                  "billingMode",
+                  "billing_mode",
                   e.target.checked ? BillingMode.BUSINESS : BillingMode.RETAIL
                 )
               }
@@ -657,7 +657,7 @@ const NewOrder = () => {
             }
           />
 
-          {OrderType.RENTAL === orderInfo.type && (
+          {ProductType.RENTAL === orderInfo.type && (
             <div className="w-full flex gap-2">
               <CustomDatePicker
                 label="Out Date"
@@ -695,8 +695,8 @@ const NewOrder = () => {
             <CustomInput
               wrapperClass="w-[30rem]"
               labelClass="w-[5rem]"
-              value={orderInfo?.eventAddress ?? ""}
-              onChange={(value) => handleValueChange("eventAddress", value)}
+              value={orderInfo?.event_address ?? ""}
+              onChange={(value) => handleValueChange("event_address", value)}
               label="Event Address"
               placeholder="Enter Event Address"
               multiline
@@ -705,8 +705,8 @@ const NewOrder = () => {
             <CustomInput
               wrapperClass="w-[30rem]"
               labelClass="w-[5rem]"
-              value={orderInfo?.eventPincode ?? ""}
-              onChange={(value) => handleValueChange("eventPincode", value)}
+              value={orderInfo?.event_pincode ?? ""}
+              onChange={(value) => handleValueChange("event_pincode", value)}
               label="Event Pincode"
               placeholder="Enter Event Pincode"
             />
@@ -724,7 +724,7 @@ const NewOrder = () => {
             <p className="w-full text-right px-2 pt-1">Products</p>
 
             <div className="flex flex-wrap gap-2 border border-[#ced4da] content-start rounded-md p-2 w-full h-[9.3rem] overflow-y-auto">
-              {orderInfo.type === OrderType.RENTAL &&
+              {orderInfo.type === ProductType.RENTAL &&
                 orderInfo.product_details?.map((product) => (
                   <Chip
                     key={product._id}
@@ -741,7 +741,7 @@ const NewOrder = () => {
         </div>
 
         {/* === Order Summary === */}
-        {orderInfo.type === OrderType.RENTAL &&
+        {orderInfo.type === ProductType.RENTAL &&
           orderInfo.product_details &&
           orderInfo.product_details.length > 0 && (
             <div className="w-full flex flex-col px-3">

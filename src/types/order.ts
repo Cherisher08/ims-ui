@@ -1,4 +1,4 @@
-import { Product, Unit } from "./common";
+import { Product, ProductType, Unit } from "./common";
 import { ContactInfoType } from "./contact";
 export enum BillingMode {
   RETAIL = "Retail",
@@ -19,13 +19,7 @@ export enum PaymentStatus {
 
 export enum PaymentMode {
   CASH = "cash",
-  GPAY = "gpay",
-}
-
-export enum OrderType {
-  RENTAL = "rental",
-  SALES = "sales",
-  SERVICE = "service",
+  UPI = "upi",
 }
 
 export type ProductDetails = {
@@ -54,7 +48,7 @@ export type DepositType = {
 };
 
 export type RentalOrderType = {
-  orderId: string;
+  order_id: string;
   contact: string;
   deposit: number;
   order_InDate: string;
@@ -66,7 +60,7 @@ export type RentalOrderType = {
 };
 
 export type RentalType = {
-  orderId: string;
+  order_id: string;
   contact: string;
   deposit: DepositType[];
   orderInDate: string;
@@ -79,7 +73,6 @@ export type RentalType = {
 };
 
 export type OrderSummaryType = {
-  no: number;
   product: Product;
   repair_count: number;
   quantity: number;
@@ -88,21 +81,22 @@ export type OrderSummaryType = {
 };
 
 export type OrderInfo = {
-  orderId: string;
+  _id: string;
+  order_id: string;
   customer: ContactInfoType;
-  eventAddress: string;
-  eventPincode: string;
-  billingMode: BillingMode;
+  billing_mode: BillingMode;
   status: PaymentStatus;
-  paymentMode: PaymentMode;
+  payment_mode: PaymentMode;
   remarks: string;
   round_off: number;
   discount: number;
-  discount_amount: number
+  discount_amount: number;
 };
 
 export type RentalOrderInfo = OrderInfo & {
-  type: OrderType.RENTAL;
+  type: ProductType.RENTAL;
+  event_address: string;
+  event_pincode: string;
   deposit: DepositType[];
   in_date: string;
   out_date: string;
@@ -112,15 +106,15 @@ export type RentalOrderInfo = OrderInfo & {
 };
 
 export type SalesOrderInfo = OrderInfo & {
-  type: OrderType.SALES;
-  out_time: string;
-  product_details: Product[];
+  type: ProductType.SALES;
+  outTime: string;
+  productDetails: Product[];
 };
 
 export type ServiceOrderInfo = OrderInfo & {
-  type: OrderType.SERVICE;
-  in_date: string;
-  out_date: string;
+  type: ProductType.SERVICE;
+  inDate: string;
+  outDate: string;
 };
 
 export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo;

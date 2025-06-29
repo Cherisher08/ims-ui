@@ -12,7 +12,7 @@ const ServiceOrderTable = ({
 }) => {
   const rentalOrderColDef: ColDef<RentalType>[] = [
     {
-      field: "orderId",
+      field: "order_id",
       headerName: "Id",
       flex: 1,
       headerClass: "ag-header-wrap",

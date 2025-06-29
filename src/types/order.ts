@@ -1,5 +1,7 @@
+import { IdNamePair } from "../pages/private/Inventory";
 import { Product, ProductType, Unit } from "./common";
 import { ContactInfoType } from "./contact";
+
 export enum BillingMode {
   RETAIL = "Retail",
   BUSINESS = "Business",
@@ -20,7 +22,11 @@ export enum PaymentStatus {
 export enum PaymentMode {
   CASH = "cash",
   UPI = "upi",
+  ACCOUNT = "account",
 }
+
+// --------------------------------------------------------------------------------------------
+// Nested Structures
 
 export type ProductDetails = {
   _id: string;
@@ -43,9 +49,12 @@ export type ContactSelectionType = {
 export type DepositType = {
   amount: number;
   date: string;
-  product: Product | null;
+  product: IdNamePair | null;
   mode: PaymentMode;
 };
+
+// --------------------------------------------------------------------------------------------
+// Types for Frontend
 
 export type RentalOrderType = {
   order_id: string;
@@ -80,35 +89,36 @@ export type OrderSummaryType = {
   final_amount: number;
 };
 
+// --------------------------------------------------------------------------------------------
+// Backend Data Types
+
 export type OrderInfo = {
   _id: string;
   order_id: string;
   customer: ContactInfoType;
   billing_mode: BillingMode;
+  discount: number;
   status: PaymentStatus;
-  payment_mode: PaymentMode;
   remarks: string;
   round_off: number;
-  discount: number;
-  discount_amount: number;
+  payment_mode: PaymentMode;
 };
 
 export type RentalOrderInfo = OrderInfo & {
   type: ProductType.RENTAL;
-  event_address: string;
-  event_pincode: string;
-  deposit: DepositType[];
-  in_date: string;
+  deposits: DepositType[];
   out_date: string;
   expected_date: string;
-  billing_unit: BillingUnit;
+  in_date: string;
   product_details: ProductDetails[];
+  event_address: string;
+  event_pincode: string;
 };
 
 export type SalesOrderInfo = OrderInfo & {
   type: ProductType.SALES;
   outTime: string;
-  productDetails: Product[];
+  products: Product[];
 };
 
 export type ServiceOrderInfo = OrderInfo & {

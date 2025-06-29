@@ -43,7 +43,7 @@ interface OneProduct {
   actions?: string;
 }
 
-interface IdNamePair {
+export interface IdNamePair {
   _id?: string;
   name: string;
 }

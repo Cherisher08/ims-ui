@@ -12,7 +12,6 @@ import {
   BillingUnit,
   DepositType,
   OrderInfoType,
-  OrderType,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -134,9 +133,9 @@ const paymentStatusOptions = Object.entries(PaymentStatus).map(
 const NewOrder = () => {
   const sampleOutPutData = {
     type: "rental",
-    billingMode: "Retail",
+    billing_mode: "Retail",
     status: "pending",
-    paymentMode: "cash",
+    payment_mode: "cash",
     out_date: "2025-06-29T12:59",
     expectedDate: "2025-06-29T12:59",
     in_date: "2025-06-29T12:59",
@@ -188,26 +187,15 @@ const NewOrder = () => {
         rent_per_unit: 2000,
       },
     ],
-    deposit: [
+    deposits: [
       {
         amount: 2113,
         date: "2025-06-29T12:59",
         product: {
           _id: "p2",
           name: "Welding Machine",
-          category: "EQUIPMENT",
-          billing_unit: "days",
-          product_unit: {
-            _id: "u2",
-            name: "g",
-          },
-          in_date: "+0530-06-29T12:54",
-          order_quantity: 123,
-          order_repair_count: 0,
-          out_date: "+0530-06-29T12:54",
-          rent_per_unit: 100,
         },
-        mode: "gpay",
+        mode: "upi",
       },
       {
         amount: 123,
@@ -216,37 +204,15 @@ const NewOrder = () => {
         product: {
           _id: "p2",
           name: "Welding Machine",
-          category: "EQUIPMENT",
-          billing_unit: "days",
-          product_unit: {
-            _id: "u2",
-            name: "g",
-          },
-          in_date: "+0530-06-29T12:54",
-          order_quantity: 123,
-          order_repair_count: 0,
-          out_date: "+0530-06-29T12:54",
-          rent_per_unit: 209,
         },
       },
       {
         amount: 12312,
         date: "2025-06-29T13:02",
-        mode: "gpay",
+        mode: "upi",
         product: {
           _id: "p5",
           name: "Safety Helmet",
-          category: "SAFETY",
-          billing_unit: "days",
-          product_unit: {
-            _id: "u2",
-            name: "g",
-          },
-          in_date: "+0530-06-29T12:54",
-          order_quantity: 12012,
-          order_repair_count: 0,
-          out_date: "+0530-06-29T12:54",
-          rent_per_unit: 200,
         },
       },
     ],
@@ -477,7 +443,7 @@ const NewOrder = () => {
   };
 
   const calcFinalAmount = () => {
-    if (orderInfo.type === OrderType.RENTAL && orderInfo.product_details) {
+    if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
       return orderInfo.product_details.reduce(
         (total, prod) =>
           total +
@@ -505,7 +471,7 @@ const NewOrder = () => {
   };
 
   const updateProductToOrder = () => {
-    if (orderInfo.type === OrderType.RENTAL) {
+    if (orderInfo.type === ProductType.RENTAL) {
       const products = orderInfo.product_details || [];
       const newProducts = products.map((prod) =>
         prod._id === updateProduct._id ? updateProduct : prod
@@ -546,9 +512,9 @@ const NewOrder = () => {
   };
 
   const createNewOrder = () => {
-    if (orderInfo.type === OrderType.RENTAL) {
+    if (orderInfo.type === ProductType.RENTAL) {
       console.log(orderInfo, depositData);
-      orderInfo.deposit = depositData;
+      orderInfo.deposits = depositData;
     }
   };
 
@@ -576,7 +542,7 @@ const NewOrder = () => {
         </Tabs>
 
         <div className="flex gap-3">
-          {orderInfo.type === OrderType.RENTAL &&
+          {orderInfo.type === ProductType.RENTAL &&
             orderInfo.product_details &&
             orderInfo?.product_details?.length > 0 && (
               <CustomButton
@@ -584,7 +550,7 @@ const NewOrder = () => {
                 onClick={() => setDepositOpen(true)}
               />
             )}
-          {orderInfo.type !== OrderType.SERVICE && (
+          {orderInfo.type !== ProductType.SERVICE && (
             <CustomButton
               label="Add product"
               onClick={() => setAddProductOpen(true)}
@@ -646,13 +612,13 @@ const NewOrder = () => {
             options={formatContacts(contacts)}
             value={
               formatContacts(contacts).find(
-                (option) => option.id === orderInfo.customer?.id
+                (option) => option.id === orderInfo.customer?._id
               )?.id ?? ""
             }
             onChange={(id) =>
               handleValueChange(
                 "customer",
-                contacts.find((option) => option.id === id)
+                contacts.find((option) => option._id === id)
               )
             }
           />
@@ -759,7 +725,7 @@ const NewOrder = () => {
                     <div className="flex flex-col gap-1 text-gray-500">
                       <p>Deposit</p>
                       <p>Total Amount</p>
-                      {orderInfo.billingMode === BillingMode.BUSINESS && (
+                      {orderInfo.billing_mode === BillingMode.BUSINESS && (
                         <p>GST (10%)</p>
                       )}
                       <p>Discount</p>
@@ -775,7 +741,7 @@ const NewOrder = () => {
                         )}
                       </p>
                       <p>₹ {calcFinalAmount()}</p>
-                      {orderInfo.billingMode === BillingMode.BUSINESS && (
+                      {orderInfo.billing_mode === BillingMode.BUSINESS && (
                         <p>
                           ₹{" "}
                           {depositData.reduce(
@@ -791,7 +757,7 @@ const NewOrder = () => {
                           value={orderInfo.discount}
                           onChange={(e) => {
                             if (
-                              orderInfo.type === OrderType.RENTAL &&
+                              orderInfo.type === ProductType.RENTAL &&
                               orderInfo.product_details
                             ) {
                               const percent = parseInt(e.target.value);
@@ -815,7 +781,7 @@ const NewOrder = () => {
                           value={orderInfo.discount_amount}
                           onChange={(e) => {
                             if (
-                              orderInfo.type === OrderType.RENTAL &&
+                              orderInfo.type === ProductType.RENTAL &&
                               orderInfo.product_details
                             ) {
                               const amount = parseInt(e.target.value);
@@ -881,10 +847,10 @@ const NewOrder = () => {
                   onClick={() => {
                     setDepositData([]);
                     setOrderInfo({
-                      type: OrderType.RENTAL,
-                      billingMode: BillingMode.RETAIL,
+                      type: ProductType.RENTAL,
+                      billing_mode: BillingMode.RETAIL,
                       status: PaymentStatus.PENDING,
-                      paymentMode: PaymentMode.CASH,
+                      payment_mode: PaymentMode.CASH,
                       out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
                       expected_date: dayjs().format("YYYY-MM-DDTHH:mm"),
                       in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
@@ -903,7 +869,7 @@ const NewOrder = () => {
         addProductToOrder={addProductToOrder}
         products={products.filter((prod) => {
           if (
-            orderInfo.type === OrderType.RENTAL &&
+            orderInfo.type === ProductType.RENTAL &&
             orderInfo.product_details
           ) {
             return orderInfo.product_details.every(
@@ -927,7 +893,7 @@ const NewOrder = () => {
         setUpdateProductOpen={(value: boolean) => setUpdateProductOpen(value)}
       />
 
-      {orderInfo.type === OrderType.RENTAL && orderInfo.product_details && (
+      {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
         <DepositModal
           depositOpen={depositOpen}
           setDepositOpen={(value: boolean) => setDepositOpen(value)}

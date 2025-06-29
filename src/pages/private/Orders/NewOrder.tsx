@@ -473,16 +473,23 @@ const NewOrder = () => {
     const finalAmount = calcFinalAmount();
     const roundOff = orderInfo.round_off || 0;
     const discountAmount = orderInfo.discount_amount || 0;
-    return finalAmount - totalDeposit - discountAmount + roundOff;
+    return parseFloat(
+      (finalAmount - totalDeposit - discountAmount + roundOff).toFixed(2)
+    );
   };
 
   const calcFinalAmount = () => {
     if (orderInfo.type === OrderType.RENTAL && orderInfo.product_details) {
-      return orderInfo.product_details.reduce(
-        (total, prod) =>
-          total +
-          prod.rent_per_unit * (prod.order_quantity - prod.order_repair_count),
-        0
+      return parseFloat(
+        orderInfo.product_details
+          .reduce(
+            (total, prod) =>
+              total +
+              prod.rent_per_unit *
+                (prod.order_quantity - prod.order_repair_count),
+            0
+          )
+          .toFixed(2)
       );
     }
     return 0;
@@ -776,13 +783,7 @@ const NewOrder = () => {
                       </p>
                       <p>₹ {calcFinalAmount()}</p>
                       {orderInfo.billingMode === BillingMode.BUSINESS && (
-                        <p>
-                          ₹{" "}
-                          {depositData.reduce(
-                            (total, deposit) => total + deposit.amount,
-                            0
-                          )}
-                        </p>
+                        <p>₹ {(calcTotal() * 0.01).toFixed(2)}</p>
                       )}
                       <div className="flex justify-end gap-1">
                         <input
@@ -794,7 +795,9 @@ const NewOrder = () => {
                               orderInfo.type === OrderType.RENTAL &&
                               orderInfo.product_details
                             ) {
-                              const percent = parseInt(e.target.value);
+                              const percent = parseFloat(
+                                parseFloat(e.target.value).toFixed(2)
+                              );
                               const total_amount = calcFinalAmount();
                               const discount_amount =
                                 total_amount * percent * 0.001;
@@ -818,7 +821,9 @@ const NewOrder = () => {
                               orderInfo.type === OrderType.RENTAL &&
                               orderInfo.product_details
                             ) {
-                              const amount = parseInt(e.target.value);
+                              const amount = parseFloat(
+                                parseFloat(e.target.value).toFixed(2)
+                              );
                               const total_amount = calcFinalAmount();
                               const percent = parseFloat(
                                 ((amount / total_amount) * 100).toFixed(2)
@@ -841,7 +846,9 @@ const NewOrder = () => {
                           onChange={(e) =>
                             setOrderInfo((prev) => ({
                               ...prev,
-                              round_off: parseInt(e.target.value),
+                              round_off: parseFloat(
+                                parseFloat(e.target.value).toFixed(2)
+                              ),
                             }))
                           }
                         />{" "}

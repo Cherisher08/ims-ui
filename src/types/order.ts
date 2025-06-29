@@ -34,8 +34,8 @@ export type ProductDetails = {
   category: string;
   billing_unit: BillingUnit;
   product_unit: Unit;
-  inDate: string;
-  outDate: string;
+  in_date: string;
+  out_date: string;
   order_repair_count: number;
   order_quantity: number;
   rent_per_unit: number;
@@ -49,7 +49,7 @@ export type ContactSelectionType = {
 export type DepositType = {
   amount: number;
   date: string;
-  product: Product;
+  product: Product | null;
   mode: PaymentMode;
 };
 
@@ -57,7 +57,7 @@ export type RentalOrderType = {
   orderId: string;
   contact: string;
   deposit: number;
-  orderInDate: string;
+  order_InDate: string;
   orderOutDate: string;
   productId: string;
   productUnit: number;
@@ -68,7 +68,7 @@ export type RentalOrderType = {
 export type RentalType = {
   orderId: string;
   contact: string;
-  deposit: number;
+  deposit: DepositType[];
   orderInDate: string;
   orderOutDate: string;
   productId: string;
@@ -96,28 +96,31 @@ export type OrderInfo = {
   status: PaymentStatus;
   paymentMode: PaymentMode;
   remarks: string;
+  round_off: number;
+  discount: number;
+  discount_amount: number
 };
 
 export type RentalOrderInfo = OrderInfo & {
   type: OrderType.RENTAL;
-  deposit: number;
-  outDate: string;
-  expectedDate: string;
-  inDate: string;
-  billingUnit: BillingUnit;
-  productDetails: ProductDetails[];
+  deposit: DepositType[];
+  in_date: string;
+  out_date: string;
+  expected_date: string;
+  billing_unit: BillingUnit;
+  product_details: ProductDetails[];
 };
 
 export type SalesOrderInfo = OrderInfo & {
   type: OrderType.SALES;
-  outTime: string;
-  productDetails: Product[];
+  out_time: string;
+  product_details: Product[];
 };
 
 export type ServiceOrderInfo = OrderInfo & {
   type: OrderType.SERVICE;
-  inDate: string;
-  outDate: string;
+  in_date: string;
+  out_date: string;
 };
 
 export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo;

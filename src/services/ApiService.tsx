@@ -43,7 +43,7 @@ const baseQueryWith401Handler: BaseQueryFn<
 
   if (result?.error?.status === 401) {
     // redirect to login page
-    window.location.href = "/auth/login";
+    // window.location.href = "/auth/login";
   }
 
   return result;

@@ -50,3 +50,39 @@ export const transformRentalOrderResponse = (
     ),
   };
 };
+
+function toUTCISOString(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  return date.toISOString();
+}
+
+export const transformRentalOrderToUTC = (order: RentalOrderInfo) => {
+  return {
+    ...order,
+    in_date: toUTCISOString(order.in_date),
+    out_date: toUTCISOString(order.out_date),
+    expected_date: toUTCISOString(order.expected_date),
+    customer: order.customer
+      ? {
+          ...order.customer,
+        }
+      : null,
+    deposits:
+      order.deposits?.map((deposit) => ({
+        ...deposit,
+        date: toUTCISOString(deposit.date),
+      })) ?? [],
+    product_details:
+      order.product_details?.map((product) => ({
+        ...product,
+        in_date: toUTCISOString(product.in_date),
+        out_date: toUTCISOString(product.out_date),
+        product_unit: product.product_unit
+          ? {
+              ...product.product_unit,
+            }
+          : null,
+      })) ?? [],
+  };
+};

@@ -1,6 +1,9 @@
 import { RentalOrderInfo } from "../types/order";
 import { rootApi } from "./ApiService";
-import { transformRentalOrderResponse } from "./transformFunctions";
+import {
+  transformRentalOrderResponse,
+  transformRentalOrderToUTC,
+} from "./transformFunctions";
 
 export const contactApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
@@ -9,11 +12,14 @@ export const contactApi = rootApi.injectEndpoints({
       providesTags: ["Rental"],
     }),
     createRentalOrder: build.mutation<RentalOrderInfo, RentalOrderInfo>({
-      query: (contact) => ({
-        url: `orders/rentals`,
-        method: "POST",
-        body: contact,
-      }),
+      query: (order) => {
+        const body = transformRentalOrderToUTC(order);
+        return {
+          url: `orders/rentals`,
+          method: "POST",
+          body: body,
+        };
+      },
       invalidatesTags: ["Rental"],
     }),
     getRentalOrderById: build.query<RentalOrderInfo, string>({
@@ -23,11 +29,14 @@ export const contactApi = rootApi.injectEndpoints({
       providesTags: ["Rental"],
     }),
     updateRentalOrder: build.mutation<RentalOrderInfo, RentalOrderInfo>({
-      query: ({ _id, ...order }) => ({
-        url: `orders/rentals/${_id}`,
-        method: "PUT",
-        body: order,
-      }),
+      query: ({ _id, ...order }) => {
+        const body = transformRentalOrderToUTC(order);
+        return {
+          url: `orders/rentals/${_id}`,
+          method: "PUT",
+          body: body,
+        };
+      },
       invalidatesTags: ["Rental"],
     }),
     deleteRentalOrder: build.mutation<void, string>({

@@ -3,7 +3,11 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
-import { RentalOrderType, RentalType } from "../../../types/order";
+import {
+  PaymentStatus,
+  RentalOrderType,
+  RentalType,
+} from "../../../types/order";
 import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +29,7 @@ const RentalOrderTable = ({
       flex: 1,
       headerClass: "ag-header-wrap",
       minWidth: 100,
+      filter: "agTextColumnFilter",
     },
     {
       field: "contact_name",
@@ -32,6 +37,7 @@ const RentalOrderTable = ({
       flex: 1,
       headerClass: "ag-header-wrap",
       minWidth: 80,
+      filter: "agTextColumnFilter",
     },
     { field: "products", headerName: "Products", flex: 1, minWidth: 90 },
     {
@@ -40,6 +46,7 @@ const RentalOrderTable = ({
       flex: 1,
       minWidth: 100,
       headerClass: "ag-header-wrap",
+      filter: "agDateColumnFilter",
       valueFormatter: (params) => {
         const date = new Date(params.value);
         return date.toLocaleDateString("en-GB", {
@@ -54,6 +61,7 @@ const RentalOrderTable = ({
       headerName: "Order Out Date",
       flex: 1,
       minWidth: 100,
+      filter: "agDateColumnFilter",
       valueFormatter: (params) => {
         const date = new Date(params.value);
         return date.toLocaleDateString("en-GB", {
@@ -91,7 +99,7 @@ const RentalOrderTable = ({
             <IoPrintOutline
               size={20}
               className="cursor-pointer"
-              onClick={() => console.log("print")}
+              onClick={() => navigate(`/orders/invoice/${rowData?._id}`)}
             />
           </div>
         );
@@ -105,6 +113,23 @@ const RentalOrderTable = ({
         isLoading={false}
         colDefs={rentalOrderColDef}
         rowData={rentalOrders}
+        getRowStyle={(params) => {
+          const expectedDateStr = params.data?.expected_date;
+          if (expectedDateStr) {
+            const expectedDate = new Date(expectedDateStr);
+            const now = new Date();
+            if (
+              expectedDate < now &&
+              params.data?.payment_status === PaymentStatus.PENDING
+            ) {
+              return {
+                backgroundColor: "red",
+                color: "white",
+              };
+            }
+          }
+          return undefined;
+        }}
       />
       <DeleteOrderModal
         deleteOrderOpen={deleteOrderOpen}

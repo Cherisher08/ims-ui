@@ -65,6 +65,7 @@ export type RentalOrderType = {
   in_date: string;
   out_date: string;
   expected_date: string;
+  payment_status: PaymentStatus;
 };
 
 export type RentalType = {
@@ -76,6 +77,7 @@ export type RentalType = {
   in_date: string;
   out_date: string;
   expected_date: string;
+  payment_status: PaymentStatus;
   actions?: string;
 };
 

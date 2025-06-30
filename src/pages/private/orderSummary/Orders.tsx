@@ -27,6 +27,7 @@ const transformRentalOrderData = (
         if (index === 0) return product.name;
         return `${names}, ${product.name}`;
       }, ""),
+      payment_status: rentalOrder.status,
     };
   });
 };

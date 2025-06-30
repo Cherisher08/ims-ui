@@ -83,12 +83,12 @@ const privateRoutes = [
         element: <Orders />,
       },
       {
-        path: "/orders/invoice",
-        element: <OrderInvoice />,
-      },
-      {
         path: "/orders/rentals/:rentalId",
         element: <NewOrder />,
+      },
+      {
+        path: "/orders/invoice/:rentalId",
+        element: <OrderInvoice />,
       },
       {
         path: "*",

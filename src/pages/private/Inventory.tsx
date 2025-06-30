@@ -43,6 +43,28 @@ interface OneProduct {
   actions?: string;
 }
 
+const initialProductData: Product = {
+  product_code: "",
+  name: "",
+  quantity: 0,
+  purchase_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  repair_count: 0,
+  available_stock: 0,
+  price: 0,
+  unit: {
+    _id: "",
+    name: "",
+  },
+  category: {
+    _id: "",
+    name: "",
+  },
+  type: ProductType.RENTAL,
+  rent_per_unit: 0,
+  discount: 0,
+  discount_type: DiscountType.PERCENT,
+};
+
 export interface IdNamePair {
   _id?: string;
   name: string;
@@ -89,27 +111,8 @@ const Inventory = () => {
   ] = useDeleteProductMutation();
 
   const [search, setSearch] = useState<string>("");
-  const [newProductData, setNewProductData] = useState<Product>({
-    product_code: "",
-    name: "",
-    quantity: 0,
-    purchase_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-    repair_count: 0,
-    available_stock: 0,
-    price: 0,
-    unit: {
-      _id: "",
-      name: "",
-    },
-    category: {
-      _id: "",
-      name: "",
-    },
-    type: ProductType.RENTAL,
-    rent_per_unit: 0,
-    discount: 0,
-    discount_type: DiscountType.PERCENT,
-  });
+  const [newProductData, setNewProductData] =
+    useState<Product>(initialProductData);
   const [deleteData, setDeleteData] = useState<OneProduct | null>(null);
   const [updateData, setUpdateData] = useState<Product | null>(null);
 
@@ -163,6 +166,7 @@ const Inventory = () => {
         flex: 1,
         headerClass: "ag-header-wrap",
         minWidth: 100,
+        filter: "agTextColumnFilter",
       },
       {
         field: "product_code",
@@ -170,6 +174,7 @@ const Inventory = () => {
         flex: 1,
         headerClass: "ag-header-wrap",
         minWidth: 80,
+        filter: "agTextColumnFilter",
       },
       { field: "category", headerName: "Category", flex: 1, minWidth: 90 },
       {
@@ -178,6 +183,7 @@ const Inventory = () => {
         flex: 1,
         minWidth: 100,
         headerClass: "ag-header-wrap",
+        filter: "agNumberColumnFilter",
       },
       { field: "type", headerName: "Type", flex: 1, minWidth: 100 },
       {
@@ -513,6 +519,13 @@ const Inventory = () => {
                 }
                 onChange={(value) => handleProductChange("type", value)}
               />
+              <CustomInput
+                label="Available Stock"
+                value={newProductData.available_stock}
+                onChange={() => {}}
+                disabled
+                placeholder="Enter Available Stock"
+              />
             </div>
 
             <div className="flex flex-col gap-3">
@@ -580,9 +593,13 @@ const Inventory = () => {
                 label="Quantity"
                 type="number"
                 value={newProductData.quantity}
-                onChange={(value) =>
-                  handleProductChange("quantity", value ? parseInt(value) : "")
-                }
+                onChange={(value) => {
+                  handleProductChange("quantity", value ? parseInt(value) : "");
+                  handleProductChange(
+                    "available_stock",
+                    value ? parseInt(value) : ""
+                  );
+                }}
                 placeholder="Enter Product Quantity"
               />
 
@@ -635,7 +652,10 @@ const Inventory = () => {
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
-              onClick={() => setAddProductOpen(false)}
+              onClick={() => {
+                setAddProductOpen(false);
+                setNewProductData(initialProductData);
+              }}
               label="Discard"
               variant="outlined"
               className="bg-white"
@@ -722,6 +742,13 @@ const Inventory = () => {
                 onChange={(value) => {
                   handleUpdateProduct("type", value);
                 }}
+              />
+              <CustomInput
+                label="Available Stock"
+                value={updateData?.available_stock || 0}
+                onChange={() => {}}
+                disabled
+                placeholder="Enter Available Stock"
               />
             </div>
 
@@ -815,12 +842,20 @@ const Inventory = () => {
                 value={updateData?.quantity ?? 0}
                 onChange={(value) =>
                   setUpdateData((prev) => {
-                    if (prev)
+                    if (prev) {
+                      const quantityDelta =
+                        (productData?.find(
+                          (product) => product._id === updateData?._id
+                        )?.quantity || 0) - parseInt(value);
                       return {
                         ...prev,
                         quantity: parseInt(value),
-                        available_stock: parseInt(value) - prev.repair_count,
+                        available_stock:
+                          (productData?.find(
+                            (product) => product._id === updateData?._id
+                          )?.available_stock || 0) - quantityDelta,
                       };
+                    }
                     return prev;
                   })
                 }
@@ -880,7 +915,6 @@ const Inventory = () => {
               <CustomInput
                 label="Total"
                 value={calculateTotal}
-                type="number"
                 onChange={() => {}}
                 placeholder="Rs. 0.0"
                 disabled
@@ -889,7 +923,9 @@ const Inventory = () => {
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
-              onClick={() => setUpdateModalOpen(false)}
+              onClick={() => {
+                setUpdateModalOpen(false);
+              }}
               label="Discard"
               variant="outlined"
               className="bg-white"

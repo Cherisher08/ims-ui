@@ -53,6 +53,7 @@ const Contacts = () => {
       flex: 1,
       maxWidth: 150,
       headerClass: "ag-header-wrap",
+      filter: "agTextColumnFilter",
     },
     {
       field: "personal_number",
@@ -60,6 +61,7 @@ const Contacts = () => {
       flex: 1,
       minWidth: 100,
       headerClass: "ag-header-wrap",
+      filter: "agTextColumnFilter",
     },
     {
       field: "office_number",
@@ -67,6 +69,7 @@ const Contacts = () => {
       flex: 1,
       minWidth: 100,
       headerClass: "ag-header-wrap",
+      filter: "agTextColumnFilter",
     },
     { field: "gstin", headerName: "GSTIN", minWidth: 100, flex: 1 },
     {
@@ -80,6 +83,7 @@ const Contacts = () => {
         wordBreak: "break-word",
         lineHeight: "1.4",
       },
+      filter: "agTextColumnFilter",
       wrapText: true,
     },
     {

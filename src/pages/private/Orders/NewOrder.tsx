@@ -77,6 +77,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     headerName: "PRODUCT",
     flex: 1,
     headerClass: "ag-header-wrap",
+    filter: "agTextColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
       return (
@@ -93,6 +94,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     flex: 1,
     maxWidth: 120,
     headerClass: "ag-header-wrap",
+    filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
       return (
@@ -108,6 +110,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     flex: 1,
     maxWidth: 110,
     headerClass: "ag-header-wrap",
+    filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
       return (
@@ -123,6 +126,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     flex: 1,
     maxWidth: 120,
     headerClass: "ag-header-wrap",
+    filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
       return <p>₹ {data?.rent_per_unit}</p>;
@@ -133,6 +137,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     flex: 1,
     maxWidth: 180,
     headerClass: "ag-header-wrap",
+    filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
       return (
@@ -826,14 +831,14 @@ const NewOrder = () => {
                       <select
                         className="w-fit outline-none"
                         onChange={(e) =>
-                          handleValueChange(
-                            "payment_mode",
-                            e.target.value.toLowerCase()
-                          )
+                          handleValueChange("payment_mode", e.target.value)
                         }
+                        value={orderInfo.payment_mode}
                       >
                         {Object.entries(PaymentMode).map(([id, key]) => (
-                          <option>{key.toUpperCase()}</option>
+                          <option key={id} value={key.toLowerCase()}>
+                            {key.toUpperCase()}
+                          </option>
                         ))}
                       </select>
                     </div>

@@ -9,12 +9,15 @@ import {
 import {
   BillingMode,
   DepositType,
-  OrderType,
   ProductDetails,
+  RentalOrderInfo,
 } from "../types/order";
 import dayjs from "dayjs";
+import { ProductType } from "../types/common";
+import { calculateDiscountAmount } from "../services/utility_functions";
 
 function numberToWordsIndian(num: number) {
+  console.log("num: ", num);
   if (typeof num !== "number" || isNaN(num)) return "Invalid number";
 
   const singleDigits = [
@@ -57,10 +60,8 @@ function numberToWordsIndian(num: number) {
     "Ninety",
   ];
 
-  const units = ["", "Thousand", "Lakh", "Crore"];
-
   // Helper to convert 2-digit numbers
-  function getTwoDigitWords(n) {
+  function getTwoDigitWords(n: number) {
     if (n < 10) return singleDigits[n];
     if (n < 20) return doubleDigits[n - 9];
     return (
@@ -70,10 +71,9 @@ function numberToWordsIndian(num: number) {
   }
 
   // Convert to words
-  function convertToWords(n) {
+  function convertToWords(n: number) {
     if (n === 0) return "Zero";
 
-    let word = "";
     const parts = [];
 
     parts.push(n % 100); // last 2 digits (units)
@@ -90,10 +90,10 @@ function numberToWordsIndian(num: number) {
     let finalWords = "";
 
     const unitNames = ["", "Thousand", "Lakh", "Crore"];
-    let pos = parts.length - 1;
+    const pos = parts.length - 1;
 
     for (let i = pos; i >= 0; i--) {
-      let val = parts[i];
+      const val = parts[i];
       if (val === 0) continue;
 
       if (i === 1) {
@@ -105,29 +105,40 @@ function numberToWordsIndian(num: number) {
       }
     }
 
-    return finalWords.trim() + " Only /-";
+    return finalWords.trim() + " Rupees Only /-";
   }
 
   return convertToWords(Math.floor(num));
 }
 
-const Invoice = ({ data }: any) => {
+interface InvoiceRentalOrder {
+  data: RentalOrderInfo;
+}
+
+const Invoice = ({ data }: InvoiceRentalOrder) => {
   const calcTotal = () => {
-    const totalDeposit = data.deposit.reduce(
+    const totalDeposit = data.deposits.reduce(
       (total: number, deposit: DepositType) => total + deposit.amount,
       0
     );
     const finalAmount = calcFinalAmount();
     const roundOff = data.round_off || 0;
     const discountAmount = data.discount_amount || 0;
+    const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount);
     return parseFloat(
-      (finalAmount - totalDeposit - discountAmount + roundOff).toFixed(2)
+      (
+        finalAmount -
+        totalDeposit -
+        discountAmount +
+        gstAmount +
+        roundOff
+      ).toFixed(2)
     );
   };
 
   const depositTotal = () => {
     return parseFloat(
-      data.deposit
+      data.deposits
         .reduce(
           (total: number, deposit: DepositType) => total + deposit.amount,
           0
@@ -137,7 +148,7 @@ const Invoice = ({ data }: any) => {
   };
 
   const calcFinalAmount = () => {
-    if (data.type === OrderType.RENTAL && data.product_details) {
+    if (data.type === ProductType.RENTAL && data.product_details) {
       return parseFloat(
         data.product_details
           .reduce(
@@ -154,7 +165,9 @@ const Invoice = ({ data }: any) => {
   };
 
   const gstAmount =
-    data.billingMode === "BUSINESS" ? (calcTotal() * 0.1).toFixed(2) : 0;
+    data.billing_mode !== "Business"
+      ? (calcFinalAmount() * data.gst * 0.01).toFixed(2)
+      : 0;
 
   const styles = StyleSheet.create({
     page: {
@@ -382,7 +395,9 @@ const Invoice = ({ data }: any) => {
             </Text>
           </View>
           <View style={styles.totalAmount}>
-            <Text style={{ color: "#4f4f4f" }}>Total Amount</Text>
+            <Text style={{ color: "#4f4f4f" }}>
+              Total Amount ({calcTotal() < 0 ? "Cr" : "Db"})
+            </Text>
             <Text
               style={{
                 fontSize: "13px",
@@ -390,7 +405,7 @@ const Invoice = ({ data }: any) => {
                 marginTop: "3px",
               }}
             >
-              {calcTotal()}
+              Rs.{Math.abs(calcTotal()).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -436,7 +451,7 @@ const Invoice = ({ data }: any) => {
                 >
                   Mobile -{" "}
                 </Text>
-                {data.customer.personalNumber}
+                {data.customer.personal_number}
               </Text>
               <Text style={styles.fieldValue}>
                 <Text
@@ -496,7 +511,7 @@ const Invoice = ({ data }: any) => {
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event Address:</Text>
-                <Text style={styles.fieldValue}>{data.eventAddress}</Text>
+                <Text style={styles.fieldValue}>{data.event_address}</Text>
               </View>
               <Text style={styles.fieldValue}>
                 <Text
@@ -508,7 +523,7 @@ const Invoice = ({ data }: any) => {
                 >
                   Pincode -{" "}
                 </Text>
-                {data.eventPincode}
+                {data.event_pincode}
               </Text>
             </View>
 
@@ -631,8 +646,8 @@ const Invoice = ({ data }: any) => {
                     <View style={styles.labelColumn}>
                       <Text>Deposit</Text>
                       <Text>Total Amount</Text>
-                      {data.business_mode === BillingMode.BUSINESS && (
-                        <Text>GST (10%)</Text>
+                      {data.billing_mode !== BillingMode.BUSINESS && (
+                        <Text>GST</Text>
                       )}
                       <Text>Discount</Text>
                       <Text>Discount Amount</Text>
@@ -643,7 +658,9 @@ const Invoice = ({ data }: any) => {
                     <View style={styles.valueColumn}>
                       <Text>Rs. {depositTotal()}</Text>
                       <Text>Rs. {calcFinalAmount().toFixed(2)}</Text>
-                      {gstAmount && <Text>Rs. {gstAmount}</Text>}
+                      {data.billing_mode !== BillingMode.BUSINESS && (
+                        <Text>Rs. {gstAmount}</Text>
+                      )}
                       <Text>{data.discount?.toFixed(2)}%</Text>
                       <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
                       <Text>Rs. {data.round_off?.toFixed(2)}</Text>
@@ -651,7 +668,11 @@ const Invoice = ({ data }: any) => {
                   </View>
 
                   {/* Small note */}
-                  <Text style={styles.smallNote}>All taxes included.</Text>
+                  {data.billing_mode !== BillingMode.BUSINESS && (
+                    <Text style={styles.smallNote}>
+                      GST and all other taxes included.
+                    </Text>
+                  )}
 
                   {/* Divider */}
                   <View style={styles.divider} />
@@ -672,9 +693,11 @@ const Invoice = ({ data }: any) => {
                       }}
                     >
                       <Text style={styles.boldText}>
-                        Rs. {calcTotal().toFixed(2)}
+                        Rs. {Math.abs(calcTotal()).toFixed(2)}
                       </Text>
-                      <Text style={styles.selectSim}>{data.payment_mode}</Text>
+                      <Text style={styles.selectSim}>
+                        {data.payment_mode.toUpperCase()}
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -687,7 +710,7 @@ const Invoice = ({ data }: any) => {
                     Amount in words:
                   </Text>
                   <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                    {numberToWordsIndian(calcTotal())}
+                    {numberToWordsIndian(Math.abs(calcTotal()))}
                   </Text>
                 </View>
                 <View style={styles.signatureContainer}>
@@ -710,7 +733,9 @@ const Invoice = ({ data }: any) => {
                 </View>
               </View>
 
-              <View style={{ width: "100%", flexDirection: "column", marginTop:5 }}>
+              <View
+                style={{ width: "100%", flexDirection: "column", marginTop: 5 }}
+              >
                 <Text style={styles.thankYouText}>
                   Thanks for choosing us - We look forward to serve you again
                 </Text>

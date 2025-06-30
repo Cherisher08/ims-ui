@@ -1,4 +1,4 @@
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, RowClassParams, RowStyle } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 // import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -12,6 +12,7 @@ type CustomTableProps<T> = {
   isLoading: boolean;
   pagination?: boolean;
   rowHeight?: number;
+  getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
 };
 
 const CustomTable = <T,>({
@@ -20,6 +21,9 @@ const CustomTable = <T,>({
   isLoading,
   rowHeight = 40,
   pagination = true,
+  getRowStyle = () => {
+    return {};
+  },
 }: CustomTableProps<T>) => {
   return (
     <div
@@ -33,6 +37,7 @@ const CustomTable = <T,>({
         headerHeight={40}
         paginationPageSize={10}
         rowHeight={rowHeight}
+        getRowStyle={(params) => getRowStyle(params)}
         domLayout="autoHeight"
         localeText={{ noRowsToShow: "No data Found..." }}
         loading={isLoading}

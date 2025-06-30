@@ -1,10 +1,305 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CustomSelect from "../../styled/CustomSelect";
 import CustomCard from "../../styled/CustomCard";
 import CustomLineChart from "../../styled/CustomLineChart";
+import { OrderInfoType, OrderType, PaymentStatus } from "../../types/order";
 
 const Dashboard = () => {
   const [filter, setFilter] = useState<string>("1");
+  const [orders, setOrders] = useState<OrderInfoType[]>([
+    {
+      order_id: "asdad12",
+      type: "rental",
+      billingMode: "Business",
+      status: "pending",
+      payment_mode: "cash",
+      out_date: "2025-06-29T17:42",
+      expected_date: "2025-06-29T17:42",
+      in_date: "2025-06-29T17:42",
+      round_off: 10.22,
+      product_details: [
+        {
+          _id: "p2",
+          name: "Welding Machine",
+          category: "EQUIPMENT",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u1",
+            name: "kg",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 10,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 300,
+        },
+        {
+          _id: "p5",
+          name: "Welding Machine",
+          category: "EQUIPMENT",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u1",
+            name: "kg",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 10,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 300,
+        },
+        {
+          _id: "p3",
+          name: "Hammer",
+          category: "TOOLS",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u3",
+            name: "l",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 20,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 1000,
+        },
+      ],
+      deposit: [
+        {
+          amount: 100,
+          date: "2025-06-29T18:06",
+          product: {
+            _id: "p2",
+            name: "Welding Machine",
+            category: "EQUIPMENT",
+            billing_unit: "days",
+            product_unit: {
+              _id: "u3",
+              name: "l",
+            },
+            in_date: "+0530-06-29T18:06",
+            order_quantity: 10,
+            order_repair_count: 0,
+            out_date: "+0530-06-29T18:06",
+            rent_per_unit: 300,
+          },
+          mode: "cash",
+        },
+      ],
+      discount: 10.52,
+      discount_amount: 241.96,
+      customer: {
+        id: "c2",
+        name: "Anita Sharma",
+        personalNumber: "9123456789",
+        officeNumber: "01122446688",
+        gstin: "07AAACB2233M1Z2",
+        email: "anita.sharma@example.in",
+        address: "Flat 9B, Green Heights, Dwarka, New Delhi",
+        pincode: "110075",
+        companyName: "Sharma Logistics",
+        addressProof: "Electricity Bill",
+      },
+      eventAddress: "asdasd",
+      eventPincode: "321112",
+      remarks: "asdxasdasd",
+    },
+    {
+      order_id: "asdad12",
+      type: "rental",
+      billingMode: "Business",
+      status: "pending",
+      payment_mode: "cash",
+      out_date: "2025-06-29T17:42",
+      expected_date: "2025-06-29T17:42",
+      in_date: "2025-06-29T17:42",
+      round_off: 10.22,
+      product_details: [
+        {
+          _id: "p2",
+          name: "Welding Machine",
+          category: "EQUIPMENT",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u1",
+            name: "kg",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 10,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 300,
+        },
+        {
+          _id: "p5",
+          name: "Welding Machine",
+          category: "EQUIPMENT",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u1",
+            name: "kg",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 10,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 300,
+        },
+        {
+          _id: "p3",
+          name: "Hammer",
+          category: "TOOLS",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u3",
+            name: "l",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 20,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 1000,
+        },
+      ],
+      deposit: [
+        {
+          amount: 100,
+          date: "2025-06-29T18:06",
+          product: {
+            _id: "p2",
+            name: "Welding Machine",
+            category: "EQUIPMENT",
+            billing_unit: "days",
+            product_unit: {
+              _id: "u3",
+              name: "l",
+            },
+            in_date: "+0530-06-29T18:06",
+            order_quantity: 10,
+            order_repair_count: 0,
+            out_date: "+0530-06-29T18:06",
+            rent_per_unit: 300,
+          },
+          mode: "cash",
+        },
+      ],
+      discount: 10.52,
+      discount_amount: 241.96,
+      customer: {
+        id: "c2",
+        name: "Anita Sharma",
+        personalNumber: "9123456789",
+        officeNumber: "01122446688",
+        gstin: "07AAACB2233M1Z2",
+        email: "anita.sharma@example.in",
+        address: "Flat 9B, Green Heights, Dwarka, New Delhi",
+        pincode: "110075",
+        companyName: "Sharma Logistics",
+        addressProof: "Electricity Bill",
+      },
+      eventAddress: "asdasd",
+      eventPincode: "321112",
+      remarks: "asdxasdasd",
+    },
+    {
+      order_id: "asdad12",
+      type: "rental",
+      billingMode: "Business",
+      status: "pending",
+      payment_mode: "cash",
+      out_date: "2025-06-29T17:42",
+      expected_date: "2025-06-29T17:42",
+      in_date: "2025-06-29T17:42",
+      round_off: 10.22,
+      product_details: [
+        {
+          _id: "p2",
+          name: "Welding Machine",
+          category: "EQUIPMENT",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u1",
+            name: "kg",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 10,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 300,
+        },
+        {
+          _id: "p5",
+          name: "Welding Machine",
+          category: "EQUIPMENT",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u1",
+            name: "kg",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 10,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 300,
+        },
+        {
+          _id: "p3",
+          name: "Hammer",
+          category: "TOOLS",
+          billing_unit: "days",
+          product_unit: {
+            _id: "u3",
+            name: "l",
+          },
+          in_date: "+0530-06-29T17:39",
+          order_quantity: 20,
+          order_repair_count: 0,
+          out_date: "+0530-06-29T17:39",
+          rent_per_unit: 1000,
+        },
+      ],
+      deposit: [
+        {
+          amount: 100,
+          date: "2025-06-29T18:06",
+          product: {
+            _id: "p2",
+            name: "Welding Machine",
+            category: "EQUIPMENT",
+            billing_unit: "days",
+            product_unit: {
+              _id: "u3",
+              name: "l",
+            },
+            in_date: "+0530-06-29T18:06",
+            order_quantity: 10,
+            order_repair_count: 0,
+            out_date: "+0530-06-29T18:06",
+            rent_per_unit: 300,
+          },
+          mode: "cash",
+        },
+      ],
+      discount: 10.52,
+      discount_amount: 241.96,
+      customer: {
+        id: "c2",
+        name: "Anita Sharma",
+        personalNumber: "9123456789",
+        officeNumber: "01122446688",
+        gstin: "07AAACB2233M1Z2",
+        email: "anita.sharma@example.in",
+        address: "Flat 9B, Green Heights, Dwarka, New Delhi",
+        pincode: "110075",
+        companyName: "Sharma Logistics",
+        addressProof: "Electricity Bill",
+      },
+      eventAddress: "asdasd",
+      eventPincode: "321112",
+      remarks: "asdxasdasd",
+    },
+  ]);
+  const [chartData, setchartData] = useState([]);
   const [graphFilter, setGraphFilter] = useState<number>(1);
   const [filterOptions, setFilterOptions] = useState([
     { id: "1", value: "daily" },
@@ -12,28 +307,56 @@ const Dashboard = () => {
     { id: "3", value: "monthly" },
   ]);
 
-  const sampleData = [
-    { date: "2024-05-01", price: 120 },
-    { date: "2024-05-02", price: 125 },
-    { date: "2024-05-03", price: 140 },
-    { date: "2024-05-04", price: 428 },
-    { date: "2024-05-05", price: 35 },
-    { date: "2024-05-06", price: 440 },
-    { date: "2024-05-07", price: 138 },
-    { date: "2024-05-08", price: 732 },
-    { date: "2024-05-09", price: 145 },
-    { date: "2024-05-10", price: 150 },
-    { date: "2024-05-11", price: 252 },
-    { date: "2024-05-12", price: 148 },
-    { date: "2024-05-13", price: 149 },
-    { date: "2024-05-14", price: 151 },
-    { date: "2024-05-15", price: 55 },
-    { date: "2024-05-16", price: 160 },
-    { date: "2024-05-17", price: 858 },
-    { date: "2024-05-18", price: 562 },
-    { date: "2024-05-19", price: 165 },
-    { date: "2024-05-20", price: 168 },
-  ];
+  const [pendingOrderAmount, setPendingOrderAmount] = useState<number>(0);
+
+  const calcFinalAmount = (order: OrderInfoType) => {
+    if (order.type === OrderType.RENTAL && order.product_details) {
+      return parseFloat(
+        order.product_details
+          .reduce(
+            (total, prod) =>
+              total +
+              prod.rent_per_unit *
+                (prod.order_quantity - prod.order_repair_count),
+            0
+          )
+          .toFixed(2)
+      );
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    const amount = orders
+      .filter((order) => order.status === PaymentStatus.PENDING)
+      .reduce((sum, order) => {
+        const deposit = order.deposit?.amount || 0;
+        const finalAmount = calcFinalAmount(order);
+        const roundOff = order.round_off || 0;
+        const discountAmount = order.discount_amount || 0;
+
+        const pendingAmount = finalAmount - deposit - discountAmount + roundOff;
+        return sum + pendingAmount;
+      }, 0);
+    setPendingOrderAmount(amount);
+    const pendingData = orders
+      .filter((order) => order.status === PaymentStatus.PENDING)
+      .map((order) => {
+        const deposit = order.deposit?.amount || 0;
+        const finalAmount = calcFinalAmount(order);
+        const roundOff = order.round_off || 0;
+        const discountAmount = order.discount_amount || 0;
+
+        const pendingAmount = parseFloat(
+          (finalAmount - deposit - discountAmount + roundOff).toFixed(2)
+        );
+        return {
+          date: new Date(order.in_date).toISOString().split("T")[0],
+          price: pendingAmount,
+        };
+      });
+    setchartData(pendingData);
+  }, [orders]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">
@@ -53,16 +376,16 @@ const Dashboard = () => {
       <div className="flex flex-col gap-3">
         <div className="grid grid-cols-[repeat(auto-fit,_minmax(13rem,_1fr))] items-center justify-center gap-4">
           <CustomCard
-            title="Products In"
+            title="Total Amount Pending"
+            className="grow"
+            value={pendingOrderAmount}
+            // change={-11.2}
+          />
+          <CustomCard
+            title="Products"
             className="grow"
             value={30}
             change={11.2}
-          />
-          <CustomCard
-            title="Products In"
-            className="grow"
-            value={30}
-            change={-11.2}
           />
           <CustomCard
             title="Products In"
@@ -105,7 +428,7 @@ const Dashboard = () => {
                 Order Timeline
               </li>
             </ul>
-            <CustomLineChart chartData={sampleData} />
+            <CustomLineChart chartData={chartData} title="" />
           </div>
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Title</p>

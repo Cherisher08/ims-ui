@@ -22,7 +22,7 @@ import {
 const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: apiUrl,
+  baseUrl: "https://ims-mpt-backend.onrender.com/",
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("access_token");
     if (token) {

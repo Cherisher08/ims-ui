@@ -14,7 +14,7 @@ const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
 const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
 const Inventory = React.lazy(() => import("../pages/private/Inventory"));
 const Contacts = React.lazy(() => import("../pages/private/Contacts/Contacts"));
-const Orders = React.lazy(() => import("../pages/private/OrderSummary/Orders"));
+const Orders = React.lazy(() => import("../pages/private/orderSummary/Orders"));
 const NewOrder = React.lazy(() => import("../pages/private/Orders/NewOrder"));
 const OrderInvoice = React.lazy(
   () => import("../pages/private/Orders/OrderInvoice")

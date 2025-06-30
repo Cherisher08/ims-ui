@@ -1,5 +1,5 @@
 import { Box, Chip, Tab, Tabs } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
 import CustomSelect, {
@@ -11,7 +11,7 @@ import {
   BillingMode,
   BillingUnit,
   DepositType,
-  OrderInfoType,
+  OrderInfo,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -25,8 +25,21 @@ import dayjs from "dayjs";
 import { Product, ProductType } from "../../../types/common";
 import AddProductModal from "./modals/AddProductModal";
 import UpdateProductModal from "./modals/UpdateProductModal";
-import { useGetProductsQuery } from "../../../services/ApiService";
+import {
+  useGetProductsQuery,
+  useUpdateProductMutation,
+} from "../../../services/ApiService";
 import { useGetContactsQuery } from "../../../services/ContactService";
+import {
+  useCreateRentalOrderMutation,
+  useGetRentalOrderByIdQuery,
+  useGetRentalOrdersQuery,
+  useUpdateRentalOrderMutation,
+} from "../../../services/OrderService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../../constants/constants";
+import { useNavigate, useParams } from "react-router-dom";
+import { calculateDiscountAmount } from "../../../services/utility_functions";
 
 const formatContacts = (
   contacts: ContactInfoType[]
@@ -36,11 +49,16 @@ const formatContacts = (
     value: contact.name,
   }));
 
-const calculateDiscountAmount = (
-  discountPercent: number,
-  finalAmount: number
-) => {
-  return +((discountPercent / 100.0) * finalAmount).toFixed(2);
+const getNewOrderId = (orders: OrderInfo[]) => {
+  let orderId = "RO-0001";
+  const suffixes = orders.map((order) => {
+    const match = order.order_id.match(/RO-(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  });
+
+  const maxSuffix = Math.max(...suffixes);
+  orderId = `RO-${String(maxSuffix + 1).padStart(4, "0")}`;
+  return orderId;
 };
 
 const colDefs: ColDef<ProductDetails>[] = [
@@ -92,7 +110,6 @@ const colDefs: ColDef<ProductDetails>[] = [
     headerClass: "ag-header-wrap",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
-      console.log("Quantity Data", data);
       return (
         <div className="flex gap-2 flex-wrap">
           {data.order_quantity} <span>Unit(s)</span>
@@ -136,10 +153,10 @@ const paymentStatusOptions = Object.entries(PaymentStatus).map(
 );
 
 const initialRentalProduct: RentalOrderInfo = {
-  _id: "",
   order_id: "",
   discount: 0,
   discount_amount: 0,
+  gst: 10,
   remarks: "",
   type: ProductType.RENTAL,
   billing_mode: BillingMode.RETAIL,
@@ -157,15 +174,41 @@ const initialRentalProduct: RentalOrderInfo = {
 };
 
 const NewOrder = () => {
+  const navigate = useNavigate();
+  const { rentalId } = useParams();
+
   const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } =
     useGetProductsQuery();
   const { data: contactsData, isSuccess: isContactsQuerySuccess } =
     useGetContactsQuery();
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } =
+    useGetRentalOrdersQuery();
+  const {
+    data: existingRentalOrder,
+    isSuccess: isRentalOrderQueryByIdSuccess,
+  } = useGetRentalOrderByIdQuery(rentalId!, {
+    skip: !rentalId,
+  });
+  const [updateProductData, { isSuccess: isUpdateProductSuccess }] =
+    useUpdateProductMutation();
+  const [
+    createRentalOrder,
+    {
+      isSuccess: isRentalOrderCreateSuccess,
+      isError: isRentalOrderCreateError,
+    },
+  ] = useCreateRentalOrderMutation();
+  const [
+    updateRentalOrder,
+    {
+      isSuccess: isRentalOrderUpdateSuccess,
+      isError: isRentalOrderUpdateError,
+    },
+  ] = useUpdateRentalOrderMutation();
 
   const [orderInfo, setOrderInfo] =
     useState<RentalOrderInfo>(initialRentalProduct);
-  console.log("orderInfo: ", orderInfo);
 
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
@@ -181,10 +224,10 @@ const NewOrder = () => {
       _id: "",
       name: "",
     },
-    in_date: dayjs().format("YYY-MM-DDTHH:mm"),
+    in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
     order_quantity: 0,
     order_repair_count: 0,
-    out_date: dayjs().format("YYY-MM-DDTHH:mm"),
+    out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
     rent_per_unit: 0,
   });
 
@@ -209,23 +252,7 @@ const NewOrder = () => {
     }));
   };
 
-  const calcTotal = () => {
-    const totalDeposit = depositData.reduce(
-      (total, deposit) => total + deposit.amount,
-      0
-    );
-    const finalAmount = calcFinalAmount();
-    const roundOff = orderInfo.round_off || 0;
-    const discountAmount = calculateDiscountAmount(
-      orderInfo.discount || 0,
-      finalAmount
-    );
-    return parseFloat(
-      (finalAmount - totalDeposit - discountAmount + roundOff).toFixed(2)
-    );
-  };
-
-  const calcFinalAmount = () => {
+  const calculateTotalAmount = useCallback(() => {
     if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
       return parseFloat(
         orderInfo.product_details
@@ -240,7 +267,36 @@ const NewOrder = () => {
       );
     }
     return 0;
-  };
+  }, [orderInfo.product_details, orderInfo.type]);
+
+  const calculateFinalAmount = useCallback(() => {
+    const totalDeposit = depositData.reduce(
+      (total, deposit) => total + deposit.amount,
+      0
+    );
+    const finalAmount = calculateTotalAmount();
+    const roundOff = orderInfo.round_off || 0;
+    const discountAmount = calculateDiscountAmount(
+      orderInfo.discount || 0,
+      finalAmount
+    );
+    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount);
+    return parseFloat(
+      (
+        finalAmount -
+        totalDeposit -
+        discountAmount +
+        gstAmount +
+        roundOff
+      ).toFixed(2)
+    );
+  }, [
+    calculateTotalAmount,
+    depositData,
+    orderInfo.discount,
+    orderInfo.gst,
+    orderInfo.round_off,
+  ]);
 
   const addProductToOrder = (product: ProductDetails) => {
     if (orderInfo.type === ProductType.RENTAL) {
@@ -277,10 +333,10 @@ const NewOrder = () => {
           _id: "",
           name: "",
         },
-        in_date: dayjs().format("YYY-MM-DDTHH:mm"),
+        in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
         order_quantity: 0,
         order_repair_count: 0,
-        out_date: dayjs().format("YYY-MM-DDTHH:mm"),
+        out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
         rent_per_unit: 0,
       });
     }
@@ -300,11 +356,94 @@ const NewOrder = () => {
   };
 
   const createNewOrder = () => {
-    if (orderInfo.type === ProductType.RENTAL) {
-      console.log(orderInfo, depositData);
-      orderInfo.deposits = depositData;
+    orderInfo.deposits = depositData;
+    if (rentalId) {
+      updateRentalOrder(orderInfo);
+      if (existingRentalOrder) {
+        orderInfo.product_details.forEach((updatedProductDetail) => {
+          const previousProductDetail =
+            existingRentalOrder.product_details.find(
+              (prev) => prev._id === updatedProductDetail._id
+            );
+
+          const previousQuantity = previousProductDetail?.order_quantity ?? 0;
+          const previousRepair = previousProductDetail?.order_repair_count ?? 0;
+
+          const quantityDelta =
+            updatedProductDetail.order_quantity - previousQuantity;
+          const repairDelta =
+            updatedProductDetail.order_repair_count - previousRepair;
+
+          // find the product in inventory
+          const currentProduct = {
+            ...products.find(
+              (product) => product._id === updatedProductDetail._id
+            )!,
+          };
+
+          // apply the delta
+          currentProduct.available_stock -= quantityDelta;
+          currentProduct.repair_count += repairDelta;
+
+          updateProductData(currentProduct);
+        });
+      }
+    } else {
+      createRentalOrder(orderInfo);
+      orderInfo.product_details.forEach((product_detail) => {
+        const currentProduct = products.find(
+          (product) => product._id === product_detail._id
+        )!;
+        currentProduct.available_stock -= product_detail.order_quantity;
+        currentProduct.repair_count += product_detail.order_repair_count;
+        updateProductData(currentProduct);
+      });
+      setOrderInfo(initialRentalProduct);
     }
   };
+
+  useEffect(() => {
+    if (isRentalOrderCreateSuccess && isUpdateProductSuccess) {
+      toast.success("Rental Order Created Successfully", {
+        toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
+      });
+      navigate("/orders");
+    }
+    if (isRentalOrderCreateError) {
+      toast.error("Rental Order was not Created Successfully", {
+        toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+      });
+      navigate("/orders");
+    }
+  }, [
+    isRentalOrderCreateError,
+    isRentalOrderCreateSuccess,
+    isUpdateProductSuccess,
+    navigate,
+  ]);
+
+  useEffect(() => {
+    if (isRentalOrderUpdateSuccess && isUpdateProductSuccess) {
+      toast.success("Rental Order Updated Successfully", {
+        toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
+      });
+      navigate("/orders");
+    }
+    if (isRentalOrderUpdateError) {
+      toast.error(
+        "Rental Order was not Updated Successfully. Please Try Again",
+        {
+          toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+        }
+      );
+      navigate("/orders");
+    }
+  }, [
+    isRentalOrderUpdateError,
+    isRentalOrderUpdateSuccess,
+    isUpdateProductSuccess,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (isProductsQuerySuccess) {
@@ -318,6 +457,24 @@ const NewOrder = () => {
     isContactsQuerySuccess,
     isProductsQuerySuccess,
     productsData,
+  ]);
+
+  useEffect(() => {
+    if (rentalId) {
+      if (isRentalOrderQueryByIdSuccess) {
+        setOrderInfo(existingRentalOrder);
+        setDepositData(existingRentalOrder.deposits);
+      }
+    } else if (isRentalOrdersQuerySuccess) {
+      const orderId = getNewOrderId(rentalOrders);
+      handleValueChange("order_id", orderId);
+    }
+  }, [
+    existingRentalOrder,
+    isRentalOrderQueryByIdSuccess,
+    isRentalOrdersQuerySuccess,
+    rentalId,
+    rentalOrders,
   ]);
 
   return (
@@ -372,10 +529,11 @@ const NewOrder = () => {
             <div className="w-full flex justify-between items-start">
               <div className="flex flex-nowrap gap-3">
                 <CustomInput
-                  onChange={(value) => handleValueChange("order_id", value)}
+                  onChange={() => {}}
                   label="Order Id"
                   placeholder="Enter Order Id"
                   value={orderInfo?.order_id ?? ""}
+                  disabled
                   className="min-w-[15rem] max-w-[35rem]"
                 />
 
@@ -404,14 +562,15 @@ const NewOrder = () => {
                 <p>Retail</p>
                 <AntSwitch
                   checked={orderInfo.billing_mode === BillingMode.BUSINESS}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     handleValueChange(
                       "billing_mode",
                       e.target.checked
                         ? BillingMode.BUSINESS
                         : BillingMode.RETAIL
-                    )
-                  }
+                    );
+                    handleValueChange("gst", e.target.checked ? 0 : 10);
+                  }}
                 />
                 <p>Business</p>
               </div>
@@ -454,7 +613,7 @@ const NewOrder = () => {
                 value={orderInfo.expected_date ?? ""}
                 className="w-fit"
                 wrapperClass="w-[13rem]"
-                onChange={(value) => handleValueChange("expectedDate", value)}
+                onChange={(value) => handleValueChange("expected_date", value)}
                 placeholder="Enter Expected Date"
               />
 
@@ -539,8 +698,8 @@ const NewOrder = () => {
                     <div className="flex flex-col gap-1 text-gray-500">
                       <p>Deposit</p>
                       <p>Total Amount</p>
-                      {orderInfo.billing_mode === BillingMode.BUSINESS && (
-                        <p>GST (10%)</p>
+                      {orderInfo.billing_mode === BillingMode.RETAIL && (
+                        <p>GST</p>
                       )}
                       <p>Discount</p>
                       <p>Discount Amount</p>
@@ -554,9 +713,30 @@ const NewOrder = () => {
                           0
                         )}
                       </p>
-                      <p>₹ {calcFinalAmount()}</p>
-                      {orderInfo.billing_mode === BillingMode.BUSINESS && (
-                        <p>₹ {(calcTotal() * 0.01).toFixed(2)}</p>
+                      <p>₹ {calculateTotalAmount()}</p>
+                      {orderInfo.billing_mode === BillingMode.RETAIL && (
+                        <div className="flex justify-end gap-1">
+                          <input
+                            className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                            type="number"
+                            value={orderInfo.gst}
+                            onChange={(e) => {
+                              if (
+                                orderInfo.type === ProductType.RENTAL &&
+                                orderInfo.product_details
+                              ) {
+                                const percent = parseFloat(
+                                  parseFloat(e.target.value).toFixed(0)
+                                );
+                                setOrderInfo((prev) => ({
+                                  ...prev,
+                                  gst: percent,
+                                }));
+                              }
+                            }}
+                          />
+                          <span className="w-2">%</span>
+                        </div>
                       )}
                       <div className="flex justify-end gap-1">
                         <input
@@ -571,9 +751,9 @@ const NewOrder = () => {
                               const percent = parseFloat(
                                 parseFloat(e.target.value).toFixed(2)
                               );
-                              const total_amount = calcFinalAmount();
+                              const total_amount = calculateTotalAmount();
                               const discount_amount =
-                                total_amount * percent * 0.001;
+                                total_amount * percent * 0.01;
                               setOrderInfo((prev) => ({
                                 ...prev,
                                 discount: percent,
@@ -597,7 +777,7 @@ const NewOrder = () => {
                               const amount = parseFloat(
                                 parseFloat(e.target.value).toFixed(2)
                               );
-                              const total_amount = calcFinalAmount();
+                              const total_amount = calculateTotalAmount();
                               const percent = parseFloat(
                                 ((amount / total_amount) * 100).toFixed(2)
                               );
@@ -629,26 +809,31 @@ const NewOrder = () => {
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] w-full text-right text-gray-500">
-                    All taxes included.
-                  </span>
+                  {orderInfo.billing_mode === BillingMode.BUSINESS && (
+                    <span className="text-[10px] w-full text-right text-gray-500">
+                      GST and all other taxes included.
+                    </span>
+                  )}
                   <div className="grid grid-cols-2 border-t border-t-gray-200">
                     <div className="flex flex-col gap-1 font-semibold pb-2">
-                      <p>{calcTotal() > 0 ? "Balance" : "Refund"}</p>
+                      <p>{calculateFinalAmount() > 0 ? "Balance" : "Refund"}</p>
                       <p>Mode</p>
                     </div>
                     <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
                       <p className="font-semibold text-black">
-                        ₹ {calcTotal()}
+                        ₹ {Math.abs(calculateFinalAmount())}
                       </p>
                       <select
                         className="w-fit outline-none"
                         onChange={(e) =>
-                          handleValueChange("payment_mode", e.target.value)
+                          handleValueChange(
+                            "payment_mode",
+                            e.target.value.toLowerCase()
+                          )
                         }
                       >
-                        {Object.keys(PaymentMode).map((mode) => (
-                          <option>{mode}</option>
+                        {Object.entries(PaymentMode).map(([id, key]) => (
+                          <option>{key.toUpperCase()}</option>
                         ))}
                       </select>
                     </div>
@@ -659,12 +844,19 @@ const NewOrder = () => {
                 <CustomButton
                   label="Cancel"
                   onClick={() => {
-                    setDepositData([]);
-                    setOrderInfo(initialRentalProduct);
+                    if (rentalId) {
+                      navigate("/orders");
+                    } else {
+                      setDepositData([]);
+                      setOrderInfo(initialRentalProduct);
+                    }
                   }}
                   variant="outlined"
                 />
-                <CustomButton label="Create Order" onClick={createNewOrder} />
+                <CustomButton
+                  label={rentalId ? "Update Order" : "Create Order"}
+                  onClick={createNewOrder}
+                />
               </div>
             </div>
           )}
@@ -674,6 +866,9 @@ const NewOrder = () => {
         addProductOpen={addProductOpen}
         addProductToOrder={addProductToOrder}
         products={products.filter((prod) => {
+          if (prod.available_stock <= 0) {
+            return false;
+          }
           if (
             orderInfo.type === ProductType.RENTAL &&
             orderInfo.product_details
@@ -701,7 +896,7 @@ const NewOrder = () => {
         <DepositModal
           depositOpen={depositOpen}
           setDepositOpen={(value: boolean) => setDepositOpen(value)}
-          products={orderInfo.product_details}
+          productData={orderInfo.product_details}
           depositData={depositData}
           setDepositData={setDepositData}
         />

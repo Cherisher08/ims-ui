@@ -63,7 +63,7 @@ const privateRoutes = [
     children: [
       {
         index: true,
-        path: "/orders/new-order",
+        path: "/orders/rentals",
         element: <NewOrder />,
       },
       {
@@ -87,12 +87,16 @@ const privateRoutes = [
         element: <OrderInvoice />,
       },
       {
+        path: "/orders/rentals/:rentalId",
+        element: <NewOrder />,
+      },
+      {
         path: "*",
-        element: <Navigate to="/orders/new-order" replace />,
+        element: <Navigate to="/orders/rentals" replace />,
       },
       {
         path: "/",
-        element: <Navigate to="/orders/new-order" replace />,
+        element: <Navigate to="/orders/rentals" replace />,
       },
     ],
   },

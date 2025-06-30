@@ -12,7 +12,7 @@ type DepositModalType = {
   depositOpen: boolean;
   setDepositOpen: (value: boolean) => void;
   depositData: DepositType[];
-  products: ProductDetails[];
+  productData: ProductDetails[];
   setDepositData: React.Dispatch<React.SetStateAction<DepositType[]>>;
 };
 
@@ -31,10 +31,16 @@ const formatProducts = (products: ProductDetails[]) => {
 const DepositModal = ({
   depositOpen,
   setDepositOpen,
-  products,
+  productData,
   depositData,
   setDepositData,
 }: DepositModalType) => {
+  const products = productData.map((product) => {
+    return {
+      _id: product._id,
+      name: product.name,
+    };
+  });
   const handleAddDeposit = () => {
     setDepositData([
       ...depositData,
@@ -42,7 +48,7 @@ const DepositModal = ({
         amount: 0,
         date: dayjs().format("YYYY-MM-DDTHH:mm"),
         mode: PaymentMode.CASH,
-        product: null,
+        product: products[0],
       },
     ]);
   };

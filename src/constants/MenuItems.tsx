@@ -19,7 +19,7 @@ export const MenuItems: MenuItemsType[] = [
   {
     id: 2,
     title: "Orders",
-    path: "/orders/new-order",
+    path: "/orders/rentals",
     logo: <LuClipboardList size={30} />,
   },
   {

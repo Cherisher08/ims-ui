@@ -57,27 +57,25 @@ export type DepositType = {
 // Types for Frontend
 
 export type RentalOrderType = {
+  _id: string;
   order_id: string;
-  contact: string;
-  deposit: number;
-  order_InDate: string;
-  orderOutDate: string;
-  productId: string;
-  productUnit: number;
-  inDate: string;
-  outDate: string;
+  contact_name: string;
+  deposits: DepositType[];
+  products: string;
+  in_date: string;
+  out_date: string;
+  expected_date: string;
 };
 
 export type RentalType = {
+  _id: string;
   order_id: string;
-  contact: string;
-  deposit: DepositType[];
-  orderInDate: string;
-  orderOutDate: string;
-  productId: string;
-  productUnit: number;
-  inDate: string;
-  outDate: string;
+  contact_name: string;
+  deposits: DepositType[];
+  products: string;
+  in_date: string;
+  out_date: string;
+  expected_date: string;
   actions?: string;
 };
 
@@ -93,7 +91,7 @@ export type OrderSummaryType = {
 // Backend Data Types
 
 export type OrderInfo = {
-  _id: string;
+  _id?: string;
   order_id: string;
   customer: ContactInfoType;
   billing_mode: BillingMode;
@@ -103,6 +101,7 @@ export type OrderInfo = {
   remarks: string;
   round_off: number;
   payment_mode: PaymentMode;
+  gst: number;
 };
 
 export type RentalOrderInfo = OrderInfo & {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CustomButton from "../../../styled/CustomButton";
 import { LuPlus } from "react-icons/lu";
 import { FaWhatsapp } from "react-icons/fa";
@@ -6,236 +6,44 @@ import { MdOutlineMail } from "react-icons/md";
 import { Box, Tab, Tabs } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import RentalOrderTable from "./RentalOrderTable";
-import { RentalOrderType } from "../../../types/order";
-import SalesOrderTable from "./SalesOrderTable";
-import ServiceOrderTable from "./ServiceOrderTable";
+import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
+// import SalesOrderTable from "./SalesOrderTable";
+// import ServiceOrderTable from "./ServiceOrderTable";
+import { useGetRentalOrdersQuery } from "../../../services/OrderService";
+
+const transformRentalOrderData = (
+  rentalOrders: RentalOrderInfo[]
+): RentalOrderType[] => {
+  return rentalOrders.map((rentalOrder) => {
+    return {
+      _id: rentalOrder._id!,
+      order_id: rentalOrder.order_id,
+      in_date: rentalOrder.in_date,
+      expected_date: rentalOrder.expected_date,
+      out_date: rentalOrder.out_date,
+      deposits: rentalOrder.deposits,
+      contact_name: rentalOrder.customer.name,
+      products: rentalOrder.product_details.reduce((names, product, index) => {
+        if (index === 0) return product.name;
+        return `${names}, ${product.name}`;
+      }, ""),
+    };
+  });
+};
 
 const Orders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
+  const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
+    useGetRentalOrdersQuery();
 
-  const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([
-    {
-      order_id: "ORD001",
-      contact: "9876543210",
-      deposit: 500,
-      orderInDate: "2025-06-01T10:15:00Z",
-      orderOutDate: "2025-06-01T16:30:00Z",
-      productId: "PROD001",
-      productUnit: 10,
-      inDate: "2025-06-01T10:20:00Z",
-      outDate: "2025-06-01T16:25:00Z",
-    },
-    {
-      order_id: "ORD002",
-      contact: "9123456789",
-      deposit: 800,
-      orderInDate: "2025-06-02T09:00:00Z",
-      orderOutDate: "2025-06-02T14:45:00Z",
-      productId: "PROD002",
-      productUnit: 5,
-      inDate: "2025-06-02T09:05:00Z",
-      outDate: "2025-06-02T14:40:00Z",
-    },
-    {
-      order_id: "ORD003",
-      contact: "9988776655",
-      deposit: 1200,
-      orderInDate: "2025-06-03T11:30:00Z",
-      orderOutDate: "2025-06-03T17:30:00Z",
-      productId: "PROD003",
-      productUnit: 15,
-      inDate: "2025-06-03T11:35:00Z",
-      outDate: "2025-06-03T17:25:00Z",
-    },
-    {
-      order_id: "ORD004",
-      contact: "9001122334",
-      deposit: 400,
-      orderInDate: "2025-06-04T08:00:00Z",
-      orderOutDate: "2025-06-04T12:15:00Z",
-      productId: "PROD004",
-      productUnit: 20,
-      inDate: "2025-06-04T08:10:00Z",
-      outDate: "2025-06-04T12:10:00Z",
-    },
-    {
-      order_id: "ORD005",
-      contact: "9112233445",
-      deposit: 950,
-      orderInDate: "2025-06-05T07:45:00Z",
-      orderOutDate: "2025-06-05T13:00:00Z",
-      productId: "PROD005",
-      productUnit: 12,
-      inDate: "2025-06-05T07:50:00Z",
-      outDate: "2025-06-05T12:55:00Z",
-    },
-    {
-      order_id: "ORD006",
-      contact: "9090909090",
-      deposit: 1100,
-      orderInDate: "2025-06-06T13:15:00Z",
-      orderOutDate: "2025-06-06T18:30:00Z",
-      productId: "PROD006",
-      productUnit: 8,
-      inDate: "2025-06-06T13:20:00Z",
-      outDate: "2025-06-06T18:25:00Z",
-    },
-    {
-      order_id: "ORD007",
-      contact: "8888777766",
-      deposit: 300,
-      orderInDate: "2025-06-07T06:45:00Z",
-      orderOutDate: "2025-06-07T11:00:00Z",
-      productId: "PROD007",
-      productUnit: 30,
-      inDate: "2025-06-07T06:50:00Z",
-      outDate: "2025-06-07T10:55:00Z",
-    },
-    {
-      order_id: "ORD008",
-      contact: "7777666655",
-      deposit: 650,
-      orderInDate: "2025-06-08T15:30:00Z",
-      orderOutDate: "2025-06-08T20:30:00Z",
-      productId: "PROD008",
-      productUnit: 14,
-      inDate: "2025-06-08T15:35:00Z",
-      outDate: "2025-06-08T20:25:00Z",
-    },
-    {
-      order_id: "ORD009",
-      contact: "9223344556",
-      deposit: 700,
-      orderInDate: "2025-06-09T09:45:00Z",
-      orderOutDate: "2025-06-09T15:00:00Z",
-      productId: "PROD009",
-      productUnit: 11,
-      inDate: "2025-06-09T09:50:00Z",
-      outDate: "2025-06-09T14:55:00Z",
-    },
-    {
-      order_id: "ORD010",
-      contact: "9334455667",
-      deposit: 480,
-      orderInDate: "2025-06-10T11:00:00Z",
-      orderOutDate: "2025-06-10T17:00:00Z",
-      productId: "PROD010",
-      productUnit: 18,
-      inDate: "2025-06-10T11:05:00Z",
-      outDate: "2025-06-10T16:55:00Z",
-    },
-    {
-      order_id: "ORD011",
-      contact: "9445566778",
-      deposit: 560,
-      orderInDate: "2025-06-11T10:30:00Z",
-      orderOutDate: "2025-06-11T15:45:00Z",
-      productId: "PROD011",
-      productUnit: 7,
-      inDate: "2025-06-11T10:35:00Z",
-      outDate: "2025-06-11T15:40:00Z",
-    },
-    {
-      order_id: "ORD012",
-      contact: "9556677889",
-      deposit: 890,
-      orderInDate: "2025-06-12T08:45:00Z",
-      orderOutDate: "2025-06-12T13:30:00Z",
-      productId: "PROD012",
-      productUnit: 6,
-      inDate: "2025-06-12T08:50:00Z",
-      outDate: "2025-06-12T13:25:00Z",
-    },
-    {
-      order_id: "ORD013",
-      contact: "9667788990",
-      deposit: 950,
-      orderInDate: "2025-06-13T07:15:00Z",
-      orderOutDate: "2025-06-13T11:45:00Z",
-      productId: "PROD013",
-      productUnit: 13,
-      inDate: "2025-06-13T07:20:00Z",
-      outDate: "2025-06-13T11:40:00Z",
-    },
-    {
-      order_id: "ORD014",
-      contact: "9778899001",
-      deposit: 610,
-      orderInDate: "2025-06-14T13:45:00Z",
-      orderOutDate: "2025-06-14T18:15:00Z",
-      productId: "PROD014",
-      productUnit: 9,
-      inDate: "2025-06-14T13:50:00Z",
-      outDate: "2025-06-14T18:10:00Z",
-    },
-    {
-      order_id: "ORD015",
-      contact: "9889900011",
-      deposit: 990,
-      orderInDate: "2025-06-15T12:00:00Z",
-      orderOutDate: "2025-06-15T17:30:00Z",
-      productId: "PROD015",
-      productUnit: 16,
-      inDate: "2025-06-15T12:05:00Z",
-      outDate: "2025-06-15T17:25:00Z",
-    },
-    {
-      order_id: "ORD016",
-      contact: "9990011223",
-      deposit: 450,
-      orderInDate: "2025-06-16T09:30:00Z",
-      orderOutDate: "2025-06-16T13:50:00Z",
-      productId: "PROD016",
-      productUnit: 4,
-      inDate: "2025-06-16T09:35:00Z",
-      outDate: "2025-06-16T13:45:00Z",
-    },
-    {
-      order_id: "ORD017",
-      contact: "9001122233",
-      deposit: 620,
-      orderInDate: "2025-06-17T14:30:00Z",
-      orderOutDate: "2025-06-17T20:00:00Z",
-      productId: "PROD017",
-      productUnit: 20,
-      inDate: "2025-06-17T14:35:00Z",
-      outDate: "2025-06-17T19:55:00Z",
-    },
-    {
-      order_id: "ORD018",
-      contact: "9112233445",
-      deposit: 700,
-      orderInDate: "2025-06-18T10:00:00Z",
-      orderOutDate: "2025-06-18T15:30:00Z",
-      productId: "PROD018",
-      productUnit: 11,
-      inDate: "2025-06-18T10:05:00Z",
-      outDate: "2025-06-18T15:25:00Z",
-    },
-    {
-      order_id: "ORD019",
-      contact: "9223344556",
-      deposit: 770,
-      orderInDate: "2025-06-19T11:45:00Z",
-      orderOutDate: "2025-06-19T17:15:00Z",
-      productId: "PROD019",
-      productUnit: 17,
-      inDate: "2025-06-19T11:50:00Z",
-      outDate: "2025-06-19T17:10:00Z",
-    },
-    {
-      order_id: "ORD020",
-      contact: "9334455667",
-      deposit: 870,
-      orderInDate: "2025-06-20T09:00:00Z",
-      orderOutDate: "2025-06-20T14:00:00Z",
-      productId: "PROD020",
-      productUnit: 10,
-      inDate: "2025-06-20T09:05:00Z",
-      outDate: "2025-06-20T13:55:00Z",
-    },
-  ]);
+  const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
+
+  useEffect(() => {
+    if (isRentalOrdersQuerySuccess) {
+      setRentalOrders(transformRentalOrderData(rentalOrderData));
+    }
+  }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
   return (
     <div className="h-fit flex gap-3 flex-col">
@@ -268,19 +76,19 @@ const Orders = () => {
           aria-label="basic tabs example"
         >
           <Tab label="Rental" value={1} />
-          <Tab label="Sales" value={2} />
-          <Tab label="Service" value={3} />
+          {/* <Tab label="Sales" value={2} />
+          <Tab label="Service" value={3} /> */}
         </Tabs>
       </Box>
       <div role="tabpanel" hidden={activeTab !== 1}>
         <RentalOrderTable rentalOrders={rentalOrders} />
       </div>
-      <div role="tabpanel" hidden={activeTab !== 2}>
+      {/* <div role="tabpanel" hidden={activeTab !== 2}>
         <SalesOrderTable rentalOrders={rentalOrders} />
       </div>
       <div role="tabpanel" hidden={activeTab !== 3}>
         <ServiceOrderTable rentalOrders={rentalOrders} />
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { Product } from "../../../../types/common";
 import CustomSelect from "../../../../styled/CustomSelect";
 import CustomInput from "../../../../styled/CustomInput";
 import CustomDatePicker from "../../../../styled/CustomDatePicker";
+import { useState } from "react";
 
 type UpdateProductModalOpen = {
   updateProductOpen: boolean;
@@ -36,6 +37,14 @@ const UpdateProductModal = ({
   setUpdateProductOpen,
   updateProductToOrder,
 }: UpdateProductModalOpen) => {
+  const currentAvailableStock =
+    products.find((product) => product._id === updateProduct?._id)
+      ?.available_stock || 0;
+
+  const isDoneDisabled =
+    updateProduct.order_quantity <= 0 ||
+    (currentAvailableStock ?? 0) < updateProduct.order_quantity ||
+    updateProduct.order_quantity < updateProduct.order_repair_count;
   const handleValueChange = (key: string, value: any) => {
     setUpdateProduct((prev) => ({
       ...prev,
@@ -54,7 +63,7 @@ const UpdateProductModal = ({
       <div className="flex flex-col gap-4 justify-center items-center w-3/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full">
           <p className="text-primary text-xl font-semibold w-full text-start">
-            Add Product
+            Update Product
           </p>
           <MdClose
             size={25}
@@ -83,6 +92,7 @@ const UpdateProductModal = ({
                 handleValueChange("name", data.name);
                 handleValueChange("category", data.category.name);
                 handleValueChange("product_unit", data.unit);
+                handleValueChange("rent_per_unit", data.rent_per_unit);
               }
             }}
           />
@@ -130,6 +140,8 @@ const UpdateProductModal = ({
             labelClass="w-[8rem]"
             placeholder="Enter Order Quantity"
             value={updateProduct.order_quantity}
+            error={(currentAvailableStock ?? 0) < updateProduct.order_quantity}
+            helperText="Quantity greater than Available Stock"
             onChange={(value) =>
               handleValueChange("order_quantity", parseInt(value))
             }
@@ -143,6 +155,19 @@ const UpdateProductModal = ({
             onChange={(value) =>
               handleValueChange("order_repair_count", parseInt(value))
             }
+            error={
+              updateProduct.order_quantity < updateProduct.order_repair_count
+            }
+            helperText="Repair Count higher than Order Quantity"
+          />
+          <CustomInput
+            label="Available Stock"
+            type="number"
+            labelClass="w-[8rem]"
+            placeholder=""
+            disabled
+            value={currentAvailableStock || 0}
+            onChange={() => {}}
           />
         </div>
 
@@ -158,6 +183,7 @@ const UpdateProductModal = ({
               updateProductToOrder();
               setUpdateProductOpen(false);
             }}
+            disabled={isDoneDisabled}
           />
         </div>
       </div>

@@ -819,6 +819,7 @@ const Inventory = () => {
                       return {
                         ...prev,
                         quantity: parseInt(value),
+                        available_stock: parseInt(value) - prev.repair_count,
                       };
                     return prev;
                   })

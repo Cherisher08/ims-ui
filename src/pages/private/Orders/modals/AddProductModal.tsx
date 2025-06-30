@@ -3,7 +3,7 @@ import { BillingUnit, ProductDetails } from "../../../../types/order";
 import { MdClose } from "react-icons/md";
 import CustomButton from "../../../../styled/CustomButton";
 import { useState } from "react";
-import { Product, Unit } from "../../../../types/common";
+import { Product } from "../../../../types/common";
 import CustomSelect from "../../../../styled/CustomSelect";
 import dayjs from "dayjs";
 import CustomInput from "../../../../styled/CustomInput";
@@ -30,10 +30,10 @@ const initialProductState: ProductDetails = {
     _id: "",
     name: "",
   },
-  in_date: dayjs().format("YYY-MM-DDTHH:mm"),
+  in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
   order_quantity: 0,
   order_repair_count: 0,
-  out_date: dayjs().format("YYY-MM-DDTHH:mm"),
+  out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
   rent_per_unit: 0,
 };
 
@@ -53,6 +53,13 @@ const AddProductModal = ({
   const [newProduct, setNewProduct] =
     useState<ProductDetails>(initialProductState);
 
+  const [currentAvailableStock, setCurrentAvailableStock] = useState<number>(0);
+
+  const isDoneDisabled =
+    newProduct.order_quantity <= 0 ||
+    (currentAvailableStock ?? 0) < newProduct.order_quantity ||
+    newProduct.order_quantity < newProduct.order_repair_count;
+
   const handleValueChange = (key: string, value: any) => {
     setNewProduct((prev) => ({
       ...prev,
@@ -65,6 +72,8 @@ const AddProductModal = ({
       open={addProductOpen}
       onClose={() => {
         setAddProductOpen(false);
+        setNewProduct(initialProductState);
+        setCurrentAvailableStock(0);
       }}
       className="w-screen h-screen flex justify-center items-center"
     >
@@ -100,6 +109,7 @@ const AddProductModal = ({
                 handleValueChange("category", data.category.name);
                 handleValueChange("product_unit", data.unit);
                 handleValueChange("rent_per_unit", data.rent_per_unit);
+                setCurrentAvailableStock(data.available_stock);
               }
             }}
           />
@@ -147,6 +157,8 @@ const AddProductModal = ({
             labelClass="w-[8rem]"
             placeholder="Enter Order Quantity"
             value={newProduct.order_quantity}
+            error={(currentAvailableStock ?? 0) < newProduct.order_quantity}
+            helperText="Quantity cannot be greater than Available Stock"
             onChange={(value) =>
               handleValueChange("order_quantity", parseInt(value))
             }
@@ -160,13 +172,28 @@ const AddProductModal = ({
             onChange={(value) =>
               handleValueChange("order_repair_count", parseInt(value))
             }
+            error={newProduct.order_quantity < newProduct.order_repair_count}
+            helperText="Repair Count cannot be higher than Order Quantity"
+          />
+          <CustomInput
+            label="Available Stock"
+            type="number"
+            labelClass="w-[8rem]"
+            placeholder=""
+            disabled
+            value={currentAvailableStock || 0}
+            onChange={() => {}}
           />
         </div>
 
         <div className="flex gap-4 my-3 w-full justify-end">
           <CustomButton
             label="Cancel"
-            onClick={() => setAddProductOpen(false)}
+            onClick={() => {
+              setAddProductOpen(false);
+              setNewProduct(initialProductState);
+              setCurrentAvailableStock(0);
+            }}
             variant="outlined"
           />
           <CustomButton
@@ -175,7 +202,9 @@ const AddProductModal = ({
               addProductToOrder(newProduct);
               setAddProductOpen(false);
               setNewProduct(initialProductState);
+              setCurrentAvailableStock(0);
             }}
+            disabled={isDoneDisabled}
           />
         </div>
       </div>

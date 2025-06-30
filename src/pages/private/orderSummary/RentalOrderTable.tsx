@@ -4,40 +4,64 @@ import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
 import { RentalOrderType, RentalType } from "../../../types/order";
+import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const RentalOrderTable = ({
   rentalOrders,
 }: {
   rentalOrders: RentalOrderType[];
 }) => {
+  const navigate = useNavigate();
+
+  const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
+  const [deleteOrderId, setDeleteOrderId] = useState<string>("");
+
   const rentalOrderColDef: ColDef<RentalType>[] = [
     {
       field: "order_id",
-      headerName: "Id",
+      headerName: "Order Id",
       flex: 1,
       headerClass: "ag-header-wrap",
       minWidth: 100,
     },
     {
-      field: "contact",
+      field: "contact_name",
       headerName: "Customer",
       flex: 1,
       headerClass: "ag-header-wrap",
       minWidth: 80,
     },
-    { field: "productId", headerName: "Product", flex: 1, minWidth: 90 },
+    { field: "products", headerName: "Products", flex: 1, minWidth: 90 },
     {
-      field: "orderInDate",
-      headerName: "M/C InDate",
+      field: "in_date",
+      headerName: "Order In Date",
       flex: 1,
       minWidth: 100,
       headerClass: "ag-header-wrap",
+      valueFormatter: (params) => {
+        const date = new Date(params.value);
+        return date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      },
     },
     {
-      field: "orderOutDate",
-      headerName: "M/C OutDate",
+      field: "out_date",
+      headerName: "Order Out Date",
       flex: 1,
       minWidth: 100,
+      valueFormatter: (params) => {
+        const date = new Date(params.value);
+        return date.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      },
     },
     {
       field: "actions",
@@ -45,16 +69,24 @@ const RentalOrderTable = ({
       flex: 1,
       minWidth: 100,
       maxWidth: 120,
-      cellRenderer: (params: ICellRendererParams) => {
+      cellRenderer: (params: ICellRendererParams<RentalType>) => {
         const rowData = params.data;
-
         return (
           <div className="flex gap-2 h-[2rem] items-center">
-            <FiEdit size={19} className="cursor-pointer" onClick={() => {}} />
+            <FiEdit
+              size={19}
+              className="cursor-pointer"
+              onClick={() => {
+                navigate(`/orders/rentals/${rowData?._id}`);
+              }}
+            />
             <AiOutlineDelete
               size={20}
               className="cursor-pointer"
-              //   onClick={() => setDeleteOrderData(rowData)}
+              onClick={() => {
+                setDeleteOrderOpen(true);
+                setDeleteOrderId(rowData?._id || "");
+              }}
             />
             <IoPrintOutline
               size={20}
@@ -68,11 +100,19 @@ const RentalOrderTable = ({
   ];
 
   return (
-    <CustomTable
-      isLoading={false}
-      colDefs={rentalOrderColDef}
-      rowData={rentalOrders}
-    />
+    <>
+      <CustomTable
+        isLoading={false}
+        colDefs={rentalOrderColDef}
+        rowData={rentalOrders}
+      />
+      <DeleteOrderModal
+        deleteOrderOpen={deleteOrderOpen}
+        setDeleteOrderOpen={(value) => setDeleteOrderOpen(value)}
+        deleteOrderId={deleteOrderId}
+        setDeleteOrderId={(value) => setDeleteOrderId(value)}
+      />
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import { RentalOrderInfo } from "../types/order";
 import { rootApi } from "./ApiService";
+import { transformRentalOrderResponse } from "./transformFunctions";
 
 export const contactApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
@@ -8,21 +9,24 @@ export const contactApi = rootApi.injectEndpoints({
       providesTags: ["Rental"],
     }),
     createRentalOrder: build.mutation<RentalOrderInfo, RentalOrderInfo>({
-      query: (body) => ({
+      query: (contact) => ({
         url: `orders/rentals`,
         method: "POST",
-        body: body,
+        body: contact,
       }),
       invalidatesTags: ["Rental"],
     }),
     getRentalOrderById: build.query<RentalOrderInfo, string>({
       query: (id) => `orders/rentals/${id}`,
+      transformResponse: (response: RentalOrderInfo) =>
+        transformRentalOrderResponse(response),
+      providesTags: ["Rental"],
     }),
     updateRentalOrder: build.mutation<RentalOrderInfo, RentalOrderInfo>({
-      query: (body) => ({
-        url: `orders/rentals`,
-        method: "POST",
-        body: body,
+      query: ({ _id, ...order }) => ({
+        url: `orders/rentals/${_id}`,
+        method: "PUT",
+        body: order,
       }),
       invalidatesTags: ["Rental"],
     }),

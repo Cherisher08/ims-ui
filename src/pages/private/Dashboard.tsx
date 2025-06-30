@@ -2,14 +2,21 @@ import { useEffect, useState } from "react";
 import CustomSelect from "../../styled/CustomSelect";
 import CustomCard from "../../styled/CustomCard";
 import CustomLineChart from "../../styled/CustomLineChart";
-import { OrderInfoType, PaymentStatus } from "../../types/order";
+import {
+  OrderInfoType,
+  PaymentStatus,
+  RentalOrderInfo,
+} from "../../types/order";
+import { ProductType } from "../../types/common";
+
+type PendingAmount = { date: string; price: number };
 
 const Dashboard = () => {
   const [filter, setFilter] = useState<string>("1");
-  const [orders, setOrders] = useState<OrderInfoType[]>([]);
-  const [chartData, setchartData] = useState([]);
+  const [orders] = useState<RentalOrderInfo[]>([]);
+  const [chartData, setchartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<number>(1);
-  const [filterOptions, setFilterOptions] = useState([
+  const [filterOptions] = useState([
     { id: "1", value: "daily" },
     { id: "2", value: "weekly" },
     { id: "3", value: "monthly" },
@@ -18,7 +25,7 @@ const Dashboard = () => {
   const [pendingOrderAmount, setPendingOrderAmount] = useState<number>(0);
 
   const calcFinalAmount = (order: OrderInfoType) => {
-    if (order.type === OrderType.RENTAL && order.product_details) {
+    if (order.type === ProductType.RENTAL && order.product_details) {
       return parseFloat(
         order.product_details
           .reduce(
@@ -38,7 +45,8 @@ const Dashboard = () => {
     const amount = orders
       .filter((order) => order.status === PaymentStatus.PENDING)
       .reduce((sum, order) => {
-        const deposit = order.deposit?.amount || 0;
+        const deposit =
+          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
         const discountAmount = order.discount_amount || 0;
@@ -50,7 +58,8 @@ const Dashboard = () => {
     const pendingData = orders
       .filter((order) => order.status === PaymentStatus.PENDING)
       .map((order) => {
-        const deposit = order.deposit?.amount || 0;
+        const deposit =
+          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
         const discountAmount = order.discount_amount || 0;

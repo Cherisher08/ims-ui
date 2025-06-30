@@ -6,7 +6,6 @@ import { Product } from "../../../../types/common";
 import CustomSelect from "../../../../styled/CustomSelect";
 import CustomInput from "../../../../styled/CustomInput";
 import CustomDatePicker from "../../../../styled/CustomDatePicker";
-import { useState } from "react";
 
 type UpdateProductModalOpen = {
   updateProductOpen: boolean;

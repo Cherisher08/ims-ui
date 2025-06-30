@@ -10,7 +10,6 @@ const OrderInvoice = () => {
   const { rentalId } = useParams();
   const {
     data: existingRentalOrder,
-    isSuccess: isRentalOrderQueryByIdSuccess,
     isLoading: isRentalOrderQueryByIdLoading,
   } = useGetRentalOrderByIdQuery(rentalId!, {
     skip: !rentalId,

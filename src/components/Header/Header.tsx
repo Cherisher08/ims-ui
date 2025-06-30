@@ -39,7 +39,7 @@ const Header: React.FC = () => {
     password: "",
     role: UserRole.User,
   });
-  const [errors, setErrors] = useState<NewUserErrorType>({
+  const [errors] = useState<NewUserErrorType>({
     name: false,
     email: false,
     password: false,

@@ -7,6 +7,7 @@ import CustomInput from "../../../styled/CustomInput";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import CustomSelect from "../../../styled/CustomSelect";
 import dayjs from "dayjs";
+import { IdNamePair } from "../Inventory";
 
 type DepositModalType = {
   depositOpen: boolean;
@@ -21,7 +22,7 @@ const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
   value,
 }));
 
-const formatProducts = (products: ProductDetails[]) => {
+const formatProducts = (products: IdNamePair[]) => {
   return products.map((product) => ({
     id: product._id || "",
     value: product.name,

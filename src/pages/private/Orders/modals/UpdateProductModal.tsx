@@ -2,7 +2,7 @@ import { Modal } from "@mui/material";
 import { BillingUnit, ProductDetails } from "../../../../types/order";
 import { MdClose } from "react-icons/md";
 import CustomButton from "../../../../styled/CustomButton";
-import { Product, Unit } from "../../../../types/common";
+import { Product } from "../../../../types/common";
 import CustomSelect from "../../../../styled/CustomSelect";
 import CustomInput from "../../../../styled/CustomInput";
 import CustomDatePicker from "../../../../styled/CustomDatePicker";
@@ -11,7 +11,6 @@ type UpdateProductModalOpen = {
   updateProductOpen: boolean;
   products: Product[];
   updateProduct: ProductDetails;
-  units: Unit[];
   setUpdateProduct: React.Dispatch<React.SetStateAction<ProductDetails>>;
   setUpdateProductOpen: (value: boolean) => void;
   updateProductToOrder: () => void;
@@ -29,17 +28,9 @@ const formatProducts = (products: Product[]) => {
   }));
 };
 
-const formatUnits = (units: Unit[]) => {
-  return units.map((unit) => ({
-    id: unit._id || "",
-    value: unit.name,
-  }));
-};
-
 const UpdateProductModal = ({
   updateProductOpen,
   products,
-  units,
   updateProduct,
   setUpdateProduct,
   setUpdateProductOpen,
@@ -91,29 +82,22 @@ const UpdateProductModal = ({
                 handleValueChange("_id", data._id);
                 handleValueChange("name", data.name);
                 handleValueChange("category", data.category.name);
+                handleValueChange("product_unit", data.unit);
               }
             }}
           />
-          <CustomSelect
+          <CustomInput
             label="Product Unit"
             className="w-[19rem]"
             labelClass="w-[8rem]"
-            options={formatUnits(units)}
-            value={
-              formatUnits(units).find(
-                (val) => val.id === updateProduct?.product_unit._id
-              )?.id ?? ""
-            }
-            onChange={(id) => {
-              const data = units.find((unit) => unit._id === id);
-              if (data) {
-                handleValueChange("product_unit", data);
-              }
-            }}
+            disabled={true}
+            value={updateProduct.product_unit.name || ""}
+            onChange={() => {}}
+            placeholder={""}
           />
           <CustomSelect
             label="Billing Unit"
-            className="w-[19rem]"
+            className="w-[16rem]"
             labelClass="w-[8rem]"
             options={billingUnitOptions}
             value={

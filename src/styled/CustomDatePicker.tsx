@@ -24,7 +24,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${wrapperClass}`}
     >
       <label
-        className={`pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+        className={`pt-2 min-w-[4rem] line-clamp-2 break-words h-fit ${labelClass}`}
       >
         {label}
       </label>

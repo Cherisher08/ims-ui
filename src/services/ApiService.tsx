@@ -51,7 +51,15 @@ const baseQueryWith401Handler: BaseQueryFn<
 export const rootApi = createApi({
   reducerPath: "rootApi",
   baseQuery: baseQueryWith401Handler,
-  tagTypes: ["Product", "Product-Category", "Unit", "Contact"],
+  tagTypes: [
+    "Product",
+    "Product-Category",
+    "Unit",
+    "Contact",
+    "Rental",
+    "Sales",
+    "Service",
+  ],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
       query: () => `auth/users/me`,

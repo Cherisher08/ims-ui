@@ -14,7 +14,7 @@ const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
 const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
 const Inventory = React.lazy(() => import("../pages/private/Inventory"));
 const Contacts = React.lazy(() => import("../pages/private/Contacts/Contacts"));
-const Orders = React.lazy(() => import("../pages/private/orderSummary/Orders"));
+const Orders = React.lazy(() => import("../pages/private/OrderSummary/Orders"));
 const NewOrder = React.lazy(() => import("../pages/private/Orders/NewOrder"));
 const OrderInvoice = React.lazy(
   () => import("../pages/private/Orders/OrderInvoice")
@@ -63,7 +63,11 @@ const privateRoutes = [
     children: [
       {
         index: true,
-        path: "/",
+        path: "/orders/new-order",
+        element: <NewOrder />,
+      },
+      {
+        path: "/dashboard",
         element: <Dashboard />,
       },
       {
@@ -79,16 +83,16 @@ const privateRoutes = [
         element: <Orders />,
       },
       {
-        path: "/orders/new-order",
-        element: <NewOrder />,
-      },
-      {
         path: "/orders/invoice",
         element: <OrderInvoice />,
       },
       {
         path: "*",
-        element: <Navigate to="/" replace />,
+        element: <Navigate to="/orders/new-order" replace />,
+      },
+      {
+        path: "/",
+        element: <Navigate to="/orders/new-order" replace />,
       },
     ],
   },

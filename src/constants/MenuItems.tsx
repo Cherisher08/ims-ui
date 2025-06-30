@@ -13,7 +13,7 @@ export const MenuItems: MenuItemsType[] = [
   {
     id: 1,
     title: "Dashboard",
-    path: "/",
+    path: "/dashboard",
     logo: <MdDashboardCustomize size={30} />,
   },
   {

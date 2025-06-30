@@ -98,6 +98,7 @@ export type OrderInfo = {
   customer: ContactInfoType;
   billing_mode: BillingMode;
   discount: number;
+  discount_amount: number;
   status: PaymentStatus;
   remarks: string;
   round_off: number;

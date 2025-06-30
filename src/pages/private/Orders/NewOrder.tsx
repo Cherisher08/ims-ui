@@ -1,4 +1,4 @@
-import { Chip, Tab, Tabs } from "@mui/material";
+import { Box, Chip, Tab, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
@@ -15,28 +15,33 @@ import {
   PaymentMode,
   PaymentStatus,
   ProductDetails,
+  RentalOrderInfo,
 } from "../../../types/order";
-import { ContactInfoType } from "../../../types/contact";
+import { ContactInfoType, initialContactType } from "../../../types/contact";
 import DepositModal from "./DepositModal";
 import CustomTable from "../../../styled/CustomTable";
 import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import dayjs from "dayjs";
-import {
-  DiscountType,
-  Product,
-  ProductType,
-  Unit,
-} from "../../../types/common";
+import { Product, ProductType } from "../../../types/common";
 import AddProductModal from "./modals/AddProductModal";
 import UpdateProductModal from "./modals/UpdateProductModal";
+import { useGetProductsQuery } from "../../../services/ApiService";
+import { useGetContactsQuery } from "../../../services/ContactService";
 
 const formatContacts = (
   contacts: ContactInfoType[]
 ): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
-    id: contact.id ?? "",
+    id: contact._id ?? "",
     value: contact.name,
   }));
+
+const calculateDiscountAmount = (
+  discountPercent: number,
+  finalAmount: number
+) => {
+  return +((discountPercent / 100.0) * finalAmount).toFixed(2);
+};
 
 const colDefs: ColDef<ProductDetails>[] = [
   {
@@ -87,7 +92,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     headerClass: "ag-header-wrap",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
-      console.log(data);
+      console.log("Quantity Data", data);
       return (
         <div className="flex gap-2 flex-wrap">
           {data.order_quantity} <span>Unit(s)</span>
@@ -130,260 +135,41 @@ const paymentStatusOptions = Object.entries(PaymentStatus).map(
   })
 );
 
+const initialRentalProduct: RentalOrderInfo = {
+  _id: "",
+  order_id: "",
+  discount: 0,
+  discount_amount: 0,
+  remarks: "",
+  type: ProductType.RENTAL,
+  billing_mode: BillingMode.RETAIL,
+  status: PaymentStatus.PENDING,
+  payment_mode: PaymentMode.CASH,
+  out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  expected_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  round_off: 0,
+  customer: initialContactType,
+  event_address: "",
+  event_pincode: "",
+  product_details: [],
+  deposits: [],
+};
+
 const NewOrder = () => {
-  const sampleOutPutData = {
-    type: "rental",
-    billing_mode: "Retail",
-    status: "pending",
-    payment_mode: "cash",
-    out_date: "2025-06-29T12:59",
-    expectedDate: "2025-06-29T12:59",
-    in_date: "2025-06-29T12:59",
-    orderId: "asdasda",
-    customer: {
-      id: "c1",
-      name: "Rahul Mehra",
-      personalNumber: "9876543210",
-      officeNumber: "02212345678",
-      gstin: "27AABCU9603R1ZV",
-      email: "rahul.mehra@example.com",
-      address: "501, Rose Residency, Andheri West, Mumbai",
-      pincode: "400058",
-      companyName: "Mehra Enterprises",
-      addressProof: "Aadhar Card",
-    },
-    eventAddress: "asdasd",
-    eventPincode: "asd123",
-    remarks: "123123",
-    productDetails: [
-      {
-        _id: "p2",
-        name: "Welding Machine",
-        category: "EQUIPMENT",
-        billing_unit: "days",
-        product_unit: {
-          _id: "u2",
-          name: "g",
-        },
-        in_date: "+0530-06-29T12:54",
-        order_quantity: 123,
-        order_repair_count: 0,
-        out_date: "+0530-06-29T12:54",
-        rent_per_unit: 100,
-      },
-      {
-        _id: "p5",
-        name: "Safety Helmet",
-        category: "SAFETY",
-        billing_unit: "days",
-        product_unit: {
-          _id: "u2",
-          name: "g",
-        },
-        in_date: "+0530-06-29T12:54",
-        order_quantity: 12012,
-        order_repair_count: 0,
-        out_date: "+0530-06-29T12:54",
-        rent_per_unit: 2000,
-      },
-    ],
-    deposits: [
-      {
-        amount: 2113,
-        date: "2025-06-29T12:59",
-        product: {
-          _id: "p2",
-          name: "Welding Machine",
-        },
-        mode: "upi",
-      },
-      {
-        amount: 123,
-        date: "2025-06-29T13:02",
-        mode: "cash",
-        product: {
-          _id: "p2",
-          name: "Welding Machine",
-        },
-      },
-      {
-        amount: 12312,
-        date: "2025-06-29T13:02",
-        mode: "upi",
-        product: {
-          _id: "p5",
-          name: "Safety Helmet",
-        },
-      },
-    ],
-  };
+  const isAllOrdersAllowed: boolean = false;
+  const { data: productsData, isSuccess: isProductsQuerySuccess } =
+    useGetProductsQuery();
+  const { data: contactsData, isSuccess: isContactsQuerySuccess } =
+    useGetContactsQuery();
 
-  const [orderInfo, setOrderInfo] = useState<Partial<OrderInfoType>>({
-    type: ProductType.RENTAL,
-    billing_mode: BillingMode.RETAIL,
-    status: PaymentStatus.PENDING,
-    payment_mode: PaymentMode.CASH,
-    out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-    expected_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-    in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-    round_off: 0,
-  });
+  const [orderInfo, setOrderInfo] =
+    useState<RentalOrderInfo>(initialRentalProduct);
+  console.log("orderInfo: ", orderInfo);
 
-  const [contacts, setContacts] = useState<ContactInfoType[]>([
-    {
-      _id: "c1",
-      name: "Rahul Mehra",
-      personal_number: "9876543210",
-      office_number: "02212345678",
-      gstin: "27AABCU9603R1ZV",
-      email: "rahul.mehra@example.com",
-      address: "501, Rose Residency, Andheri West, Mumbai",
-      pincode: "400058",
-      company_name: "Mehra Enterprises",
-      address_proof: "Aadhar Card",
-    },
-    {
-      _id: "c2",
-      name: "Anita Sharma",
-      personal_number: "9123456789",
-      office_number: "01122446688",
-      gstin: "07AAACB2233M1Z2",
-      email: "anita.sharma@example.in",
-      address: "Flat 9B, Green Heights, Dwarka, New Delhi",
-      pincode: "110075",
-      company_name: "Sharma Logistics",
-      address_proof: "Electricity Bill",
-    },
-    {
-      _id: "c3",
-      name: "Vikram Reddy",
-      personal_number: "9988776655",
-      office_number: "04023456789",
-      gstin: "36AACCV1234B1Z9",
-      email: "vikram.reddy@reddygroup.com",
-      address: "Plot No. 22, Banjara Hills, Hyderabad",
-      pincode: "500034",
-      company_name: "Reddy Group",
-      address_proof: "Passport",
-    },
-    {
-      _id: "c4",
-      name: "Priya Verma",
-      personal_number: "9090909090",
-      office_number: "03398765432",
-      gstin: "19AAACP4065N1ZR",
-      email: "priya.verma@pvsolutions.com",
-      address: "23/4 Lake Gardens, Kolkata",
-      pincode: "700045",
-      company_name: "PV Solutions",
-      address_proof: "Driving License",
-    },
-    {
-      _id: "c5",
-      name: "Karan Joshi",
-      personal_number: "9811122233",
-      office_number: "07933445566",
-      gstin: "24AAECS1111F1Z6",
-      email: "karan.joshi@techworld.io",
-      address: "5th Floor, Silicon Tower, Ahmedabad",
-      pincode: "380015",
-      company_name: "TechWorld Innovations",
-      address_proof: "Rent Agreement",
-    },
-  ]);
+  const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
-  const [products, setProducts] = useState<Product[]>([
-    {
-      _id: "p1",
-      name: "Cordless Drill",
-      created_at: "2024-12-01T10:15:00Z",
-      quantity: 50,
-      available_stock: 45,
-      repair_count: 2,
-      product_code: "CDR-101",
-      category: { _id: "c1", name: "TOOLS" },
-      price: 2500,
-      type: ProductType.SALES,
-      purchase_date: "2024-11-15",
-      unit: { _id: "u1", name: "PCS" },
-      rent_per_unit: 200,
-      discount: 10,
-      discount_type: DiscountType.PERCENT,
-      created_by: "admin",
-    },
-    {
-      _id: "p2",
-      name: "Welding Machine",
-      created_at: "2025-01-10T08:45:00Z",
-      quantity: 20,
-      available_stock: 18,
-      repair_count: 1,
-      product_code: "WLD-203",
-      category: { _id: "c2", name: "EQUIPMENT" },
-      price: 12000,
-      type: ProductType.RENTAL,
-      purchase_date: "2024-12-20",
-      unit: { _id: "u1", name: "PCS" },
-      rent_per_unit: 300,
-      discount: 500,
-      discount_type: DiscountType.RUPEES,
-      created_by: "manager1",
-    },
-    {
-      _id: "p3",
-      name: "Hammer",
-      created_at: "2025-02-15T09:30:00Z",
-      quantity: 100,
-      available_stock: 90,
-      repair_count: 0,
-      product_code: "HAM-002",
-      category: { _id: "c1", name: "TOOLS" },
-      price: 150,
-      type: ProductType.SALES,
-      purchase_date: "2025-01-10",
-      unit: { _id: "u1", name: "PCS" },
-      rent_per_unit: 1000,
-      discount: 0,
-      discount_type: DiscountType.RUPEES,
-      created_by: "admin",
-    },
-    {
-      _id: "p4",
-      name: "Concrete Mixer",
-      created_at: "2025-03-05T13:00:00Z",
-      quantity: 10,
-      available_stock: 7,
-      repair_count: 2,
-      product_code: "CMX-401",
-      category: { _id: "c4", name: "MACHINERY" },
-      price: 55000,
-      type: ProductType.RENTAL,
-      purchase_date: "2025-02-15",
-      unit: { _id: "u2", name: "SET" },
-      rent_per_unit: 1200,
-      discount: 1000,
-      discount_type: DiscountType.RUPEES,
-      created_by: "supervisor1",
-    },
-    {
-      _id: "p5",
-      name: "Safety Helmet",
-      created_at: "2025-04-01T12:00:00Z",
-      quantity: 200,
-      available_stock: 195,
-      repair_count: 0,
-      product_code: "SHL-010",
-      category: { _id: "c3", name: "SAFETY" },
-      price: 250,
-      type: ProductType.SALES,
-      purchase_date: "2025-03-01",
-      unit: { _id: "u1", name: "PCS" },
-      rent_per_unit: 100,
-      discount: 5,
-      discount_type: DiscountType.PERCENT,
-      created_by: "admin",
-    },
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [updateProductOpen, setUpdateProductOpen] = useState<boolean>(false);
   const [updateProduct, setUpdateProduct] = useState<ProductDetails>({
@@ -412,14 +198,6 @@ const NewOrder = () => {
     },
   ]);
 
-  const [units, setUnits] = useState<Unit[]>([
-    { _id: "u1", name: "kg" },
-    { _id: "u2", name: "g" },
-    { _id: "u3", name: "l" },
-    { _id: "u4", name: "ml" },
-    { _id: "u5", name: "m" },
-  ]);
-
   useEffect(() => {
     console.log("Order Info Updated:", orderInfo);
   }, [orderInfo]);
@@ -438,7 +216,10 @@ const NewOrder = () => {
     );
     const finalAmount = calcFinalAmount();
     const roundOff = orderInfo.round_off || 0;
-    const discountAmount = orderInfo.discount_amount || 0;
+    const discountAmount = calculateDiscountAmount(
+      orderInfo.discount || 0,
+      finalAmount
+    );
     return finalAmount - totalDeposit - discountAmount + roundOff;
   };
 
@@ -518,28 +299,48 @@ const NewOrder = () => {
     }
   };
 
+  useEffect(() => {
+    if (isProductsQuerySuccess) {
+      setProducts(productsData);
+    }
+    if (isContactsQuerySuccess) {
+      setContacts(contactsData);
+    }
+  }, [
+    contactsData,
+    isContactsQuerySuccess,
+    isProductsQuerySuccess,
+    productsData,
+  ]);
+
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col h-full">
       {/* === Top Tabs and Add Button === */}
       <div className="w-full flex justify-between mb-4">
-        <Tabs
-          value={orderInfo.type}
-          onChange={(_, value) => handleValueChange("type", value)}
-          sx={{ "& .MuiTabs-indicator": { display: "none" } }}
-        >
-          {Object.values(ProductType).map((type) => (
-            <Tab
-              key={type}
-              label={type.charAt(0) + type.slice(1).toLowerCase()}
-              value={type}
-              sx={{
-                backgroundColor: orderInfo.type === type ? "#002f53" : "",
-                color: orderInfo.type === type ? "#ffffff !important" : "",
-                fontWeight: orderInfo.type === type ? "bold" : "normal",
-              }}
-            />
-          ))}
-        </Tabs>
+        {isAllOrdersAllowed ? (
+          <Tabs
+            value={orderInfo.type}
+            onChange={(_, value) => handleValueChange("type", value)}
+            sx={{ "& .MuiTabs-indicator": { display: "none" } }}
+          >
+            {Object.values(ProductType).map((type) => (
+              <Tab
+                key={type}
+                label={type.charAt(0) + type.slice(1).toLowerCase()}
+                value={type}
+                sx={{
+                  backgroundColor: orderInfo.type === type ? "#002f53" : "",
+                  color: orderInfo.type === type ? "#ffffff !important" : "",
+                  fontWeight: orderInfo.type === type ? "bold" : "normal",
+                }}
+              />
+            ))}
+          </Tabs>
+        ) : (
+          <Box className="font-primary text-2xl font-bold w-full">
+            Rental Order
+          </Box>
+        )}
 
         <div className="flex gap-3">
           {orderInfo.type === ProductType.RENTAL &&
@@ -550,63 +351,69 @@ const NewOrder = () => {
                 onClick={() => setDepositOpen(true)}
               />
             )}
-          {orderInfo.type !== ProductType.SERVICE && (
-            <CustomButton
-              label="Add product"
-              onClick={() => setAddProductOpen(true)}
-            />
-          )}
+          <CustomButton
+            label="Add product"
+            onClick={() => setAddProductOpen(true)}
+          />
         </div>
       </div>
 
       {/* === Order Info Form === */}
-      <div className="w-full flex flex-col gap-2">
-        <div className="w-full flex justify-between items-start">
-          <div className="flex flex-nowrap gap-3">
-            <CustomInput
-              onChange={(value) => handleValueChange("order_id", value)}
-              label="Order Id"
-              placeholder="Enter Order Id"
-              value={orderInfo?.order_id ?? ""}
-              className="min-w-[15rem] max-w-[35rem]"
-            />
+      <div className="w-full flex flex-col gap-2 overflow-y-scroll max-h-full">
+        {orderInfo.type === ProductType.RENTAL && (
+          <>
+            <div className="w-full flex justify-between items-start">
+              <div className="flex flex-nowrap gap-3">
+                <CustomInput
+                  onChange={(value) => handleValueChange("order_id", value)}
+                  label="Order Id"
+                  placeholder="Enter Order Id"
+                  value={orderInfo?.order_id ?? ""}
+                  className="min-w-[15rem] max-w-[35rem]"
+                />
 
-            <CustomSelect
-              label="Payment Status"
-              className="w-[15rem]"
-              labelClass="w-fit"
-              options={paymentStatusOptions}
-              value={
-                paymentStatusOptions.find(
-                  (paymentStatus) => orderInfo.status === paymentStatus.value
-                )?.id ?? ""
-              }
-              onChange={(id) =>
-                handleValueChange(
-                  "status",
-                  paymentStatusOptions.find((option) => option.id === id)?.value
-                )
-              }
-            />
-          </div>
+                <CustomSelect
+                  label="Payment Status"
+                  className="w-[15rem]"
+                  labelClass="w-fit"
+                  options={paymentStatusOptions}
+                  value={
+                    paymentStatusOptions.find(
+                      (paymentStatus) =>
+                        orderInfo.status === paymentStatus.value
+                    )?.id ?? ""
+                  }
+                  onChange={(id) =>
+                    handleValueChange(
+                      "status",
+                      paymentStatusOptions.find((option) => option.id === id)
+                        ?.value
+                    )
+                  }
+                />
+              </div>
 
-          <div className="flex items-center gap-2">
-            <p>Retail</p>
-            <AntSwitch
-              checked={orderInfo.billing_mode === BillingMode.BUSINESS}
-              onChange={(e) =>
-                handleValueChange(
-                  "billing_mode",
-                  e.target.checked ? BillingMode.BUSINESS : BillingMode.RETAIL
-                )
-              }
-            />
-            <p>Business</p>
-          </div>
-        </div>
+              <div className="flex items-center gap-2">
+                <p>Retail</p>
+                <AntSwitch
+                  checked={orderInfo.billing_mode === BillingMode.BUSINESS}
+                  onChange={(e) =>
+                    handleValueChange(
+                      "billing_mode",
+                      e.target.checked
+                        ? BillingMode.BUSINESS
+                        : BillingMode.RETAIL
+                    )
+                  }
+                />
+                <p>Business</p>
+              </div>
+            </div>
+          </>
+        )}
 
-        {/* === Customer + Rental Dates === */}
-        <div className="grid grid-cols-1 sm:grid-cols-[22%_auto] gap-3">
+        {/* === Customer + Rental Data === */}
+        <div className="grid grid-cols-1 sm:grid-cols-[20%_auto] gap-2">
           <CustomSelect
             label="Customer"
             options={formatContacts(contacts)}
@@ -846,15 +653,7 @@ const NewOrder = () => {
                   label="Cancel"
                   onClick={() => {
                     setDepositData([]);
-                    setOrderInfo({
-                      type: ProductType.RENTAL,
-                      billing_mode: BillingMode.RETAIL,
-                      status: PaymentStatus.PENDING,
-                      payment_mode: PaymentMode.CASH,
-                      out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-                      expected_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-                      in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-                    });
+                    setOrderInfo(initialRentalProduct);
                   }}
                   variant="outlined"
                 />
@@ -879,7 +678,6 @@ const NewOrder = () => {
             return true;
           }
         })}
-        units={units}
         setAddProductOpen={(value: boolean) => setAddProductOpen(value)}
       />
 
@@ -888,7 +686,6 @@ const NewOrder = () => {
         updateProductOpen={updateProductOpen}
         updateProductToOrder={updateProductToOrder}
         products={products.filter((prod) => prod._id === updateProduct?._id)}
-        units={units}
         setUpdateProduct={setUpdateProduct}
         setUpdateProductOpen={(value: boolean) => setUpdateProductOpen(value)}
       />

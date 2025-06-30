@@ -1,11 +1,26 @@
 import { Modal } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdClose } from "react-icons/md";
 import CustomInput from "../../../../styled/CustomInput";
 import { FaTimesCircle } from "react-icons/fa";
 import { LuUpload } from "react-icons/lu";
-import type { UpdateContactModalType } from "../../../../types/contact";
-import CustomButton from "../../../../styled/CustomButtom";
+import CustomButton from "../../../../styled/CustomButton";
+import {
+  ContactInfoType,
+  ContactWithFile,
+  initialContactType,
+} from "../../../../types/contact";
+import type { Dispatch, SetStateAction } from "react";
+import { useUpdateContactMutation } from "../../../../services/ContactService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../../../constants/constants";
+
+export type UpdateContactModalType = {
+  updateContactOpen: boolean;
+  setUpdateContactOpen: (value: boolean) => void;
+  updateContactData: ContactInfoType;
+  setUpdateContactData: Dispatch<SetStateAction<ContactInfoType>>;
+};
 
 const UpdateContactModal = ({
   updateContactOpen,
@@ -13,13 +28,20 @@ const UpdateContactModal = ({
   updateContactData,
   setUpdateContactData,
 }: UpdateContactModalType) => {
+  console.log("updateContactData: ", updateContactData);
   const [addressProof, setAddressProof] = useState<File | null>(null);
+  const [
+    updateContact,
+    { isSuccess: isUpdateContactSuccess, isError: IsUpdateContactError },
+  ] = useUpdateContactMutation();
 
   const handleUpdateContact = () => {
-    if (updateContactData) {
-      setUpdateContactData(null);
-      setUpdateContactOpen(false);
-    }
+    const contactWithFile: ContactWithFile = {
+      ...updateContactData,
+      file: addressProof,
+    };
+    updateContact(contactWithFile);
+    setUpdateContactData(initialContactType);
   };
 
   const handelProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,23 +52,38 @@ const UpdateContactModal = ({
     }
   };
 
-  const handleContactChange = (key: string, value: string) => {
+  const handleContactChange = (
+    key: keyof ContactInfoType,
+    value: string | number
+  ) => {
     setUpdateContactData((prev) => {
-      if (prev) {
-        return {
-          ...prev,
-          [key]: value,
-        };
-      }
-      return null;
+      return {
+        ...prev,
+        [key]: value,
+      };
     });
   };
+
+  useEffect(() => {
+    if (isUpdateContactSuccess) {
+      toast.success("Contact updated successfully", {
+        toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
+      });
+      setUpdateContactOpen(false);
+    }
+    if (IsUpdateContactError) {
+      toast.success("Error in creating contact", {
+        toastId: TOAST_IDS.ERROR_CONTACT_CREATE,
+      });
+      setUpdateContactOpen(false);
+    }
+  }, [IsUpdateContactError, isUpdateContactSuccess, setUpdateContactOpen]);
 
   return (
     <Modal
       open={updateContactOpen}
       onClose={() => {
-        setUpdateContactData(null);
+        setUpdateContactData(initialContactType);
         setUpdateContactOpen(false);
         setAddressProof(null);
       }}
@@ -62,7 +99,7 @@ const UpdateContactModal = ({
             className="cursor-pointer"
             onClick={() => {
               setUpdateContactOpen(false);
-              setUpdateContactData(null);
+              setUpdateContactData(initialContactType);
               setAddressProof(null);
             }}
           />
@@ -77,32 +114,29 @@ const UpdateContactModal = ({
                 onChange={(value) => handleContactChange("name", value)}
                 placeholder="Enter Name"
               />
-              {/* <CustomSelect
-                  label="Type"
-                  options={contactType}
-                  value={updateContactData?.type ?? { id: "", value: "" }}
-                  onChange={(value) =>
-                    setUpdateContactData((prev) => {
-                      if (prev) return { ...prev, type: JSON.parse(value) };
-                      return null;
-                    })
-                  }
-                /> */}
+              <CustomInput
+                label="Email"
+                value={updateContactData?.email ?? ""}
+                onChange={(value) => handleContactChange("email", value)}
+                placeholder="Enter Email"
+              />
             </div>
 
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Personal Number"
-                value={updateContactData?.personalNumber ?? ""}
+                value={updateContactData?.personal_number ?? ""}
                 onChange={(value) =>
-                  handleContactChange("personalNumber", value)
+                  handleContactChange("personal_number", value)
                 }
                 placeholder="Enter Personal Number"
               />
               <CustomInput
                 label="Office Number"
-                value={updateContactData?.officeNumber ?? ""}
-                onChange={(value) => handleContactChange("officeNumber", value)}
+                value={updateContactData?.office_number ?? ""}
+                onChange={(value) =>
+                  handleContactChange("office_number", value)
+                }
                 placeholder="Enter Office Number"
               />
             </div>
@@ -110,16 +144,15 @@ const UpdateContactModal = ({
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Company"
-                value={updateContactData?.companyName ?? ""}
-                onChange={(value) => handleContactChange("companyName", value)}
+                value={updateContactData?.company_name ?? ""}
+                onChange={(value) => handleContactChange("company_name", value)}
                 placeholder="Enter Company Name"
               />
-
               <CustomInput
-                label="Email"
-                value={updateContactData?.email ?? ""}
-                onChange={(value) => handleContactChange("email", value)}
-                placeholder="Enter Email"
+                label="GSTIN"
+                value={updateContactData?.gstin ?? ""}
+                onChange={(value) => handleContactChange("gstin", value)}
+                placeholder="Enter GSTIN"
               />
             </div>
           </div>
@@ -146,42 +179,64 @@ const UpdateContactModal = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-[auto_2fr] justify-center items-center h-4/5 w-full gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[auto_2fr] justify-center items-center sm:h-4/5 w-full gap-4">
               <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
                 Upload Proof
               </label>
-              {addressProof === null ? (
-                <div className="h-full">
-                  <input
-                    id="new-contact-proof"
-                    name="new-contact-proof"
-                    className="hidden"
-                    type="file"
-                    onChange={handelProofChange}
-                  ></input>
-                  <label
-                    htmlFor="new-contact-proof"
-                    className="border rounded-sm flex flex-col items-center justify-center h-full"
-                  >
-                    <LuUpload />
-                    <p>Upload Proof</p>
-                  </label>
-                </div>
-              ) : (
-                <div className="aspect-square w-full overflow-hidden relative">
-                  <FaTimesCircle
-                    size={20}
-                    color="red"
-                    colorInterpolation="green"
-                    className="absolute top-2 right-2 cursor-pointer"
-                    onClick={() => setAddressProof(null)}
-                  />
-                  <img
-                    src={URL.createObjectURL(addressProof)}
-                    className="rounded-sm aspect-square w-full"
-                  />
-                </div>
-              )}
+              <div className="h-[12rem] w-[12rem] relative">
+                {addressProof === null ? (
+                  <>
+                    {updateContactData.address_proof ? (
+                      <>
+                        <FaTimesCircle
+                          size={20}
+                          color="red"
+                          className="absolute top-2 right-2 cursor-pointer z-10"
+                          onClick={() =>
+                            handleContactChange("address_proof", "")
+                          }
+                        />
+                        <img
+                          src={updateContactData.address_proof}
+                          className="rounded-sm h-full w-full object-cover"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          id="new-contact-proof"
+                          name="new-contact-proof"
+                          className="hidden"
+                          type="file"
+                          onChange={handelProofChange}
+                        />
+                        <label
+                          htmlFor="new-contact-proof"
+                          className="border rounded-sm flex flex-col items-center justify-center h-full w-full cursor-pointer"
+                        >
+                          <LuUpload />
+                          <p className="text-xs text-center px-2">
+                            Upload Proof
+                          </p>
+                        </label>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <FaTimesCircle
+                      size={20}
+                      color="red"
+                      className="absolute top-2 right-2 cursor-pointer z-10"
+                      onClick={() => setAddressProof(null)}
+                    />
+                    <img
+                      src={URL.createObjectURL(addressProof)}
+                      className="rounded-sm h-full w-full object-cover"
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -189,7 +244,7 @@ const UpdateContactModal = ({
           <CustomButton
             onClick={() => {
               setUpdateContactOpen(false);
-              setUpdateContactData(null);
+              setUpdateContactData(initialContactType);
               setAddressProof(null);
             }}
             label="Discard"

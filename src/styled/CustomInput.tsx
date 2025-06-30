@@ -9,9 +9,13 @@ interface CustomInputProps {
   className?: string;
   startIcon?: React.ReactNode;
   error?: boolean;
+  maxLength?: number;
   multiline?: boolean;
   minRows?: number;
   helperText?: string;
+  disabled?: boolean;
+  wrapperClass?: string;
+  labelClass?: string;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -26,14 +30,20 @@ const CustomInput: React.FC<CustomInputProps> = ({
   multiline = false,
   minRows = 4,
   startIcon = null,
+  maxLength = 120,
+  disabled = false,
+  wrapperClass = "",
+  labelClass = "",
 }) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 ${
+      className={`grid grid-cols-[auto_2fr]  justify-between min-w-fit gap-2 ${wrapperClass} ${
         multiline ? "h-fit pb-8" : "h-[3.5rem]"
       }`}
     >
-      <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
+      <label
+        className={`1pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+      >
         {label}
       </label>
       <TextField
@@ -44,6 +54,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
         variant="outlined"
         multiline={multiline}
         minRows={minRows}
+        disabled={disabled}
         helperText={error ? helperText : helperText ? " " : ""}
         placeholder={placeholder}
         slotProps={{
@@ -56,6 +67,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
           },
           htmlInput: {
             min: type === "number" ? 0 : undefined,
+            maxLength: maxLength,
             className: `${
               multiline ? "h-fit" : "h-[2.5rem] p-2"
             } box-border ${className}`,

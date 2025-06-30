@@ -1,6 +1,7 @@
-import Header from "../../components/Header";
-import Sidebar from "../../components/Sidebar";
 import { Outlet } from "react-router-dom";
+
+import Header from "../Header/Header";
+import Sidebar from "../Sidebar/Sidebar";
 
 const MainLayout = () => {
   return (
@@ -8,7 +9,7 @@ const MainLayout = () => {
       <Sidebar />
       <div className="ml-3 flex flex-col w-full h-full">
         <Header />
-        <div className="flex-1 overflow-y-auto px-6 w-full py-1">
+        <div className="flex-1 overflow-y-auto sm:px-6 px-2 w-full py-1">
           <Outlet />
         </div>
       </div>

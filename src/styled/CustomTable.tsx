@@ -1,6 +1,6 @@
-import type { ColDef } from "ag-grid-community";
+import type { ColDef, RowClassParams, RowStyle } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import "ag-grid-community/styles/ag-grid.css";
+// import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 
@@ -9,9 +9,22 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 type CustomTableProps<T> = {
   rowData: T[];
   colDefs: ColDef<T>[];
+  isLoading: boolean;
+  pagination?: boolean;
+  rowHeight?: number;
+  getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
 };
 
-const CustomTable = <T,>({ rowData, colDefs }: CustomTableProps<T>) => {
+const CustomTable = <T,>({
+  rowData,
+  colDefs,
+  isLoading,
+  rowHeight = 40,
+  pagination = true,
+  getRowStyle = () => {
+    return {};
+  },
+}: CustomTableProps<T>) => {
   return (
     <div
       className="ag-theme-alpine"
@@ -20,12 +33,14 @@ const CustomTable = <T,>({ rowData, colDefs }: CustomTableProps<T>) => {
       <AgGridReact<T>
         rowData={rowData}
         columnDefs={colDefs}
-        pagination={true}
+        pagination={pagination}
         headerHeight={40}
         paginationPageSize={10}
-        rowHeight={40}
+        rowHeight={rowHeight}
+        getRowStyle={(params) => getRowStyle(params)}
         domLayout="autoHeight"
-         localeText={{ noRowsToShow: "No data Found..." }}
+        localeText={{ noRowsToShow: "No data Found..." }}
+        loading={isLoading}
       />
     </div>
   );

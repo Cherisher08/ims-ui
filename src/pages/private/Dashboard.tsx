@@ -1,39 +1,79 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CustomSelect from "../../styled/CustomSelect";
 import CustomCard from "../../styled/CustomCard";
 import CustomLineChart from "../../styled/CustomLineChart";
+import {
+  OrderInfoType,
+  PaymentStatus,
+  RentalOrderInfo,
+} from "../../types/order";
+import { ProductType } from "../../types/common";
+
+type PendingAmount = { date: string; price: number };
 
 const Dashboard = () => {
   const [filter, setFilter] = useState<string>("1");
+  const [orders] = useState<RentalOrderInfo[]>([]);
+  const [chartData, setchartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<number>(1);
-  const [filterOptions, setFilterOptions] = useState([
+  const [filterOptions] = useState([
     { id: "1", value: "daily" },
     { id: "2", value: "weekly" },
     { id: "3", value: "monthly" },
   ]);
 
-  const sampleData = [
-    { date: "2024-05-01", price: 120 },
-    { date: "2024-05-02", price: 125 },
-    { date: "2024-05-03", price: 140 },
-    { date: "2024-05-04", price: 428 },
-    { date: "2024-05-05", price: 35 },
-    { date: "2024-05-06", price: 440 },
-    { date: "2024-05-07", price: 138 },
-    { date: "2024-05-08", price: 732 },
-    { date: "2024-05-09", price: 145 },
-    { date: "2024-05-10", price: 150 },
-    { date: "2024-05-11", price: 252 },
-    { date: "2024-05-12", price: 148 },
-    { date: "2024-05-13", price: 149 },
-    { date: "2024-05-14", price: 151 },
-    { date: "2024-05-15", price: 55 },
-    { date: "2024-05-16", price: 160 },
-    { date: "2024-05-17", price: 858 },
-    { date: "2024-05-18", price: 562 },
-    { date: "2024-05-19", price: 165 },
-    { date: "2024-05-20", price: 168 },
-  ];
+  const [pendingOrderAmount, setPendingOrderAmount] = useState<number>(0);
+
+  const calcFinalAmount = (order: OrderInfoType) => {
+    if (order.type === ProductType.RENTAL && order.product_details) {
+      return parseFloat(
+        order.product_details
+          .reduce(
+            (total, prod) =>
+              total +
+              prod.rent_per_unit *
+                (prod.order_quantity - prod.order_repair_count),
+            0
+          )
+          .toFixed(2)
+      );
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    const amount = orders
+      .filter((order) => order.status === PaymentStatus.PENDING)
+      .reduce((sum, order) => {
+        const deposit =
+          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || 0;
+        const finalAmount = calcFinalAmount(order);
+        const roundOff = order.round_off || 0;
+        const discountAmount = order.discount_amount || 0;
+
+        const pendingAmount = finalAmount - deposit - discountAmount + roundOff;
+        return sum + pendingAmount;
+      }, 0);
+    setPendingOrderAmount(amount);
+    const pendingData = orders
+      .filter((order) => order.status === PaymentStatus.PENDING)
+      .map((order) => {
+        const deposit =
+          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || 0;
+        const finalAmount = calcFinalAmount(order);
+        const roundOff = order.round_off || 0;
+        const discountAmount = order.discount_amount || 0;
+
+        const pendingAmount = parseFloat(
+          (finalAmount - deposit - discountAmount + roundOff).toFixed(2)
+        );
+        return {
+          date: new Date(order.in_date).toISOString().split("T")[0],
+          price: pendingAmount,
+        };
+      });
+    setchartData(pendingData);
+  }, [orders]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">
@@ -53,16 +93,16 @@ const Dashboard = () => {
       <div className="flex flex-col gap-3">
         <div className="grid grid-cols-[repeat(auto-fit,_minmax(13rem,_1fr))] items-center justify-center gap-4">
           <CustomCard
-            title="Products In"
+            title="Total Amount Pending"
+            className="grow"
+            value={pendingOrderAmount}
+            // change={-11.2}
+          />
+          <CustomCard
+            title="Products"
             className="grow"
             value={30}
             change={11.2}
-          />
-          <CustomCard
-            title="Products In"
-            className="grow"
-            value={30}
-            change={-11.2}
           />
           <CustomCard
             title="Products In"
@@ -105,7 +145,7 @@ const Dashboard = () => {
                 Order Timeline
               </li>
             </ul>
-            <CustomLineChart chartData={sampleData} />
+            <CustomLineChart chartData={chartData} title="" />
           </div>
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Title</p>

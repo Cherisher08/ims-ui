@@ -1,290 +1,358 @@
-import CustomButton from "../../styled/CustomButtom";
+import CustomButton from "../../styled/CustomButton";
 import { LuPlus } from "react-icons/lu";
 import CustomInput from "../../styled/CustomInput";
-import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { useEffect, useMemo, useState } from "react";
 import { BsSearch } from "react-icons/bs";
-import { Checkbox, Modal } from "@mui/material";
+import { Modal } from "@mui/material";
 import CustomSelect from "../../styled/CustomSelect";
-import CustomAutoComplete from "../../styled/CustomAutoComplete";
+import CustomAutoComplete, {
+  CustomOptionProps,
+} from "../../styled/CustomAutoComplete";
 import CustomTable from "../../styled/CustomTable";
 import type { ColDef } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { AiOutlineDelete } from "react-icons/ai";
-import { MdClose, MdOutlineAddShoppingCart } from "react-icons/md";
+import { MdClose } from "react-icons/md";
 import type { ICellRendererParams } from "ag-grid-community";
 import { PiWarningFill } from "react-icons/pi";
 import CustomDatePicker from "../../styled/CustomDatePicker";
+import {
+  useCreateProductCategoryMutation,
+  useCreateProductMutation,
+  useCreateUnitMutation,
+  useDeleteProductMutation,
+  useGetProductCategoriesQuery,
+  useGetProductsQuery,
+  useGetUnitsQuery,
+  useUpdateProductMutation,
+} from "../../services/ApiService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../constants/constants";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import { DiscountType, Product, ProductType } from "../../types/common";
 
-interface ProductType {
-  productName: string;
-  productCode: string;
+interface OneProduct {
+  _id: string;
+  name: string;
+  product_code: string;
   category: string;
-  unit?: string;
-  availableStock: number;
+  quantity: number;
   type: string;
   actions?: string;
 }
 
-interface AddProductType {
-  productName: string;
-  productCode: string;
-  unit: string;
-  category: string;
-  type: {
-    id: string;
-    value: string;
-  } | null;
-  quantity: number;
-  purchaseDate: string;
-  price: number;
-  rentalPrice: number;
-  discount: number;
-  discountType: string;
-  total: number;
-  availableStock: number;
-  seller?: string;
-  purchaseOrder?: boolean;
+const initialProductData: Product = {
+  product_code: "",
+  name: "",
+  quantity: 0,
+  purchase_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  repair_count: 0,
+  available_stock: 0,
+  price: 0,
+  unit: {
+    _id: "",
+    name: "",
+  },
+  category: {
+    _id: "",
+    name: "",
+  },
+  type: ProductType.RENTAL,
+  rent_per_unit: 0,
+  discount: 0,
+  discount_type: DiscountType.PERCENT,
+};
+
+export interface IdNamePair {
+  _id?: string;
+  name: string;
 }
 
-const inventory = () => {
+const transformIdNamePair = (idNamePairs: IdNamePair[]) => {
+  return idNamePairs.map((pair) => ({
+    id: pair._id!,
+    value: pair.name,
+  }));
+};
+
+const transformIdValuePair = (idValuePair: CustomOptionProps) => {
+  return {
+    _id: idValuePair.id,
+    name: idValuePair.value,
+  };
+};
+
+const Inventory = () => {
+  const userEmail = useSelector((state: RootState) => state.user.email);
+  const { data: productData, isLoading: isProductsLoading } =
+    useGetProductsQuery();
+  const {
+    data: productCategoryData,
+    isSuccess: isProductCategoryQuerySuccess,
+  } = useGetProductCategoriesQuery();
+  const [createProductCategory, { isSuccess: isProductCategoryCreateSuccess }] =
+    useCreateProductCategoryMutation();
+  const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
+  const [createUnit, { isSuccess: isUnitCreateSuccess }] =
+    useCreateUnitMutation();
+  const [
+    createProduct,
+    { isSuccess: isProductCreated, isError: isProductCreateError },
+  ] = useCreateProductMutation();
+  const [
+    updateProduct,
+    { isSuccess: isProductUpdated, isError: isProductUpdateError },
+  ] = useUpdateProductMutation();
+  const [
+    deleteProduct,
+    { isSuccess: isProductDeleted, isError: isProductDeleteError },
+  ] = useDeleteProductMutation();
+
   const [search, setSearch] = useState<string>("");
-  const [newproductData, setNewproductData] = useState<AddProductType>({
-    productCode: "",
-    productName: "",
-    quantity: 0,
-    purchaseDate: "",
-    price: 0,
-    unit: "",
-    category: "",
-    total: 0,
-    type: null,
-    seller: "",
-    rentalPrice: 0,
-    discount: 0,
-    discountType: "1",
-    purchaseOrder: false,
-    availableStock: 0,
-  });
-  const [deleteData, setDeleteData] = useState<ProductType | null>(null);
-  const [updateData, setUpdateData] = useState<AddProductType | null>(null);
+  const [newProductData, setNewProductData] =
+    useState<Product>(initialProductData);
+  const [deleteData, setDeleteData] = useState<OneProduct | null>(null);
+  const [updateData, setUpdateData] = useState<Product | null>(null);
 
-  const [addSellerOpen, setAddSellerOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
+  const [deleteProductOpen, setDeleteProductOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
-  const [addStockOpen, setAddStockOpen] = useState<boolean>(false);
 
-  const [productCategories, setProductCategories] = useState([
-    {
-      id: 1,
-      value: "heavy machineries",
-    },
-    {
-      id: 2,
-      value: "light machineries",
-    },
-  ]);
+  const [productCategories, setProductCategories] = useState<
+    CustomOptionProps[]
+  >([]);
 
-  const [productUnits, setProductUnits] = useState([
-    {
-      id: 1,
-      value: "Kg",
-    },
-    {
-      id: 2,
-      value: "g",
-    },
-    {
-      id: 3,
-      value: "cm",
-    },
-    {
-      id: 4,
-      value: "M",
-    },
-  ]);
+  const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
 
-  const [sellers, setSellers] = useState([
+  const discountTypeValues = [
     {
-      id: "1",
-      value: "Ajay Devan",
+      id: "PERCENT",
+      value: "%",
     },
     {
-      id: "2",
-      value: "VigneshShivaram",
+      id: "RUPEES",
+      value: "₹",
     },
-    {
-      id: "3",
-      value: "Gnanesh",
-    },
-    {
-      id: "4",
-      value: "Surya",
-    },
-  ]);
+  ];
 
-  const [productType, setProductType] = useState([
-    { id: "1", value: "Rental" },
-    { id: "2", value: "Sales" },
-    { id: "3", value: "Service" },
-  ]);
+  const productTypes = [
+    { id: "rental", value: "RENTAL" },
+    { id: "sales", value: "SALES" },
+    { id: "service", value: "SERVICE" },
+  ];
 
-  const [rowData, setRowData] = useState<ProductType[]>([
-    {
-      productName: "Wireless Mouse",
-      productCode: "WM123",
-      category: "Electronics",
-      unit: "cm",
-      availableStock: 45,
-      type: "Accessory",
-    },
-    {
-      productName: "Bluetooth Headphones",
-      productCode: "BH456",
-      category: "Electronics",
-      availableStock: 25,
-      type: "Audio",
-    },
-    {
-      productName: "Laptop Stand",
-      productCode: "LS789",
-      category: "Office",
-      availableStock: 60,
-      type: "Furniture",
-    },
-    {
-      productName: "Notebook",
-      productCode: "NB321",
-      category: "Stationery",
-      availableStock: 100,
-      type: "Paper",
-    },
-    {
-      productName: "Desk Lamp",
-      productCode: "DL654",
-      category: "Lighting",
-      availableStock: 35,
-      type: "Electrical",
-    },
-    {
-      productName: "USB-C Cable",
-      productCode: "UC987",
-      category: "Electronics",
-      availableStock: 80,
-      type: "Accessory",
-    },
-    {
-      productName: "Water Bottle",
-      productCode: "WB741",
-      category: "Lifestyle",
-      availableStock: 50,
-      type: "Utility",
-    },
-    {
-      productName: "Backpack",
-      productCode: "BP852",
-      category: "Bags",
-      availableStock: 20,
-      type: "Travel",
-    },
-    {
-      productName: "Smart Watch",
-      productCode: "SW963",
-      category: "Wearables",
-      availableStock: 15,
-      type: "Electronics",
-    },
-    {
-      productName: "Keyboard",
-      productCode: "KB159",
-      category: "Electronics",
-      availableStock: 40,
-      type: "Peripheral",
-    },
-    {
-      productName: "Monitor",
-      productCode: "MN753",
-      category: "Electronics",
-      availableStock: 10,
-      type: "Display",
-    },
-    {
-      productName: "Pen Set",
-      productCode: "PS456",
-      category: "Stationery",
-      availableStock: 200,
-      type: "Writing",
-    },
-    {
-      productName: "File Organizer",
-      productCode: "FO369",
-      category: "Office",
-      availableStock: 75,
-      type: "Storage",
-    },
-    {
-      productName: "Tablet",
-      productCode: "TB147",
-      category: "Electronics",
-      availableStock: 18,
-      type: "Mobile",
-    },
-    {
-      productName: "Portable Charger",
-      productCode: "PC258",
-      category: "Electronics",
-      availableStock: 90,
-      type: "Battery",
-    },
-    {
-      productName: "Chair",
-      productCode: "CH369",
-      category: "Furniture",
-      availableStock: 12,
-      type: "Office",
-    },
-    {
-      productName: "Desk",
-      productCode: "DK147",
-      category: "Furniture",
-      availableStock: 8,
-      type: "Office",
-    },
-    {
-      productName: "Ruler",
-      productCode: "RL159",
-      category: "Stationery",
-      availableStock: 150,
-      type: "Measuring",
-    },
-    {
-      productName: "Stapler",
-      productCode: "SP951",
-      category: "Stationery",
-      availableStock: 60,
-      type: "Tool",
-    },
-    {
-      productName: "Laptop",
-      productCode: "LT123",
-      category: "Electronics",
-      availableStock: 22,
-      type: "Computer",
-    },
-  ]);
+  const rowData = useMemo<OneProduct[]>(() => {
+    return productData
+      ? productData.map((product) => ({
+          _id: product._id!,
+          name: product.name,
+          product_code: product.product_code,
+          category: product.category.name,
+          quantity: product.quantity,
+          type: product.type,
+        }))
+      : [];
+  }, [productData]);
 
-  const [filteredData, setFilteredData] = useState<ProductType[]>([]);
+  const [filteredData, setFilteredData] = useState<OneProduct[]>([]);
+
+  const colDefs = useMemo<ColDef<OneProduct>[]>(
+    () => [
+      {
+        field: "name",
+        headerName: "Product Name",
+        flex: 1,
+        headerClass: "ag-header-wrap",
+        minWidth: 100,
+        filter: "agTextColumnFilter",
+      },
+      {
+        field: "product_code",
+        headerName: "Product Code",
+        flex: 1,
+        headerClass: "ag-header-wrap",
+        minWidth: 80,
+        filter: "agTextColumnFilter",
+      },
+      { field: "category", headerName: "Category", flex: 1, minWidth: 90 },
+      {
+        field: "quantity",
+        headerName: "Available Stock",
+        flex: 1,
+        minWidth: 100,
+        headerClass: "ag-header-wrap",
+        filter: "agNumberColumnFilter",
+      },
+      { field: "type", headerName: "Type", flex: 1, minWidth: 100 },
+      {
+        field: "actions",
+        headerName: "Actions",
+        flex: 1,
+        minWidth: 100,
+        maxWidth: 120,
+        pinned: "right",
+        cellRenderer: (params: ICellRendererParams<OneProduct>) => {
+          const rowData = params.data!;
+
+          return (
+            <div className="flex gap-2 h-[2rem] items-center">
+              <FiEdit
+                size={19}
+                className="cursor-pointer"
+                onClick={() => {
+                  const currentRowData =
+                    productData?.find(
+                      (product) => product._id === rowData._id
+                    ) ?? productData![0];
+                  setUpdateData({
+                    ...currentRowData,
+                    purchase_date: new Date(currentRowData.purchase_date)
+                      .toISOString()
+                      .slice(0, 16),
+                  });
+                  setUpdateModalOpen(true);
+                }}
+              />
+              <AiOutlineDelete
+                size={20}
+                className="cursor-pointer"
+                onClick={() => {
+                  setDeleteProductOpen(true);
+                  setDeleteData(rowData);
+                }}
+              />
+            </div>
+          );
+        },
+      },
+    ],
+    [productData]
+  );
 
   const addProduct = () => {
-    console.log("val");
+    createProduct({
+      ...newProductData,
+      created_by: userEmail,
+      created_at: new Date().toISOString(),
+    });
+    setAddProductOpen(false);
   };
 
-  const deleteProduct = () => {
-    console.log("val");
+  const updateProductData = () => {
+    updateProduct(updateData!);
+    setUpdateModalOpen(false);
   };
 
-  const handleProductChange = (key: string, value: string | number) => {
-    setNewproductData((prev) => ({ ...prev, [key]: value }));
+  const deleteProductData = () => {
+    deleteProduct(deleteData!._id);
+    setDeleteProductOpen(false);
   };
+
+  const calculateTotal = useMemo(() => {
+    if (addProductOpen) {
+      if (
+        newProductData?.discount_type === DiscountType.PERCENT &&
+        newProductData.price &&
+        newProductData.quantity
+      ) {
+        const totalPrice = newProductData.price * newProductData.quantity;
+        if (newProductData.discount === 0 || isNaN(newProductData.discount))
+          return `₹${totalPrice}`;
+        const value =
+          totalPrice -
+          +((newProductData.discount / 100) * totalPrice).toFixed(2);
+        return `₹${value}`;
+      }
+      if (
+        newProductData?.discount_type === DiscountType.RUPEES &&
+        newProductData.price &&
+        newProductData.quantity
+      ) {
+        const value =
+          newProductData.price * newProductData.quantity -
+          newProductData.discount;
+        return `₹${value}`;
+      }
+    }
+    if (updateModalOpen) {
+      if (
+        updateData?.discount_type === DiscountType.PERCENT &&
+        updateData.price &&
+        updateData.quantity
+      ) {
+        const totalPrice = updateData.price * updateData.quantity;
+        if (updateData.discount === 0 || isNaN(updateData.discount))
+          return `₹${totalPrice}`;
+        const value =
+          totalPrice - +((updateData.discount / 100) * totalPrice).toFixed(2);
+        return `₹${value}`;
+      }
+      if (
+        updateData?.discount_type === DiscountType.RUPEES &&
+        updateData.price &&
+        updateData.quantity
+      ) {
+        const value =
+          updateData.price * updateData.quantity - updateData.discount;
+        return `₹${value}`;
+      }
+    }
+    return `₹0`;
+  }, [
+    addProductOpen,
+    newProductData.discount,
+    newProductData?.discount_type,
+    newProductData.price,
+    newProductData.quantity,
+    updateData?.discount,
+    updateData?.discount_type,
+    updateData?.price,
+    updateData?.quantity,
+    updateModalOpen,
+  ]);
+
+  const handleProductChange = (
+    key: string,
+    value: string | number | IdNamePair | undefined
+  ) => {
+    setNewProductData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleUpdateProduct = (
+    key: string,
+    value: string | number | IdNamePair | undefined
+  ) => {
+    setUpdateData((prev) => ({ ...prev!, [key]: value }));
+  };
+
+  useEffect(() => {
+    if (isProductCategoryQuerySuccess) {
+      setProductCategories(() => {
+        return transformIdNamePair(productCategoryData);
+      });
+    }
+    if (isProductCategoryCreateSuccess)
+      toast.success("Product Category created successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_CATEGORY_CREATE,
+      });
+  }, [
+    isProductCategoryCreateSuccess,
+    isProductCategoryQuerySuccess,
+    productCategoryData,
+  ]);
+
+  useEffect(() => {
+    if (isUnitQuerySuccess)
+      setProductUnits(() => {
+        return transformIdNamePair(unitData);
+      });
+    if (isUnitCreateSuccess)
+      toast.success("Product Unit created successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_UNIT_CREATE,
+      });
+  }, [isUnitCreateSuccess, isUnitQuerySuccess, unitData]);
 
   useEffect(() => {
     setFilteredData(rowData);
@@ -295,15 +363,56 @@ const inventory = () => {
       setFilteredData(
         rowData.filter(
           (data) =>
-            data.productName.toLowerCase().includes(search.toLowerCase()) ||
-            data.productCode.toLowerCase().includes(search.toLowerCase()) ||
-            data.type.toLowerCase().includes(search.toLowerCase())
+            data.name.toLowerCase().includes(search.toLowerCase()) ||
+            data.product_code.toLowerCase().includes(search.toLowerCase()) ||
+            data.type.toLowerCase().includes(search.toLowerCase()) ||
+            data.category.toLowerCase().includes(search.toLowerCase())
         )
       );
     } else {
       setFilteredData(rowData);
     }
-  }, [search]);
+  }, [rowData, search]);
+
+  useEffect(() => {
+    if (isProductCreated) {
+      toast.success("Product Created Successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_CREATE,
+      });
+    }
+    if (isProductUpdated) {
+      toast.success("Product Updated Successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_UPDATE,
+      });
+    }
+    if (isProductDeleted) {
+      toast.success("Product Deleted Successfully", {
+        toastId: TOAST_IDS.SUCCESS_PRODUCT_DELETE,
+      });
+    }
+    if (isProductCreateError) {
+      toast.error("Error in Creating Product", {
+        toastId: TOAST_IDS.ERROR_PRODUCT_CREATE,
+      });
+    }
+    if (isProductUpdateError) {
+      toast.error("Error in Updating Product", {
+        toastId: TOAST_IDS.ERROR_PRODUCT_UPDATE,
+      });
+    }
+    if (isProductDeleteError) {
+      toast.error("Error in Deleting Product", {
+        toastId: TOAST_IDS.ERROR_PRODUCT_DELETE,
+      });
+    }
+  }, [
+    isProductCreateError,
+    isProductCreated,
+    isProductDeleteError,
+    isProductDeleted,
+    isProductUpdateError,
+    isProductUpdated,
+  ]);
 
   return (
     <div className="h-fit">
@@ -324,7 +433,11 @@ const inventory = () => {
         </div>
       </div>
       <div className="w-full h-fit overflow-y-auto">
-        <CustomTable rowData={filteredData} colDefs={colDefs} />
+        <CustomTable<OneProduct>
+          rowData={filteredData}
+          colDefs={colDefs}
+          isLoading={isProductsLoading}
+        />
       </div>
 
       {/* Add Product */}
@@ -334,8 +447,8 @@ const inventory = () => {
         className="w-screen h-screen flex justify-center items-center"
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
-          <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
+          <div className="flex justify-between w-full pb-4">
+            <p className="text-primary text-2xl font-semibold w-full text-start">
               New Product
             </p>
             <MdClose
@@ -348,8 +461,8 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"
-                value={newproductData.productName}
-                onChange={(value) => handleProductChange("productName", value)}
+                value={newProductData.name}
+                onChange={(value) => handleProductChange("name", value)}
                 placeholder="Enter Product Name"
               />
               <CustomAutoComplete
@@ -357,7 +470,7 @@ const inventory = () => {
                 error={false}
                 placeholder="Select Unit"
                 helperText="Please Select The Unit"
-                value={newproductData.unit}
+                value={newProductData.unit?.name ?? ""}
                 options={productUnits}
                 className=""
                 addNewValue={(value) => {
@@ -368,34 +481,66 @@ const inventory = () => {
                         value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
-                    setProductUnits((prev) => [
-                      ...prev,
-                      { id: productUnits.length, value: value },
-                    ]);
-                    handleProductChange("unit", value);
+                    createUnit({
+                      name: value,
+                    });
+                    handleProductChange(
+                      "unit",
+                      transformIdValuePair(
+                        value
+                          ? productUnits.find(
+                              (productUnit) => productUnit.value === value
+                            ) ?? productUnits[0]
+                          : productUnits[0]
+                      )
+                    );
                   }
                 }}
-                onChange={(value) => handleProductChange("unit", value)}
+                onChange={(value) =>
+                  handleProductChange(
+                    "unit",
+                    transformIdValuePair(
+                      value
+                        ? productUnits.find(
+                            (productUnit) => productUnit.value === value
+                          ) ?? productUnits[0]
+                        : productUnits[0]
+                    )
+                  )
+                }
               />
               <CustomSelect
                 label="Type"
-                options={productType}
-                value={newproductData.type}
+                options={productTypes}
+                value={
+                  productTypes.find(
+                    (productType) => newProductData.type === productType.id
+                  )?.id ?? productTypes[0].id
+                }
                 onChange={(value) => handleProductChange("type", value)}
+              />
+              <CustomInput
+                label="Available Stock"
+                value={newProductData.available_stock}
+                onChange={() => {}}
+                disabled
+                placeholder="Enter Available Stock"
               />
             </div>
 
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Code"
-                value={newproductData.productCode}
-                onChange={(value) => handleProductChange("productCode", value)}
+                value={newProductData.product_code}
+                onChange={(value) => handleProductChange("product_code", value)}
                 placeholder="Enter Product Code"
               />
               <CustomDatePicker
                 label="Purchase Date"
-                value={newproductData.purchaseDate}
-                onChange={(value) => handleProductChange("purchaseDate", value)}
+                value={newProductData.purchase_date}
+                onChange={(value) =>
+                  handleProductChange("purchase_date", value)
+                }
                 placeholder="Enter Purchase Date"
               />
               <CustomAutoComplete
@@ -403,7 +548,7 @@ const inventory = () => {
                 error={false}
                 placeholder="Select Category"
                 helperText="Please Select The Category"
-                value={newproductData.category}
+                value={newProductData.category?.name ?? ""}
                 options={productCategories}
                 className=""
                 addNewValue={(value) => {
@@ -414,19 +559,31 @@ const inventory = () => {
                         value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
-                    setProductCategories((prev) => [
-                      ...prev,
-                      { id: productCategories.length, value: value },
-                    ]);
+                    createProductCategory({
+                      name: value,
+                    });
                     handleProductChange("category", value);
                   }
                 }}
-                onChange={(value) => handleProductChange("category", value)}
+                onChange={(value) =>
+                  handleProductChange(
+                    "category",
+                    transformIdValuePair(
+                      value
+                        ? productCategories.find(
+                            (productCategory) => productCategory.value === value
+                          ) ?? productCategories[0]
+                        : productCategories[0]
+                    )
+                  )
+                }
               />
               <CustomInput
                 label="Rental Price"
-                value={newproductData.rentalPrice}
-                onChange={(value) => handleProductChange("rental_price", value)}
+                value={newProductData.rent_per_unit}
+                onChange={(value) =>
+                  handleProductChange("rent_per_unit", value)
+                }
                 placeholder="Enter Rental Price"
               />
             </div>
@@ -434,15 +591,25 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Quantity"
-                value={newproductData.quantity}
-                onChange={(value) => handleProductChange("quantity", value)}
+                type="number"
+                value={newProductData.quantity}
+                onChange={(value) => {
+                  handleProductChange("quantity", value ? parseInt(value) : "");
+                  handleProductChange(
+                    "available_stock",
+                    value ? parseInt(value) : ""
+                  );
+                }}
                 placeholder="Enter Product Quantity"
               />
 
               <CustomInput
                 label="Price"
-                value={newproductData.price}
-                onChange={(value) => handleProductChange("price", value)}
+                value={newProductData.price}
+                type="number"
+                onChange={(value) =>
+                  handleProductChange("price", value ? parseInt(value) : "")
+                }
                 placeholder="Enter Product Price"
               />
 
@@ -450,297 +617,50 @@ const inventory = () => {
                 <CustomInput
                   label="Discount"
                   placeholder=""
-                  value={newproductData.discount}
+                  value={newProductData.discount}
                   type="number"
-                  onChange={(value) => handleProductChange("discount", value)}
+                  onChange={(value) =>
+                    handleProductChange(
+                      "discount",
+                      value ? parseInt(value) : ""
+                    )
+                  }
                 />
                 <CustomSelect
                   label=""
-                  options={[
-                    {
-                      id: "1",
-                      value: "%",
-                    },
-                    {
-                      id: "2",
-                      value: "₹",
-                    },
-                  ]}
-                  defaultValue="%"
-                  value={newproductData.discountType}
+                  options={discountTypeValues}
+                  value={
+                    discountTypeValues.find(
+                      (discountType) =>
+                        newProductData.discount_type === discountType.id
+                    )?.id ?? discountTypeValues[0].id
+                  }
                   onChange={(value) =>
-                    handleProductChange("discountType", value)
+                    handleProductChange("discount_type", value)
                   }
                 />
               </div>
 
               <CustomInput
                 label="Total"
-                value={newproductData.total}
-                onChange={(value) => handleProductChange("total", value)}
+                value={calculateTotal}
+                onChange={() => {}}
                 placeholder="Rs. 0.0"
+                disabled
               />
             </div>
-
-            <div className="flex gap-2 items-center font-semibold h-fit">
-              <Checkbox
-                name="purchaseOrder"
-                id="purchaseOrder"
-                className="w-fit h-fit"
-                sx={{
-                  color: "#000000",
-                  "&.Mui-checked": {
-                    color: "#000000",
-                  },
-                }}
-                value={newproductData.purchaseOrder}
-                onChange={(_, value) =>
-                  setNewproductData((prev) => ({
-                    ...prev,
-                    purchaseOrder: value,
-                  }))
-                }
-              />
-              <label
-                htmlFor="purchaseOrder"
-                className="cursor-pointer select-none"
-              >
-                Mark as Purchase Order
-              </label>
-            </div>
-            {newproductData.purchaseOrder && (
-              <CustomSelect
-                label="Seller"
-                value={newproductData.seller ?? ""}
-                options={sellers}
-                onChange={(value) => handleProductChange("seller", value)}
-              />
-            )}
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
-              onClick={() => setAddProductOpen(false)}
+              onClick={() => {
+                setAddProductOpen(false);
+                setNewProductData(initialProductData);
+              }}
               label="Discard"
               variant="outlined"
               className="bg-white"
             />
             <CustomButton onClick={addProduct} label="Add Product" />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Update Stock */}
-      <Modal
-        open={addStockOpen}
-        onClose={() => setAddStockOpen(false)}
-        className="w-screen h-screen flex justify-center items-center"
-      >
-        <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
-          <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Add Stock
-            </p>
-            <MdClose
-              size={25}
-              className="cursor-pointer"
-              onClick={() => setAddStockOpen(false)}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
-            <div className="flex flex-col gap-3">
-              <CustomInput
-                label="Product Name"
-                value={newproductData.productName}
-                onChange={(value) => handleProductChange("productName", value)}
-                placeholder="Enter Product Name"
-              />
-              <CustomAutoComplete
-                label="Unit"
-                error={false}
-                placeholder="Select Unit"
-                helperText="Please Select The Unit"
-                value={newproductData.unit}
-                options={productUnits}
-                className=""
-                addNewValue={(value) => {
-                  const exists =
-                    productUnits.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
-                    ).length > 0;
-                  if (!exists && value.length > 0) {
-                    setProductUnits((prev) => [
-                      ...prev,
-                      { id: productUnits.length, value: value },
-                    ]);
-                    handleProductChange("unit", value);
-                  }
-                }}
-                onChange={(value) => handleProductChange("unit", value)}
-              />
-              <CustomSelect
-                label="Type"
-                options={productType}
-                value={newproductData.type ?? { id: "", value: "" }}
-                onChange={(value) => handleProductChange("type", value)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <CustomInput
-                label="Product Code"
-                value={newproductData.productCode}
-                onChange={(value) => handleProductChange("productCode", value)}
-                placeholder="Enter Product Code"
-              />
-              <CustomDatePicker
-                label="Purchase Date"
-                value={newproductData.purchaseDate}
-                onChange={(value) => handleProductChange("purchaseDate", value)}
-                placeholder="Enter Purchase Date"
-              />
-              <CustomAutoComplete
-                label="Category"
-                error={false}
-                placeholder="Select Category"
-                helperText="Please Select The Category"
-                value={newproductData.category}
-                options={productCategories}
-                className=""
-                addNewValue={(value) => {
-                  const exists =
-                    productCategories.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
-                    ).length > 0;
-                  if (!exists && value.length > 0) {
-                    setProductCategories((prev) => [
-                      ...prev,
-                      { id: productCategories.length, value: value },
-                    ]);
-                    handleProductChange("category", value);
-                  }
-                }}
-                onChange={(value) => handleProductChange("category", value)}
-              />
-              <CustomInput
-                label="Rental Price"
-                type="number"
-                value={newproductData.rentalPrice}
-                onChange={(value) =>
-                  handleProductChange("rentalPrice", parseInt(value))
-                }
-                placeholder="Enter Rental Price"
-              />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <CustomInput
-                label="Quantity"
-                type="number"
-                value={newproductData.quantity}
-                onChange={(value) =>
-                  handleProductChange("quantity", parseInt(value))
-                }
-                placeholder="Enter Product Quantity"
-              />
-
-              <CustomInput
-                label="Price"
-                type="number"
-                value={newproductData.price}
-                onChange={(value) =>
-                  handleProductChange("price", parseInt(value))
-                }
-                placeholder="Enter Product Price"
-              />
-
-              <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
-                <CustomInput
-                  label="Discount"
-                  placeholder=""
-                  value={newproductData.discount}
-                  type="number"
-                  onChange={(value) =>
-                    handleProductChange("discount", parseInt(value))
-                  }
-                />
-                <CustomSelect
-                  label=""
-                  options={[
-                    {
-                      id: "1",
-                      value: "%",
-                    },
-                    {
-                      id: "2",
-                      value: "₹",
-                    },
-                  ]}
-                  defaultValue="%"
-                  value={newproductData.discountType ?? { id: "", value: "" }}
-                  onChange={(value) =>
-                    handleProductChange("discountType", value)
-                  }
-                />
-              </div>
-
-              <CustomInput
-                label="Total"
-                type="number"
-                value={newproductData.total}
-                onChange={(value) =>
-                  handleProductChange("total", parseInt(value))
-                }
-                placeholder="Rs. 0.0"
-              />
-            </div>
-
-            <div className="flex gap-2 items-center font-semibold h-fit">
-              <Checkbox
-                name="purchase_order"
-                id="purchase_order"
-                className="w-fit h-fit"
-                sx={{
-                  color: "#000000",
-                  "&.Mui-checked": {
-                    color: "#000000",
-                  },
-                }}
-                value={newproductData.purchaseOrder}
-                onChange={(_, value) =>
-                  setNewproductData((prev) => ({
-                    ...prev,
-                    purchaseOrder: value,
-                  }))
-                }
-              />
-              <label
-                htmlFor="purchaseOrder"
-                className="cursor-pointer select-none"
-              >
-                Mark as Purchase Order
-              </label>
-            </div>
-            {newproductData.purchaseOrder && (
-              <CustomSelect
-                label="Seller"
-                value={newproductData?.seller ?? { id: "", value: "" }}
-                options={sellers}
-                onChange={(value) => handleProductChange("seller", value)}
-              />
-            )}
-          </div>
-          <div className="flex w-full gap-3 justify-end">
-            <CustomButton
-              onClick={() => setAddProductOpen(false)}
-              label="Discard"
-              variant="outlined"
-              className="bg-white"
-            />
-            <CustomButton onClick={addProduct} label="Save Product" />
           </div>
         </div>
       </Modal>
@@ -772,8 +692,8 @@ const inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"
-                value={updateData?.productName ?? ""}
-                onChange={(value) => handleProductChange("product_name", value)}
+                value={updateData?.name ?? ""}
+                onChange={(value) => handleUpdateProduct("product_name", value)}
                 placeholder="Enter Product Name"
               />
               <CustomAutoComplete
@@ -781,7 +701,7 @@ const inventory = () => {
                 error={false}
                 placeholder="Select Unit"
                 helperText="Please Select The Unit"
-                value={"cm"}
+                value={updateData?.unit?.name ?? ""}
                 options={productUnits}
                 className=""
                 addNewValue={(value) => {
@@ -792,33 +712,56 @@ const inventory = () => {
                         value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
-                    setProductUnits((prev) => [
-                      ...prev,
-                      { id: productUnits.length, value: value },
-                    ]);
-                    handleProductChange("unit", value);
+                    createUnit({
+                      name: value,
+                    });
+                    handleUpdateProduct("unit", value);
                   }
                 }}
-                onChange={(value) => handleProductChange("unit", value)}
+                onChange={(value) =>
+                  handleUpdateProduct(
+                    "unit",
+                    transformIdValuePair(
+                      value
+                        ? productUnits.find(
+                            (productUnit) => productUnit.value === value
+                          ) ?? productUnits[0]
+                        : productUnits[0]
+                    )
+                  )
+                }
               />
               <CustomSelect
                 label="Type"
-                options={productType}
-                value={newproductData.type}
-                onChange={(value) => handleProductChange("type", value)}
+                options={productTypes}
+                value={
+                  productTypes.find(
+                    (productType) => newProductData.type === productType.id
+                  )?.id ?? productTypes[0].id
+                }
+                onChange={(value) => {
+                  handleUpdateProduct("type", value);
+                }}
+              />
+              <CustomInput
+                label="Available Stock"
+                value={updateData?.available_stock || 0}
+                onChange={() => {}}
+                disabled
+                placeholder="Enter Available Stock"
               />
             </div>
 
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Code"
-                value={updateData?.productCode ?? ""}
+                value={updateData?.product_code ?? ""}
                 onChange={(value) =>
                   setUpdateData((prev) => {
                     if (prev)
                       return {
                         ...prev,
-                        productCode: value,
+                        product_code: value,
                       };
                     return prev;
                   })
@@ -827,13 +770,13 @@ const inventory = () => {
               />
               <CustomDatePicker
                 label="Purchase Date"
-                value={updateData?.purchaseDate ?? ""}
+                value={updateData?.purchase_date ?? ""}
                 onChange={(value) =>
                   setUpdateData((prev) => {
                     if (prev)
                       return {
                         ...prev,
-                        purchaseDate: value,
+                        purchase_date: value,
                       };
                     return prev;
                   })
@@ -845,7 +788,7 @@ const inventory = () => {
                 error={false}
                 placeholder="Select Category"
                 helperText="Please Select The Category"
-                value={updateData?.category ?? ""}
+                value={updateData?.category.name ?? ""}
                 options={productCategories}
                 className=""
                 addNewValue={(value) => {
@@ -856,41 +799,34 @@ const inventory = () => {
                         value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
-                    setProductCategories((prev) => [
-                      ...prev,
-                      { id: productCategories.length, value: value },
-                    ]);
-
-                    setUpdateData((prev) => {
-                      if (prev)
-                        return {
-                          ...prev,
-                          category: value,
-                        };
-                      return prev;
+                    createProductCategory({
+                      name: value,
                     });
+                    handleUpdateProduct("category", value);
                   }
                 }}
                 onChange={(value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        category: value,
-                      };
-                    return prev;
-                  })
+                  handleUpdateProduct(
+                    "category",
+                    transformIdValuePair(
+                      value
+                        ? productCategories.find(
+                            (productCategory) => productCategory.value === value
+                          ) ?? productCategories[0]
+                        : productCategories[0]
+                    )
+                  )
                 }
               />
               <CustomInput
                 label="Rental Price"
-                value={updateData?.rentalPrice ?? 0}
+                value={updateData?.rent_per_unit ?? 0}
                 onChange={(value) =>
                   setUpdateData((prev) => {
                     if (prev)
                       return {
                         ...prev,
-                        rentalPrice: parseInt(value),
+                        rent_per_unit: parseInt(value),
                       };
                     return prev;
                   })
@@ -906,13 +842,20 @@ const inventory = () => {
                 value={updateData?.quantity ?? 0}
                 onChange={(value) =>
                   setUpdateData((prev) => {
-                    console.log(value);
-                    // return;
-                    if (prev)
+                    if (prev) {
+                      const quantityDelta =
+                        (productData?.find(
+                          (product) => product._id === updateData?._id
+                        )?.quantity || 0) - parseInt(value);
                       return {
                         ...prev,
                         quantity: parseInt(value),
+                        available_stock:
+                          (productData?.find(
+                            (product) => product._id === updateData?._id
+                          )?.available_stock || 0) - quantityDelta,
                       };
+                    }
                     return prev;
                   })
                 }
@@ -955,113 +898,47 @@ const inventory = () => {
                 />
                 <CustomSelect
                   label=""
-                  options={[
-                    {
-                      id: "1",
-                      value: "%",
-                    },
-                    {
-                      id: "2",
-                      value: "₹",
-                    },
-                  ]}
+                  options={discountTypeValues}
                   defaultValue="%"
-                  value={updateData?.discountType ?? ""}
+                  value={
+                    discountTypeValues.find(
+                      (discountType) =>
+                        newProductData.discount_type === discountType.id
+                    )?.id ?? discountTypeValues[0].id
+                  }
                   onChange={(value) =>
-                    setUpdateData((prev) => {
-                      if (prev)
-                        return {
-                          ...prev,
-                          discountType: value,
-                        };
-                      return prev;
-                    })
+                    handleUpdateProduct("discount_type", value)
                   }
                 />
               </div>
 
               <CustomInput
                 label="Total"
-                value={updateData?.total ?? 0}
-                type="number"
-                onChange={(value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        total: parseInt(value),
-                      };
-                    return prev;
-                  })
-                }
+                value={calculateTotal}
+                onChange={() => {}}
                 placeholder="Rs. 0.0"
+                disabled
               />
             </div>
-
-            <div className="flex gap-2 items-center font-semibold h-fit">
-              <Checkbox
-                name="purchase_order"
-                id="purchase_order"
-                className="w-fit h-fit"
-                sx={{
-                  color: "#000000",
-                  "&.Mui-checked": {
-                    color: "#000000",
-                  },
-                }}
-                value={updateData?.purchaseOrder ?? false}
-                onChange={(_, value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        purchaseOrder: value,
-                      };
-                    return prev;
-                  })
-                }
-              />
-              <label
-                htmlFor="purchase_order"
-                className="cursor-pointer select-none"
-              >
-                Mark as Purchase Order
-              </label>
-            </div>
-            {updateData?.purchaseOrder && (
-              <CustomSelect
-                label="Seller"
-                value={updateData?.seller ?? ""}
-                options={sellers}
-                onChange={(value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        seller: value,
-                      };
-                    return prev;
-                  })
-                }
-              />
-            )}
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
-              onClick={() => setAddProductOpen(false)}
+              onClick={() => {
+                setUpdateModalOpen(false);
+              }}
               label="Discard"
               variant="outlined"
               className="bg-white"
             />
-            <CustomButton onClick={addProduct} label="Save Product" />
+            <CustomButton onClick={updateProductData} label="Save Product" />
           </div>
         </div>
       </Modal>
 
       {/* Delete Modal */}
       <Modal
-        open={deleteData ? true : false}
-        onClose={() => setDeleteData(null)}
+        open={deleteProductOpen}
+        onClose={() => setDeleteProductOpen(false)}
         className="w-screen h-screen flex justify-center items-center"
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-2/5 max-h-4/5 bg-white rounded-lg p-4">
@@ -1072,7 +949,10 @@ const inventory = () => {
             <MdClose
               size={25}
               className="cursor-pointer"
-              onClick={() => setDeleteData(null)}
+              onClick={() => {
+                setDeleteProductOpen(false);
+                setDeleteData(null);
+              }}
             />
           </div>
 
@@ -1088,12 +968,15 @@ const inventory = () => {
           </div>
           <div className="flex w-full gap-3 justify-end">
             <CustomButton
-              onClick={() => setDeleteData(null)}
+              onClick={() => {
+                setDeleteProductOpen(false);
+                setDeleteData(null);
+              }}
               label="Cancel"
               variant="outlined"
               className="bg-white"
             />
-            <CustomButton onClick={() => deleteProduct()} label="Delete" />
+            <CustomButton onClick={() => deleteProductData()} label="Delete" />
           </div>
         </div>
       </Modal>
@@ -1101,4 +984,4 @@ const inventory = () => {
   );
 };
 
-export default inventory;
+export default Inventory;

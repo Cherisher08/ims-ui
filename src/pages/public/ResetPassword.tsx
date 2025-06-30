@@ -1,21 +1,74 @@
 import { useNavigate } from "react-router-dom";
 import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@mui/material";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store/store";
+import {
+  useUpdateUserPasswordMutation,
+  useVerifyOtpMutation,
+} from "../../services/ApiService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../constants/constants";
+
+interface PasswordObject {
+  password: string;
+  confirmPassword: string;
+}
 
 const ResetPassword = () => {
+  const email = useSelector((state: RootState) => state.user.email);
   const name = "Mani";
   const navigate = useNavigate();
+  const [otp, setOtp] = useState<string>();
+  const [password, setPassword] = useState<PasswordObject>({
+    password: "",
+    confirmPassword: "",
+  });
   const [verified, setVerified] = useState<boolean>(false);
+  const [verifyOtp, { isSuccess: isOtpSuccess, isError: isOtpError }] =
+    useVerifyOtpMutation();
+  const [updateUserPassword, { isSuccess: isPasswordUpdateSuccess }] =
+    useUpdateUserPasswordMutation();
 
   const handleVerify = () => {
-    setVerified(true);
+    if (otp && email)
+      verifyOtp({
+        otp: otp,
+        email: email,
+      });
   };
 
   const handleSignIn = () => {
-    navigate("/");
+    updateUserPassword({
+      email: email,
+      password: password.password,
+    });
   };
+
+  const isValidPassword =
+    password.password && password.password === password.confirmPassword;
+
+  useEffect(() => {
+    if (isOtpSuccess) {
+      toast("Entered OTP is valid", {
+        toastId: TOAST_IDS.OTP_VALID,
+      });
+      setVerified(true);
+    }
+    if (isOtpError) {
+      toast("Entered OTP is invalid. Please try again", {
+        toastId: TOAST_IDS.OTP_INVALID,
+      });
+    }
+    if (isPasswordUpdateSuccess) {
+      toast("Password Updated Successfully", {
+        toastId: TOAST_IDS.SUCCESS_PASSWORD_UPDATE,
+      });
+      navigate("/");
+    }
+  }, [isOtpError, isOtpSuccess, isPasswordUpdateSuccess, navigate]);
 
   return (
     <div className="bg-white w-full min-h-screen items-center px-3 grid grid-cols-[60%_40%]">
@@ -41,6 +94,13 @@ const ResetPassword = () => {
               <input
                 className="w-full px-3 py-2 rounded-md border border-outline outline-none"
                 placeholder="Enter new password"
+                onChange={(event) =>
+                  setPassword((prev) => ({
+                    ...prev,
+                    password: event.target.value,
+                  }))
+                }
+                value={password.password}
               ></input>
             </div>
             <div className="flex flex-col gap-2">
@@ -48,13 +108,23 @@ const ResetPassword = () => {
               <input
                 className="w-full px-3 py-2 rounded-md border border-outline outline-none"
                 placeholder="Re-enter password"
+                onChange={(event) =>
+                  setPassword((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                value={password.confirmPassword}
               ></input>
             </div>
           </div>
           <Button
             variant="contained"
-            className="bg-secondary w-full p-3 rounded-md content-center h-11 text-white"
+            className={`${
+              !isValidPassword ? "bg-disabled" : "bg-secondary"
+            } w-full p-3 rounded-md content-center h-11 text-white`}
             onClick={handleSignIn}
+            disabled={!isValidPassword}
           >
             Sign in
           </Button>
@@ -78,13 +148,18 @@ const ResetPassword = () => {
               <input
                 className="w-full px-3 py-2 rounded-md border border-outline outline-none"
                 placeholder="Enter your otp"
+                onChange={(event) => setOtp(event.target.value)}
+                value={otp}
               ></input>
             </div>
           </div>
           <Button
             variant="contained"
-            className="bg-secondary w-full p-3 h-11 rounded-md content-center bg-new text-white"
+            className={`${
+              !(otp && email) ? "bg-disabled" : "bg-secondary"
+            } w-full p-3 h-11 rounded-md content-center bg-new text-white`}
             onClick={handleVerify}
+            disabled={!(otp && email)}
           >
             Verify OTP
           </Button>

@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Loader from "../components/Loader";
+import { ToastContainer } from "react-toastify";
+import RequireAuth from "../components/RequireAuth/RequireAuth";
 
 const MainLayout = React.lazy(() => import("../components/Layouts/MainLayout"));
 const AuthLayout = React.lazy(() => import("../components/Layouts/AuthLayout"));
@@ -12,13 +14,8 @@ const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
 const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
 const Inventory = React.lazy(() => import("../pages/private/Inventory"));
 const Contacts = React.lazy(() => import("../pages/private/Contacts/Contacts"));
-const Orders = React.lazy(() => import("../pages/private/Orders"));
-const NewRentalOrder = React.lazy(
-  () => import("../pages/private/Orders/NewRentalOrder")
-);
-const NewSalesOrder = React.lazy(
-  () => import("../pages/private/Orders/NewSalesOrder")
-);
+const Orders = React.lazy(() => import("../pages/private/OrderSummary/Orders"));
+const NewOrder = React.lazy(() => import("../pages/private/Orders/NewOrder"));
 const OrderInvoice = React.lazy(
   () => import("../pages/private/Orders/OrderInvoice")
 );
@@ -58,11 +55,19 @@ const publicRoutes = [
 const privateRoutes = [
   {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <RequireAuth>
+        <MainLayout />
+      </RequireAuth>
+    ),
     children: [
       {
         index: true,
-        path: "/",
+        path: "/orders/rentals",
+        element: <NewOrder />,
+      },
+      {
+        path: "/dashboard",
         element: <Dashboard />,
       },
       {
@@ -78,20 +83,20 @@ const privateRoutes = [
         element: <Orders />,
       },
       {
-        path: "/orders/new-rental-order",
-        element: <NewRentalOrder />,
+        path: "/orders/rentals/:rentalId",
+        element: <NewOrder />,
       },
       {
-        path: "/orders/new-sales-order",
-        element: <NewSalesOrder />,
-      },
-      {
-        path: "/orders/invoice",
+        path: "/orders/invoice/:rentalId",
         element: <OrderInvoice />,
       },
       {
         path: "*",
-        element: <Navigate to="/" replace />,
+        element: <Navigate to="/orders/rentals" replace />,
+      },
+      {
+        path: "/",
+        element: <Navigate to="/orders/rentals" replace />,
       },
     ],
   },
@@ -112,6 +117,7 @@ const Index = () => {
     <BrowserRouter>
       <Suspense fallback={<Loader />}>
         <Routes>{appRoutes(newRoutes)}</Routes>
+        <ToastContainer />
       </Suspense>
     </BrowserRouter>
   );

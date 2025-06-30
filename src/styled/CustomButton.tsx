@@ -6,6 +6,7 @@ interface CustomButtonProps {
   icon?: React.ReactNode;
   variant?: "outlined" | "contained" | "text";
   className?: string;
+  disabled?: boolean;
 }
 
 const buttonStyles = {
@@ -20,15 +21,19 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   className = "",
   variant = "contained",
   icon,
+  disabled = false,
 }) => {
   return (
     <Button
       classes={{
-        root: `${className} ${buttonStyles[variant]} min-w-fit normal-case text-nowrap hover:bg-highlight h-[2.5rem]`,
+        root: `${disabled ? "bg-disabled! text-white!" : ""}${className} ${
+          buttonStyles[variant]
+        } min-w-fit normal-case text-nowrap hover:bg-highlight h-[2.5rem]`,
       }}
       onClick={onClick}
       startIcon={icon}
       variant={variant}
+      disabled={disabled}
     >
       {label}
     </Button>

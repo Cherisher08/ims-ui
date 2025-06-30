@@ -1,34 +1,31 @@
-import type { Dispatch, SetStateAction } from "react";
-
 export type ContactInfoType = {
-  id: string;
+  _id?: string;
   name: string;
-  personalNumber: string;
-  officeNumber: string;
+  personal_number: string;
+  office_number: string;
   gstin: string;
   email: string;
   address: string;
   pincode: string;
-  addressProof?: string;
-  companyName?: string;
-  actions?: string;
+  company_name?: string;
+  address_proof?: string;
 };
 
-export type AddContactModalType = {
-  addContactOpen: boolean;
-  setAddContactOpen: (value: boolean) => void;
-};
+export interface ContactWithFile extends ContactInfoType {
+  file: File | null;
+}
 
-export type UpdateContactModalType = {
-  updateContactOpen: boolean;
-  setUpdateContactOpen: (value: boolean) => void;
-  updateContactData: ContactInfoType | null;
-  setUpdateContactData: Dispatch<SetStateAction<ContactInfoType | null>>;
-};
+export type ContactInfoWithActions = ContactInfoType & { actions?: string };
 
-export type DeleteContactType = {
-  deleteContactOpen: boolean;
-  setDeleteContactOpen: (value: boolean) => void;
-  deleteContactId: string;
-  setDeleteContactId: (value: string) => void;
+export const initialContactType: ContactInfoType = {
+  _id: "",
+  name: "",
+  personal_number: "",
+  office_number: "",
+  gstin: "",
+  email: "",
+  address: "",
+  pincode: "",
+  company_name: "",
+  address_proof: "",
 };

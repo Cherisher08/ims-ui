@@ -1,5 +1,12 @@
 {
   "files": [],
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": ".",              // optional, depending on your setup
+    "paths": {
+      "*": ["node_modules/*"]    // optional, depending on your setup
+    }
+  },
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }

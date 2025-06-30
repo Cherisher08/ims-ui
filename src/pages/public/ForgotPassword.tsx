@@ -2,13 +2,38 @@ import { useNavigate } from "react-router-dom";
 import NamedLogo from "../../assets/named-logo.png";
 import Logo from "../../assets/logo.svg";
 import { Button } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useResetPasswordMutation } from "../../services/ApiService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../constants/constants";
+import { useDispatch } from "react-redux";
+import { updateUser } from "../../store/UserSlice";
 
 const ForgotPassword = () => {
+  const dispatch = useDispatch();
+  const [resetPassword, { isSuccess: isPasswordReset }] =
+    useResetPasswordMutation();
+  const [email, setEmail] = useState<string>();
   const navigate = useNavigate();
 
   const handleSendMail = async () => {
-    navigate("/auth/reset-password");
+    if (email) resetPassword(email);
   };
+
+  useEffect(() => {
+    if (isPasswordReset) {
+      dispatch(
+        updateUser({
+          email: email,
+          loggedTime: new Date().toISOString(),
+        })
+      );
+      toast("OTP is sent through email successfully", {
+        toastId: TOAST_IDS.SUCCESS_OTP_GENERATION,
+      });
+      navigate("/auth/reset-password");
+    }
+  }, [dispatch, email, isPasswordReset, navigate]);
 
   return (
     <div className="bg-white w-full min-h-screen items-center px-3 grid grid-cols-[60%_40%]">
@@ -33,13 +58,19 @@ const ForgotPassword = () => {
             <input
               className="w-full px-3 py-2 rounded-md border border-outline outline-none"
               placeholder="Enter your email"
+              onChange={(event) => setEmail(event.target.value)}
+              value={email}
             ></input>
           </div>
         </div>
         <Button
           variant="contained"
-          className="bg-secondary w-full p-3 h-11 rounded-md content-center text-white"
+          className={`${
+            !email ? "bg-disabled" : "bg-secondary"
+          } w-full p-3 h-11 rounded-md content-center text-white`}
           onClick={handleSendMail}
+          value={email}
+          disabled={!email}
         >
           Email me
         </Button>

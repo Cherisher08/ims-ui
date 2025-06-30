@@ -1,9 +1,18 @@
+import { useEffect } from "react";
 import { Modal } from "@mui/material";
-import React from "react";
 import { MdClose } from "react-icons/md";
 import { PiWarningFill } from "react-icons/pi";
-import CustomButton from "../../../../styled/CustomButtom";
-import type { DeleteContactType } from "../../../../types/contact";
+import CustomButton from "../../../../styled/CustomButton";
+import { useDeleteContactMutation } from "../../../../services/ContactService";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../../../constants/constants";
+
+export type DeleteContactType = {
+  deleteContactOpen: boolean;
+  setDeleteContactOpen: (value: boolean) => void;
+  deleteContactId: string;
+  setDeleteContactId: (value: string) => void;
+};
 
 const DeleteContactModal = ({
   deleteContactOpen,
@@ -11,14 +20,23 @@ const DeleteContactModal = ({
   deleteContactId,
   setDeleteContactId,
 }: DeleteContactType) => {
+  const [deleteContact, { isSuccess: isDeleteContactSuccess, reset }] =
+    useDeleteContactMutation();
+
   const handleDeleteContact = () => {
-    try {
-    } catch (error) {
-    } finally {
-      setDeleteContactId("");
+    deleteContact(deleteContactId);
+    setDeleteContactId("");
+  };
+
+  useEffect(() => {
+    if (isDeleteContactSuccess) {
+      toast.success("Deleted Contact Successfully", {
+        toastId: TOAST_IDS.SUCCESS_CONTACT_DELETE,
+      });
+      reset();
       setDeleteContactOpen(false);
     }
-  };
+  }, [isDeleteContactSuccess, reset, setDeleteContactOpen]);
 
   return (
     <Modal

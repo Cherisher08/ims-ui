@@ -8,6 +8,8 @@ export interface CustomMenuItemProps {
   label: string;
   icon: React.ReactNode;
   handleItem: () => void;
+  key: string;
+  disabled?: boolean;
 }
 
 export interface TransformPositionType {
@@ -50,6 +52,8 @@ const CustomMenu: React.FC<CustomMenuProps> = ({
         <MenuItem
           className={`${menuItemClassName} px-3 py-1`}
           onClick={item.handleItem}
+          disabled={item.disabled ?? false}
+          key={item.key}
         >
           <ListItemIcon>{item.icon}</ListItemIcon>
           <ListItemText>{item.label}</ListItemText>

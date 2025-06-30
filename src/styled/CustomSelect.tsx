@@ -1,12 +1,12 @@
 import { MenuItem, Select } from "@mui/material";
 
-type CustomSelectOptionProps = {
+export type CustomSelectOptionProps = {
   id: string;
   value: string;
 };
 
 type CustomSelectProps = {
-  value: CustomSelectOptionProps;
+  value: string;
   options: CustomSelectOptionProps[];
   onChange: (value: string) => void;
   label: string;
@@ -14,9 +14,11 @@ type CustomSelectProps = {
   error?: boolean;
   helperText?: string;
   className?: string;
+  wrapperClass?: string;
+  labelClass?: string;
 };
 
-const CustomSelect: React.FC<CustomSelectProps> = ({
+const CustomSelect = ({
   value,
   options,
   label,
@@ -25,11 +27,15 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   error = false,
   helperText = "",
   className = "",
-}) => {
+  labelClass = "",
+  wrapperClass = "",
+}: CustomSelectProps) => {
   return (
-    <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
+    <div
+      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${wrapperClass}`}
+    >
       <label
-        className={`pt-2 line-clamp-2 break-words h-fit ${
+        className={`pt-2 line-clamp-2 break-words h-fit ${labelClass} ${
           label ? "w-[5rem]" : "w-0"
         }`}
       >
@@ -37,18 +43,17 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       </label>
       <div className="flex flex-col gap-2 w-full">
         <Select
-          className="h-[2.5rem]"
+          className={`h-[2.5rem] ${className}`}
           error={error}
-          value={JSON.stringify(value)}
+          value={value}
           defaultValue={defaultValue}
-          onChange={(e) => onChange(JSON.parse(e.target.value))}
+          onChange={(e) => onChange(e.target.value)}
           displayEmpty
           inputProps={{ "aria-label": "Without label" }}
-          classes={{ root: ` ${className}` }}
         >
           {options.map((option) => (
-            <MenuItem value={JSON.stringify(option)} key={option.id}>
-              {JSON.stringify(option.value)}
+            <MenuItem value={option.id} key={option.id}>
+              {option.value}
             </MenuItem>
           ))}
         </Select>

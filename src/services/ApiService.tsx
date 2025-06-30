@@ -19,8 +19,10 @@ import {
   VerifyOtpRequest,
 } from "../types/common";
 
+const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:8000/",
+  baseUrl: apiUrl,
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("access_token");
     if (token) {

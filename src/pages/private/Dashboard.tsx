@@ -3,43 +3,118 @@ import CustomSelect from "../../styled/CustomSelect";
 import CustomCard from "../../styled/CustomCard";
 import CustomLineChart from "../../styled/CustomLineChart";
 import {
+  BillingMode,
   OrderInfoType,
   PaymentStatus,
   RentalOrderInfo,
 } from "../../types/order";
 import { ProductType } from "../../types/common";
+import { useGetRentalOrdersQuery } from "../../services/OrderService";
+import { calculateDiscountAmount } from "../../services/utility_functions";
+import dayjs from "dayjs";
+import weekOfYear from "dayjs/plugin/weekOfYear";
+import { isPending } from "@reduxjs/toolkit";
+dayjs.extend(weekOfYear);
 
 type PendingAmount = { date: string; price: number };
 
+const groupKeyFormatter = (dateStr: string, filter: string) => {
+  const date = dayjs(dateStr);
+  switch (filter) {
+    case "1":
+      return date.format("YYYY-MM-DD");
+    case "2":
+      return `${date.year()}-W${date.week()}`;
+    case "3":
+      return date.format("YYYY-MM");
+    default:
+      return date.format("YYYY-MM-DD");
+  }
+};
+
+const calcFinalAmount = (order: OrderInfoType) => {
+  if (order.type === ProductType.RENTAL && order.product_details) {
+    return parseFloat(
+      order.product_details
+        .reduce(
+          (total, prod) =>
+            total +
+            prod.rent_per_unit *
+              (prod.order_quantity - prod.order_repair_count),
+          0
+        )
+        .toFixed(2)
+    );
+  }
+  return 0;
+};
+
+const pendingGroupedData = (
+  orders: RentalOrderInfo[],
+  filter: string,
+  isPending: boolean
+) => {
+  const groups: Record<string, number> = {};
+
+  orders
+    .filter((order) => order.status === PaymentStatus.PENDING)
+    .forEach((order) => {
+      const groupKey = groupKeyFormatter(order.in_date, filter);
+
+      const depositTotal =
+        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+
+      const finalAmount = calcFinalAmount(order);
+      const roundOff = order.round_off || 0;
+      const discountAmount = order.discount_amount || 0;
+      const gstAmount =
+        order.billing_mode === BillingMode.BUSINESS
+          ? 0
+          : calculateDiscountAmount(order.gst, finalAmount);
+
+      const pendingAmount = parseFloat(
+        (
+          finalAmount -
+          depositTotal -
+          discountAmount +
+          gstAmount +
+          roundOff
+        ).toFixed(2)
+      );
+
+      if (isPending) {
+        if (pendingAmount < 0) {
+          groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
+        }
+      } else {
+        if (pendingAmount > 0) {
+          groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
+        }
+      }
+    });
+
+  const chartData = Object.entries(groups).map(([date, price]) => ({
+    date,
+    price,
+  }));
+
+  return chartData;
+};
+
 const Dashboard = () => {
+  const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
+    useGetRentalOrdersQuery();
   const [filter, setFilter] = useState<string>("1");
-  const [orders] = useState<RentalOrderInfo[]>([]);
-  const [chartData, setchartData] = useState<PendingAmount[]>([]);
+  const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
+  const [chartData, setChartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<number>(1);
-  const [filterOptions] = useState([
+  const filterOptions = [
     { id: "1", value: "daily" },
     { id: "2", value: "weekly" },
     { id: "3", value: "monthly" },
-  ]);
+  ];
 
   const [pendingOrderAmount, setPendingOrderAmount] = useState<number>(0);
-
-  const calcFinalAmount = (order: OrderInfoType) => {
-    if (order.type === ProductType.RENTAL && order.product_details) {
-      return parseFloat(
-        order.product_details
-          .reduce(
-            (total, prod) =>
-              total +
-              prod.rent_per_unit *
-                (prod.order_quantity - prod.order_repair_count),
-            0
-          )
-          .toFixed(2)
-      );
-    }
-    return 0;
-  };
 
   useEffect(() => {
     const amount = orders
@@ -50,30 +125,26 @@ const Dashboard = () => {
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
         const discountAmount = order.discount_amount || 0;
+        const gstAmount =
+          order.billing_mode === BillingMode.BUSINESS
+            ? 0
+            : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - deposit - discountAmount + roundOff;
+        const pendingAmount =
+          finalAmount - deposit - discountAmount + gstAmount + roundOff;
+        if (pendingAmount < 0) return sum + 0;
         return sum + pendingAmount;
       }, 0);
     setPendingOrderAmount(amount);
-    const pendingData = orders
-      .filter((order) => order.status === PaymentStatus.PENDING)
-      .map((order) => {
-        const deposit =
-          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || 0;
-        const finalAmount = calcFinalAmount(order);
-        const roundOff = order.round_off || 0;
-        const discountAmount = order.discount_amount || 0;
+    const pendingData = pendingGroupedData(orders, filter, true);
+    setChartData(pendingData);
+  }, [filter, orders]);
 
-        const pendingAmount = parseFloat(
-          (finalAmount - deposit - discountAmount + roundOff).toFixed(2)
-        );
-        return {
-          date: new Date(order.in_date).toISOString().split("T")[0],
-          price: pendingAmount,
-        };
-      });
-    setchartData(pendingData);
-  }, [orders]);
+  useEffect(() => {
+    if (isRentalOrdersQuerySuccess) {
+      setOrders(rentalOrderData);
+    }
+  }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">

@@ -22,7 +22,7 @@ import {
 const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "https://ims-mpt-backend.onrender.com/",
+  baseUrl: apiUrl,
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -52,7 +52,7 @@ const baseQueryWith401Handler: BaseQueryFn<
 // Define a service using a base URL and expected endpoints
 export const rootApi = createApi({
   reducerPath: "rootApi",
-  baseQuery: baseQuery,
+  baseQuery: baseQueryWith401Handler,
   tagTypes: [
     "Product",
     "Product-Category",

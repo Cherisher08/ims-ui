@@ -52,7 +52,7 @@ const baseQueryWith401Handler: BaseQueryFn<
 // Define a service using a base URL and expected endpoints
 export const rootApi = createApi({
   reducerPath: "rootApi",
-  baseQuery: baseQueryWith401Handler,
+  baseQuery: baseQuery,
   tagTypes: [
     "Product",
     "Product-Category",

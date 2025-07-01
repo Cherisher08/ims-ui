@@ -579,7 +579,7 @@ const NewOrder = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
                 <p>Retail</p>
                 <AntSwitch
                   checked={orderInfo.billing_mode === BillingMode.BUSINESS}

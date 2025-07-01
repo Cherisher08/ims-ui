@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { FaUserPlus } from "react-icons/fa";
-import { IoIosNotificationsOutline, IoMdMore } from "react-icons/io";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import { IoMdMore } from "react-icons/io";
 import { PiSignOut } from "react-icons/pi";
 import CustomMenu, { type CustomMenuItemProps } from "../../styled/CustomMenu";
-import { Avatar, Modal } from "@mui/material";
+import {
+  Avatar,
+  Badge,
+  Box,
+  Card,
+  CardContent,
+  Drawer,
+  IconButton,
+  Modal,
+  Typography,
+} from "@mui/material";
 import CustomInput from "../../styled/CustomInput";
 import CustomButton from "../../styled/CustomButton";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +25,8 @@ import { rootApi, useRegisterUserMutation } from "../../services/ApiService";
 import { clearUser } from "../../store/UserSlice";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../constants/constants";
+import { useLazyGetExpiredRentalOrdersQuery } from "../../services/OrderService";
+import { setExpiredRentalOrders } from "../../store/OrdersSlice";
 import { RiMenu3Line } from "react-icons/ri";
 
 type NewUserErrorType = {
@@ -28,6 +41,13 @@ type HeaderType = {
 };
 
 const Header = ({ open, setOpen }: HeaderType) => {
+  const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
+  const expiredRentalOrders = useSelector(
+    (state: RootState) => state.rentalOrder.data
+  );
+  console.log("expiredRentalOrders: ", expiredRentalOrders);
+  const expiredOrdersCount = expiredRentalOrders.length;
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [
@@ -36,6 +56,11 @@ const Header = ({ open, setOpen }: HeaderType) => {
   ] = useRegisterUserMutation();
 
   const userData = useSelector((state: RootState) => state.user);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+
+  const toggleDrawer = (newOpen: boolean) => () => {
+    setDrawerOpen(newOpen);
+  };
   const ref = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addUserModelOpen, setAddUserModelOpen] = useState<boolean>(false);
@@ -92,12 +117,91 @@ const Header = ({ open, setOpen }: HeaderType) => {
     : "";
 
   useEffect(() => {
+    const fetchExpiredOrders = async () => {
+      const result = await triggerGetRentalOrder();
+      console.log("result: ", result);
+      if ("error" in result && result.error?.status === 404) {
+        // no expired orders found
+        dispatch(setExpiredRentalOrders([]));
+      } else if ("data" in result && result.data) {
+        dispatch(setExpiredRentalOrders(result.data));
+      }
+    };
+
+    // immediately on mount
+    fetchExpiredOrders();
+
+    // every 30 min
+    const interval = setInterval(() => {
+      fetchExpiredOrders();
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [triggerGetRentalOrder, dispatch]);
+
+  useEffect(() => {
     if (!isRegisteringUser && isUserRegisterSuccess) {
       toast("User Created Successfully", {
         toastId: TOAST_IDS.SUCCESS_REGISTER_USER,
       });
     }
   }, [isRegisteringUser, isUserRegisterSuccess]);
+
+  const DrawerList = (
+    <Box
+      sx={{ width: 300 }}
+      className="p-2"
+      role="presentation"
+      onClick={toggleDrawer(false)}
+    >
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Expired Rental Orders
+      </Typography>
+
+      {expiredRentalOrders.length === 0 && (
+        <Typography variant="body2" color="text.secondary">
+          No expired orders found.
+        </Typography>
+      )}
+
+      <Box
+        sx={{
+          maxHeight: "85vh",
+          overflowY: "auto",
+          pr: 1,
+        }}
+      >
+        {expiredRentalOrders.map((order) => (
+          <Card
+            key={order.order_id}
+            variant="outlined"
+            sx={{ mb: 2, backgroundColor: "#f9f9f9" }}
+          >
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Order ID: {order.order_id}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Expected Date:{" "}
+                {new Date(order.expected_date).toLocaleString(undefined, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </Typography>
+              <CustomButton
+                variant="contained"
+                onClick={() => {
+                  navigate(`/orders/rentals/${order._id}`);
+                }}
+                className="mt-1"
+                label={"View Order"}
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </Box>
+    </Box>
+  );
 
   return (
     <div className="w-full flex justify-between">
@@ -112,7 +216,21 @@ const Header = ({ open, setOpen }: HeaderType) => {
       </div>
       <div className="w-full px-6 h-18 flex justify-end">
         <div className="flex items-center gap-4">
-          <IoIosNotificationsOutline size={28} className="cursor-pointer" />
+          <IconButton
+            onClick={toggleDrawer(true)}
+            sx={{
+              padding: 0,
+              backgroundColor: "transparent",
+            }}
+          >
+            <Badge
+              color="error"
+              badgeContent={expiredOrdersCount > 0 ? expiredOrdersCount : null}
+              overlap="circular"
+            >
+              <NotificationsNoneIcon sx={{ fontSize: 28 }} />
+            </Badge>
+          </IconButton>
           <Avatar className="min-w-12 h-12 rounded-full">
             {strippedUserName}
           </Avatar>
@@ -131,6 +249,13 @@ const Header = ({ open, setOpen }: HeaderType) => {
             }}
           />
         </div>
+        <Drawer
+          open={drawerOpen}
+          anchor={"right"}
+          onClose={toggleDrawer(false)}
+        >
+          {DrawerList}
+        </Drawer>
 
         {/* Add User Modal */}
         <Modal

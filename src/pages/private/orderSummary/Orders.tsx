@@ -37,6 +37,7 @@ const Orders = () => {
   const [activeTab, setActiveTab] = useState(1);
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
+  const isCommunicationsFeatureDone: boolean = false;
 
   const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
 
@@ -56,16 +57,20 @@ const Orders = () => {
           icon={<LuPlus color="white" />}
         />
         <div className="flex gap-3">
-          <CustomButton
-            onClick={() => console.log("whatsapp")}
-            label="Whatsapp"
-            icon={<FaWhatsapp color="white" />}
-          />
-          <CustomButton
-            onClick={() => console.log("email")}
-            label="Email"
-            icon={<MdOutlineMail color="white" />}
-          />
+          {isCommunicationsFeatureDone && (
+            <>
+              <CustomButton
+                onClick={() => console.log("whatsapp")}
+                label="Whatsapp"
+                icon={<FaWhatsapp color="white" />}
+              />
+              <CustomButton
+                onClick={() => console.log("email")}
+                label="Email"
+                icon={<MdOutlineMail color="white" />}
+              />
+            </>
+          )}
         </div>
       </div>
 

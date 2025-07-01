@@ -46,7 +46,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     typeof error.status === "number" &&
     [401, 403].includes(error.status)
   ) {
-    return <Navigate to="/auth/login" replace />;
+    // return <Navigate to="/auth/login" replace />;
   }
 
   return children;

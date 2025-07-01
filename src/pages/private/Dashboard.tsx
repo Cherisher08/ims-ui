@@ -4,109 +4,246 @@ import CustomCard from "../../styled/CustomCard";
 import CustomLineChart from "../../styled/CustomLineChart";
 import {
   BillingMode,
+  BillingUnit,
   OrderInfoType,
-  PaymentStatus,
   RentalOrderInfo,
 } from "../../types/order";
 import { ProductType } from "../../types/common";
 import { useGetRentalOrdersQuery } from "../../services/OrderService";
 import { calculateDiscountAmount } from "../../services/utility_functions";
 import dayjs from "dayjs";
-import weekOfYear from "dayjs/plugin/weekOfYear";
-import { isPending } from "@reduxjs/toolkit";
-dayjs.extend(weekOfYear);
+import isoWeek from "dayjs/plugin/isoWeek";
+import CustomOrderTimeLine from "../../styled/CustomOrderTimeLine";
+
+dayjs.extend(isoWeek);
 
 type PendingAmount = { date: string; price: number };
 
-const groupKeyFormatter = (dateStr: string, filter: string) => {
-  const date = dayjs(dateStr);
+export interface OrderTimeline {
+  count: number;
+  date: string;
+}
+
+type ResultData = {
+  pendingAmountData: {
+    order: PendingAmount;
+    pendingAmount: number;
+  }[];
+  pendingBalanceData: {
+    order: PendingAmount;
+    balanceAmount: number;
+  }[];
+  totalProductsOut: {
+    order: OrderTimeline;
+    productsOutCount: number;
+  }[];
+  totalReturnedProducts: {
+    order: RentalOrderInfo;
+    returnedProductsCount: number;
+  }[];
+};
+
+interface GraphData {
+  pendingData: PendingAmount[];
+  balanceData: PendingAmount[];
+  orderTimeLine: OrderTimeline[];
+}
+
+const analyzeRentalOrders = (
+  orders: RentalOrderInfo[],
+  filter: string
+): ResultData => {
+  const today = new Date();
+
+  let startTime: Date;
+  let endTime: Date;
+
   switch (filter) {
     case "1":
-      return date.format("YYYY-MM-DD");
+      startTime = dayjs().startOf("day").toDate();
+      endTime = dayjs().endOf("day").toDate();
+      break;
+
     case "2":
-      return `${date.year()}-W${date.week()}`;
+      startTime = dayjs().startOf("isoWeek").toDate();
+      endTime = dayjs().endOf("isoWeek").toDate();
+      break;
+
     case "3":
-      return date.format("YYYY-MM");
+      startTime = dayjs().startOf("month").toDate();
+      endTime = dayjs().endOf("month").toDate();
+      break;
+  }
+
+  const pendingAmountData: {
+    order: { price: number; date: string };
+    pendingAmount: number;
+  }[] = [];
+  const pendingBalanceData: {
+    order: {
+      price: number;
+      date: string;
+    };
+    balanceAmount: number;
+  }[] = [];
+  const totalProductsOut: {
+    order: {
+      count: number;
+      date: string;
+    };
+    productsOutCount: number;
+  }[] = [];
+  const totalReturnedProducts: {
+    order: RentalOrderInfo;
+    returnedProductsCount: number;
+  }[] = [];
+
+  const filteredOrders = orders.filter((order) => {
+    const outDate = new Date(order.out_date);
+    return outDate >= startTime && outDate <= endTime;
+  });
+
+  filteredOrders.forEach((order) => {
+    const depositTotal =
+      order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+    const finalAmount = calcFinalAmount(order);
+    const roundOff = order.round_off || 0;
+    const discountAmount = order.discount_amount || 0;
+    const gstAmount =
+      order.billing_mode === BillingMode.BUSINESS
+        ? 0
+        : calculateDiscountAmount(order.gst, finalAmount);
+
+    const pendingAmount = parseFloat(
+      (
+        finalAmount -
+        depositTotal -
+        discountAmount +
+        gstAmount +
+        roundOff
+      ).toFixed(2)
+    );
+
+    if (pendingAmount > 0) {
+      pendingAmountData.push({
+        order: {
+          price: pendingAmount,
+          date: order.in_date,
+        },
+        pendingAmount,
+      });
+    } else if (pendingAmount < 0) {
+      const formattedOrder: { price: number; date: string } = {
+        price: Math.abs(pendingAmount),
+        date: order.in_date,
+      };
+      pendingBalanceData.push({
+        order: formattedOrder,
+        balanceAmount: pendingAmount,
+      });
+    }
+
+    const productOutCount = order.product_details.reduce((sum, p) => {
+      if (p.in_date && new Date(p.in_date) > today) {
+        return sum + (p.order_quantity || 0);
+      }
+      return sum;
+    }, 0);
+
+    if (productOutCount > 0) {
+      totalProductsOut.push({
+        order: {
+          count: productOutCount,
+          date: order.out_date,
+        },
+        productsOutCount: productOutCount,
+      });
+    }
+
+    const returnedCount = order.product_details.reduce((sum, p) => {
+      if (p.in_date && new Date(p.in_date) < today) {
+        return sum + (p.order_quantity || 0);
+      }
+      return sum;
+    }, 0);
+
+    if (returnedCount > 0) {
+      totalReturnedProducts.push({
+        order,
+        returnedProductsCount: returnedCount,
+      });
+    }
+  });
+
+  return {
+    pendingAmountData,
+    pendingBalanceData,
+    totalProductsOut,
+    totalReturnedProducts,
+  };
+};
+
+const getRentalDuration = (
+  outDate: string,
+  inDate: string,
+  unit: BillingUnit
+): number => {
+  const out = new Date(outDate);
+  const inn = new Date(inDate);
+  const diffMs = inn.getTime() - out.getTime();
+
+  switch (unit) {
+    case BillingUnit.SHIFT:
+      return 1;
+    case BillingUnit.DAYS:
+      return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    case BillingUnit.WEEKS:
+      return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7)));
+    case BillingUnit.MONTHS:
+      return Math.max(
+        1,
+        (inn.getFullYear() - out.getFullYear()) * 12 +
+          (inn.getMonth() - out.getMonth())
+      );
     default:
-      return date.format("YYYY-MM-DD");
+      return 1;
   }
 };
 
-const calcFinalAmount = (order: OrderInfoType) => {
+const calcFinalAmount = (order: OrderInfoType): number => {
   if (order.type === ProductType.RENTAL && order.product_details) {
-    return parseFloat(
-      order.product_details
-        .reduce(
-          (total, prod) =>
-            total +
-            prod.rent_per_unit *
-              (prod.order_quantity - prod.order_repair_count),
-          0
-        )
-        .toFixed(2)
-    );
+    const total = order.product_details.reduce((sum, prod) => {
+      const duration = getRentalDuration(
+        prod.out_date,
+        prod.in_date,
+        prod.billing_unit
+      );
+      const quantity = prod.order_quantity - prod.order_repair_count;
+      return sum + prod.rent_per_unit * quantity * duration;
+    }, 0);
+
+    return parseFloat(total.toFixed(2));
   }
   return 0;
-};
-
-const pendingGroupedData = (
-  orders: RentalOrderInfo[],
-  filter: string,
-  isPending: boolean
-) => {
-  const groups: Record<string, number> = {};
-
-  orders
-    .filter((order) => order.status === PaymentStatus.PENDING)
-    .forEach((order) => {
-      const groupKey = groupKeyFormatter(order.in_date, filter);
-
-      const depositTotal =
-        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
-
-      const finalAmount = calcFinalAmount(order);
-      const roundOff = order.round_off || 0;
-      const discountAmount = order.discount_amount || 0;
-      const gstAmount =
-        order.billing_mode === BillingMode.BUSINESS
-          ? 0
-          : calculateDiscountAmount(order.gst, finalAmount);
-
-      const pendingAmount = parseFloat(
-        (
-          finalAmount -
-          depositTotal -
-          discountAmount +
-          gstAmount +
-          roundOff
-        ).toFixed(2)
-      );
-
-      if (isPending) {
-        if (pendingAmount < 0) {
-          groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
-        }
-      } else {
-        if (pendingAmount > 0) {
-          groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
-        }
-      }
-    });
-
-  const chartData = Object.entries(groups).map(([date, price]) => ({
-    date,
-    price,
-  }));
-
-  return chartData;
 };
 
 const Dashboard = () => {
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
-  const [filter, setFilter] = useState<string>("1");
+  const [filter, setFilter] = useState<string>("3");
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
-  const [chartData, setChartData] = useState<PendingAmount[]>([]);
+  const [totalInfo, setTotalInfo] = useState({
+    pendingAmount: 0,
+    balanceAmount: 0,
+    mcIn: 0,
+    mcOut: 0,
+  });
+
+  const [graphData, setGraphData] = useState<GraphData>({
+    pendingData: [],
+    balanceData: [],
+    orderTimeLine: [],
+  });
   const [graphFilter, setGraphFilter] = useState<number>(1);
   const filterOptions = [
     { id: "1", value: "daily" },
@@ -114,37 +251,53 @@ const Dashboard = () => {
     { id: "3", value: "monthly" },
   ];
 
-  const [pendingOrderAmount, setPendingOrderAmount] = useState<number>(0);
-
-  useEffect(() => {
-    const amount = orders
-      .filter((order) => order.status === PaymentStatus.PENDING)
-      .reduce((sum, order) => {
-        const deposit =
-          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || 0;
-        const finalAmount = calcFinalAmount(order);
-        const roundOff = order.round_off || 0;
-        const discountAmount = order.discount_amount || 0;
-        const gstAmount =
-          order.billing_mode === BillingMode.BUSINESS
-            ? 0
-            : calculateDiscountAmount(order.gst, finalAmount);
-
-        const pendingAmount =
-          finalAmount - deposit - discountAmount + gstAmount + roundOff;
-        if (pendingAmount < 0) return sum + 0;
-        return sum + pendingAmount;
-      }, 0);
-    setPendingOrderAmount(amount);
-    const pendingData = pendingGroupedData(orders, filter, true);
-    setChartData(pendingData);
-  }, [filter, orders]);
-
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
       setOrders(rentalOrderData);
     }
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
+
+  useEffect(() => {
+    if (isRentalOrdersQuerySuccess && orders.length > 0) {
+      const resultData = analyzeRentalOrders(orders, filter);
+      const totalPendingAmount = resultData.pendingAmountData.reduce(
+        (total, value) => total + value.pendingAmount,
+        0
+      );
+      const totalBalanceAmount = resultData.pendingBalanceData.reduce(
+        (total, value) => total + value.balanceAmount,
+        0
+      );
+      const totalProductsOut = resultData.totalProductsOut.reduce(
+        (total, value) => total + value.productsOutCount,
+        0
+      );
+      const totalProductsIn = resultData.totalReturnedProducts.reduce(
+        (total, value) => total + value.returnedProductsCount,
+        0
+      );
+
+      setTotalInfo({
+        pendingAmount: totalPendingAmount,
+        balanceAmount: Math.abs(totalBalanceAmount),
+        mcOut: totalProductsOut,
+        mcIn: totalProductsIn,
+      });
+
+      setGraphData({
+        pendingData:
+          resultData.pendingAmountData.length > 0
+            ? resultData.pendingAmountData.map((orderData) => orderData.order)
+            : [],
+        balanceData: resultData.pendingBalanceData.map(
+          (orderData) => orderData.order
+        ),
+        orderTimeLine: resultData.totalProductsOut.map(
+          (orderData) => orderData.order
+        ),
+      });
+    }
+  }, [filter, isRentalOrdersQuerySuccess, orders]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">
@@ -166,26 +319,22 @@ const Dashboard = () => {
           <CustomCard
             title="Total Amount Pending"
             className="grow"
-            value={pendingOrderAmount}
-            // change={-11.2}
+            value={totalInfo.pendingAmount}
           />
           <CustomCard
-            title="Products"
+            title="Total Balance Amount"
             className="grow"
-            value={30}
-            change={11.2}
+            value={totalInfo.balanceAmount}
           />
           <CustomCard
-            title="Products In"
+            title="Machine Out"
             className="grow"
-            value={30}
-            change={-11.2}
+            value={totalInfo.mcOut}
           />
           <CustomCard
-            title="Products In"
+            title="Machine In"
             className="grow"
-            value={30}
-            change={11.2}
+            value={totalInfo.mcIn}
           />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[75%_auto] w-full gap-3 pb-4">
@@ -216,9 +365,17 @@ const Dashboard = () => {
                 Order Timeline
               </li>
             </ul>
-            <CustomLineChart chartData={chartData} title="" />
+            {graphFilter === 1 && (
+              <CustomLineChart chartData={graphData.pendingData} title="" />
+            )}
+            {graphFilter === 2 && (
+              <CustomLineChart chartData={graphData.balanceData} title="" />
+            )}
+            {graphFilter === 3 && (
+              <CustomOrderTimeLine orders={graphData.orderTimeLine} title="" />
+            )}
           </div>
-          <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
+          {/* <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Title</p>
             <ul className="flex flex-col gap-3 px-4 h-full overflow-y-auto">
               {[
@@ -246,7 +403,7 @@ const Dashboard = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

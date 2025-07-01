@@ -39,7 +39,10 @@ import {
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
 import { useNavigate, useParams } from "react-router-dom";
-import { calculateDiscountAmount } from "../../../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../../../services/utility_functions";
 
 const formatContacts = (
   contacts: ContactInfoType[]
@@ -51,10 +54,13 @@ const formatContacts = (
 
 const getNewOrderId = (orders: OrderInfo[]) => {
   let orderId = "RO-0001";
-  const suffixes = orders.map((order) => {
-    const match = order.order_id.match(/RO-(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  });
+  const suffixes =
+    orders.length > 0
+      ? orders.map((order) => {
+          const match = order.order_id.match(/RO-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+      : [0];
 
   const maxSuffix = Math.max(...suffixes);
   orderId = `RO-${String(maxSuffix + 1).padStart(4, "0")}`;
@@ -140,12 +146,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
-      return (
-        <p>
-          ₹{" "}
-          {(data.order_quantity - data.order_repair_count) * data.rent_per_unit}
-        </p>
-      );
+      return <p>₹ {calculateProductRent(data)}</p>;
     },
   },
 ];
@@ -259,17 +260,11 @@ const NewOrder = () => {
 
   const calculateTotalAmount = useCallback(() => {
     if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-      return parseFloat(
-        orderInfo.product_details
-          .reduce(
-            (total, prod) =>
-              total +
-              prod.rent_per_unit *
-                (prod.order_quantity - prod.order_repair_count),
-            0
-          )
-          .toFixed(2)
-      );
+      const total = orderInfo.product_details.reduce((sum, prod) => {
+        return sum + calculateProductRent(prod);
+      }, 0);
+
+      return parseFloat(total.toFixed(2));
     }
     return 0;
   }, [orderInfo.product_details, orderInfo.type]);
@@ -428,6 +423,27 @@ const NewOrder = () => {
   ]);
 
   useEffect(() => {
+    if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+      const total_amount = calculateTotalAmount();
+
+      // recalculate the discount_amount using the stored percentage
+      const amount = parseFloat(
+        ((orderInfo.discount / 100) * total_amount).toFixed(2)
+      );
+
+      setOrderInfo((prev) => ({
+        ...prev,
+        discount_amount: amount,
+      }));
+    }
+  }, [
+    orderInfo.product_details,
+    orderInfo.type,
+    orderInfo.discount,
+    calculateTotalAmount,
+  ]);
+
+  useEffect(() => {
     if (isRentalOrderUpdateSuccess && isUpdateProductSuccess) {
       toast.success("Rental Order Updated Successfully", {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
@@ -528,11 +544,11 @@ const NewOrder = () => {
       </div>
 
       {/* === Order Info Form === */}
-      <div className="w-full flex flex-col gap-2 overflow-y-scroll max-h-full">
+      <div className="max-w-full overflow-x-hidden flex flex-col sm gap-2 max-h-full">
         {orderInfo.type === ProductType.RENTAL && (
           <>
-            <div className="w-full flex justify-between items-start">
-              <div className="flex flex-nowrap gap-3">
+            <div className="max-w-full flex flex-wrap justify-between items-start">
+              <div className="flex max-lg:flex-wrap gap-3">
                 <CustomInput
                   onChange={() => {}}
                   label="Order Id"
@@ -584,9 +600,11 @@ const NewOrder = () => {
         )}
 
         {/* === Customer + Rental Data === */}
-        <div className="grid grid-cols-1 sm:grid-cols-[20%_auto] gap-2">
+        <div className="grid grid-cols-[repeat(auto-fit,_minmax(20rem,_1fr))] gap-2  w-full">
           <CustomSelect
             label="Customer"
+            labelClass="min-w-[5rem]"
+            wrapperClass="min-w-[15rem] max-w-[20rem]"
             options={formatContacts(contacts)}
             value={
               formatContacts(contacts).find(
@@ -602,7 +620,7 @@ const NewOrder = () => {
           />
 
           {ProductType.RENTAL === orderInfo.type && (
-            <div className="w-full flex gap-2">
+            <>
               <CustomDatePicker
                 label="Out Date"
                 value={orderInfo.out_date ?? ""}
@@ -630,14 +648,14 @@ const NewOrder = () => {
                 onChange={(value) => handleValueChange("in_date", value)}
                 placeholder="Enter In Date"
               />
-            </div>
+            </>
           )}
         </div>
         {/* ===Event Data === */}
-        <div className="grid grid-cols-2 justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 justify-between">
           <div className="flex flex-col">
             <CustomInput
-              wrapperClass="w-[30rem]"
+              wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
               value={orderInfo?.event_address ?? ""}
               onChange={(value) => handleValueChange("event_address", value)}
@@ -647,7 +665,7 @@ const NewOrder = () => {
               minRows={5}
             />
             <CustomInput
-              wrapperClass="w-[30rem]"
+              wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
               value={orderInfo?.event_pincode ?? ""}
               onChange={(value) => handleValueChange("event_pincode", value)}
@@ -658,7 +676,7 @@ const NewOrder = () => {
               value={orderInfo?.remarks ?? ""}
               onChange={(value) => handleValueChange("remarks", value)}
               label="Remarks"
-              wrapperClass="w-[30rem]"
+              wrapperClass="w-[30rem] max-w-full"
               placeholder="Enter remarks"
               multiline
               minRows={3}
@@ -757,8 +775,9 @@ const NewOrder = () => {
                                 parseFloat(e.target.value).toFixed(2)
                               );
                               const total_amount = calculateTotalAmount();
-                              const discount_amount =
-                                total_amount * percent * 0.01;
+                              const discount_amount = parseFloat(
+                                (total_amount * percent * 0.01).toFixed(2)
+                              );
                               setOrderInfo((prev) => ({
                                 ...prev,
                                 discount: percent,

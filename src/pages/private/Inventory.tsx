@@ -457,7 +457,7 @@ const Inventory = () => {
               onClick={() => setAddProductOpen(false)}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"
@@ -688,7 +688,7 @@ const Inventory = () => {
               }}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"

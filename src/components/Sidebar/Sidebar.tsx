@@ -6,8 +6,13 @@ import { MenuItems } from "../../constants/MenuItems";
 import { useMenu } from "../../contexts/MenuContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const SideBar: React.FC = () => {
-  const [open, setOpen] = useState<boolean>(true);
+type SideBar = {
+  open: boolean;
+  setOpen: (value: boolean) => void;
+};
+
+const SideBar = ({ open, setOpen }: SideBar) => {
+  // const [open, setOpen] = useState<boolean>(true);
   const navigate = useNavigate();
   const { active, setActive } = useMenu();
   const location = useLocation();
@@ -21,7 +26,11 @@ const SideBar: React.FC = () => {
   }, [pathname, setActive]);
 
   return (
-    <div className="w-fit h-full z-50 hidden sm:block relative">
+    <div
+      className={`w-fit h-full z-50 absolute md:relative ${
+        open ? "" : "-translate-x-25 md:-translate-x-0"
+      }`}
+    >
       <motion.div
         initial={{ width: "17rem", padding: "1rem 1.5rem" }}
         animate={{
@@ -84,7 +93,7 @@ const SideBar: React.FC = () => {
 
       {/* Hamburger */}
       <div
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setOpen(!open)}
         className="absolute cursor-pointer top-1/2 right-0 flex justify-center items-center translate-x-5 rounded-r-xl -translate-y-1/2 bg-primary w-6 h-18"
       >
         <LuChevronsLeft

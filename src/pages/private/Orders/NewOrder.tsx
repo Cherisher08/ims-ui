@@ -39,7 +39,10 @@ import {
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
 import { useNavigate, useParams } from "react-router-dom";
-import { calculateDiscountAmount } from "../../../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../../../services/utility_functions";
 
 const formatContacts = (
   contacts: ContactInfoType[]
@@ -51,10 +54,13 @@ const formatContacts = (
 
 const getNewOrderId = (orders: OrderInfo[]) => {
   let orderId = "RO-0001";
-  const suffixes = orders.map((order) => {
-    const match = order.order_id.match(/RO-(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  });
+  const suffixes =
+    orders.length > 0
+      ? orders.map((order) => {
+          const match = order.order_id.match(/RO-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+      : [0];
 
   const maxSuffix = Math.max(...suffixes);
   orderId = `RO-${String(maxSuffix + 1).padStart(4, "0")}`;
@@ -140,12 +146,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
-      return (
-        <p>
-          ₹{" "}
-          {(data.order_quantity - data.order_repair_count) * data.rent_per_unit}
-        </p>
-      );
+      return <p>₹ {calculateProductRent(data)}</p>;
     },
   },
 ];
@@ -259,17 +260,11 @@ const NewOrder = () => {
 
   const calculateTotalAmount = useCallback(() => {
     if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-      return parseFloat(
-        orderInfo.product_details
-          .reduce(
-            (total, prod) =>
-              total +
-              prod.rent_per_unit *
-                (prod.order_quantity - prod.order_repair_count),
-            0
-          )
-          .toFixed(2)
-      );
+      const total = orderInfo.product_details.reduce((sum, prod) => {
+        return sum + calculateProductRent(prod);
+      }, 0);
+
+      return parseFloat(total.toFixed(2));
     }
     return 0;
   }, [orderInfo.product_details, orderInfo.type]);
@@ -425,6 +420,27 @@ const NewOrder = () => {
     isRentalOrderCreateSuccess,
     isUpdateProductSuccess,
     navigate,
+  ]);
+
+  useEffect(() => {
+    if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+      const total_amount = calculateTotalAmount();
+
+      // recalculate the discount_amount using the stored percentage
+      const amount = parseFloat(
+        ((orderInfo.discount / 100) * total_amount).toFixed(2)
+      );
+
+      setOrderInfo((prev) => ({
+        ...prev,
+        discount_amount: amount,
+      }));
+    }
+  }, [
+    orderInfo.product_details,
+    orderInfo.type,
+    orderInfo.discount,
+    calculateTotalAmount,
   ]);
 
   useEffect(() => {
@@ -759,8 +775,9 @@ const NewOrder = () => {
                                 parseFloat(e.target.value).toFixed(2)
                               );
                               const total_amount = calculateTotalAmount();
-                              const discount_amount =
-                                total_amount * percent * 0.01;
+                              const discount_amount = parseFloat(
+                                (total_amount * percent * 0.01).toFixed(2)
+                              );
                               setOrderInfo((prev) => ({
                                 ...prev,
                                 discount: percent,

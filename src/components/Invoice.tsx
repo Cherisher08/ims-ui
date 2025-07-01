@@ -14,7 +14,10 @@ import {
 } from "../types/order";
 import dayjs from "dayjs";
 import { ProductType } from "../types/common";
-import { calculateDiscountAmount } from "../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../services/utility_functions";
 
 function numberToWordsIndian(num: number) {
   console.log("num: ", num);
@@ -116,6 +119,7 @@ interface InvoiceRentalOrder {
 }
 
 const Invoice = ({ data }: InvoiceRentalOrder) => {
+  console.log("data: ", data);
   const calcTotal = () => {
     const totalDeposit = data.deposits.reduce(
       (total: number, deposit: DepositType) => total + deposit.amount,
@@ -149,17 +153,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
 
   const calcFinalAmount = () => {
     if (data.type === ProductType.RENTAL && data.product_details) {
-      return parseFloat(
-        data.product_details
-          .reduce(
-            (total: number, prod: ProductDetails) =>
-              total +
-              prod.rent_per_unit *
-                (prod.order_quantity - prod.order_repair_count),
-            0
-          )
-          .toFixed(2)
-      );
+      const total = data.product_details.reduce((sum, prod) => {
+        return sum + calculateProductRent(prod);
+      }, 0);
+
+      return parseFloat(total.toFixed(2));
     }
     return 0;
   };
@@ -231,7 +229,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       fontSize: "12px",
       marginBottom: "3px",
     },
-    orderSummaryContainer: {
+    OrderSummaryContainer: {
       padding: 10,
       flexDirection: "column",
       gap: 5,
@@ -556,7 +554,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             </View>
           </View>
         </View>
-        <View style={styles.orderSummaryContainer}>
+        <View style={styles.OrderSummaryContainer}>
           <Text style={{ fontSize: 15, fontWeight: "bold" }}>
             Order Summary
           </Text>
@@ -624,14 +622,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       Rs. {product.rent_per_unit}
                     </Text>
                     <Text style={[styles.productColumn, { width: 80 }]}>
-                      Rs.{" "}
-                      {parseFloat(
-                        (
-                          (product.order_quantity -
-                            product.order_repair_count) *
-                          product.rent_per_unit
-                        ).toFixed(2)
-                      )}
+                      Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                     </Text>
                   </View>
                 )

@@ -3,11 +3,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { rootApi } from "../services/ApiService";
 import userReducer from "./UserSlice";
+import rentalOrdersReducer from "./OrdersSlice";
 
 export const store = configureStore({
   reducer: {
     // Add the generated reducer as a specific top-level slice
     user: userReducer,
+    rentalOrder: rentalOrdersReducer,
     [rootApi.reducerPath]: rootApi.reducer,
   },
   // Adding the api middleware enables caching, invalidation, polling,

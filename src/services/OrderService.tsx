@@ -46,6 +46,10 @@ export const contactApi = rootApi.injectEndpoints({
       }),
       invalidatesTags: ["Rental"],
     }),
+    getExpiredRentalOrders: build.query<RentalOrderInfo[], void>({
+      query: () => `orders/rentals/expired`,
+      providesTags: ["Rental"],
+    }),
   }),
 });
 
@@ -55,4 +59,5 @@ export const {
   useCreateRentalOrderMutation,
   useUpdateRentalOrderMutation,
   useDeleteRentalOrderMutation,
+  useLazyGetExpiredRentalOrdersQuery,
 } = contactApi;

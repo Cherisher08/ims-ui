@@ -9,8 +9,10 @@ import {
   RentalType,
 } from "../../../types/order";
 import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../store/store";
 
 const RentalOrderTable = ({
   rentalOrders,
@@ -18,6 +20,15 @@ const RentalOrderTable = ({
   rentalOrders: RentalOrderType[];
 }) => {
   const navigate = useNavigate();
+  const expiredOrders = useSelector(
+    (state: RootState) => state.rentalOrder.data
+  );
+
+  // make a Set of IDs for fast lookup
+  const expiredOrderIds = useMemo(
+    () => new Set(expiredOrders.map((order) => order.order_id)),
+    [expiredOrders]
+  );
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
   const [deleteOrderId, setDeleteOrderId] = useState<string>("");
@@ -114,19 +125,12 @@ const RentalOrderTable = ({
         colDefs={rentalOrderColDef}
         rowData={rentalOrders}
         getRowStyle={(params) => {
-          const expectedDateStr = params.data?.expected_date;
-          if (expectedDateStr) {
-            const expectedDate = new Date(expectedDateStr);
-            const now = new Date();
-            if (
-              expectedDate < now &&
-              params.data?.payment_status === PaymentStatus.PENDING
-            ) {
-              return {
-                backgroundColor: "red",
-                color: "white",
-              };
-            }
+          const orderId = params.data?.order_id;
+          if (orderId && expiredOrderIds.has(orderId)) {
+            return {
+              backgroundColor: "red",
+              color: "white",
+            };
           }
           return undefined;
         }}

@@ -3,11 +3,7 @@ import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
-import {
-  PaymentStatus,
-  RentalOrderType,
-  RentalType,
-} from "../../../types/order";
+import { RentalOrderType, RentalType } from "../../../types/order";
 import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";

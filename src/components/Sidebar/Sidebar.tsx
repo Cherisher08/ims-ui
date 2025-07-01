@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { LuChevronsLeft } from "react-icons/lu";
 import Logo from "../../assets/logo.svg";
 import { MenuItems } from "../../constants/MenuItems";

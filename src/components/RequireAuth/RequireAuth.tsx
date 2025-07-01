@@ -1,5 +1,4 @@
 // components/RequireAuth.tsx
-import { Navigate } from "react-router-dom"; // adjust path
 import { useGetUserQuery } from "../../services/ApiService";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";

@@ -45,7 +45,6 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const expiredRentalOrders = useSelector(
     (state: RootState) => state.rentalOrder.data
   );
-  console.log("expiredRentalOrders: ", expiredRentalOrders);
   const expiredOrdersCount = expiredRentalOrders.length;
 
   const navigate = useNavigate();
@@ -119,10 +118,12 @@ const Header = ({ open, setOpen }: HeaderType) => {
   useEffect(() => {
     const fetchExpiredOrders = async () => {
       const result = await triggerGetRentalOrder();
-      console.log("result: ", result);
-      if ("error" in result && result.error?.status === 404) {
-        // no expired orders found
-        dispatch(setExpiredRentalOrders([]));
+      if ("error" in result && result.error) {
+        const error = result.error;
+
+        if ("status" in error && error.status === 404) {
+          dispatch(setExpiredRentalOrders([]));
+        }
       } else if ("data" in result && result.data) {
         dispatch(setExpiredRentalOrders(result.data));
       }

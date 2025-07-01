@@ -22,7 +22,7 @@ import {
 const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: apiUrl,
+  baseUrl: "https://ims-mpt-backend.onrender.com/",
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -43,7 +43,7 @@ const baseQueryWith401Handler: BaseQueryFn<
 
   if (result?.error?.status === 401) {
     // redirect to login page
-    window.location.href = "/auth/login";
+    // window.location.href = "/auth/login";
   }
 
   return result;
@@ -52,7 +52,7 @@ const baseQueryWith401Handler: BaseQueryFn<
 // Define a service using a base URL and expected endpoints
 export const rootApi = createApi({
   reducerPath: "rootApi",
-  baseQuery: baseQueryWith401Handler,
+  baseQuery: baseQuery,
   tagTypes: [
     "Product",
     "Product-Category",
@@ -68,7 +68,7 @@ export const rootApi = createApi({
     }),
     authorizeUser: build.mutation<AuthorizeUserResponse, UserRequest>({
       query: ({ email, password }) => ({
-        url: `auth/users/tokens`,
+        url: `https://ims-mpt-backend.onrender.com/auth/users/tokens`,
         method: "POST",
         body: new URLSearchParams({
           grant_type: "password",
@@ -80,14 +80,14 @@ export const rootApi = createApi({
     registerUser: build.mutation<User, User>({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       query: ({ _id, ...user }) => ({
-        url: `auth/users/`,
+        url: `https://ims-mpt-backend.onrender.com/auth/users/`,
         method: "POST",
         body: user,
       }),
     }),
     resetPassword: build.mutation<GeneralResponse, string>({
       query: (email) => ({
-        url: `auth/users/reset`,
+        url: `https://ims-mpt-backend.onrender.com/auth/users/reset`,
         method: "POST",
         body: {
           email: email,
@@ -96,14 +96,14 @@ export const rootApi = createApi({
     }),
     verifyOtp: build.mutation<GeneralResponse, VerifyOtpRequest>({
       query: (body) => ({
-        url: "auth/users/otp",
+        url: "https://ims-mpt-backend.onrender.com/auth/users/otp",
         method: "POST",
         body: body,
       }),
     }),
     updateUserPassword: build.mutation<User, UpdateUserPasswordRequest>({
       query: (body) => ({
-        url: `auth/users/update`,
+        url: `https://ims-mpt-backend.onrender.com/auth/users/update`,
         method: "POST",
         body: body,
       }),
@@ -114,7 +114,7 @@ export const rootApi = createApi({
     }),
     createProduct: build.mutation<Product, Product>({
       query: (body) => ({
-        url: `products`,
+        url: `https://ims-mpt-backend.onrender.com/products`,
         method: "POST",
         body: body,
       }),
@@ -125,7 +125,7 @@ export const rootApi = createApi({
     }),
     updateProduct: build.mutation<Product, Product>({
       query: ({ _id, ...product }) => ({
-        url: `products/${_id}`,
+        url: `https://ims-mpt-backend.onrender.com/products/${_id}`,
         method: "PUT",
         body: product,
       }),
@@ -133,7 +133,7 @@ export const rootApi = createApi({
     }),
     deleteProduct: build.mutation<void, string>({
       query: (id) => ({
-        url: `products/${id}`,
+        url: `https://ims-mpt-backend.onrender.com/products/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Product"],
@@ -144,7 +144,7 @@ export const rootApi = createApi({
     }),
     createProductCategory: build.mutation<ProductCategory, ProductCategory>({
       query: (body) => ({
-        url: `product-category`,
+        url: `https://ims-mpt-backend.onrender.com/product-category`,
         method: "POST",
         body: body,
       }),
@@ -159,7 +159,7 @@ export const rootApi = createApi({
     }),
     createUnit: build.mutation<Unit, Unit>({
       query: (body) => ({
-        url: `unit`,
+        url: `https://ims-mpt-backend.onrender.com/unit`,
         method: "POST",
         body: body,
       }),

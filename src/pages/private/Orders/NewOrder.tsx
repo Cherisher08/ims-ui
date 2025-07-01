@@ -1,5 +1,6 @@
 import { Box, Chip, Tab, Tabs } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
 import CustomSelect, {
@@ -54,13 +55,10 @@ const formatContacts = (
 
 const getNewOrderId = (orders: OrderInfo[]) => {
   let orderId = "RO-0001";
-  const suffixes =
-    orders.length > 0
-      ? orders.map((order) => {
-          const match = order.order_id.match(/RO-(\d+)/);
-          return match ? parseInt(match[1], 10) : 0;
-        })
-      : [0];
+  const suffixes = orders.map((order) => {
+    const match = order.order_id.match(/RO-(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  });
 
   const maxSuffix = Math.max(...suffixes);
   orderId = `RO-${String(maxSuffix + 1).padStart(4, "0")}`;
@@ -489,6 +487,8 @@ const NewOrder = () => {
     } else if (isRentalOrdersQuerySuccess) {
       const orderId = getNewOrderId(rentalOrders);
       handleValueChange("order_id", orderId);
+    } else {
+      handleValueChange("order_id", "RO-0001");
     }
   }, [
     existingRentalOrder,
@@ -528,6 +528,10 @@ const NewOrder = () => {
         )}
 
         <div className="flex gap-3">
+          <p className="text-sm text-primary whitespace-nowrap mt-3">
+            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add
+            at least one product to proceed.
+          </p>
           {orderInfo.type === ProductType.RENTAL &&
             orderInfo.product_details &&
             orderInfo?.product_details?.length > 0 && (

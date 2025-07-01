@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../constants/constants";
 import { useLazyGetExpiredRentalOrdersQuery } from "../../services/OrderService";
 import { setExpiredRentalOrders } from "../../store/OrdersSlice";
+import { RiMenu3Line } from "react-icons/ri";
 
 type NewUserErrorType = {
   name: boolean;
@@ -34,7 +35,12 @@ type NewUserErrorType = {
   password: boolean;
 };
 
-const Header: React.FC = () => {
+type HeaderType = {
+  open: boolean;
+  setOpen: (value: boolean) => void;
+};
+
+const Header = ({ open, setOpen }: HeaderType) => {
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const expiredRentalOrders = useSelector(
     (state: RootState) => state.rentalOrder.data
@@ -198,102 +204,117 @@ const Header: React.FC = () => {
   );
 
   return (
-    <div className="w-full px-6 h-18 flex justify-end">
-      <div className="flex items-center gap-4">
-        <IconButton
-          onClick={toggleDrawer(true)}
-          sx={{
-            padding: 0,
-            backgroundColor: "transparent",
-          }}
-        >
-          <Badge
-            color="error"
-            badgeContent={expiredOrdersCount > 0 ? expiredOrdersCount : null}
-            overlap="circular"
-          >
-            <NotificationsNoneIcon sx={{ fontSize: 28 }} />
-          </Badge>
-        </IconButton>
-        <Avatar className="min-w-12 h-12 rounded-full">
-          {strippedUserName}
-        </Avatar>
-        <div ref={ref} onClick={() => handleMenu(true)}>
-          <IoMdMore size={28} className="cursor-pointer" />
-        </div>
-        <CustomMenu
-          anchorEl={ref.current}
-          open={menuOpen}
-          handleClose={() => handleMenu(false)}
-          className="mt-4"
-          menuItems={menuItems}
-          transformPosition={{
-            vertical: "top",
-            horizontal: "right",
-          }}
-        />
+    <div className="w-full flex justify-between">
+      {open && (
+        <div
+          className="md:hidden w-screen h-screen absolute bg-black opacity-50 z-30"
+          onClick={() => setOpen(false)}
+        ></div>
+      )}
+      <div className="flex items-center md:hidden">
+        <RiMenu3Line size={30} onClick={() => setOpen(!open)} />
       </div>
-      <Drawer open={drawerOpen} anchor={"right"} onClose={toggleDrawer(false)}>
-        {DrawerList}
-      </Drawer>
-
-      {/* Add User Modal */}
-      <Modal
-        open={addUserModelOpen}
-        onClose={() => handleAddUserModal(false)}
-        className="w-screen h-screen flex justify-center items-center"
-      >
-        <div className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg p-4">
-          <p className="text-primary text-xl font-semibold w-full text-start">
-            Add User
-          </p>
-          <div className="flex flex-col w-[30rem] px-10 gap-y-2 justify-center items-start">
-            <CustomInput
-              label="User Name"
-              error={errors.name}
-              placeholder="Enter User Name"
-              value={newUserData.name}
-              onChange={(name) =>
-                setNewUserData((prev) => ({ ...prev, name: name }))
-              }
-              className="w-60 rounded-lg"
-              helperText="Enter User Name"
-            />
-
-            <CustomInput
-              label="Email"
-              error={errors.email}
-              placeholder="Enter Email"
-              value={newUserData.email}
-              onChange={(email) =>
-                setNewUserData((prev) => ({ ...prev, email: email }))
-              }
-              className="w-60 rounded-lg"
-              helperText="Enter Valid Email"
-            />
-            <CustomInput
-              label="Password"
-              error={errors.password}
-              placeholder="Enter Password"
-              value={newUserData.password}
-              onChange={(password) =>
-                setNewUserData((prev) => ({ ...prev, password: password }))
-              }
-              className="w-60 rounded-lg"
-              helperText="Enter password"
-            />
+      <div className="w-full px-6 h-18 flex justify-end">
+        <div className="flex items-center gap-4">
+          <IconButton
+            onClick={toggleDrawer(true)}
+            sx={{
+              padding: 0,
+              backgroundColor: "transparent",
+            }}
+          >
+            <Badge
+              color="error"
+              badgeContent={expiredOrdersCount > 0 ? expiredOrdersCount : null}
+              overlap="circular"
+            >
+              <NotificationsNoneIcon sx={{ fontSize: 28 }} />
+            </Badge>
+          </IconButton>
+          <Avatar className="min-w-12 h-12 rounded-full">
+            {strippedUserName}
+          </Avatar>
+          <div ref={ref} onClick={() => handleMenu(true)}>
+            <IoMdMore size={28} className="cursor-pointer" />
           </div>
-          <div className="flex w-full gap-3 justify-end">
-            <CustomButton
-              onClick={() => handleAddUserModal(false)}
-              label="Cancel"
-              variant="outlined"
-              className="bg-white"
-            />
-            <CustomButton onClick={addUser} label="Add User" />
-          </div>
+          <CustomMenu
+            anchorEl={ref.current}
+            open={menuOpen}
+            handleClose={() => handleMenu(false)}
+            className="mt-4"
+            menuItems={menuItems}
+            transformPosition={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+          />
         </div>
-      </Modal>
+        <Drawer
+          open={drawerOpen}
+          anchor={"right"}
+          onClose={toggleDrawer(false)}
+        >
+          {DrawerList}
+        </Drawer>
+
+        {/* Add User Modal */}
+        <Modal
+          open={addUserModelOpen}
+          onClose={() => handleAddUserModal(false)}
+          className="w-screen h-screen flex justify-center items-center"
+        >
+          <div className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg p-4">
+            <p className="text-primary text-xl font-semibold w-full text-start">
+              Add User
+            </p>
+            <div className="flex flex-col w-[30rem] px-10 gap-y-2 justify-center items-start">
+              <CustomInput
+                label="User Name"
+                error={errors.name}
+                placeholder="Enter User Name"
+                value={newUserData.name}
+                onChange={(name) =>
+                  setNewUserData((prev) => ({ ...prev, name: name }))
+                }
+                className="w-60 rounded-lg"
+                helperText="Enter User Name"
+              />
+
+              <CustomInput
+                label="Email"
+                error={errors.email}
+                placeholder="Enter Email"
+                value={newUserData.email}
+                onChange={(email) =>
+                  setNewUserData((prev) => ({ ...prev, email: email }))
+                }
+                className="w-60 rounded-lg"
+                helperText="Enter Valid Email"
+              />
+              <CustomInput
+                label="Password"
+                error={errors.password}
+                placeholder="Enter Password"
+                value={newUserData.password}
+                onChange={(password) =>
+                  setNewUserData((prev) => ({ ...prev, password: password }))
+                }
+                className="w-60 rounded-lg"
+                helperText="Enter password"
+              />
+            </div>
+            <div className="flex w-full gap-3 justify-end">
+              <CustomButton
+                onClick={() => handleAddUserModal(false)}
+                label="Cancel"
+                variant="outlined"
+                className="bg-white"
+              />
+              <CustomButton onClick={addUser} label="Add User" />
+            </div>
+          </div>
+        </Modal>
+      </div>
     </div>
   );
 };

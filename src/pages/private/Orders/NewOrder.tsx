@@ -544,11 +544,11 @@ const NewOrder = () => {
       </div>
 
       {/* === Order Info Form === */}
-      <div className="w-full flex flex-col gap-2 overflow-y-scroll max-h-full">
+      <div className="max-w-full overflow-x-hidden flex flex-col sm gap-2 max-h-full">
         {orderInfo.type === ProductType.RENTAL && (
           <>
-            <div className="w-full flex justify-between items-start">
-              <div className="flex flex-nowrap gap-3">
+            <div className="max-w-full flex flex-wrap justify-between items-start">
+              <div className="flex max-lg:flex-wrap gap-3">
                 <CustomInput
                   onChange={() => {}}
                   label="Order Id"
@@ -579,7 +579,7 @@ const NewOrder = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
                 <p>Retail</p>
                 <AntSwitch
                   checked={orderInfo.billing_mode === BillingMode.BUSINESS}
@@ -600,9 +600,11 @@ const NewOrder = () => {
         )}
 
         {/* === Customer + Rental Data === */}
-        <div className="grid grid-cols-1 sm:grid-cols-[20%_auto] gap-2">
+        <div className="grid grid-cols-[repeat(auto-fit,_minmax(20rem,_1fr))] gap-2  w-full">
           <CustomSelect
             label="Customer"
+            labelClass="min-w-[5rem]"
+            wrapperClass="min-w-[15rem] max-w-[20rem]"
             options={formatContacts(contacts)}
             value={
               formatContacts(contacts).find(
@@ -618,7 +620,7 @@ const NewOrder = () => {
           />
 
           {ProductType.RENTAL === orderInfo.type && (
-            <div className="w-full flex gap-2">
+            <>
               <CustomDatePicker
                 label="Out Date"
                 value={orderInfo.out_date ?? ""}
@@ -646,14 +648,14 @@ const NewOrder = () => {
                 onChange={(value) => handleValueChange("in_date", value)}
                 placeholder="Enter In Date"
               />
-            </div>
+            </>
           )}
         </div>
         {/* ===Event Data === */}
-        <div className="grid grid-cols-2 justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 justify-between">
           <div className="flex flex-col">
             <CustomInput
-              wrapperClass="w-[30rem]"
+              wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
               value={orderInfo?.event_address ?? ""}
               onChange={(value) => handleValueChange("event_address", value)}
@@ -663,7 +665,7 @@ const NewOrder = () => {
               minRows={5}
             />
             <CustomInput
-              wrapperClass="w-[30rem]"
+              wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
               value={orderInfo?.event_pincode ?? ""}
               onChange={(value) => handleValueChange("event_pincode", value)}
@@ -674,7 +676,7 @@ const NewOrder = () => {
               value={orderInfo?.remarks ?? ""}
               onChange={(value) => handleValueChange("remarks", value)}
               label="Remarks"
-              wrapperClass="w-[30rem]"
+              wrapperClass="w-[30rem] max-w-full"
               placeholder="Enter remarks"
               multiline
               minRows={3}

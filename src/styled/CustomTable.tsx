@@ -1,8 +1,16 @@
-import type { ColDef, RowClassParams, RowStyle } from "ag-grid-community";
+import type {
+  ColDef,
+  RowClassParams,
+  RowStyle,
+  SizeColumnsToContentStrategy,
+  SizeColumnsToFitGridStrategy,
+  SizeColumnsToFitProvidedWidthStrategy,
+} from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 // import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
+import { useMemo } from "react";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -25,6 +33,18 @@ const CustomTable = <T,>({
     return {};
   },
 }: CustomTableProps<T>) => {
+  const autoSizeStrategy = useMemo<
+    | SizeColumnsToFitGridStrategy
+    | SizeColumnsToFitProvidedWidthStrategy
+    | SizeColumnsToContentStrategy
+  >(() => {
+    return {
+      type: "fitCellContents",
+      defaultMaxWidth: 150,
+      defaultMinWidth: 80,
+    };
+  }, []);
+
   return (
     <div
       className="ag-theme-alpine"
@@ -41,6 +61,7 @@ const CustomTable = <T,>({
         domLayout="autoHeight"
         localeText={{ noRowsToShow: "No data Found..." }}
         loading={isLoading}
+        autoSizeStrategy={autoSizeStrategy}
       />
     </div>
   );

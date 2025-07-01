@@ -32,6 +32,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         type="datetime-local"
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
+        
         className={`rounded-sm border border-[#ced4da] focus:border-0 px-3 h-[2.5rem] text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2] ${className}`}
         placeholder={placeholder}
       />

@@ -7,7 +7,7 @@ import { store } from "./store/store";
 
 function App() {
   return (
-    <div className="min-w-screen min-h-screen overflow-y-hidden h-fit">
+    <div className="w-screen overflow-hidden min-h-screen overflow-y-hidden h-fit">
       <Provider store={store}>
         <MenuProvider>
           <AppRoutes />

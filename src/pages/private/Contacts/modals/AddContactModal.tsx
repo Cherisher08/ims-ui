@@ -106,7 +106,7 @@ const AddContactModal = ({
         </div>
 
         <div className=" flex flex-col gap-3 h-4/5 px-3 overflow-y-auto scrollbar-stable">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ">
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Name"
@@ -181,7 +181,7 @@ const AddContactModal = ({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[auto_2fr] justify-center items-center sm:h-4/5 w-full gap-4">
-              <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
+              <label className="pt-2 w-[4rem] line-clamp-2 break-words h-fit min-h-10">
                 Upload Proof
               </label>
 

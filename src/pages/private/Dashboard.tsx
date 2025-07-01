@@ -19,8 +19,6 @@ import CustomOrderTimeLine from "../../styled/CustomOrderTimeLine";
 
 dayjs.extend(isoWeek);
 
-type PendingAmount = { date: string; price: number };
-
 const analyzeRentalOrders = (orders: RentalOrderInfo[], filter: string) => {
   const today = new Date();
 

@@ -6,8 +6,6 @@ import {
   BillingMode,
   BillingUnit,
   OrderInfoType,
-  PaymentMode,
-  PaymentStatus,
   RentalOrderInfo,
 } from "../../types/order";
 import { ProductType } from "../../types/common";
@@ -21,7 +19,40 @@ dayjs.extend(isoWeek);
 
 type PendingAmount = { date: string; price: number };
 
-const analyzeRentalOrders = (orders: RentalOrderInfo[], filter: string) => {
+export interface OrderTimeline {
+  count: number;
+  date: string;
+}
+
+type ResultData = {
+  pendingAmountData: {
+    order: PendingAmount;
+    pendingAmount: number;
+  }[];
+  pendingBalanceData: {
+    order: PendingAmount;
+    balanceAmount: number;
+  }[];
+  totalProductsOut: {
+    order: OrderTimeline;
+    productsOutCount: number;
+  }[];
+  totalReturnedProducts: {
+    order: RentalOrderInfo;
+    returnedProductsCount: number;
+  }[];
+};
+
+interface GraphData {
+  pendingData: PendingAmount[];
+  balanceData: PendingAmount[];
+  orderTimeLine: OrderTimeline[];
+}
+
+const analyzeRentalOrders = (
+  orders: RentalOrderInfo[],
+  filter: string
+): ResultData => {
   const today = new Date();
 
   let startTime: Date;
@@ -208,7 +239,7 @@ const Dashboard = () => {
     mcOut: 0,
   });
 
-  const [graphData, setGraphData] = useState({
+  const [graphData, setGraphData] = useState<GraphData>({
     pendingData: [],
     balanceData: [],
     orderTimeLine: [],
@@ -221,464 +252,52 @@ const Dashboard = () => {
   ];
 
   useEffect(() => {
-    // if (isRentalOrdersQuerySuccess) {
-    // setOrders(rentalOrderData);
-    setOrders([
-      {
-        order_id: "RENT-001",
-        customer: {
-          _id: "c1",
-          name: "Suresh Babu",
-          personal_number: "12381723",
-          office_number: "2313123123",
-          gstin: "123333",
-          email: "suresh@example.com",
-          address: "Erode",
-          pincode: "638001",
-        },
-        billing_mode: BillingMode.RETAIL,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PAID,
-        remarks: "Repeat customer",
-        round_off: 5,
-        payment_mode: PaymentMode.CASH,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-06-05T09:00",
-        expected_date: "2025-06-06T09:00",
-        in_date: "2025-06-06T09:00",
-        product_details: [
-          {
-            _id: "p5",
-            name: "Cooling Fan",
-            category: "Utility",
-            billing_unit: BillingUnit.DAYS,
-            product_unit: { _id: "u1", name: "unit" },
-            in_date: "2025-06-06T09:00",
-            out_date: "2025-06-05T09:00",
-            order_quantity: 10,
-            order_repair_count: 0,
-            rent_per_unit: 100,
-          },
-        ],
-        event_address: "Railway Station, Erode",
-        event_pincode: "638002",
-      },
-      {
-        order_id: "RENT-002",
-        customer: {
-          _id: "c2",
-          name: "Ravi Kannan",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "ravi@example.com",
-          address: "Chennai",
-          pincode: "600001",
-        },
-        billing_mode: BillingMode.BUSINESS,
-        discount: 5,
-        discount_amount: 500,
-        status: PaymentStatus.PENDING,
-        remarks: "",
-        round_off: 0,
-        payment_mode: PaymentMode.UPI,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-06-10T18:00",
-        expected_date: "2025-06-10T23:00",
-        in_date: "2025-06-10T23:00",
-        product_details: [
-          {
-            _id: "p6",
-            name: "Stage Light",
-            category: "Lighting",
-            billing_unit: BillingUnit.SHIFT,
-            product_unit: { _id: "u2", name: "set" },
-            in_date: "2025-06-10T23:00",
-            out_date: "2025-06-10T18:00",
-            order_quantity: 5,
-            order_repair_count: 0,
-            rent_per_unit: 800,
-          },
-        ],
-        event_address: "Hall A, Trade Centre",
-        event_pincode: "600002",
-      },
-      {
-        order_id: "RENT-003",
-        customer: {
-          _id: "c3",
-          name: "Meera Raj",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "meera@example.com",
-          address: "Madurai",
-          pincode: "625001",
-        },
-        billing_mode: BillingMode.RETAIL,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PAID,
-        remarks: "Wedding",
-        round_off: 10,
-        payment_mode: PaymentMode.CASH,
-        gst: 12,
-        type: ProductType.RENTAL,
-        deposits: [
-          {
-            amount: 10000,
-            date: "2025-06-04T10:00",
-            mode: PaymentMode.CASH,
-            product: { _id: "p7", name: "Sound Mixer" },
-          },
-        ],
-        out_date: "2025-06-01T10:00",
-        expected_date: "2025-06-04T10:00",
-        in_date: "2025-06-04T10:00",
-        product_details: [
-          {
-            _id: "p7",
-            name: "Sound Mixer",
-            category: "Audio",
-            billing_unit: BillingUnit.DAYS,
-            product_unit: { _id: "u3", name: "unit" },
-            in_date: "2025-06-04T10:00",
-            out_date: "2025-06-01T10:00",
-            order_quantity: 2,
-            order_repair_count: 0,
-            rent_per_unit: 2000,
-          },
-          {
-            _id: "p7",
-            name: "Sound Bar",
-            category: "Audio",
-            billing_unit: BillingUnit.DAYS,
-            product_unit: { _id: "u3", name: "unit" },
-            in_date: "2025-06-04T10:00",
-            out_date: "2025-06-01T10:00",
-            order_quantity: 5,
-            order_repair_count: 0,
-            rent_per_unit: 1000,
-          },
-        ],
-        event_address: "Meenakshi Grounds",
-        event_pincode: "625002",
-      },
-      {
-        order_id: "RENT-004",
-        customer: {
-          _id: "c4",
-          name: "Rahul Sen",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "rahul@example.com",
-          address: "Trichy",
-          pincode: "620001",
-        },
-        billing_mode: BillingMode.BUSINESS,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PAID,
-        remarks: "",
-        round_off: 0,
-        payment_mode: PaymentMode.ACCOUNT,
-        gst: 5,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-06-01T09:00",
-        expected_date: "2025-06-15T09:00",
-        in_date: "2025-06-15T09:00",
-        product_details: [
-          {
-            _id: "p8",
-            name: "Projector",
-            category: "Display",
-            billing_unit: BillingUnit.WEEKS,
-            product_unit: { _id: "u4", name: "piece" },
-            in_date: "2025-06-15T09:00",
-            out_date: "2025-06-01T09:00",
-            order_quantity: 1,
-            order_repair_count: 0,
-            rent_per_unit: 7000,
-          },
-        ],
-        event_address: "ABC Convention Hall",
-        event_pincode: "620002",
-      },
-      {
-        order_id: "RENT-005",
-        customer: {
-          _id: "c5",
-          name: "Anu Bala",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "anu@example.com",
-          address: "Salem",
-          pincode: "636001",
-        },
-        billing_mode: BillingMode.RETAIL,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PAID,
-        remarks: "Outdoor",
-        round_off: 0,
-        payment_mode: PaymentMode.UPI,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-06-01T12:00",
-        expected_date: "2025-08-01T12:00",
-        in_date: "2025-08-01T12:00",
-        product_details: [
-          {
-            _id: "p10",
-            name: "AC Unit",
-            category: "Cooling",
-            billing_unit: BillingUnit.MONTHS,
-            product_unit: { _id: "u5", name: "unit" },
-            in_date: "2025-08-01T12:00",
-            out_date: "2025-06-01T12:00",
-            order_quantity: 2,
-            order_repair_count: 0,
-            rent_per_unit: 9000,
-          },
-        ],
-        event_address: "Metro Road",
-        event_pincode: "636002",
-      },
-      {
-        order_id: "RENT-006",
-        customer: {
-          _id: "c6",
-          name: "Karthik Raja",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "karthik@example.com",
-          address: "Karur",
-          pincode: "639001",
-        },
-        billing_mode: BillingMode.RETAIL,
-        discount: 2,
-        discount_amount: 200,
-        status: PaymentStatus.PAID,
-        remarks: "",
-        round_off: -5,
-        payment_mode: PaymentMode.CASH,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-06-20T06:00",
-        expected_date: "2025-06-23T06:00",
-        in_date: "2025-06-23T06:00",
-        product_details: [
-          {
-            _id: "p11",
-            name: "LED Screen",
-            category: "Display",
-            billing_unit: BillingUnit.DAYS,
-            product_unit: { _id: "u6", name: "sqft" },
-            in_date: "2025-06-23T06:00",
-            out_date: "2025-06-20T06:00",
-            order_quantity: 3,
-            order_repair_count: 0,
-            rent_per_unit: 5000,
-          },
-        ],
-        event_address: "Municipal Grounds",
-        event_pincode: "639002",
-      },
-      {
-        order_id: "RENT-006",
-        customer: {
-          _id: "c7",
-          name: "Mani V",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "mani@example.com",
-          address: "Vellore",
-          pincode: "632001",
-        },
-        billing_mode: BillingMode.BUSINESS,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PENDING,
-        remarks: "",
-        round_off: 0,
-        payment_mode: PaymentMode.CASH,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-06-10T16:00",
-        expected_date: "2025-06-10T22:00",
-        in_date: "2025-06-10T22:00",
-        product_details: [
-          {
-            _id: "p12",
-            name: "Wireless Mic",
-            category: "Audio",
-            billing_unit: BillingUnit.SHIFT,
-            product_unit: { _id: "u7", name: "unit" },
-            in_date: "2025-06-10T22:00",
-            out_date: "2025-06-10T16:00",
-            order_quantity: 6,
-            order_repair_count: 0,
-            rent_per_unit: 300,
-          },
-        ],
-        event_address: "Music Hall",
-        event_pincode: "632002",
-      },
-      {
-        order_id: "RENT-008",
-        customer: {
-          _id: "c8",
-          name: "Deepa M",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "deepa@example.com",
-          address: "Theni",
-          pincode: "625531",
-        },
-        billing_mode: BillingMode.RETAIL,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PAID,
-        remarks: "Conference setup",
-        round_off: 0,
-        payment_mode: PaymentMode.CASH,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [],
-        out_date: "2025-07-11T10:00",
-        expected_date: "2025-07-13T10:00",
-        in_date: "2025-07-13T10:00",
-        product_details: [
-          {
-            _id: "p13",
-            name: "Event Table",
-            category: "Furniture",
-            billing_unit: BillingUnit.DAYS,
-            product_unit: { _id: "u8", name: "piece" },
-            in_date: "2025-07-13T10:00",
-            out_date: "2025-07-11T10:00",
-            order_quantity: 20,
-            order_repair_count: 0,
-            rent_per_unit: 150,
-          },
-        ],
-        event_address: "Collectorate Grounds",
-        event_pincode: "625532",
-      },
-      {
-        order_id: "RENT-009",
-        customer: {
-          _id: "c9",
-          name: "Rajesh Kumar",
-          personal_number: "9002211345",
-          office_number: "9002211345",
-          gstin: "Asdasd",
-          email: "rajesh@example.com",
-          address: "Cuddalore",
-          pincode: "607001",
-        },
-        billing_mode: BillingMode.BUSINESS,
-        discount: 0,
-        discount_amount: 0,
-        status: PaymentStatus.PAID,
-        remarks: "",
-        round_off: 0,
-        payment_mode: PaymentMode.ACCOUNT,
-        gst: 18,
-        type: ProductType.RENTAL,
-        deposits: [
-          {
-            amount: 80000,
-            mode: PaymentMode.ACCOUNT,
-            product: {
-              _id: "p14",
-              name: "Stage ramp",
-            },
-            date: "2025-06-022T09:00",
-          },
-        ],
-        out_date: "2025-07-01T09:00",
-        expected_date: "2025-07-22T09:00",
-        in_date: "2025-07-22T09:00",
-        product_details: [
-          {
-            _id: "p14",
-            name: "Stage Ramp",
-            category: "Structure",
-            billing_unit: BillingUnit.WEEKS,
-            product_unit: { _id: "u9", name: "ft" },
-            in_date: "2025-07-22T09:00",
-            out_date: "2025-07-01T09:00",
-            order_quantity: 1,
-            order_repair_count: 0,
-            rent_per_unit: 10000,
-          },
-          {
-            _id: "p14",
-            name: "Stage Ramp",
-            category: "Structure",
-            billing_unit: BillingUnit.WEEKS,
-            product_unit: { _id: "u9", name: "ft" },
-            in_date: "2025-07-22T09:00",
-            out_date: "2025-07-01T09:00",
-            order_quantity: 5,
-            order_repair_count: 0,
-            rent_per_unit: 10000,
-          },
-        ],
-        event_address: "Expo Field",
-        event_pincode: "607002",
-      },
-    ]);
-    // }
+    if (isRentalOrdersQuerySuccess) {
+      setOrders(rentalOrderData);
+    }
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
   useEffect(() => {
-    const resultData = analyzeRentalOrders(orders, filter);
-    const totalPendingAmount = resultData.pendingAmountData.reduce(
-      (total, value) => total + value.pendingAmount,
-      0
-    );
-    const totalBalanceAmount = resultData.pendingBalanceData.reduce(
-      (total, value) => total + value.balanceAmount,
-      0
-    );
-    const totalProductsOut = resultData.totalProductsOut.reduce(
-      (total, value) => total + value.productsOutCount,
-      0
-    );
-    const totalProductsIn = resultData.totalReturnedProducts.reduce(
-      (total, value) => total + value.returnedProductsCount,
-      0
-    );
+    if (isRentalOrdersQuerySuccess && orders.length > 0) {
+      const resultData = analyzeRentalOrders(orders, filter);
+      const totalPendingAmount = resultData.pendingAmountData.reduce(
+        (total, value) => total + value.pendingAmount,
+        0
+      );
+      const totalBalanceAmount = resultData.pendingBalanceData.reduce(
+        (total, value) => total + value.balanceAmount,
+        0
+      );
+      const totalProductsOut = resultData.totalProductsOut.reduce(
+        (total, value) => total + value.productsOutCount,
+        0
+      );
+      const totalProductsIn = resultData.totalReturnedProducts.reduce(
+        (total, value) => total + value.returnedProductsCount,
+        0
+      );
 
-    setTotalInfo({
-      pendingAmount: totalPendingAmount,
-      balanceAmount: Math.abs(totalBalanceAmount),
-      mcOut: totalProductsOut,
-      mcIn: totalProductsIn,
-    });
+      setTotalInfo({
+        pendingAmount: totalPendingAmount,
+        balanceAmount: Math.abs(totalBalanceAmount),
+        mcOut: totalProductsOut,
+        mcIn: totalProductsIn,
+      });
 
-    setGraphData({
-      pendingData: resultData.pendingAmountData.map((order) => order.order),
-      balanceData: resultData.pendingBalanceData.map((order) => order.order),
-      orderTimeLine: resultData.totalProductsOut.map((order) => order.order),
-    });
-  }, [filter, orders]);
+      setGraphData({
+        pendingData:
+          resultData.pendingAmountData.length > 0
+            ? resultData.pendingAmountData.map((orderData) => orderData.order)
+            : [],
+        balanceData: resultData.pendingBalanceData.map(
+          (orderData) => orderData.order
+        ),
+        orderTimeLine: resultData.totalProductsOut.map(
+          (orderData) => orderData.order
+        ),
+      });
+    }
+  }, [filter, isRentalOrdersQuerySuccess, orders]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">

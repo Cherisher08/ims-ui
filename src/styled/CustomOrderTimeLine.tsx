@@ -13,7 +13,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import dayjs from "dayjs";
-import { RentalOrderInfo } from "../types/order";
+import { OrderTimeline } from "../pages/private/Dashboard";
 
 ChartJS.register(
   LineElement,
@@ -27,7 +27,7 @@ ChartJS.register(
 );
 
 interface CustomOrderTimeLineProps {
-  orders: RentalOrderInfo[];
+  orders: OrderTimeline[];
   title?: string;
 }
 
@@ -38,7 +38,7 @@ const CustomOrderTimeLine: React.FC<CustomOrderTimeLineProps> = ({
   const dateCounts: Record<string, number> = {};
 
   orders.forEach((order) => {
-    const dateKey = dayjs(order.out_date).format("YYYY-MM-DD");
+    const dateKey = dayjs(order.date).format("YYYY-MM-DD");
     dateCounts[dateKey] = (dateCounts[dateKey] || 0) + 1;
   });
 

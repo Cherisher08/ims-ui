@@ -165,7 +165,7 @@ const Inventory = () => {
         headerName: "Product Name",
         flex: 1,
         headerClass: "ag-header-wrap",
-        minWidth: 100,
+        minWidth: 200,
         filter: "agTextColumnFilter",
       },
       {
@@ -173,10 +173,10 @@ const Inventory = () => {
         headerName: "Product Code",
         flex: 1,
         headerClass: "ag-header-wrap",
-        minWidth: 80,
+        minWidth: 100,
         filter: "agTextColumnFilter",
       },
-      { field: "category", headerName: "Category", flex: 1, minWidth: 90 },
+      { field: "category", headerName: "Category", flex: 1, minWidth: 300 },
       {
         field: "quantity",
         headerName: "Available Stock",

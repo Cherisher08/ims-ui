@@ -38,7 +38,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   return (
     <div
       className={`grid grid-cols-[auto_2fr]  justify-between min-w-fit gap-2 ${wrapperClass} ${
-        multiline ? "h-fit pb-8" : "h-[3.5rem]"
+        multiline ? "h-fit pb-8" : "min-h-[3.5rem]"
       }`}
     >
       <label

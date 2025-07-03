@@ -45,6 +45,20 @@ import {
   calculateProductRent,
 } from "../../../services/utility_functions";
 
+type ErrorType = {
+  customer: boolean;
+  event_address: boolean;
+  event_pincode: boolean;
+  remarks: boolean;
+};
+
+const initialErrorState = {
+  customer: false,
+  event_address: false,
+  event_pincode: false,
+  remarks: false,
+};
+
 const formatContacts = (
   contacts: ContactInfoType[]
 ): CustomSelectOptionProps[] =>
@@ -180,6 +194,7 @@ const initialRentalProduct: RentalOrderInfo = {
 const NewOrder = () => {
   const navigate = useNavigate();
   const { rentalId } = useParams();
+  const [error, setErrors] = useState<ErrorType>(initialErrorState);
 
   const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } =
@@ -353,8 +368,31 @@ const NewOrder = () => {
     }
   };
 
+  const validateEventDetails = () => {
+    const newErrors = initialErrorState;
+
+    newErrors.customer = !orderInfo.customer._id;
+    newErrors.event_address =
+      !orderInfo.event_address || orderInfo.event_address.length > 100;
+    newErrors.event_pincode = !/^\d{6}$/.test(orderInfo.event_pincode || "");
+
+    if (orderInfo.remarks) {
+      newErrors.remarks = orderInfo.remarks.length > 30;
+    }
+    setErrors(newErrors);
+    return newErrors;
+  };
+
   const createNewOrder = () => {
     orderInfo.deposits = depositData;
+    const validationResult = validateEventDetails();
+
+    const hasAnyError = Object.values(validationResult).some(
+      (val) => val === true
+    );
+    console.log(hasAnyError);
+    if (hasAnyError) return;
+
     if (rentalId) {
       updateRentalOrder(orderInfo);
       if (existingRentalOrder) {
@@ -609,6 +647,8 @@ const NewOrder = () => {
             label="Customer"
             labelClass="min-w-[5rem]"
             wrapperClass="min-w-[15rem] max-w-[20rem]"
+            error={error.customer}
+            helperText="Please select customer"
             options={formatContacts(contacts)}
             value={
               formatContacts(contacts).find(
@@ -661,6 +701,8 @@ const NewOrder = () => {
             <CustomInput
               wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
+              error={error.event_address}
+              helperText="Address is required"
               value={orderInfo?.event_address ?? ""}
               onChange={(value) => handleValueChange("event_address", value)}
               label="Event Address"
@@ -671,6 +713,8 @@ const NewOrder = () => {
             <CustomInput
               wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
+              error={error.event_pincode}
+              helperText="Pincode is required eg.600001"
               value={orderInfo?.event_pincode ?? ""}
               onChange={(value) => handleValueChange("event_pincode", value)}
               label="Event Pincode"
@@ -680,6 +724,8 @@ const NewOrder = () => {
               value={orderInfo?.remarks ?? ""}
               onChange={(value) => handleValueChange("remarks", value)}
               label="Remarks"
+              error={error.remarks}
+              helperText="Remarks must be less than 30 length"
               wrapperClass="w-[30rem] max-w-full"
               placeholder="Enter remarks"
               multiline

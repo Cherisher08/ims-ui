@@ -8,14 +8,14 @@ import {
 export const contactApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
     getRentalOrders: build.query<RentalOrderInfo[], void>({
-      query: () => `orders/rentals`,
+      query: () => `http://127.0.0.1:8000/orders/rentals`,
       providesTags: ["Rental"],
     }),
     createRentalOrder: build.mutation<RentalOrderInfo, RentalOrderInfo>({
       query: (order) => {
         const body = transformRentalOrderToUTC(order);
         return {
-          url: `orders/rentals`,
+          url: `http://127.0.0.1:8000/orders/rentals`,
           method: "POST",
           body: body,
         };
@@ -23,7 +23,7 @@ export const contactApi = rootApi.injectEndpoints({
       invalidatesTags: ["Rental"],
     }),
     getRentalOrderById: build.query<RentalOrderInfo, string>({
-      query: (id) => `orders/rentals/${id}`,
+      query: (id) => `http://127.0.0.1:8000/orders/rentals/${id}`,
       transformResponse: (response: RentalOrderInfo) =>
         transformRentalOrderResponse(response),
       providesTags: ["Rental"],
@@ -32,7 +32,7 @@ export const contactApi = rootApi.injectEndpoints({
       query: ({ _id, ...order }) => {
         const body = transformRentalOrderToUTC(order);
         return {
-          url: `orders/rentals/${_id}`,
+          url: `http://127.0.0.1:8000/orders/rentals/${_id}`,
           method: "PUT",
           body: body,
         };
@@ -41,13 +41,13 @@ export const contactApi = rootApi.injectEndpoints({
     }),
     deleteRentalOrder: build.mutation<void, string>({
       query: (id) => ({
-        url: `orders/rentals/${id}`,
+        url: `http://127.0.0.1:8000/orders/rentals/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Rental"],
     }),
     getExpiredRentalOrders: build.query<RentalOrderInfo[], void>({
-      query: () => `orders/rentals/expired`,
+      query: () => `http://127.0.0.1:8000/orders/rentals/expired`,
       providesTags: ["Rental"],
     }),
   }),

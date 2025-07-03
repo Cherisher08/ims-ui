@@ -19,6 +19,28 @@ export type AddContactModalType = {
   setAddContactOpen: (value: boolean) => void;
 };
 
+type ErrorType = {
+  name: boolean;
+  email: boolean;
+  personal_number: boolean;
+  office_number: boolean;
+  company_name: boolean;
+  gstin: boolean;
+  address: boolean;
+  pincode: boolean;
+};
+
+const initialErrorState = {
+  name: false,
+  email: false,
+  personal_number: false,
+  office_number: false,
+  company_name: false,
+  gstin: false,
+  address: false,
+  pincode: false,
+};
+
 const AddContactModal = ({
   addContactOpen,
   setAddContactOpen,
@@ -30,8 +52,15 @@ const AddContactModal = ({
     { isSuccess: isCreateContactSuccess, isError: isCreateContactError, reset },
   ] = useCreateContactMutation();
   const [addressProof, setAddressProof] = useState<File | null>(null);
+  const [errors, setErrors] = useState<ErrorType>(initialErrorState);
 
   const handleAddContact = () => {
+    const validationResult = validateContact();
+
+    const hasAnyError = Object.values(validationResult).some(
+      (val) => val === true
+    );
+    if (hasAnyError) return;
     const contactWithFile: ContactWithFile = {
       ...newContactData,
       file: addressProof,
@@ -39,6 +68,41 @@ const AddContactModal = ({
     createNewContact(contactWithFile);
     setAddressProof(null);
     setNewContactData(initialContactType);
+  };
+
+  const validateContact = () => {
+    const newErrors = { ...initialErrorState };
+
+    newErrors.name =
+      !newContactData.name ||
+      newContactData.name.length < 3 ||
+      newContactData.name.length > 20;
+
+    newErrors.email = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      newContactData.email || ""
+    );
+
+    newErrors.personal_number = !/^\d{10}$/.test(
+      newContactData.personal_number || ""
+    );
+
+    if (newContactData.office_number)
+      newErrors.office_number = !/^\d{10}$/.test(newContactData.office_number);
+
+    if (newContactData.company_name)
+      newErrors.company_name = newContactData.company_name.length > 20;
+
+    if (newContactData.gstin)
+      newErrors.gstin = newContactData.gstin.length > 15;
+
+    if (newContactData.address)
+      newErrors.address = newContactData.address.length > 100;
+
+    if (newContactData.pincode)
+      newErrors.pincode = newContactData.pincode.length !== 6;
+
+    setErrors(newErrors);
+    return newErrors;
   };
 
   const handleProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,12 +174,16 @@ const AddContactModal = ({
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Name"
+                error={errors.name}
+                helperText="Name is required"
                 value={newContactData?.name ?? ""}
                 onChange={(value) => handleContactChange("name", value)}
                 placeholder="Enter Name"
               />
               <CustomInput
                 label="Email"
+                error={errors.email}
+                helperText="Email is rquired"
                 value={newContactData?.email ?? ""}
                 onChange={(value) => handleContactChange("email", value)}
                 placeholder="Enter Email"
@@ -125,6 +193,8 @@ const AddContactModal = ({
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Personal Number"
+                error={errors.personal_number}
+                helperText="Mobile Number must be 10 digit"
                 value={newContactData?.personal_number ?? ""}
                 onChange={(value) =>
                   handleContactChange("personal_number", value)
@@ -133,6 +203,8 @@ const AddContactModal = ({
               />
               <CustomInput
                 label="Office Number"
+                error={errors.office_number}
+                helperText="Mobile Number must be 10 digit"
                 value={newContactData?.office_number ?? ""}
                 onChange={(value) =>
                   handleContactChange("office_number", value)
@@ -144,6 +216,8 @@ const AddContactModal = ({
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Company"
+                error={errors.company_name}
+                helperText="Name must be less than 20 letters"
                 value={newContactData?.company_name ?? ""}
                 onChange={(value) => handleContactChange("company_name", value)}
                 placeholder="Enter Company Name"
@@ -151,6 +225,8 @@ const AddContactModal = ({
 
               <CustomInput
                 label="GSTIN"
+                error={errors.gstin}
+                helperText="GSTIN must be 15 digit"
                 value={newContactData?.gstin ?? ""}
                 onChange={(value) => handleContactChange("gstin", value)}
                 placeholder="Enter GSTIN"
@@ -163,6 +239,8 @@ const AddContactModal = ({
               <div className="lg:w-2/3">
                 <CustomInput
                   label="Address"
+                  error={errors.address}
+                  helperText="Address must be less than 100"
                   multiline
                   value={newContactData?.address ?? ""}
                   onChange={(value) => handleContactChange("address", value)}
@@ -173,6 +251,8 @@ const AddContactModal = ({
               <div className="lg:w-1/2">
                 <CustomInput
                   label="Pincode"
+                  error={errors.pincode}
+                  helperText="Invalid pincode"  
                   value={newContactData?.pincode ?? ""}
                   onChange={(value) => handleContactChange("pincode", value)}
                   placeholder="Enter Pincode"

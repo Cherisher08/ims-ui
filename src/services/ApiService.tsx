@@ -64,11 +64,11 @@ export const rootApi = createApi({
   ],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
-      query: () => `auth/users/me`,
+      query: () => `http://127.0.0.1:8000/auth/users/me`,
     }),
     authorizeUser: build.mutation<AuthorizeUserResponse, UserRequest>({
       query: ({ email, password }) => ({
-        url: `auth/users/tokens`,
+        url: `http://127.0.0.1:8000/auth/users/tokens`,
         method: "POST",
         body: new URLSearchParams({
           grant_type: "password",
@@ -80,14 +80,14 @@ export const rootApi = createApi({
     registerUser: build.mutation<User, User>({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       query: ({ _id, ...user }) => ({
-        url: `auth/users/`,
+        url: `http://127.0.0.1:8000/auth/users/`,
         method: "POST",
         body: user,
       }),
     }),
     resetPassword: build.mutation<GeneralResponse, string>({
       query: (email) => ({
-        url: `auth/users/reset`,
+        url: `http://127.0.0.1:8000/auth/users/reset`,
         method: "POST",
         body: {
           email: email,
@@ -96,32 +96,32 @@ export const rootApi = createApi({
     }),
     verifyOtp: build.mutation<GeneralResponse, VerifyOtpRequest>({
       query: (body) => ({
-        url: "auth/users/otp",
+        url: "http://127.0.0.1:8000/auth/users/otp",
         method: "POST",
         body: body,
       }),
     }),
     updateUserPassword: build.mutation<User, UpdateUserPasswordRequest>({
       query: (body) => ({
-        url: `auth/users/update`,
+        url: `http://127.0.0.1:8000/auth/users/update`,
         method: "POST",
         body: body,
       }),
     }),
     getProducts: build.query<Product[], void>({
-      query: () => `products`,
+      query: () => `http://127.0.0.1:8000/products`,
       providesTags: ["Product"],
     }),
     createProduct: build.mutation<Product, Product>({
       query: (body) => ({
-        url: `products`,
+        url: `http://127.0.0.1:8000/products`,
         method: "POST",
         body: body,
       }),
       invalidatesTags: ["Product"],
     }),
     getProductById: build.query<Product, string>({
-      query: (id) => `products/${id}`,
+      query: (id) => `http://127.0.0.1:8000/products/${id}`,
     }),
     updateProduct: build.mutation<Product, Product>({
       query: ({ _id, ...product }) => ({
@@ -133,7 +133,7 @@ export const rootApi = createApi({
     }),
     deleteProduct: build.mutation<void, string>({
       query: (id) => ({
-        url: `products/${id}`,
+        url: `http://127.0.0.1:8000/products/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Product"],
@@ -144,29 +144,29 @@ export const rootApi = createApi({
     }),
     createProductCategory: build.mutation<ProductCategory, ProductCategory>({
       query: (body) => ({
-        url: `product-category`,
+        url: `http://127.0.0.1:8000/product-category`,
         method: "POST",
         body: body,
       }),
       invalidatesTags: ["Product-Category"],
     }),
     getProductCategoryById: build.query<ProductCategory, string>({
-      query: (id) => `product-category/${id}`,
+      query: (id) => `http://127.0.0.1:8000/product-category/${id}`,
     }),
     getUnits: build.query<Unit[], void>({
-      query: () => `unit`,
+      query: () => `http://127.0.0.1:8000/unit`,
       providesTags: ["Unit"],
     }),
     createUnit: build.mutation<Unit, Unit>({
       query: (body) => ({
-        url: `unit`,
+        url: `http://127.0.0.1:8000/unit`,
         method: "POST",
         body: body,
       }),
       invalidatesTags: ["Unit"],
     }),
     getUnitById: build.query<Unit, string>({
-      query: (id) => `unit/${id}`,
+      query: (id) => `http://127.0.0.1:8000/unit/${id}`,
     }),
   }),
 });

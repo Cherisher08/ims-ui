@@ -32,7 +32,7 @@ const CustomSelect = ({
 }: CustomSelectProps) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${wrapperClass}`}
+      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 min-h-[3.5rem] ${wrapperClass}`}
     >
       <label
         className={`pt-2 line-clamp-2 break-words h-fit ${labelClass} ${

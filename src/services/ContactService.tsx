@@ -20,14 +20,14 @@ const constructContactFormData = (contactWithFile: ContactWithFile) => {
 export const contactApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
     getContacts: build.query<ContactInfoType[], void>({
-      query: () => `contacts`,
+      query: () => `http://127.0.0.1:8000/contacts`,
       providesTags: ["Contact"],
     }),
     createContact: build.mutation<ContactInfoType, ContactWithFile>({
       query: (body) => {
         const formData = constructContactFormData(body);
         return {
-          url: `contacts`,
+          url: `http://127.0.0.1:8000/contacts`,
           method: "POST",
           body: formData,
         };
@@ -35,14 +35,14 @@ export const contactApi = rootApi.injectEndpoints({
       invalidatesTags: ["Contact"],
     }),
     getContactById: build.query<ContactInfoType, string>({
-      query: (id) => `contacts/${id}`,
+      query: (id) => `http://127.0.0.1:8000/contacts/${id}`,
     }),
     updateContact: build.mutation<ContactInfoType, ContactWithFile>({
       query: ({ _id, ...contact }) => {
         const formData = constructContactFormData(contact);
         console.log("formData: ", formData);
         return {
-          url: `contacts/${_id}`,
+          url: `http://127.0.0.1:8000/contacts/${_id}`,
           method: "PUT",
           body: formData,
         };
@@ -51,7 +51,7 @@ export const contactApi = rootApi.injectEndpoints({
     }),
     deleteContact: build.mutation<void, string>({
       query: (id) => ({
-        url: `contacts/${id}`,
+        url: `http://127.0.0.1:8000/contacts/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Contact"],

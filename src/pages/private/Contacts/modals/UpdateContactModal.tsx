@@ -28,11 +28,10 @@ const UpdateContactModal = ({
   updateContactData,
   setUpdateContactData,
 }: UpdateContactModalType) => {
-  console.log("updateContactData: ", updateContactData);
   const [addressProof, setAddressProof] = useState<File | null>(null);
   const [
     updateContact,
-    { isSuccess: isUpdateContactSuccess, isError: IsUpdateContactError },
+    { isSuccess: isUpdateContactSuccess, isError: IsUpdateContactError, reset },
   ] = useUpdateContactMutation();
 
   const handleUpdateContact = () => {
@@ -70,14 +69,21 @@ const UpdateContactModal = ({
         toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
       });
       setUpdateContactOpen(false);
+      reset();
     }
     if (IsUpdateContactError) {
-      toast.success("Error in creating contact", {
+      toast.error("Error in creating contact", {
         toastId: TOAST_IDS.ERROR_CONTACT_CREATE,
       });
       setUpdateContactOpen(false);
+      reset();
     }
-  }, [IsUpdateContactError, isUpdateContactSuccess, setUpdateContactOpen]);
+  }, [
+    IsUpdateContactError,
+    isUpdateContactSuccess,
+    reset,
+    setUpdateContactOpen,
+  ]);
 
   return (
     <Modal

@@ -44,6 +44,7 @@ const Contacts = () => {
   const [filteredData, setFilteredData] = useState<ContactInfoType[]>([]);
   const [updateContactData, setUpdateContactData] =
     useState<ContactInfoType>(initialContactType);
+  console.log("updateContactData: ", updateContactData);
 
   const colDefs: ColDef<ContactInfoWithActions>[] = [
     {
@@ -51,7 +52,7 @@ const Contacts = () => {
       headerName: "Name",
       pinned: "left",
       flex: 1,
-      maxWidth: 150,
+      minWidth: 200,
       headerClass: "ag-header-wrap",
       filter: "agTextColumnFilter",
     },
@@ -59,7 +60,7 @@ const Contacts = () => {
       field: "personal_number",
       headerName: "Phone\nNumber",
       flex: 1,
-      minWidth: 100,
+      minWidth: 150,
       headerClass: "ag-header-wrap",
       filter: "agTextColumnFilter",
     },
@@ -67,7 +68,7 @@ const Contacts = () => {
       field: "office_number",
       headerName: "Office Number",
       flex: 1,
-      minWidth: 100,
+      minWidth: 150,
       headerClass: "ag-header-wrap",
       filter: "agTextColumnFilter",
     },
@@ -77,7 +78,7 @@ const Contacts = () => {
       headerName: "Email",
       flex: 1,
       autoHeight: true,
-      minWidth: 120,
+      minWidth: 150,
       cellStyle: {
         whiteSpace: "normal",
         wordBreak: "break-word",

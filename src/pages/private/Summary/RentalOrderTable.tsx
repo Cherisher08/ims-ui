@@ -43,7 +43,7 @@ const RentalOrderTable = ({
       headerName: "Customer",
       flex: 1,
       headerClass: "ag-header-wrap",
-      minWidth: 80,
+      minWidth: 150,
       filter: "agTextColumnFilter",
     },
     { field: "products", headerName: "Products", flex: 1, minWidth: 90 },
@@ -51,7 +51,7 @@ const RentalOrderTable = ({
       field: "in_date",
       headerName: "Order In Date",
       flex: 1,
-      minWidth: 100,
+      minWidth: 150,
       headerClass: "ag-header-wrap",
       filter: "agDateColumnFilter",
       valueFormatter: (params) => {
@@ -82,6 +82,7 @@ const RentalOrderTable = ({
       field: "actions",
       headerName: "Actions",
       flex: 1,
+      pinned: "right",
       minWidth: 100,
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {

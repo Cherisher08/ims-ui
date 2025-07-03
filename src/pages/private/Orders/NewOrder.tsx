@@ -81,6 +81,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     headerName: "PRODUCT",
     flex: 1,
     headerClass: "ag-header-wrap",
+    minWidth: 200,
     filter: "agTextColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
       const data = params.data as ProductDetails;
@@ -96,7 +97,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     field: "order_repair_count",
     headerName: "REPAIR COUNT",
     flex: 1,
-    maxWidth: 120,
+    minWidth: 120,
     headerClass: "ag-header-wrap",
     filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
@@ -112,7 +113,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     field: "order_quantity",
     headerName: "QUANTITY",
     flex: 1,
-    maxWidth: 110,
+    minWidth: 120,
     headerClass: "ag-header-wrap",
     filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
@@ -128,7 +129,7 @@ const colDefs: ColDef<ProductDetails>[] = [
     field: "rent_per_unit",
     headerName: "RENT PER UNIT",
     flex: 1,
-    maxWidth: 120,
+    minWidth: 120,
     headerClass: "ag-header-wrap",
     filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {
@@ -139,7 +140,7 @@ const colDefs: ColDef<ProductDetails>[] = [
   {
     headerName: "FINAL AMOUNT",
     flex: 1,
-    maxWidth: 180,
+    minWidth: 120,
     headerClass: "ag-header-wrap",
     filter: "agNumberColumnFilter",
     cellRenderer: (params: ICellRendererParams) => {

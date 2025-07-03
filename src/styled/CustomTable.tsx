@@ -40,8 +40,7 @@ const CustomTable = <T,>({
   >(() => {
     return {
       type: "fitCellContents",
-      defaultMaxWidth: 150,
-      defaultMinWidth: 80,
+      defaultMinWidth: 150,
     };
   }, []);
 

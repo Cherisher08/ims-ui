@@ -44,6 +44,7 @@ const Contacts = () => {
   const [filteredData, setFilteredData] = useState<ContactInfoType[]>([]);
   const [updateContactData, setUpdateContactData] =
     useState<ContactInfoType>(initialContactType);
+  console.log("updateContactData: ", updateContactData);
 
   const colDefs: ColDef<ContactInfoWithActions>[] = [
     {
@@ -77,7 +78,7 @@ const Contacts = () => {
       headerName: "Email",
       flex: 1,
       autoHeight: true,
-      minWidth: 120,
+      minWidth: 150,
       cellStyle: {
         whiteSpace: "normal",
         wordBreak: "break-word",

@@ -15,6 +15,7 @@ import { calculateDiscountAmount } from "../../services/utility_functions";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import AntSwitch from "../../styled/CustomSwitch";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
@@ -153,7 +154,7 @@ const getChartData = (
         const pendingAmount =
           finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
-        if (pendingAmount > 0 && order.status === PaymentStatus.PENDING) {
+        if (pendingAmount > 0) {
           groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
         }
         break;
@@ -173,7 +174,7 @@ const getChartData = (
         const pendingAmount =
           finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
-        if (pendingAmount < 0 && order.status === PaymentStatus.PENDING) {
+        if (pendingAmount < 0) {
           groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
         }
         break;
@@ -246,40 +247,73 @@ const getChartData = (
 
 const getDetailsData = (
   orders: RentalOrderInfo[],
-  chartType: ChartType
-): { name: string; amount: number }[] => {
-  const data: { name: string; amount: number }[] = [];
+  chartType: ChartType,
+  filter: string
+):
+  | {
+      pending: { name: string; amount: number }[];
+      paid: { name: string; amount: number }[];
+    }
+  | { name: string; amount: number }[] => {
+  const validGroupKeys = getValidGroupKeys(filter);
+  if (chartType === "incoming_pending" || chartType === "repayment_pending") {
+    const pending: { name: string; amount: number }[] = [];
+    const paid: { name: string; amount: number }[] = [];
 
-  orders.forEach((order) => {
-    switch (chartType) {
-      case "incoming_pending":
-      case "repayment_pending": {
-        const depositTotal =
-          order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
-        const finalAmount = calcFinalAmount(order);
-        const roundOff = order.round_off || 0;
-        const discountAmount = order.discount_amount || 0;
-        const gstAmount =
-          order.billing_mode === BillingMode.BUSINESS
-            ? 0
-            : calculateDiscountAmount(order.gst, finalAmount);
+    orders.forEach((order) => {
+      const groupKey = groupKeyFormatter(order.in_date, filter);
 
-        const pendingAmount =
-          finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+      // ignore if this group is outside the current date range
+      if (!validGroupKeys.includes(groupKey)) return;
+      const depositTotal =
+        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      const finalAmount = calcFinalAmount(order);
+      const roundOff = order.round_off || 0;
+      const discountAmount = order.discount_amount || 0;
+      const gstAmount =
+        order.billing_mode === BillingMode.BUSINESS
+          ? 0
+          : calculateDiscountAmount(order.gst, finalAmount);
 
-        if (
-          order.status === PaymentStatus.PENDING &&
-          ((chartType === "incoming_pending" && pendingAmount > 0) ||
-            (chartType === "repayment_pending" && pendingAmount < 0))
-        ) {
-          data.push({
+      const pendingAmount =
+        finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+
+      if (order.status === PaymentStatus.PENDING) {
+        if (chartType === "incoming_pending" && pendingAmount > 0) {
+          pending.push({
+            name: order.customer.name,
+            amount: Math.abs(pendingAmount),
+          });
+        } else if (chartType === "repayment_pending" && pendingAmount < 0) {
+          pending.push({
             name: order.customer.name,
             amount: Math.abs(pendingAmount),
           });
         }
-        break;
+      } else {
+        // paid section
+        if (chartType === "incoming_pending" && pendingAmount > 0) {
+          paid.push({
+            name: order.customer.name,
+            amount: Math.abs(pendingAmount),
+          });
+        } else if (chartType === "repayment_pending" && pendingAmount < 0) {
+          paid.push({
+            name: order.customer.name,
+            amount: Math.abs(pendingAmount),
+          });
+        }
       }
+    });
 
+    return { pending, paid };
+  }
+
+  // for machine types
+  const data: { name: string; amount: number }[] = [];
+
+  orders.forEach((order) => {
+    switch (chartType) {
       case "machines_in": {
         order.product_details.forEach((p) => {
           if (p.in_date) {
@@ -291,7 +325,6 @@ const getDetailsData = (
         });
         break;
       }
-
       case "machines_out": {
         order.product_details.forEach((p) => {
           if (p.out_date) {
@@ -303,7 +336,6 @@ const getDetailsData = (
         });
         break;
       }
-
       case "machines_repair": {
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
@@ -316,7 +348,6 @@ const getDetailsData = (
         });
         break;
       }
-
       case "machines_overdue": {
         order.product_details.forEach((p) => {
           if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
@@ -328,7 +359,6 @@ const getDetailsData = (
         });
         break;
       }
-
       default:
         break;
     }
@@ -342,9 +372,11 @@ const Dashboard = () => {
     useGetRentalOrdersQuery();
   const [filter, setFilter] = useState<string>("1");
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
+  const [showPendingAmountsOnly, setShowPendingAmountsOnly] =
+    useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<ChartType>("incoming_pending");
-  const detailsData = getDetailsData(orders, graphFilter);
+  const detailsData = getDetailsData(orders, graphFilter, filter);
   const filterOptions = [
     { id: "1", value: "daily" },
     { id: "2", value: "weekly" },
@@ -397,13 +429,24 @@ const Dashboard = () => {
       const pendingAmount =
         finalAmount - depositSum - discountAmount + gstAmount + roundOff;
 
-      if (pendingAmount > 0) {
-        balanceAmount += pendingAmount;
-      } else if (pendingAmount < 0) {
-        repaymentAmount += Math.abs(pendingAmount);
+      console.log("showPendingAmountsOnly: ", showPendingAmountsOnly);
+      console.log("depositSum: ", depositSum);
+      console.log("depositAmount: ", depositAmount);
+      if (showPendingAmountsOnly) {
+        if (order.status === PaymentStatus.PENDING) {
+          depositAmount += depositSum;
+          if (pendingAmount > 0) {
+            balanceAmount += pendingAmount;
+          }
+          if (pendingAmount < 0) {
+            repaymentAmount += Math.abs(pendingAmount);
+          }
+        }
+      } else {
+        depositAmount += depositSum;
+        if (pendingAmount > 0) balanceAmount += pendingAmount; // total billed regardless of status
+        if (pendingAmount < 0) repaymentAmount += Math.abs(pendingAmount);
       }
-
-      depositAmount += depositSum;
 
       order.product_details.forEach((product) => {
         if (product.in_date) {
@@ -428,7 +471,7 @@ const Dashboard = () => {
       mcIn,
       mcOut,
     });
-  }, [filter, orders]);
+  }, [filter, orders, showPendingAmountsOnly]);
 
   useEffect(() => {
     const pendingData = getChartData(orders, filter, graphFilter);
@@ -440,7 +483,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="w-full flex justify-between">
         <p className="text-primary font-bold">Overview</p>
-        <div>
+        <div className="flex gap-4">
           <CustomSelect
             label=""
             onChange={(val) => setFilter(val)}
@@ -448,6 +491,16 @@ const Dashboard = () => {
             options={filterOptions}
             value={filter}
           />
+          <div className="flex pt-2 gap-2">
+            <p>All</p>
+            <AntSwitch
+              checked={showPendingAmountsOnly}
+              onChange={(e) => {
+                setShowPendingAmountsOnly(e.target.checked);
+              }}
+            />
+            <p>Pending</p>
+          </div>
         </div>
       </div>
       <div className="flex flex-col gap-3">
@@ -547,19 +600,64 @@ const Dashboard = () => {
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Details</p>
             <ul className="flex flex-col gap-3 px-4 h-full overflow-y-auto">
-              {detailsData.length === 0 && (
-                <li className="text-gray-400 italic">No data available</li>
+              {"pending" in detailsData ? (
+                <>
+                  <li
+                    key={"table-header"}
+                    className="flex justify-between text-sm"
+                  >
+                    <span>Customer</span>
+                    <span>Amount</span>
+                  </li>
+                  <h3 className="font-bold mt-2">Pending</h3>
+                  {detailsData.pending.length === 0 && (
+                    <li className="text-gray-400 italic">No pending</li>
+                  )}
+                  {detailsData.pending.map((record, index) => (
+                    <li
+                      key={"pending-" + index}
+                      className="flex justify-between text-sm"
+                    >
+                      <span>{record.name}</span>
+                      <span>{`₹${record.amount.toFixed(2)}`}</span>
+                    </li>
+                  ))}
+
+                  <h3 className="font-bold mt-4">Paid</h3>
+                  {detailsData.paid.length === 0 && (
+                    <li className="text-gray-400 italic">No paid</li>
+                  )}
+                  {detailsData.paid.map((record, index) => (
+                    <li
+                      key={"paid-" + index}
+                      className="flex justify-between text-sm"
+                    >
+                      <span>{record.name}</span>
+                      <span>{`₹${record.amount.toFixed(2)}`}</span>
+                    </li>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <li
+                    key={"table-header"}
+                    className="flex justify-between text-sm"
+                  >
+                    <span>Product</span>
+                    <span>Nos</span>
+                  </li>
+                  {Array.isArray(detailsData) && detailsData.length === 0 && (
+                    <li className="text-gray-400 italic">No data available</li>
+                  )}
+                  {Array.isArray(detailsData) &&
+                    detailsData.map((record, index) => (
+                      <li key={index} className="flex justify-between text-sm">
+                        <span>{record.name}</span>
+                        <span>{record.amount}</span>
+                      </li>
+                    ))}
+                </>
               )}
-              {detailsData.map((record, index) => (
-                <li key={index} className="flex justify-between text-sm">
-                  <span>{record.name}</span>
-                  <span>
-                    {isPriceData
-                      ? `₹${record.amount.toFixed(2)}`
-                      : record.amount}
-                  </span>
-                </li>
-              ))}
             </ul>
           </div>
         </div>

@@ -18,13 +18,13 @@ export const MenuItems: MenuItemsType[] = [
   },
   {
     id: 2,
-    title: "Orders",
+    title: "Entries",
     path: "/orders/rentals",
     logo: <LuClipboardList size={30} />,
   },
   {
     id: 3,
-    title: "Inventory",
+    title: "Stocks",
     path: "/inventory",
     logo: <LuShoppingBag size={30} />,
   },

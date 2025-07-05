@@ -38,7 +38,7 @@ interface OneProduct {
   name: string;
   product_code: string;
   category: string;
-  quantity: number;
+  available_stock: number;
   type: string;
   actions?: string;
 }
@@ -150,7 +150,7 @@ const Inventory = () => {
           name: product.name,
           product_code: product.product_code,
           category: product.category.name,
-          quantity: product.quantity,
+          available_stock: product.available_stock,
           type: product.type,
         }))
       : [];
@@ -178,7 +178,7 @@ const Inventory = () => {
       },
       { field: "category", headerName: "Category", flex: 1, minWidth: 300 },
       {
-        field: "quantity",
+        field: "available_stock",
         headerName: "Available Stock",
         flex: 1,
         minWidth: 100,

@@ -35,6 +35,7 @@ import {
   useCreateRentalOrderMutation,
   useGetRentalOrderByIdQuery,
   useGetRentalOrdersQuery,
+  useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
 } from "../../../services/OrderService";
 import { toast } from "react-toastify";
@@ -44,6 +45,8 @@ import {
   calculateDiscountAmount,
   calculateProductRent,
 } from "../../../services/utility_functions";
+import { useDispatch } from "react-redux";
+import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
 
 const formatContacts = (
   contacts: ContactInfoType[]
@@ -181,7 +184,9 @@ const initialRentalProduct: RentalOrderInfo = {
 const NewOrder = () => {
   const navigate = useNavigate();
   const { rentalId } = useParams();
+  const dispatch = useDispatch();
 
+  const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } =
     useGetProductsQuery();
@@ -354,7 +359,7 @@ const NewOrder = () => {
     }
   };
 
-  const createNewOrder = () => {
+  const createNewOrder = async () => {
     orderInfo.deposits = depositData;
     if (rentalId) {
       updateRentalOrder(orderInfo);
@@ -388,21 +393,59 @@ const NewOrder = () => {
         });
       }
     } else {
-      createRentalOrder(orderInfo);
-      orderInfo.product_details.forEach((product_detail) => {
-        const currentProduct = products.find(
-          (product) => product._id === product_detail._id
-        )!;
-        currentProduct.available_stock -= product_detail.order_quantity;
-        currentProduct.repair_count += product_detail.order_repair_count;
-        updateProductData(currentProduct);
-      });
-      setOrderInfo(initialRentalProduct);
+      try {
+        // 1️⃣ Create the rental order and wait for it to succeed
+        const orderResponse = await createRentalOrder(orderInfo).unwrap();
+        console.log("✅ Order created successfully", orderResponse);
+
+        // 2️⃣ Once order is created, update product stocks
+        const results = await Promise.allSettled(
+          orderInfo.product_details.map((product_detail) => {
+            const currentProduct = products.find(
+              (product) => product._id === product_detail._id
+            );
+
+            if (!currentProduct) {
+              console.warn(
+                `⚠️ Product ${product_detail._id} not found, skipping`
+              );
+              return Promise.resolve(); // skip if not found
+            }
+
+            return updateProductData({
+              ...currentProduct,
+              available_stock:
+                currentProduct.available_stock - product_detail.order_quantity,
+              repair_count:
+                currentProduct.repair_count + product_detail.order_repair_count,
+            }).unwrap();
+          })
+        );
+
+        results.forEach((result, idx) => {
+          if (result.status === "fulfilled") {
+            console.log(
+              `✅ Product ${orderInfo.product_details[idx]._id} updated successfully`
+            );
+          } else {
+            console.error(
+              `❌ Product ${orderInfo.product_details[idx]._id} update failed:`,
+              result.reason
+            );
+          }
+        });
+
+        // 3️⃣ Finally, reset your form or order state
+        setOrderInfo(initialRentalProduct);
+      } catch (error) {
+        console.error("❌ Failed to create rental order:", error);
+        // optionally show user a toast or message
+      }
     }
   };
 
   useEffect(() => {
-    if (isRentalOrderCreateSuccess && isUpdateProductSuccess) {
+    if (isRentalOrderCreateSuccess) {
       toast.success("Rental Order Created Successfully", {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
       });
@@ -443,10 +486,24 @@ const NewOrder = () => {
   ]);
 
   useEffect(() => {
-    if (isRentalOrderUpdateSuccess && isUpdateProductSuccess) {
+    if (isRentalOrderUpdateSuccess) {
       toast.success("Rental Order Updated Successfully", {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
       });
+      const fetchExpiredOrders = async () => {
+        const result = await triggerGetRentalOrder();
+        if ("error" in result && result.error) {
+          const error = result.error;
+
+          if ("status" in error && error.status === 404) {
+            dispatch(setExpiredRentalOrders([]));
+          }
+        } else if ("data" in result && result.data) {
+          dispatch(setExpiredRentalOrders(result.data));
+        }
+      };
+
+      fetchExpiredOrders();
       navigate("/orders");
     }
     if (isRentalOrderUpdateError) {
@@ -459,10 +516,12 @@ const NewOrder = () => {
       navigate("/orders");
     }
   }, [
+    dispatch,
     isRentalOrderUpdateError,
     isRentalOrderUpdateSuccess,
     isUpdateProductSuccess,
     navigate,
+    triggerGetRentalOrder,
   ]);
 
   useEffect(() => {

@@ -43,7 +43,7 @@ const RentalOrderTable = ({
       headerName: "Customer",
       flex: 1,
       headerClass: "ag-header-wrap",
-      minWidth: 150,
+      minWidth: 200,
       filter: "agTextColumnFilter",
     },
     { field: "products", headerName: "Products", flex: 1, minWidth: 90 },
@@ -83,7 +83,6 @@ const RentalOrderTable = ({
       headerName: "Actions",
       flex: 1,
       pinned: "right",
-      minWidth: 100,
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {
         const rowData = params.data;

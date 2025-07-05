@@ -25,25 +25,27 @@ ChartJS.register(
 );
 
 interface ChartDataPoint {
-  date: string;
-  price: number;
+  x: string;
+  y: number;
 }
 
 interface CustomLineChartProps {
   chartData: ChartDataPoint[];
   title?: string;
+  isYPrice?: boolean;
 }
 
 const CustomLineChart: React.FC<CustomLineChartProps> = ({
   chartData,
   title = "",
+  isYPrice = true,
 }) => {
   const data = {
-    labels: chartData.map((point) => point.date),
+    labels: chartData.map((point) => point.x),
     datasets: [
       {
-        label: "Price",
-        data: chartData.map((point) => point.price),
+        label: isYPrice ? "Price" : "Count",
+        data: chartData.map((point) => point.y),
         fill: false,
         borderColor: "rgba(75, 192, 192, 1)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",

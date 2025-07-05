@@ -2,7 +2,7 @@ import { IoIosTrendingDown, IoIosTrendingUp } from "react-icons/io";
 
 type CardProps = {
   title: string;
-  value: number;
+  value: string;
   change?: number | null;
   className?: string;
 };
@@ -10,7 +10,7 @@ type CardProps = {
 const CustomCard = ({ title, value, change = null, className }: CardProps) => {
   return (
     <div
-      className={`rounded-3xl p-5 flex flex-col justify-between bg-[#eceefb] min-w-52 min-h-26 max-w-60 ${className}`}
+      className={`rounded-3xl p-5 flex flex-col justify-between bg-[#eceefb] min-w-48 min-h-26 max-w-60 ${className}`}
     >
       <p>{title}</p>
       <div className="grid grid-cols-2 items-center">

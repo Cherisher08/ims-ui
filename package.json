@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://ims-ui-51gp.onrender.com",
+  "homepage": "https://ims-ui-zeta.vercel.app/",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

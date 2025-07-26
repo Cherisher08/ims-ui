@@ -20,6 +20,7 @@ import {
 } from "../types/common";
 
 const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
+console.log("apiUrl: ", apiUrl);
 
 const baseQuery = fetchBaseQuery({
   baseUrl: apiUrl,

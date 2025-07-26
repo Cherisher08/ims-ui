@@ -20,7 +20,6 @@ const RentalOrderTable = ({
     (state: RootState) => state.rentalOrder.data
   );
 
-  // make a Set of IDs for fast lookup
   const expiredOrderIds = useMemo(
     () => new Set(expiredOrders.map((order) => order.order_id)),
     [expiredOrders]

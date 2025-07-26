@@ -19,7 +19,9 @@ import {
   VerifyOtpRequest,
 } from "../types/common";
 
-const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
+// const apiUrl = "https://ims-mpt-backend.onrender.com/";
+// const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
+const apiUrl = "https://ims-mpt-backend.onrender.com/";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: apiUrl,
@@ -43,7 +45,8 @@ const baseQueryWith401Handler: BaseQueryFn<
 
   if (result?.error?.status === 401) {
     // redirect to login page
-    window.location.href = "/auth/login";
+    // console.log(window.location);
+    // window.location.href = "http://localhost:4173/auth/login";
   }
 
   return result;

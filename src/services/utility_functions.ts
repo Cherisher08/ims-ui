@@ -45,6 +45,5 @@ export const calculateProductRent = (product: ProductDetails): number => {
   }
 
   const effectiveQuantity = order_quantity - order_repair_count;
-
   return rent_per_unit * effectiveQuantity * duration;
 };

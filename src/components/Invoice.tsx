@@ -501,11 +501,15 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             <View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
-                <Text style={styles.fieldValue}>{data.out_date}</Text>
+                <Text style={styles.fieldValue}>
+                  {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss")}
+                </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
-                <Text style={styles.fieldValue}>{data.in_date}</Text>
+                <Text style={styles.fieldValue}>
+                  {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss")}
+                </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event Address:</Text>

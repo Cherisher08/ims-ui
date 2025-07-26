@@ -217,6 +217,7 @@ const NewOrder = () => {
     },
   ] = useUpdateRentalOrderMutation();
 
+  const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
   const [orderInfo, setOrderInfo] =
     useState<RentalOrderInfo>(initialRentalProduct);
 
@@ -252,7 +253,11 @@ const NewOrder = () => {
   ]);
 
   useEffect(() => {
-    console.log("Order Info Updated:", orderInfo);
+    if (!orderInfo.customer._id || orderInfo.product_details.length == 0) {
+      setCreateOrderDisabled(true);
+    } else {
+      setCreateOrderDisabled(false);
+    }
   }, [orderInfo]);
 
   const handleValueChange = (key: string, value: any) => {
@@ -274,10 +279,6 @@ const NewOrder = () => {
   }, [orderInfo.product_details, orderInfo.type]);
 
   const calculateFinalAmount = useCallback(() => {
-    const totalDeposit = depositData.reduce(
-      (total, deposit) => total + deposit.amount,
-      0
-    );
     const finalAmount = calculateTotalAmount();
     const roundOff = orderInfo.round_off || 0;
     const discountAmount = calculateDiscountAmount(
@@ -286,13 +287,7 @@ const NewOrder = () => {
     );
     const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount);
     return parseFloat(
-      (
-        finalAmount -
-        totalDeposit -
-        discountAmount +
-        gstAmount +
-        roundOff
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff).toFixed(2)
     );
   }, [
     calculateTotalAmount,
@@ -302,32 +297,80 @@ const NewOrder = () => {
     orderInfo.round_off,
   ]);
 
+  const calculateProductRentPerUnit = (
+    products: ProductDetails[],
+    gstPercent: number
+  ): ProductDetails[] => {
+    return products.map((product) => {
+      const original = product.rent_per_unit;
+
+      const exclusiveAmount = original / (1 + gstPercent / 100);
+      return {
+        ...product,
+        rent_per_unit: Math.round(exclusiveAmount * 100) / 100,
+      };
+    });
+  };
+
   const addProductToOrder = (product: ProductDetails) => {
     if (orderInfo.type === ProductType.RENTAL) {
       const products = orderInfo.product_details || [];
 
       const alreadyAdded = products.some((p) => p._id === product._id);
+      if (alreadyAdded) return;
 
-      if (!alreadyAdded) {
-        const newProducts = [...products, product];
-        setOrderInfo({
-          ...orderInfo,
-          product_details: newProducts,
-        });
+      let adjustedProduct = product;
+
+      if (orderInfo.billing_mode === BillingMode.RETAIL) {
+        const [adjusted] = calculateProductRentPerUnit(
+          [product],
+          orderInfo.gst || 0
+        );
+        adjustedProduct = adjusted;
+      } else {
+        adjustedProduct = {
+          ...product,
+          rent_per_unit: product.rent_per_unit,
+        };
       }
+
+      const newProducts = [...products, adjustedProduct];
+
+      setOrderInfo({
+        ...orderInfo,
+        product_details: newProducts,
+      });
     }
   };
 
   const updateProductToOrder = () => {
     if (orderInfo.type === ProductType.RENTAL) {
       const products = orderInfo.product_details || [];
+
+      let adjustedProduct = updateProduct;
+
+      if (orderInfo.billing_mode === BillingMode.RETAIL) {
+        const [adjusted] = calculateProductRentPerUnit(
+          [updateProduct],
+          orderInfo.gst || 0
+        );
+        adjustedProduct = adjusted;
+      } else {
+        adjustedProduct = {
+          ...updateProduct,
+          rent_per_unit: updateProduct.rent_per_unit,
+        };
+      }
+
       const newProducts = products.map((prod) =>
-        prod._id === updateProduct._id ? updateProduct : prod
+        prod._id === updateProduct._id ? adjustedProduct : prod
       );
+
       setOrderInfo({
         ...orderInfo,
         product_details: newProducts,
       });
+
       setUpdateProduct({
         _id: "",
         name: "",
@@ -558,6 +601,30 @@ const NewOrder = () => {
     rentalOrders,
   ]);
 
+  useEffect(() => {
+    if (orderInfo && orderInfo.product_details.length > 0) {
+      setOrderInfo((prev) => {
+        let updatedProducts;
+        if (prev.billing_mode === BillingMode.RETAIL) {
+          const gstPercent = prev.gst;
+          updatedProducts = calculateProductRentPerUnit(
+            prev.product_details,
+            gstPercent
+          );
+        } else {
+          updatedProducts = prev.product_details.map((product) => ({
+            ...product,
+            rent_per_unit: product.rent_per_unit,
+          }));
+        }
+        return {
+          ...prev,
+          product_details: updatedProducts,
+        };
+      });
+    }
+  }, [orderInfo.gst, orderInfo.billing_mode]);
+
   return (
     <div className="w-full flex flex-col h-full">
       {/* === Top Tabs and Add Button === */}
@@ -767,187 +834,186 @@ const NewOrder = () => {
         </div>
 
         {/* === Order Summary === */}
-        {orderInfo.type === ProductType.RENTAL &&
-          orderInfo.product_details &&
-          orderInfo.product_details.length > 0 && (
-            <div className="w-full flex flex-col px-3">
-              <p className="text-xl font-semibold">Order Summary</p>
-              <CustomTable
-                rowData={orderInfo.product_details ?? []}
-                colDefs={colDefs}
-                pagination={false}
-                isLoading={false}
-                rowHeight={60}
-              />
-              <div className="flex justify-end w-full">
-                <div className="flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex flex-col gap-1 text-gray-500">
-                      <p>Deposit</p>
-                      <p>Total Amount</p>
-                      {orderInfo.billing_mode === BillingMode.RETAIL && (
-                        <p>GST</p>
+        {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
+          <div className="w-full flex flex-col px-3">
+            <p className="text-xl font-semibold">Order Summary</p>
+            <CustomTable
+              rowData={orderInfo.product_details ?? []}
+              colDefs={colDefs}
+              pagination={false}
+              isLoading={false}
+              rowHeight={60}
+            />
+            <div className="flex justify-end w-full">
+              <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1 text-gray-500">
+                    <p>Deposit</p>
+                    <p>Amount before Taxes</p>
+                    <p>GST</p>
+                    <p>Discount</p>
+                    <p>Discount Amount</p>
+                    <p>Round Off</p>
+                  </div>
+                  <div className="flex flex-col gap-1 text-gray-500 text-end">
+                    <p>
+                      ₹{" "}
+                      {depositData.reduce(
+                        (total, deposit) => total + deposit.amount,
+                        0
                       )}
-                      <p>Discount</p>
-                      <p>Discount Amount</p>
-                      <p>Round Off</p>
-                    </div>
-                    <div className="flex flex-col gap-1 text-gray-500 text-end">
-                      <p>
-                        ₹{" "}
-                        {depositData.reduce(
-                          (total, deposit) => total + deposit.amount,
-                          0
-                        )}
-                      </p>
-                      <p>₹ {calculateTotalAmount()}</p>
-                      {orderInfo.billing_mode === BillingMode.RETAIL && (
-                        <div className="flex justify-end gap-1">
-                          <input
-                            className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                            type="number"
-                            value={orderInfo.gst}
-                            onChange={(e) => {
-                              if (
-                                orderInfo.type === ProductType.RENTAL &&
-                                orderInfo.product_details
-                              ) {
-                                const percent = parseFloat(
-                                  parseFloat(e.target.value).toFixed(0)
-                                );
-                                setOrderInfo((prev) => ({
-                                  ...prev,
-                                  gst: percent,
-                                }));
-                              }
-                            }}
-                          />
-                          <span className="w-2">%</span>
-                        </div>
-                      )}
-                      <div className="flex justify-end gap-1">
-                        <input
-                          className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                          type="number"
-                          value={orderInfo.discount}
-                          onChange={(e) => {
-                            if (
-                              orderInfo.type === ProductType.RENTAL &&
-                              orderInfo.product_details
-                            ) {
-                              const percent = parseFloat(
-                                parseFloat(e.target.value).toFixed(2)
-                              );
-                              const total_amount = calculateTotalAmount();
-                              const discount_amount = parseFloat(
-                                (total_amount * percent * 0.01).toFixed(2)
-                              );
-                              setOrderInfo((prev) => ({
-                                ...prev,
-                                discount: percent,
-                                discount_amount: discount_amount,
-                              }));
-                            }
-                          }}
-                        />
-                        <span className="w-2">%</span>
-                      </div>
-                      <p>
-                        <input
-                          className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                          type="number"
-                          value={orderInfo.discount_amount}
-                          onChange={(e) => {
-                            if (
-                              orderInfo.type === ProductType.RENTAL &&
-                              orderInfo.product_details
-                            ) {
-                              const amount = parseFloat(
-                                parseFloat(e.target.value).toFixed(2)
-                              );
-                              const total_amount = calculateTotalAmount();
-                              const percent = parseFloat(
-                                ((amount / total_amount) * 100).toFixed(2)
-                              );
-                              setOrderInfo((prev) => ({
-                                ...prev,
-                                discount: percent,
-                                discount_amount: amount,
-                              }));
-                            }
-                          }}
-                        />{" "}
-                        ₹
-                      </p>
-                      <div>
-                        <input
-                          className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                          type="number"
-                          value={orderInfo.round_off}
-                          onChange={(e) =>
+                    </p>
+                    <p>₹ {calculateTotalAmount()}</p>
+                    <div className="flex justify-end gap-1">
+                      <input
+                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                        type="number"
+                        value={orderInfo.gst}
+                        onChange={(e) => {
+                          if (
+                            orderInfo.type === ProductType.RENTAL &&
+                            orderInfo.product_details
+                          ) {
+                            const percent = parseFloat(
+                              parseFloat(e.target.value).toFixed(0)
+                            );
                             setOrderInfo((prev) => ({
                               ...prev,
-                              round_off: parseFloat(
-                                parseFloat(e.target.value).toFixed(2)
-                              ),
-                            }))
+                              gst: percent,
+                            }));
                           }
-                        />{" "}
-                        ₹
-                      </div>
+                        }}
+                      />
+                      <span className="w-2">%</span>
                     </div>
-                  </div>
-                  {orderInfo.billing_mode === BillingMode.BUSINESS && (
-                    <span className="text-[10px] w-full text-right text-gray-500">
-                      GST and all other taxes included.
-                    </span>
-                  )}
-                  <div className="grid grid-cols-2 border-t border-t-gray-200">
-                    <div className="flex flex-col gap-1 font-semibold pb-2">
-                      <p>{calculateFinalAmount() > 0 ? "Balance" : "Refund"}</p>
-                      <p>Mode</p>
+                    <div className="flex justify-end gap-1">
+                      <input
+                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                        type="number"
+                        value={orderInfo.discount}
+                        onChange={(e) => {
+                          if (
+                            orderInfo.type === ProductType.RENTAL &&
+                            orderInfo.product_details
+                          ) {
+                            const percent = parseFloat(
+                              parseFloat(e.target.value).toFixed(2)
+                            );
+                            const total_amount = calculateTotalAmount();
+                            const discount_amount = parseFloat(
+                              (total_amount * percent * 0.01).toFixed(2)
+                            );
+                            setOrderInfo((prev) => ({
+                              ...prev,
+                              discount: percent,
+                              discount_amount: discount_amount,
+                            }));
+                          }
+                        }}
+                      />
+                      <span className="w-2">%</span>
                     </div>
-                    <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
-                      <p className="font-semibold text-black">
-                        ₹ {Math.abs(calculateFinalAmount())}
-                      </p>
-                      <select
-                        className="w-fit outline-none"
+                    <p>
+                      <input
+                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                        type="number"
+                        value={orderInfo.discount_amount}
+                        onChange={(e) => {
+                          if (
+                            orderInfo.type === ProductType.RENTAL &&
+                            orderInfo.product_details
+                          ) {
+                            const amount = parseFloat(
+                              parseFloat(e.target.value).toFixed(2)
+                            );
+                            const total_amount = calculateTotalAmount();
+                            const percent = parseFloat(
+                              ((amount / total_amount) * 100).toFixed(2)
+                            );
+                            setOrderInfo((prev) => ({
+                              ...prev,
+                              discount: percent,
+                              discount_amount: amount,
+                            }));
+                          }
+                        }}
+                      />{" "}
+                      ₹
+                    </p>
+                    <div>
+                      <input
+                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                        type="number"
+                        value={orderInfo.round_off}
                         onChange={(e) =>
-                          handleValueChange("payment_mode", e.target.value)
+                          setOrderInfo((prev) => ({
+                            ...prev,
+                            round_off: parseFloat(
+                              parseFloat(e.target.value).toFixed(2)
+                            ),
+                          }))
                         }
-                        value={orderInfo.payment_mode}
-                      >
-                        {Object.entries(PaymentMode).map(([id, key]) => (
-                          <option key={id} value={key.toLowerCase()}>
-                            {key.toUpperCase()}
-                          </option>
-                        ))}
-                      </select>
+                      />{" "}
+                      ₹
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-4 my-3 justify-end">
-                <CustomButton
-                  label="Cancel"
-                  onClick={() => {
-                    if (rentalId) {
-                      navigate("/orders");
-                    } else {
-                      setDepositData([]);
-                      setOrderInfo(initialRentalProduct);
-                    }
-                  }}
-                  variant="outlined"
-                />
-                <CustomButton
-                  label={rentalId ? "Update Order" : "Create Order"}
-                  onClick={createNewOrder}
-                />
+                <div className="grid grid-cols-2 border-t border-t-gray-200">
+                  <div className="flex flex-col gap-1 font-semibold pb-2">
+                    <p>Amount after Taxes</p>
+                    <p>{calculateFinalAmount() > 0 ? "Balance" : "Refund"}</p>
+                    <p>Mode</p>
+                  </div>
+                  <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
+                    <p>₹ {Math.abs(calculateFinalAmount())}</p>
+                    <p className="font-semibold text-black">
+                      ₹{" "}
+                      {Math.abs(
+                        calculateFinalAmount() -
+                          depositData.reduce(
+                            (total, deposit) => total + deposit.amount,
+                            0
+                          )
+                      )}
+                    </p>
+                    <select
+                      className="w-fit outline-none"
+                      onChange={(e) =>
+                        handleValueChange("payment_mode", e.target.value)
+                      }
+                      value={orderInfo.payment_mode}
+                    >
+                      {Object.entries(PaymentMode).map(([id, key]) => (
+                        <option key={id} value={key.toLowerCase()}>
+                          {key.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
+            <div className="flex gap-4 my-3 justify-end">
+              <CustomButton
+                label="Cancel"
+                onClick={() => {
+                  if (rentalId) {
+                    navigate("/orders");
+                  } else {
+                    setDepositData([]);
+                    setOrderInfo(initialRentalProduct);
+                  }
+                }}
+                variant="outlined"
+              />
+              <CustomButton
+                label={rentalId ? "Update Order" : "Create Order"}
+                disabled={createOrderDisabled}
+                onClick={createNewOrder}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <AddProductModal

@@ -5,6 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useEffect } from "react";
 import { updateUser } from "../../store/UserSlice";
 import { useDispatch } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -45,7 +46,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     typeof error.status === "number" &&
     [401, 403].includes(error.status)
   ) {
-    // return <Navigate to="/auth/login" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   return children;

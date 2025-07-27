@@ -9,7 +9,7 @@ import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
 import {
   BillingMode,
-  ProductDetails,
+  // ProductDetails,
   RentalOrderType,
   RentalType,
 } from "../../../types/order";
@@ -100,18 +100,18 @@ const RentalOrderTable = ({
     );
   };
 
-  const calculateRentAfterGST = (
-    rent: number,
-    gst: number,
-    orderInfo: RentalOrderType
-  ) => {
-    if (orderInfo.billing_mode === BillingMode.RETAIL) {
-      const exclusiveAmount = rent / (1 + gst / 100);
-      return Math.round(exclusiveAmount * 100) / 100;
-    } else {
-      return rent;
-    }
-  };
+  // const calculateRentAfterGST = (
+  //   rent: number,
+  //   gst: number,
+  //   orderInfo: RentalOrderType
+  // ) => {
+  //   if (orderInfo.billing_mode === BillingMode.RETAIL) {
+  //     const exclusiveAmount = rent / (1 + gst / 100);
+  //     return Math.round(exclusiveAmount * 100) / 100;
+  //   } else {
+  //     return rent;
+  //   }
+  // };
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
     {
@@ -266,7 +266,6 @@ const RentalOrderTable = ({
       filter: "agNumberColumnFilter",
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
-        console.log("data: ", data);
         return <p>₹ {calculateFinalAmount(data)}</p>;
       },
     },

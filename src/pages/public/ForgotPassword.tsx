@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import NamedLogo from "../../assets/named-logo.png";
+import NamedLogo from "/named-logo.png";
 import Logo from "../../assets/logo.svg";
 import { Button } from "@mui/material";
 import { useEffect, useState } from "react";

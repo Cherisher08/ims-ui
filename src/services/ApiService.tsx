@@ -44,7 +44,8 @@ const baseQueryWith401Handler: BaseQueryFn<
 
   if (result?.error?.status === 401) {
     // redirect to login page
-    // window.location.href = "auth/login";
+    // console.log(window.location);
+    // window.location.href = "http://localhost:4173/auth/login";
   }
 
   return result;

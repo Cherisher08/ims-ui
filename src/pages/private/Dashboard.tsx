@@ -504,7 +504,7 @@ const Dashboard = () => {
         </div>
       </div>
       <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(4rem,_1fr))] items-center justify-center gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(5rem,1fr))] items-center justify-center gap-4">
           <CustomCard
             title="Balance Amount"
             className="grow"

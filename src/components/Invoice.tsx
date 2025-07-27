@@ -672,7 +672,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <Text>GST</Text>
                       <Text>Round Off</Text>
                       <Text style={styles.boldText}>Net Total</Text>
-                      <Text style={styles.boldText}>Advance</Text>
+                      <Text style={styles.boldText}>Caution Deposit</Text>
                     </View>
 
                     {/* Right Column Values */}
@@ -685,7 +685,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <Text style={styles.boldText}>
                         Rs. {Math.abs(calcTotal()).toFixed(2)}
                       </Text>
-                      <Text style={styles.boldText}>
+                      <Text style={[styles.boldText, { color: "red" }]}>
                         Rs. {depositTotal().toFixed(2)}
                       </Text>
                     </View>
@@ -697,6 +697,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   {/* Final total and mode */}
                   <View style={styles.balanceRow}>
                     <View style={{ flexDirection: "column", gap: 4 }}>
+                      {/* <Text>Outstanding Amount</Text> */}
                       <Text>
                         {calcTotal() -
                           data.deposits.reduce(
@@ -704,8 +705,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                             0
                           ) <
                         0
-                          ? "Refund"
-                          : "Outstanding Amount"}
+                          ? "Outstanding (Refund)"
+                          : "Outstanding (Balance)"}
                       </Text>
                       <Text>Mode</Text>
                     </View>
@@ -729,6 +730,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                             )
                         ).toFixed(2)}
                       </Text>
+                      {/* <Text> </Text> */}
                       <Text style={styles.selectSim}>
                         {data.payment_mode.toUpperCase()}
                       </Text>

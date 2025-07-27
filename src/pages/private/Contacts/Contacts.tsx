@@ -17,6 +17,8 @@ import {
 import UpdateContactModal from "./modals/UpdateContactModal";
 import DeleteContactModal from "./modals/DeleteContactModal";
 import { useGetContactsQuery } from "../../../services/ContactService";
+import { IoEyeOutline } from "react-icons/io5";
+import ViewImageModal from "./modals/ViewImageModal";
 
 const renderIcon = (params: { data: ContactInfoType }) => {
   const hasProof = !!params.data?.address_proof;
@@ -40,11 +42,11 @@ const Contacts = () => {
   const [deleteContactOpen, setDeleteContactOpen] = useState<boolean>(false);
   const [contactData, setContactData] = useState<ContactInfoType[]>([]);
 
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [deleteContactId, setDeleteContactId] = useState<string>("");
   const [filteredData, setFilteredData] = useState<ContactInfoType[]>([]);
   const [updateContactData, setUpdateContactData] =
     useState<ContactInfoType>(initialContactType);
-  console.log("updateContactData: ", updateContactData);
 
   const colDefs: ColDef<ContactInfoWithActions>[] = [
     {
@@ -94,6 +96,24 @@ const Contacts = () => {
       minWidth: 100,
       cellRenderer: renderIcon,
       headerClass: "ag-header-wrap",
+    },
+    {
+      headerName: "Image Proof",
+      flex: 1,
+      minWidth: 120,
+      headerClass: "ag-header-wrap",
+      cellRenderer: (params: ICellRendererParams) => {
+        const rowData = params.data;
+
+        return (
+          <IoEyeOutline
+            size={25}
+            onClick={() => {
+              setImageUrl(rowData.image_url);
+            }}
+          />
+        );
+      },
     },
     {
       field: "actions",
@@ -196,6 +216,11 @@ const Contacts = () => {
         setDeleteContactOpen={(value) => setDeleteContactOpen(value)}
         deleteContactId={deleteContactId}
         setDeleteContactId={(value) => setDeleteContactId(value)}
+      />
+
+      <ViewImageModal
+        imageUrl={imageUrl}
+        setImageUrl={(val) => setImageUrl(val)}
       />
     </div>
   );

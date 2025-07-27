@@ -5,14 +5,19 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { ProductDetails } from "../../../types/order";
+import { ProductDetails, RentalType } from "../../../types/order";
 import { FaPlus } from "react-icons/fa";
 import CustomButton from "../../../styled/CustomButton";
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
-const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
-  const productDetails = props.data.product_details || [];
-  const deposits = props.data.deposits || [];
+const CustomDetailRenderer = (
+  props: IDetailCellRendererParams<RentalType, any>
+) => {
+  const orderData = { ...props.data };
+  const productDetails = orderData.product_details?.map((product) => ({
+    ...product,
+  }));
+  const deposits = orderData.deposits?.map((deposit) => ({ ...deposit }));
   // const [patchRentalOrder] = usePatchRentalOrderMutation();
 
   const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
@@ -59,7 +64,7 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
   return (
     <div className="px-10 py-4 bg-gray-200 h-full overflow-auto">
       <div className="flex justify-between items-center mb-2">
-        <p className="font-semibold text-lg">Products:</p>
+        <p className="font-semibold text-lg text-black">Products:</p>
         <CustomButton icon={<FaPlus />} onClick={() => {}} label="Product" />
       </div>
       <div
@@ -148,7 +153,7 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
       </div>
 
       <div className="flex justify-between items-center mb-2">
-        <p className="font-semibold text-lg">Deposits:</p>
+        <p className="font-semibold text-lg text-black">Deposits:</p>
         <CustomButton icon={<FaPlus />} onClick={() => {}} label="Deposit" />
       </div>
       <div className="ag-theme-alpine" style={{ height: 150 }}>

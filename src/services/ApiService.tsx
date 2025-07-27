@@ -64,6 +64,7 @@ export const rootApi = createApi({
     "Rental",
     "Sales",
     "Service",
+    "Expired",
   ],
   endpoints: (build) => ({
     getUser: build.query<User, void>({

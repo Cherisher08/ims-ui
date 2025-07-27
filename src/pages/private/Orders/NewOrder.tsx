@@ -12,7 +12,6 @@ import {
   BillingMode,
   BillingUnit,
   DepositType,
-  OrderInfo,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -47,6 +46,7 @@ import {
 } from "../../../services/utility_functions";
 import { useDispatch } from "react-redux";
 import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
+import { getNewOrderId } from "../Summary/utils";
 
 const formatContacts = (
   contacts: ContactInfoType[]
@@ -68,27 +68,6 @@ const getCurrentFY = () => {
   const startYear = month < 4 ? year - 1 : year;
   const endYear = startYear + 1;
   return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
-};
-
-const getNewOrderId = (orders: OrderInfo[]) => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1; // JS months 0-11
-  const startYear = month < 4 ? year - 1 : year;
-  const endYear = startYear + 1;
-  const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
-
-  const suffixes = orders
-    .map((order) => {
-      const match = order.order_id?.match(/INV\/\d{2}-\d{2}\/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    })
-    .filter((num) => num > 0);
-
-  const maxSuffix = suffixes.length > 0 ? Math.max(...suffixes) : 0;
-  const nextSuffix = (maxSuffix + 1).toString().padStart(4, "0");
-
-  return `INV/${fy}/${nextSuffix}`;
 };
 
 const colDefs: ColDef<ProductDetails>[] = [
@@ -199,7 +178,6 @@ const initialRentalProduct: RentalOrderInfo = {
   round_off: 0,
   customer: initialContactType,
   event_address: "",
-  event_pincode: "",
   product_details: [],
   deposits: [],
 };

@@ -109,7 +109,8 @@ const Contacts = () => {
           <IoEyeOutline
             size={25}
             onClick={() => {
-              setImageUrl(rowData.image_url);
+              setImageUrl(rowData.address_proof);
+              console.log("rowData.image_url: ", rowData.address_proof);
             }}
           />
         );

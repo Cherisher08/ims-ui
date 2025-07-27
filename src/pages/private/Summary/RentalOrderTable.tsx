@@ -3,6 +3,8 @@ import type {
   CellEditingStoppedEvent,
   ColDef,
   ICellRendererParams,
+  RowHeightParams,
+  ValueFormatterParams,
   ValueGetterParams,
 } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
@@ -55,7 +57,6 @@ const RentalOrderTable = ({
   );
 
   const orderData = rentalOrders.map((order) => ({ ...order }));
-  console.log("orderData: ", orderData);
 
   // const patchOrder = async (patchPayload: PatchPayload) => {
   //   // Call your API here (RTK Query, axios, fetch, etc.)
@@ -122,6 +123,7 @@ const RentalOrderTable = ({
       minWidth: 100,
       filter: "agTextColumnFilter",
       cellRenderer: "agGroupCellRenderer",
+      sort: "desc",
     },
     {
       field: "out_date",
@@ -175,14 +177,16 @@ const RentalOrderTable = ({
       cellDataType: "dateTime",
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
-        const date = new Date(params.value);
-        return date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        const date = params.value ? new Date(params.value) : "";
+        if (date)
+          return date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        return "";
       },
     },
     {
@@ -364,6 +368,60 @@ const RentalOrderTable = ({
       },
     },
     {
+      field: "status",
+      headerName: "Payment Status",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      valueFormatter: (params: ValueFormatterParams) => {
+        const status = params.data.status;
+        if (status === "paid") return "paid";
+        if (status === "pending") {
+          const data = params.data;
+          const depositData: DepositType[] = params.data.deposits ?? 0;
+
+          const total =
+            calculateFinalAmount(data) -
+            depositData.reduce((total, deposit) => total + deposit.amount, 0);
+
+          return total > 0 ? "pending (customer)" : "pending (us)";
+        }
+        return status;
+      },
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: ["paid", "pending", "product fault"],
+      },
+      cellStyle: (params) => {
+        const data = params.data;
+        if (data) {
+          const depositData: DepositType[] = data.deposits ?? 0;
+
+          const total =
+            calculateFinalAmount(data) -
+            depositData.reduce((total, deposit) => total + deposit.amount, 0);
+
+          const status = data.status;
+
+          if (status === "paid") {
+            return { backgroundColor: "#bbf7d0", color: "#166534" }; // green
+          }
+
+          if (status === "pending") {
+            if (total > 0) {
+              return { backgroundColor: "#fca5a5", color: "#7f1d1d" }; // red for us
+            } else {
+              return { backgroundColor: "#fde68a", color: "#78350f" }; // yellow for customer
+            }
+          }
+        }
+
+        return { backgroundColor: "#bfdbfe", color: "#1e3a8a" }; // default blue or fallback
+      },
+    },
+    {
       field: "remarks",
       headerName: "Remarks",
       flex: 1,
@@ -375,6 +433,19 @@ const RentalOrderTable = ({
       cellEditor: AddressCellEditor,
       valueFormatter: (params) => {
         return params.value?.replace(/\n/g, " ") ?? "";
+      },
+    },
+    {
+      field: "payment_mode",
+      headerName: "Payment Mode",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: ["cash", "account", "upi"],
       },
     },
     {
@@ -435,6 +506,11 @@ const RentalOrderTable = ({
         value = { ...customer };
       }
 
+      if (field === "status") {
+        if (typeof newValue === "string" && newValue.includes("pending"))
+          value = "pending";
+      }
+
       const patchPayload: PatchOperation[] = [
         {
           op: "replace",
@@ -449,6 +525,13 @@ const RentalOrderTable = ({
       console.error("Failed to patch rental order:", err);
       // Optional: revert or notify
     }
+  };
+
+  const handleRowHeight = (params: RowHeightParams) => {
+    if (params.node.detail) {
+      return 300;
+    }
+    return 45;
   };
 
   useEffect(() => {
@@ -480,6 +563,7 @@ const RentalOrderTable = ({
         }}
         masterDetail={true}
         handleCellEditingStopped={handleCellEditingStopped}
+        getRowHeight={handleRowHeight}
       />
       <DeleteOrderModal
         deleteOrderOpen={deleteOrderOpen}

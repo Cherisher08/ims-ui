@@ -544,7 +544,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 <Text style={styles.fieldTitle}>Event Address:</Text>
                 <Text style={styles.fieldValue}>{data.event_address}</Text>
               </View>
-              <Text style={styles.fieldValue}>
+              {/* <Text style={styles.fieldValue}>
                 <Text
                   style={{
                     fontWeight: "bold",
@@ -555,7 +555,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   Pincode -{" "}
                 </Text>
                 {data.event_pincode}
-              </Text>
+              </Text> */}
             </View>
 
             <View style={styles.tableField}>

@@ -8,9 +8,13 @@ import type {
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
-import { RentalOrderInfo, RentalType } from "../../../types/order";
+import {
+  RentalOrderInfo,
+  RentalType,
+} from "../../../types/order";
 import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
 import { useCallback, useMemo, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
@@ -52,6 +56,7 @@ const RentalOrderTable = ({
       headerClass: "ag-header-wrap",
       minWidth: 100,
       filter: "agTextColumnFilter",
+      cellRenderer: "agGroupCellRenderer",
     },
     {
       field: "out_date",
@@ -126,11 +131,14 @@ const RentalOrderTable = ({
       filter: "agTextColumnFilter",
       editable: true,
       cellDataType: "object",
+      valueFormatter: (params) => {
+        const customer = params.value;
+        return customer.name || " ";
+      },
     },
     {
       field: "actions",
       headerName: "Actions",
-      flex: 1,
       pinned: "right",
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {
@@ -192,6 +200,22 @@ const RentalOrderTable = ({
     return params.data.rowId;
   }, []);
 
+  // const detailCellRendererParams: IDetailCellRendererParams<
+  //   RentalOrderInfo,
+  //   ProductDetails
+  // > = {
+  //   detailGridOptions: {
+  //     columnDefs: [
+  //       { field: "name", headerName: "Name" },
+  //       { field: "price", headerName: "Price" },
+  //     ] as ColDef<ProductDetails>[],
+  //   },
+  //   getDetailRowData: (params) => {
+  //     console.log("DETAIL ROW DATA:", params.data);
+  //     params.successCallback(params.data.product_details || []);
+  //   },
+  // };
+
   return (
     <>
       <CustomTable
@@ -208,6 +232,7 @@ const RentalOrderTable = ({
           }
           return undefined;
         }}
+        masterDetail={true}
         handleCellEditingStopped={handleCellEditingStopped}
         onGetRowId={handleGetRowId}
       />

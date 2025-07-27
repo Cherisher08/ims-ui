@@ -7,16 +7,20 @@ import type {
   RowClassParams,
   RowHeightParams,
   RowStyle,
+  RowModelType,
   SizeColumnsToContentStrategy,
   SizeColumnsToFitGridStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
+  IDetailCellRendererParams,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
+// import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 import {
-  ClientSideRowModelModule,
   ModuleRegistry,
-  RowApiModule,
   AllCommunityModule,
+  ClientSideRowModelModule,
+  RowApiModule,
 } from "ag-grid-community";
 import {
   ColumnMenuModule,
@@ -24,13 +28,16 @@ import {
   ContextMenuModule,
   MasterDetailModule,
 } from "ag-grid-enterprise";
+import { useMemo } from "react";
+import CustomDetailRenderer from "../pages/private/Summary/CustomDetailRenderer";
+
 ModuleRegistry.registerModules([
-  RowApiModule,
   ClientSideRowModelModule,
-  ColumnsToolPanelModule,
-  MasterDetailModule,
+  RowApiModule,
   ColumnMenuModule,
   ContextMenuModule,
+  ColumnsToolPanelModule,
+  MasterDetailModule,
   AllCommunityModule,
 ]);
 
@@ -40,9 +47,12 @@ type CustomTableProps<T> = {
   isLoading: boolean;
   pagination?: boolean;
   rowHeight?: number;
+  masterDetail?: boolean;
+  rowModelType?: RowModelType;
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
-  getRowHeight?: (params: RowHeightParams) => number | null;
+  onGetRowId?: (params: GetRowIdParams) => string;
+  detailCellRendererParams?: IDetailCellRendererParams;
 };
 
 const CustomTable = <T,>({
@@ -50,6 +60,8 @@ const CustomTable = <T,>({
   colDefs,
   isLoading,
   rowHeight = 40,
+  masterDetail = false,
+  rowModelType = "clientSide",
   pagination = true,
   getRowStyle = () => {
     return {};
@@ -57,7 +69,6 @@ const CustomTable = <T,>({
   handleCellEditingStopped = () => {
     return;
   },
-  getRowHeight = (params) => null,
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy
@@ -78,17 +89,32 @@ const CustomTable = <T,>({
       <AgGridReact<T>
         rowData={rowData}
         columnDefs={colDefs}
+        suppressMenuHide={false}
+        masterDetail={masterDetail}
         pagination={pagination}
+        rowModelType={rowModelType}
         headerHeight={40}
         paginationPageSize={10}
         rowHeight={rowHeight}
+        detailRowHeight={400}
+        getRowHeight={(params) => {
+          if (params.node.detail) {
+            const productCount = params.data?.product_details?.length || 0;
+            const depositsCount = params.data?.deposits?.length || 0;
+            return (productCount + depositsCount) * 80 + 100;
+          }
+          return 50;
+        }}
         getRowStyle={(params) => getRowStyle(params)}
+        components={{
+          customDetailRenderer: CustomDetailRenderer,
+        }}
+        detailCellRenderer="customDetailRenderer"
         domLayout="autoHeight"
         localeText={{ noRowsToShow: "No data Found..." }}
         loading={isLoading}
         autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
-        getRowHeight={getRowHeight}
       />
     </div>
   );

@@ -19,7 +19,8 @@ import {
   VerifyOtpRequest,
 } from "../types/common";
 
-const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
+// const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
+const apiUrl = "https://ims-mpt-backend.onrender.com/";
 console.log("apiUrl: ", apiUrl);
 
 const baseQuery = fetchBaseQuery({

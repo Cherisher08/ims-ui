@@ -61,16 +61,34 @@ type ErrorType = {
   expectedDate: boolean;
 };
 
-const getNewOrderId = (orders: OrderInfo[]) => {
-  let orderId = "RO-0001";
-  const suffixes = orders.map((order) => {
-    const match = order.order_id.match(/RO-(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  });
+const getCurrentFY = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const startYear = month < 4 ? year - 1 : year;
+  const endYear = startYear + 1;
+  return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
+};
 
-  const maxSuffix = Math.max(...suffixes);
-  orderId = `RO-${String(maxSuffix + 1).padStart(4, "0")}`;
-  return orderId;
+const getNewOrderId = (orders: OrderInfo[]) => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // JS months 0-11
+  const startYear = month < 4 ? year - 1 : year;
+  const endYear = startYear + 1;
+  const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
+
+  const suffixes = orders
+    .map((order) => {
+      const match = order.order_id?.match(/INV\/\d{2}-\d{2}\/(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter((num) => num > 0);
+
+  const maxSuffix = suffixes.length > 0 ? Math.max(...suffixes) : 0;
+  const nextSuffix = (maxSuffix + 1).toString().padStart(4, "0");
+
+  return `INV/${fy}/${nextSuffix}`;
 };
 
 const colDefs: ColDef<ProductDetails>[] = [
@@ -397,11 +415,12 @@ const NewOrder = () => {
   };
 
   const createNewOrder = async () => {
-    orderInfo.deposits = depositData;
+    const newOrderInfo = { ...orderInfo, deposits: depositData };
+
     if (rentalId) {
-      updateRentalOrder(orderInfo);
+      updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {
-        orderInfo.product_details.forEach((updatedProductDetail) => {
+        newOrderInfo.product_details.forEach((updatedProductDetail) => {
           const previousProductDetail =
             existingRentalOrder.product_details.find(
               (prev) => prev._id === updatedProductDetail._id
@@ -432,12 +451,12 @@ const NewOrder = () => {
     } else {
       try {
         // 1️⃣ Create the rental order and wait for it to succeed
-        const orderResponse = await createRentalOrder(orderInfo).unwrap();
+        const orderResponse = await createRentalOrder(newOrderInfo).unwrap();
         console.log("✅ Order created successfully", orderResponse);
 
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
-          orderInfo.product_details.map((product_detail) => {
+          newOrderInfo.product_details.map((product_detail) => {
             const currentProduct = products.find(
               (product) => product._id === product_detail._id
             );
@@ -446,7 +465,7 @@ const NewOrder = () => {
               console.warn(
                 `⚠️ Product ${product_detail._id} not found, skipping`
               );
-              return Promise.resolve(); // skip if not found
+              return Promise.resolve();
             }
 
             return updateProductData({
@@ -462,11 +481,11 @@ const NewOrder = () => {
         results.forEach((result, idx) => {
           if (result.status === "fulfilled") {
             console.log(
-              `✅ Product ${orderInfo.product_details[idx]._id} updated successfully`
+              `✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`
             );
           } else {
             console.error(
-              `❌ Product ${orderInfo.product_details[idx]._id} update failed:`,
+              `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
               result.reason
             );
           }
@@ -480,6 +499,13 @@ const NewOrder = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (!rentalId) {
+      setOrderInfo(initialRentalProduct);
+      setDepositData([]);
+    }
+  }, [rentalId]);
 
   useEffect(() => {
     if (isRentalOrderCreateSuccess) {
@@ -564,7 +590,7 @@ const NewOrder = () => {
       const orderId = getNewOrderId(rentalOrders);
       handleValueChange("order_id", orderId);
     } else {
-      handleValueChange("order_id", "RO-0001");
+      handleValueChange("order_id", `INV/${getCurrentFY()}/0001`);
     }
   }, [
     existingRentalOrder,
@@ -785,19 +811,20 @@ const NewOrder = () => {
               multiline
               minRows={5}
             />
-            <CustomInput
+            {/* <CustomInput
               wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
               value={orderInfo?.event_pincode ?? ""}
               onChange={(value) => handleValueChange("event_pincode", value)}
               label="Event Pincode"
               placeholder="Enter Event Pincode"
-            />
+            /> */}
             <CustomInput
               value={orderInfo?.remarks ?? ""}
               onChange={(value) => handleValueChange("remarks", value)}
               label="Remarks"
               wrapperClass="w-[30rem] max-w-full"
+              className="h-full"
               placeholder="Enter remarks"
               multiline
               minRows={3}

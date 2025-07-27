@@ -1,5 +1,5 @@
 import { Modal } from "@mui/material";
-import React, { useEffect } from "react";
+import React from "react";
 import { DepositType, PaymentMode, ProductDetails } from "../../../types/order";
 import { MdClose } from "react-icons/md";
 import CustomButton from "../../../styled/CustomButton";
@@ -65,10 +65,6 @@ const DepositModal = ({
     );
     setDepositData(data);
   };
-
-  useEffect(() => {
-    console.log(depositData);
-  }, [depositData]);
 
   return (
     <Modal

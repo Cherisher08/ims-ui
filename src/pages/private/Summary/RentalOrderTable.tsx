@@ -15,6 +15,7 @@ import {
 } from "../../../types/order";
 import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
@@ -272,7 +273,6 @@ const RentalOrderTable = ({
     {
       field: "actions",
       headerName: "Actions",
-      flex: 1,
       pinned: "right",
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {
@@ -371,6 +371,7 @@ const RentalOrderTable = ({
           }
           return undefined;
         }}
+        masterDetail={true}
         handleCellEditingStopped={handleCellEditingStopped}
       />
       <DeleteOrderModal

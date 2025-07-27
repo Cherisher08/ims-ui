@@ -101,18 +101,18 @@ const RentalOrderTable = ({
     );
   };
 
-  const calculateRentAfterGST = (
-    rent: number,
-    gst: number,
-    orderInfo: RentalOrderType
-  ) => {
-    if (orderInfo.billing_mode === BillingMode.RETAIL) {
-      const exclusiveAmount = rent / (1 + gst / 100);
-      return Math.round(exclusiveAmount * 100) / 100;
-    } else {
-      return rent;
-    }
-  };
+  // const calculateRentAfterGST = (
+  //   rent: number,
+  //   gst: number,
+  //   orderInfo: RentalOrderType
+  // ) => {
+  //   if (orderInfo.billing_mode === BillingMode.RETAIL) {
+  //     const exclusiveAmount = rent / (1 + gst / 100);
+  //     return Math.round(exclusiveAmount * 100) / 100;
+  //   } else {
+  //     return rent;
+  //   }
+  // };
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
     {

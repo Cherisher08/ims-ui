@@ -47,3 +47,14 @@ export interface Product {
   discount_type: DiscountType;
   created_by?: string;
 }
+
+export interface PatchOperation {
+  op: "add" | "remove" | "replace";
+  path: string;
+  value?: any;
+}
+
+export interface PatchPayload {
+  id: string;
+  payload: PatchOperation[];
+}

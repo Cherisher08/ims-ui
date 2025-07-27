@@ -1,3 +1,4 @@
+import { PatchPayload } from "../types/common";
 import { RentalOrderInfo } from "../types/order";
 import { rootApi } from "./ApiService";
 import {
@@ -50,6 +51,16 @@ export const contactApi = rootApi.injectEndpoints({
       query: () => `orders/rentals/expired`,
       providesTags: ["Rental"],
     }),
+    patchRentalOrder: build.mutation<RentalOrderInfo, PatchPayload>({
+      query: ({ id, payload }) => {
+        return {
+          url: `orders/rentals/${id}`,
+          method: "PATCH",
+          body: payload,
+        };
+      },
+      invalidatesTags: ["Rental"],
+    }),
   }),
 });
 
@@ -60,4 +71,5 @@ export const {
   useUpdateRentalOrderMutation,
   useDeleteRentalOrderMutation,
   useLazyGetExpiredRentalOrdersQuery,
+  usePatchRentalOrderMutation,
 } = contactApi;

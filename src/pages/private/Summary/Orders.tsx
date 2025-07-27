@@ -6,31 +6,28 @@ import { MdOutlineMail } from "react-icons/md";
 import { Box, Tab, Tabs } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import RentalOrderTable from "./RentalOrderTable";
-import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
 // import SalesOrderTable from "./SalesOrderTable";
 // import ServiceOrderTable from "./ServiceOrderTable";
 import { useGetRentalOrdersQuery } from "../../../services/OrderService";
+import { RentalOrderInfo } from "../../../types/order";
 
-const transformRentalOrderData = (
-  rentalOrders: RentalOrderInfo[]
-): RentalOrderType[] => {
-  return rentalOrders.map((rentalOrder) => {
-    return {
-      _id: rentalOrder._id!,
-      order_id: rentalOrder.order_id,
-      in_date: rentalOrder.in_date,
-      expected_date: rentalOrder.expected_date,
-      out_date: rentalOrder.out_date,
-      deposits: rentalOrder.deposits,
-      contact_name: rentalOrder.customer.name,
-      products: rentalOrder.product_details.reduce((names, product, index) => {
-        if (index === 0) return product.name;
-        return `${names}, ${product.name}`;
-      }, ""),
-      payment_status: rentalOrder.status,
-    };
-  });
-};
+// const transformRentalOrderData = (
+//   rentalOrders: RentalOrderInfo[]
+// ): RentalOrderType[] => {
+//   return rentalOrders.map((rentalOrder) => {
+//     return {
+//       _id: rentalOrder._id!,
+//       order_id: rentalOrder.order_id,
+//       in_date: rentalOrder.in_date,
+//       expected_date: rentalOrder.expected_date,
+//       out_date: rentalOrder.out_date,
+//       deposits: rentalOrder.deposits,
+//       customer: rentalOrder.customer,
+//       products: rentalOrder.product_details,
+//       payment_status: rentalOrder.status,
+//     };
+//   });
+// };
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -39,11 +36,11 @@ const Orders = () => {
     useGetRentalOrdersQuery();
   const isCommunicationsFeatureDone: boolean = false;
 
-  const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
+  const [rentalOrders, setRentalOrders] = useState<RentalOrderInfo[]>([]);
 
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
-      setRentalOrders(transformRentalOrderData(rentalOrderData));
+      setRentalOrders(rentalOrderData);
     }
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 

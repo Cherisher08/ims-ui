@@ -1,5 +1,7 @@
 import type {
+  CellEditingStoppedEvent,
   ColDef,
+  GetRowIdParams,
   RowClassParams,
   RowStyle,
   SizeColumnsToContentStrategy,
@@ -21,6 +23,8 @@ type CustomTableProps<T> = {
   pagination?: boolean;
   rowHeight?: number;
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
+  handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
+  onGetRowId?: (params: GetRowIdParams) => string;
 };
 
 const CustomTable = <T,>({
@@ -31,6 +35,12 @@ const CustomTable = <T,>({
   pagination = true,
   getRowStyle = () => {
     return {};
+  },
+  handleCellEditingStopped = () => {
+    return;
+  },
+  onGetRowId = () => {
+    return "";
   },
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
@@ -61,6 +71,8 @@ const CustomTable = <T,>({
         localeText={{ noRowsToShow: "No data Found..." }}
         loading={isLoading}
         autoSizeStrategy={autoSizeStrategy}
+        onCellEditingStopped={handleCellEditingStopped}
+        // getRowId={onGetRowId}
       />
     </div>
   );

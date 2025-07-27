@@ -500,6 +500,13 @@ const NewOrder = () => {
   };
 
   useEffect(() => {
+    if (!rentalId) {
+      setOrderInfo(initialRentalProduct);
+      setDepositData([]);
+    }
+  }, [rentalId]);
+
+  useEffect(() => {
     if (isRentalOrderCreateSuccess) {
       toast.success("Rental Order Created Successfully", {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,

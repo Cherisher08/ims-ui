@@ -5,56 +5,129 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { ProductDetails, RentalType } from "../../../types/order";
+import { RentalType } from "../../../types/order";
 import { FaPlus } from "react-icons/fa";
 import CustomButton from "../../../styled/CustomButton";
+import { PatchOperation } from "../../../types/common";
+import { usePatchRentalOrderMutation } from "../../../services/OrderService";
+import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
+import { getDefaultDeposit, getDefaultProduct } from "./utils";
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
 const CustomDetailRenderer = (
   props: IDetailCellRendererParams<RentalType, any>
 ) => {
+  const [patchRentalOrder] = usePatchRentalOrderMutation();
   const orderData = { ...props.data };
-  const productDetails = orderData.product_details?.map((product) => ({
-    ...product,
-  }));
-  const deposits = orderData.deposits?.map((deposit) => ({ ...deposit }));
+  const productDetails =
+    orderData.product_details?.map((product) => ({
+      ...product,
+    })) || [];
+  const deposits = orderData.deposits?.map((deposit) => ({ ...deposit })) || [];
+  const productPairs =
+    orderData.product_details?.map((product) => {
+      return {
+        _id: product._id,
+        name: product.name,
+      };
+    }) || [];
   // const [patchRentalOrder] = usePatchRentalOrderMutation();
 
-  const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
-    const { data, colDef, oldValue, newValue } = event;
+  const handleProductCellEditing = async (event: CellEditingStoppedEvent) => {
+    const { rowIndex, colDef, oldValue, newValue } = event;
     const field = colDef.field;
-    console.log(field, data);
     if (!field || newValue === oldValue) return;
 
     try {
       let value = newValue;
+      const patchPayload: PatchOperation[] = [];
+      if (field === "name") {
+        value = newValue.name;
+        patchPayload.push({
+          op: "replace",
+          path: `/product_details/${rowIndex}/_id`,
+          value: newValue._id,
+        });
+      }
+      patchPayload.push({
+        op: "replace",
+        path: `/product_details/${rowIndex}/${field}`,
+        value,
+      });
 
-      console.log(value);
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched ${field} for order ${orderData._id}`);
+    } catch (err) {
+      console.error("Failed to patch rental order:", err);
+      // Optional: revert or notify
+    }
+  };
 
-      // Special case for customer field
-      // if (field === "customer") {
-      //   if (!isGetContactsSuccess) {
-      //     console.error("Customer query not retrieved yet");
-      //     return;
-      //   }
-      //   const customer = contactsQueryData.find((c) => c._id === newValue._id);
-      //   if (!customer) {
-      //     console.error("Customer not found for ID:", newValue);
-      //     return;
-      //   }
-      //   value = { ...customer };
-      // }
+  const handleDepositCellEditing = async (event: CellEditingStoppedEvent) => {
+    const { rowIndex, colDef, oldValue, newValue } = event;
+    const field = colDef.field;
+    if (!field || newValue === oldValue) return;
 
-      // const patchPayload: PatchOperation[] = [
-      //   {
-      //     op: "replace",
-      //     path: `/${field}`,
-      //     value,
-      //   },
-      // ];
+    try {
+      const value = newValue;
+      const patchPayload: PatchOperation[] = [
+        {
+          op: "replace",
+          path: `/deposits/${rowIndex}/${field}`,
+          value,
+        },
+      ];
 
-      // await patchRentalOrder({ id: data._id, payload: patchPayload }).unwrap();
-      console.log(`Successfully patched ${field} for order ${data._id}`);
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched ${field} for order ${orderData._id}`);
+    } catch (err) {
+      console.error("Failed to patch rental order:", err);
+      // Optional: revert or notify
+    }
+  };
+
+  const handleNewProduct = async () => {
+    const product = getDefaultProduct();
+    const patchPayload: PatchOperation[] = [
+      {
+        op: "add",
+        path: `/product_details`,
+        value: product,
+      },
+    ];
+    try {
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched for order ${orderData._id}`);
+    } catch (err) {
+      console.error("Failed to patch rental order:", err);
+      // Optional: revert or notify
+    }
+  };
+
+  const handleNewDeposit = async () => {
+    const deposit = getDefaultDeposit(productPairs);
+    const patchPayload: PatchOperation[] = [
+      {
+        op: "add",
+        path: `/deposits`,
+        value: deposit,
+      },
+    ];
+    try {
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched ${deposit} for order ${orderData._id}`);
     } catch (err) {
       console.error("Failed to patch rental order:", err);
       // Optional: revert or notify
@@ -65,7 +138,11 @@ const CustomDetailRenderer = (
     <div className="px-10 py-4 bg-gray-200 h-full overflow-auto">
       <div className="flex justify-between items-center mb-2">
         <p className="font-semibold text-lg text-black">Products:</p>
-        <CustomButton icon={<FaPlus />} onClick={() => {}} label="Product" />
+        <CustomButton
+          icon={<FaPlus />}
+          onClick={() => handleNewProduct()}
+          label="Product"
+        />
       </div>
       <div
         className="ag-theme-alpine"
@@ -75,7 +152,17 @@ const CustomDetailRenderer = (
           rowData={productDetails}
           suppressMenuHide={false}
           columnDefs={[
-            { field: "name", headerName: "Name", flex: 1 },
+            {
+              field: "name",
+              headerName: "Name",
+              flex: 1,
+              editable: true,
+              singleClickEdit: true,
+              cellEditor: AutocompleteCellEditor,
+              cellEditorParams: {
+                customerOptions: productPairs,
+              },
+            },
             {
               field: "billing_unit",
               headerName: "Billing Unit",
@@ -148,13 +235,17 @@ const CustomDetailRenderer = (
               },
             },
           ]}
-          onCellEditingStopped={handleCellEditingStopped}
+          onCellEditingStopped={handleProductCellEditing}
         />
       </div>
 
       <div className="flex justify-between items-center mb-2">
         <p className="font-semibold text-lg text-black">Deposits:</p>
-        <CustomButton icon={<FaPlus />} onClick={() => {}} label="Deposit" />
+        <CustomButton
+          icon={<FaPlus />}
+          onClick={() => handleNewDeposit()}
+          label="Deposit"
+        />
       </div>
       <div className="ag-theme-alpine" style={{ height: 150 }}>
         <AgGridReact
@@ -201,9 +292,9 @@ const CustomDetailRenderer = (
               flex: 1,
               editable: true,
               singleClickEdit: true,
-              cellEditor: SelectCellEditor,
+              cellEditor: AutocompleteCellEditor,
               cellEditorParams: {
-                options: productDetails.map((p: ProductDetails) => p.name),
+                customerOptions: productPairs,
               },
             },
             {
@@ -214,11 +305,11 @@ const CustomDetailRenderer = (
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                options: ["Retail", "Business"],
+                options: ["cash", "account", "upi"],
               },
             },
           ]}
-          onCellEditingStopped={handleCellEditingStopped}
+          onCellEditingStopped={handleDepositCellEditing}
         />
       </div>
     </div>

@@ -5,6 +5,7 @@ import {
 } from "ag-grid-community";
 import {
   BillingMode,
+  BillingUnit,
   OrderInfo,
   PaymentMode,
   PaymentStatus,
@@ -14,6 +15,7 @@ import { ContactInfoType } from "../../../types/contact";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { ProductType } from "../../../types/common";
+import { IdNamePair } from "../Inventory";
 
 dayjs.extend(utc);
 
@@ -103,5 +105,32 @@ export const getDefaultRentalOrder = (
     round_off: 0,
     status: PaymentStatus.PENDING,
     type: ProductType.RENTAL,
+  };
+};
+
+export const getDefaultDeposit = (products: IdNamePair[]) => {
+  return {
+    amount: 0,
+    date: utcString,
+    mode: PaymentMode.CASH,
+    product: products[0],
+  };
+};
+
+export const getDefaultProduct = () => {
+  return {
+    _id: "",
+    name: "",
+    category: "",
+    billing_unit: BillingUnit.DAYS,
+    product_unit: {
+      _id: "",
+      name: "",
+    },
+    in_date: utcString,
+    order_quantity: 0,
+    order_repair_count: 0,
+    out_date: utcString,
+    rent_per_unit: 0,
   };
 };

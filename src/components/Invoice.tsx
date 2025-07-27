@@ -373,9 +373,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.container}>
-          <Image src="/src/assets/named-logo.png" style={styles.image} />
+          <Image src="/named-logo.png" style={styles.image} />
           <View style={styles.ownerDetails}>
-            <Text style={styles.title}>Mani Power Tools</Text>
+            <Text style={styles.title}>MANI POWER TOOLS</Text>
             <Text style={styles.ownerAddress}>
               No. 1/290, Angalamman Koil Street, Padur,
             </Text>
@@ -721,7 +721,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       MANI POWER TOOLS
                     </Text>
                   </View>
-                  <Image src="/src/assets/sign.png" style={styles.signImage} />
+                  <Image src="/sign.png" style={styles.signImage} />
                   <Text style={styles.signatureFooter}>
                     Authorized Signatory
                   </Text>

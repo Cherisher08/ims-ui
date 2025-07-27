@@ -6,6 +6,8 @@ interface CustomDatePickerProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  error?: boolean;
+  helperText?: string;
   wrapperClass?: string;
   labelClass?: string;
 }
@@ -14,6 +16,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   label,
   value,
   onChange,
+  error = false,
+  helperText = "",
   placeholder = "",
   className = "",
   wrapperClass = "",
@@ -28,14 +32,18 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       >
         {label}
       </label>
-      <input
-        type="datetime-local"
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        
-        className={`rounded-sm border border-[#ced4da] focus:border-0 px-3 h-[2.5rem] text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2] ${className}`}
-        placeholder={placeholder}
-      />
+      <div className="flex flex-col">
+        <input
+          type="datetime-local"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          className={`rounded-sm border border-[#ced4da] focus:border-0 px-3 h-[2.5rem] text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2] ${className}`}
+          placeholder={placeholder}
+        />
+        {error && (
+          <span className="text-red-500 text-xs mt-1">{helperText}</span>
+        )}
+      </div>
     </div>
   );
 };

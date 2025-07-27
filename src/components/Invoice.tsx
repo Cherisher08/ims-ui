@@ -20,7 +20,6 @@ import {
 } from "../services/utility_functions";
 
 function numberToWordsIndian(num: number) {
-  console.log("num: ", num);
   if (typeof num !== "number" || isNaN(num)) return "Invalid number";
 
   const singleDigits = [
@@ -119,24 +118,34 @@ interface InvoiceRentalOrder {
 }
 
 const Invoice = ({ data }: InvoiceRentalOrder) => {
-  console.log("data: ", data);
+  const calculateRentAfterGST = (rent: number, gst: number) => {
+    if (data.billing_mode === BillingMode.RETAIL) {
+      console.log(gst);
+      const exclusiveAmount = rent / (1 + gst / 100);
+      return Math.round(exclusiveAmount * 100) / 100;
+    } else {
+      return rent;
+    }
+  };
+
+  const updatedProducts =
+    data.billing_mode === BillingMode.RETAIL && data.product_details
+      ? data.product_details.map((product: ProductDetails) => ({
+          ...product,
+          rent_per_unit: calculateRentAfterGST(product.rent_per_unit, data.gst),
+        }))
+      : data.product_details;
+
   const calcTotal = () => {
-    const totalDeposit = data.deposits.reduce(
-      (total: number, deposit: DepositType) => total + deposit.amount,
-      0
-    );
     const finalAmount = calcFinalAmount();
     const roundOff = data.round_off || 0;
     const discountAmount = data.discount_amount || 0;
-    const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount);
+    const gstAmount = calculateDiscountAmount(
+      data.gst || 0,
+      finalAmount - discountAmount
+    );
     return parseFloat(
-      (
-        finalAmount -
-        totalDeposit -
-        discountAmount +
-        gstAmount +
-        roundOff
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff).toFixed(2)
     );
   };
 
@@ -152,8 +161,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
   };
 
   const calcFinalAmount = () => {
-    if (data.type === ProductType.RENTAL && data.product_details) {
-      const total = data.product_details.reduce((sum, prod) => {
+    if (data.type === ProductType.RENTAL && updatedProducts.length > 0) {
+      const total = updatedProducts.reduce((sum, prod) => {
         return sum + calculateProductRent(prod);
       }, 0);
 
@@ -162,10 +171,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     return 0;
   };
 
-  const gstAmount =
-    data.billing_mode !== "Business"
-      ? (calcFinalAmount() * data.gst * 0.01).toFixed(2)
-      : 0;
+  const gstAmount = (
+    (calcFinalAmount() - data.discount_amount) *
+    data.gst *
+    0.01
+  ).toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -394,7 +404,16 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           </View>
           <View style={styles.totalAmount}>
             <Text style={{ color: "#4f4f4f" }}>
-              Total Amount ({calcTotal() < 0 ? "Cr" : "Db"})
+              Total Amount (
+              {Math.abs(calcTotal()) -
+                data.deposits.reduce(
+                  (total, deposit) => total + deposit.amount,
+                  0
+                ) <
+              0
+                ? "CR"
+                : "DR"}
+              )
             </Text>
             <Text
               style={{
@@ -403,7 +422,16 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 marginTop: "3px",
               }}
             >
-              Rs.{Math.abs(calcTotal()).toFixed(2)}
+              Rs.{" "}
+              {(
+                Math.abs(
+                  calcTotal() -
+                    data.deposits.reduce(
+                      (total, deposit) => total + deposit.amount,
+                      0
+                    )
+                ) || 0
+              ).toFixed(2)}
             </Text>
           </View>
         </View>
@@ -587,50 +615,48 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   FINAL AMOUNT
                 </Text>
               </View>
-              {data.product_details.map(
-                (product: ProductDetails, index: number) => (
-                  <View key={product._id} style={styles.tableRow}>
-                    <Text style={[styles.productColumn, { width: 30 }]}>
-                      {index + 1}
+              {updatedProducts.map((product: ProductDetails, index: number) => (
+                <View key={product._id} style={styles.tableRow}>
+                  <Text style={[styles.productColumn, { width: 30 }]}>
+                    {index + 1}
+                  </Text>
+                  <View>
+                    <Text
+                      style={[
+                        styles.productColumn,
+                        {
+                          width: 300,
+                          paddingBottom: 5,
+                          textAlign: "left",
+                        },
+                      ]}
+                    >
+                      {product.name}
                     </Text>
-                    <View>
-                      <Text
-                        style={[
-                          styles.productColumn,
-                          {
-                            width: 300,
-                            paddingBottom: 5,
-                            textAlign: "left",
-                          },
-                        ]}
-                      >
-                        {product.name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.productColumn,
-                          {
-                            width: 300,
-                            textAlign: "left",
-                            color: "#4f4f4f",
-                          },
-                        ]}
-                      >
-                        {product.category}
-                      </Text>
-                    </View>
-                    <Text style={[styles.productColumn, { width: 70 }]}>
-                      {product.order_quantity} Unit(s)
-                    </Text>
-                    <Text style={[styles.productColumn, { width: 80 }]}>
-                      Rs. {product.rent_per_unit}
-                    </Text>
-                    <Text style={[styles.productColumn, { width: 80 }]}>
-                      Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                    <Text
+                      style={[
+                        styles.productColumn,
+                        {
+                          width: 300,
+                          textAlign: "left",
+                          color: "#4f4f4f",
+                        },
+                      ]}
+                    >
+                      {product.category}
                     </Text>
                   </View>
-                )
-              )}
+                  <Text style={[styles.productColumn, { width: 70 }]}>
+                    {product.order_quantity} Unit(s)
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 80 }]}>
+                    Rs. {product.rent_per_unit}
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 80 }]}>
+                    Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                  </Text>
+                </View>
+              ))}
             </View>
             <View style={styles.calculationWrapper}>
               <View style={styles.calculationContainer}>
@@ -640,12 +666,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     {/* Left Column Labels */}
                     <View style={styles.labelColumn}>
                       <Text>Deposit</Text>
-                      <Text>Total Amount</Text>
-                      {data.billing_mode !== BillingMode.BUSINESS && (
-                        <Text>GST</Text>
-                      )}
+                      <Text>Amount before Taxes</Text>
                       <Text>Discount</Text>
                       <Text>Discount Amount</Text>
+                      <Text>GST</Text>
                       <Text>Round Off</Text>
                     </View>
 
@@ -653,21 +677,12 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     <View style={styles.valueColumn}>
                       <Text>Rs. {depositTotal()}</Text>
                       <Text>Rs. {calcFinalAmount().toFixed(2)}</Text>
-                      {data.billing_mode !== BillingMode.BUSINESS && (
-                        <Text>Rs. {gstAmount}</Text>
-                      )}
                       <Text>{data.discount?.toFixed(2)}%</Text>
                       <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
+                      <Text>Rs. {gstAmount}</Text>
                       <Text>Rs. {data.round_off?.toFixed(2)}</Text>
                     </View>
                   </View>
-
-                  {/* Small note */}
-                  {data.billing_mode !== BillingMode.BUSINESS && (
-                    <Text style={styles.smallNote}>
-                      GST and all other taxes included.
-                    </Text>
-                  )}
 
                   {/* Divider */}
                   <View style={styles.divider} />
@@ -675,8 +690,16 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   {/* Final total and mode */}
                   <View style={styles.balanceRow}>
                     <View style={{ flexDirection: "column", gap: 4 }}>
+                      <Text style={styles.boldText}>Amount After Taxes</Text>
                       <Text style={styles.boldText}>
-                        {calcTotal() > 0 ? "Balance" : "Refund"}
+                        {Math.abs(calcTotal()) -
+                          data.deposits.reduce(
+                            (total, deposit) => total + deposit.amount,
+                            0
+                          ) >
+                        0
+                          ? "Balance"
+                          : "Refund"}
                       </Text>
                       <Text>Mode</Text>
                     </View>
@@ -689,6 +712,18 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     >
                       <Text style={styles.boldText}>
                         Rs. {Math.abs(calcTotal()).toFixed(2)}
+                      </Text>
+                      <Text style={styles.boldText}>
+                        Rs.{" "}
+                        {(
+                          Math.abs(
+                            calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              )
+                          ) || 0
+                        ).toFixed(2)}
                       </Text>
                       <Text style={styles.selectSim}>
                         {data.payment_mode.toUpperCase()}
@@ -705,7 +740,21 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     Amount in words:
                   </Text>
                   <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                    {numberToWordsIndian(Math.abs(calcTotal()))}
+                    {numberToWordsIndian(
+                      // Math.abs(calcTotal()) -
+                      //   data.deposits.reduce(
+                      //     (total, deposit) => total + deposit.amount,
+                      //     0
+                      //   )
+
+                      Math.abs(
+                        calcTotal() -
+                          data.deposits.reduce(
+                            (total, deposit) => total + deposit.amount,
+                            0
+                          )
+                      ) || 0
+                    )}
                   </Text>
                 </View>
                 <View style={styles.signatureContainer}>

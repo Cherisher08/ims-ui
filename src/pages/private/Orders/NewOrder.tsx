@@ -397,11 +397,12 @@ const NewOrder = () => {
   };
 
   const createNewOrder = async () => {
-    orderInfo.deposits = depositData;
+    const newOrderInfo = { ...orderInfo, deposits: depositData };
+
     if (rentalId) {
-      updateRentalOrder(orderInfo);
+      updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {
-        orderInfo.product_details.forEach((updatedProductDetail) => {
+        newOrderInfo.product_details.forEach((updatedProductDetail) => {
           const previousProductDetail =
             existingRentalOrder.product_details.find(
               (prev) => prev._id === updatedProductDetail._id
@@ -432,12 +433,12 @@ const NewOrder = () => {
     } else {
       try {
         // 1️⃣ Create the rental order and wait for it to succeed
-        const orderResponse = await createRentalOrder(orderInfo).unwrap();
+        const orderResponse = await createRentalOrder(newOrderInfo).unwrap();
         console.log("✅ Order created successfully", orderResponse);
 
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
-          orderInfo.product_details.map((product_detail) => {
+          newOrderInfo.product_details.map((product_detail) => {
             const currentProduct = products.find(
               (product) => product._id === product_detail._id
             );
@@ -446,7 +447,7 @@ const NewOrder = () => {
               console.warn(
                 `⚠️ Product ${product_detail._id} not found, skipping`
               );
-              return Promise.resolve(); // skip if not found
+              return Promise.resolve();
             }
 
             return updateProductData({
@@ -462,11 +463,11 @@ const NewOrder = () => {
         results.forEach((result, idx) => {
           if (result.status === "fulfilled") {
             console.log(
-              `✅ Product ${orderInfo.product_details[idx]._id} updated successfully`
+              `✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`
             );
           } else {
             console.error(
-              `❌ Product ${orderInfo.product_details[idx]._id} update failed:`,
+              `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
               result.reason
             );
           }
@@ -785,19 +786,20 @@ const NewOrder = () => {
               multiline
               minRows={5}
             />
-            <CustomInput
+            {/* <CustomInput
               wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
               value={orderInfo?.event_pincode ?? ""}
               onChange={(value) => handleValueChange("event_pincode", value)}
               label="Event Pincode"
               placeholder="Enter Event Pincode"
-            />
+            /> */}
             <CustomInput
               value={orderInfo?.remarks ?? ""}
               onChange={(value) => handleValueChange("remarks", value)}
               label="Remarks"
               wrapperClass="w-[30rem] max-w-full"
+              className="h-full"
               placeholder="Enter remarks"
               multiline
               minRows={3}

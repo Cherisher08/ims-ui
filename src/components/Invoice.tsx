@@ -9,6 +9,7 @@ import {
 import {
   BillingMode,
   DepositType,
+  PaymentStatus,
   ProductDetails,
   RentalOrderInfo,
 } from "../types/order";
@@ -320,7 +321,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     },
     divider: {
       borderTop: "1 solid #E5E7EB",
-      marginVertical: 6,
+      marginVertical: 2,
     },
     smallNote: {
       fontSize: 8,
@@ -665,22 +666,28 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   <View style={styles.gridRow}>
                     {/* Left Column Labels */}
                     <View style={styles.labelColumn}>
-                      <Text>Deposit</Text>
-                      <Text>Amount before Taxes</Text>
+                      <Text>Total Amount</Text>
                       <Text>Discount</Text>
                       <Text>Discount Amount</Text>
                       <Text>GST</Text>
                       <Text>Round Off</Text>
+                      <Text style={styles.boldText}>Net Total</Text>
+                      <Text style={styles.boldText}>Advance</Text>
                     </View>
 
                     {/* Right Column Values */}
                     <View style={styles.valueColumn}>
-                      <Text>Rs. {depositTotal()}</Text>
                       <Text>Rs. {calcFinalAmount().toFixed(2)}</Text>
                       <Text>{data.discount?.toFixed(2)}%</Text>
                       <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
                       <Text>Rs. {gstAmount}</Text>
                       <Text>Rs. {data.round_off?.toFixed(2)}</Text>
+                      <Text style={styles.boldText}>
+                        Rs. {Math.abs(calcTotal()).toFixed(2)}
+                      </Text>
+                      <Text style={styles.boldText}>
+                        Rs. {depositTotal().toFixed(2)}
+                      </Text>
                     </View>
                   </View>
 
@@ -690,16 +697,15 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   {/* Final total and mode */}
                   <View style={styles.balanceRow}>
                     <View style={{ flexDirection: "column", gap: 4 }}>
-                      <Text style={styles.boldText}>Amount After Taxes</Text>
-                      <Text style={styles.boldText}>
-                        {Math.abs(calcTotal()) -
+                      <Text>
+                        {calcTotal() -
                           data.deposits.reduce(
                             (total, deposit) => total + deposit.amount,
                             0
-                          ) >
+                          ) <
                         0
-                          ? "Balance"
-                          : "Refund"}
+                          ? "Refund"
+                          : "Outstanding Amount"}
                       </Text>
                       <Text>Mode</Text>
                     </View>
@@ -710,19 +716,17 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                         alignItems: "flex-end",
                       }}
                     >
-                      <Text style={styles.boldText}>
-                        Rs. {Math.abs(calcTotal()).toFixed(2)}
-                      </Text>
-                      <Text style={styles.boldText}>
+                      <Text style={[styles.boldText, { color: "red" }]}>
                         Rs.{" "}
-                        {(
-                          Math.abs(
-                            calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              )
-                          ) || 0
+                        {(data.status === PaymentStatus.PAID
+                          ? 0
+                          : Math.abs(
+                              calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                )
+                            )
                         ).toFixed(2)}
                       </Text>
                       <Text style={styles.selectSim}>
@@ -741,12 +745,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   </Text>
                   <Text style={{ fontSize: 13, fontWeight: "bold" }}>
                     {numberToWordsIndian(
-                      // Math.abs(calcTotal()) -
-                      //   data.deposits.reduce(
-                      //     (total, deposit) => total + deposit.amount,
-                      //     0
-                      //   )
-
                       Math.abs(
                         calcTotal() -
                           data.deposits.reduce(

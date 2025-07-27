@@ -23,7 +23,6 @@ export const InDateCellEditor = (props: CustomCellEditorProps) => {
   };
 
   const handleValueChange = (updatedValue: string) => {
-    console.log("updatedValue: ", updatedValue);
     setValue(updatedValue);
     props.onValueChange(dayjs(updatedValue).tz(dayjs.tz.guess()).format());
   };

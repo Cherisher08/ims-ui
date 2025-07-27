@@ -1,20 +1,38 @@
+import "ag-grid-community/styles/ag-theme-alpine.css";
+import { useMemo } from "react";
 import type {
   CellEditingStoppedEvent,
   ColDef,
   GetRowIdParams,
   RowClassParams,
+  RowHeightParams,
   RowStyle,
   SizeColumnsToContentStrategy,
   SizeColumnsToFitGridStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-// import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
-import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
-import { useMemo } from "react";
-
-ModuleRegistry.registerModules([AllCommunityModule]);
+import {
+  ClientSideRowModelModule,
+  ModuleRegistry,
+  RowApiModule,
+  AllCommunityModule,
+} from "ag-grid-community";
+import {
+  ColumnMenuModule,
+  ColumnsToolPanelModule,
+  ContextMenuModule,
+  MasterDetailModule,
+} from "ag-grid-enterprise";
+ModuleRegistry.registerModules([
+  RowApiModule,
+  ClientSideRowModelModule,
+  ColumnsToolPanelModule,
+  MasterDetailModule,
+  ColumnMenuModule,
+  ContextMenuModule,
+  AllCommunityModule,
+]);
 
 type CustomTableProps<T> = {
   rowData: T[];
@@ -24,7 +42,7 @@ type CustomTableProps<T> = {
   rowHeight?: number;
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
-  onGetRowId?: (params: GetRowIdParams) => string;
+  getRowHeight?: (params: RowHeightParams) => number | null;
 };
 
 const CustomTable = <T,>({
@@ -39,9 +57,7 @@ const CustomTable = <T,>({
   handleCellEditingStopped = () => {
     return;
   },
-  onGetRowId = () => {
-    return "";
-  },
+  getRowHeight = (params) => null,
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy
@@ -72,7 +88,7 @@ const CustomTable = <T,>({
         loading={isLoading}
         autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
-        // getRowId={onGetRowId}
+        getRowHeight={getRowHeight}
       />
     </div>
   );

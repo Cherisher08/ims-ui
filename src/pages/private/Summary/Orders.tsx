@@ -9,25 +9,21 @@ import RentalOrderTable from "./RentalOrderTable";
 // import SalesOrderTable from "./SalesOrderTable";
 // import ServiceOrderTable from "./ServiceOrderTable";
 import { useGetRentalOrdersQuery } from "../../../services/OrderService";
-import { RentalOrderInfo } from "../../../types/order";
+import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
 
-// const transformRentalOrderData = (
-//   rentalOrders: RentalOrderInfo[]
-// ): RentalOrderType[] => {
-//   return rentalOrders.map((rentalOrder) => {
-//     return {
-//       _id: rentalOrder._id!,
-//       order_id: rentalOrder.order_id,
-//       in_date: rentalOrder.in_date,
-//       expected_date: rentalOrder.expected_date,
-//       out_date: rentalOrder.out_date,
-//       deposits: rentalOrder.deposits,
-//       customer: rentalOrder.customer,
-//       products: rentalOrder.product_details,
-//       payment_status: rentalOrder.status,
-//     };
-//   });
-// };
+const transformRentalOrderData = (
+  rentalOrders: RentalOrderInfo[]
+): RentalOrderType[] => {
+  return rentalOrders.map((rentalOrder) => {
+    return {
+      ...rentalOrder,
+      customer: {
+        _id: rentalOrder.customer._id,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
+      },
+    };
+  });
+};
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -36,11 +32,11 @@ const Orders = () => {
     useGetRentalOrdersQuery();
   const isCommunicationsFeatureDone: boolean = false;
 
-  const [rentalOrders, setRentalOrders] = useState<RentalOrderInfo[]>([]);
+  const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
 
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
-      setRentalOrders(rentalOrderData);
+      setRentalOrders(transformRentalOrderData(rentalOrderData));
     }
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 

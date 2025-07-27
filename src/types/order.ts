@@ -58,12 +58,10 @@ export type DepositType = {
 
 export type RentalOrderType = Omit<RentalOrderInfo, "customer"> & {
   customer: IdNamePair;
-  gst_amount?: number;
 };
 
 export type RentalType = Omit<RentalOrderInfo, "customer"> & {
   customer: IdNamePair;
-  gst_amount?: number;
   actions?: string;
 };
 

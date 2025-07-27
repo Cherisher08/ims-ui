@@ -1006,7 +1006,16 @@ const NewOrder = () => {
                 <div className="grid grid-cols-2 border-t border-t-gray-200">
                   <div className="flex flex-col gap-1 font-semibold pb-2">
                     <p>Amount after Taxes</p>
-                    <p>{calculateFinalAmount() > 0 ? "Balance" : "Refund"}</p>
+                    <p>
+                      {calculateFinalAmount() -
+                        depositData.reduce(
+                          (total, deposit) => total + deposit.amount,
+                          0
+                        ) >
+                      0
+                        ? "Balance"
+                        : "Refund"}
+                    </p>
                     <p>Mode</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">

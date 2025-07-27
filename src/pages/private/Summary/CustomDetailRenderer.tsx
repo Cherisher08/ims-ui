@@ -4,10 +4,11 @@ import { AgGridReact } from "ag-grid-react";
 const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
   const productDetails = props.data.product_details || [];
   const deposits = props.data.deposits || [];
+  console.log("deposits: ", deposits);
 
   return (
     <div className="px-10 py-4 bg-gray-200 h-full overflow-auto">
-      <p className="font-semibold text-lg">Products:</p>
+      <p className="font-semibold text-lg text-black">Products:</p>
       <div
         className="ag-theme-alpine"
         style={{ height: 200, marginBottom: 20 }}
@@ -30,7 +31,7 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
         />
       </div>
 
-      <p className="font-semibold text-lg">Deposits:</p>
+      <p className="font-semibold text-lg text-black">Deposits:</p>
       <div className="ag-theme-alpine" style={{ height: 150 }}>
         <AgGridReact
           rowData={deposits}
@@ -42,7 +43,7 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
               field: "product",
               headerName: "Product",
               valueFormatter: (params) => {
-                const product = params.value;
+                const product = params.value || {};
                 return product.name || " ";
               },
               flex: 1,

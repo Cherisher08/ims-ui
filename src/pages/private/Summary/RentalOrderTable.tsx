@@ -3,13 +3,14 @@ import type {
   CellEditingStoppedEvent,
   ColDef,
   ICellRendererParams,
+  ValueGetterParams,
 } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
 import {
   BillingMode,
-  ProductDetails,
+  DepositType,
   RentalOrderType,
   RentalType,
 } from "../../../types/order";
@@ -27,11 +28,11 @@ import { IdNamePair } from "../Inventory";
 import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
 import { AddressCellEditor } from "../../../components/AgGridCellEditors/AddressCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { gstPercentSetter } from "./utls";
 import {
   calculateDiscountAmount,
   calculateProductRent,
 } from "../../../services/utility_functions";
+import { currencyFormatter } from "./utils";
 
 const RentalOrderTable = ({
   rentalOrders,
@@ -193,6 +194,8 @@ const RentalOrderTable = ({
       editable: true,
       singleClickEdit: true,
       cellDataType: "text",
+      filter: "agTextColumnFilter",
+
       cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
         customerOptions: customerList.current,
@@ -211,7 +214,6 @@ const RentalOrderTable = ({
       editable: true,
       singleClickEdit: true,
       cellEditor: AddressCellEditor,
-      autoHeight: true, // required to allow row to grow
       valueFormatter: (params) => {
         return params.value?.replace(/\n/g, " ") ?? "";
       },
@@ -230,6 +232,22 @@ const RentalOrderTable = ({
       },
     },
     {
+      headerName: "Amount (Before Taxes)",
+      flex: 1,
+      minWidth: 200,
+      headerClass: "ag-header-wrap",
+      filter: "agNumberColumnFilter",
+      valueFormatter: currencyFormatter,
+      valueGetter: (params: ValueGetterParams) => {
+        const value = calculateTotalAmount(params.data);
+        return isNaN(value) ? null : value;
+      },
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        return <p>₹ {calculateTotalAmount(data)}</p>;
+      },
+    },
+    {
       field: "gst",
       headerName: "GST(%)",
       headerClass: "ag-header-wrap",
@@ -242,32 +260,121 @@ const RentalOrderTable = ({
       cellEditorParams: {
         step: 1,
       },
-      valueSetter: gstPercentSetter,
     },
     {
-      field: "gst_amount",
       headerName: "GST Amount",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agTextColumnFilter",
+      valueFormatter: currencyFormatter,
+      valueGetter: (params: ValueGetterParams) => {
+        const gstPercent = parseFloat(params.data.gst ?? 0);
+        const totalAmount = calculateTotalAmount(params.data);
+        if (isNaN(gstPercent) || isNaN(totalAmount)) return 0;
+        return (gstPercent / 100) * totalAmount;
+      },
+    },
+    {
+      field: "discount",
+      headerName: "Discount(%)",
       headerClass: "ag-header-wrap",
       minWidth: 150,
       maxWidth: 200,
       filter: "agNumberColumnFilter",
       editable: true,
       singleClickEdit: true,
-      cellEditor: "agTextCellEditor",
+      cellEditor: "agNumberCellEditor",
       cellEditorParams: {
         step: 1,
       },
     },
     {
-      headerName: "Total Amount",
-      flex: 1,
+      field: "round_off",
+      headerName: "Round Off",
+      headerClass: "ag-header-wrap",
       minWidth: 150,
+      maxWidth: 200,
+      filter: "agTextColumnFilter",
+      editable: true,
+      valueFormatter: currencyFormatter,
+      singleClickEdit: true,
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        step: 1,
+      },
+    },
+    {
+      headerName: "Amount (After Taxes)",
+      flex: 1,
+      minWidth: 200,
       headerClass: "ag-header-wrap",
       filter: "agNumberColumnFilter",
+      valueFormatter: currencyFormatter,
+      valueGetter: (params: ValueGetterParams) => {
+        const value = calculateFinalAmount(params.data);
+        return isNaN(value) ? null : value;
+      },
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
-        console.log("data: ", data);
         return <p>₹ {calculateFinalAmount(data)}</p>;
+      },
+    },
+    {
+      headerName: "Deposit Amount",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agNumberColumnFilter",
+      valueFormatter: currencyFormatter,
+      valueGetter: (params: ValueGetterParams) => {
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return depositData.reduce(
+          (total, deposit) => total + deposit.amount,
+          0
+        );
+      },
+    },
+    {
+      headerName: "Outstanding Amount",
+      flex: 1,
+      minWidth: 200,
+      headerClass: "ag-header-wrap",
+      filter: "agNumberColumnFilter",
+      valueGetter: (params: ValueGetterParams) => {
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        const value =
+          calculateFinalAmount(params.data) -
+          depositData.reduce((total, deposit) => total + deposit.amount, 0);
+
+        return isNaN(value) ? null : value;
+      },
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return (
+          <p>
+            ₹{" "}
+            {(
+              calculateFinalAmount(data) -
+              depositData.reduce((total, deposit) => total + deposit.amount, 0)
+            ).toFixed(2)}
+          </p>
+        );
+      },
+    },
+    {
+      field: "remarks",
+      headerName: "Remarks",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 200,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: AddressCellEditor,
+      valueFormatter: (params) => {
+        return params.value?.replace(/\n/g, " ") ?? "";
       },
     },
     {

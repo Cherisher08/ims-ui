@@ -56,19 +56,12 @@ export type DepositType = {
 // --------------------------------------------------------------------------------------------
 // Types for Frontend
 
-// export type RentalOrderType = {
-//   _id: string;
-//   order_id: string;
-//   contact_name: string;
-//   deposits: DepositType[];
-//   products: string;
-//   in_date: string;
-//   out_date: string;
-//   expected_date: string;
-//   payment_status: PaymentStatus;
-// };
+export type RentalOrderType = Omit<RentalOrderInfo, "customer"> & {
+  customer: IdNamePair;
+};
 
-export type RentalType = RentalOrderInfo & {
+export type RentalType = Omit<RentalOrderInfo, "customer"> & {
+  customer: IdNamePair;
   actions?: string;
 };
 

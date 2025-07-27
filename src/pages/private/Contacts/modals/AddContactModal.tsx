@@ -69,7 +69,6 @@ const AddContactModal = ({
       reset();
       setAddContactOpen(false);
     }
-    console.log("isCreateContactError: ", isCreateContactError);
     if (isCreateContactError) {
       toast.error("Error in creating contact", {
         toastId: TOAST_IDS.ERROR_CONTACT_CREATE,

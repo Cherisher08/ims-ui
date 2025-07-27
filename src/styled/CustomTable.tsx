@@ -1,3 +1,4 @@
+import "ag-grid-community/styles/ag-theme-alpine.css";
 import type {
   CellEditingStoppedEvent,
   ColDef,
@@ -9,6 +10,7 @@ import type {
   SizeColumnsToFitGridStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
   IDetailCellRendererParams,
+  RowHeightParams,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 // import "ag-grid-community/styles/ag-grid.css";
@@ -50,6 +52,7 @@ type CustomTableProps<T> = {
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
   onGetRowId?: (params: GetRowIdParams) => string;
   detailCellRendererParams?: IDetailCellRendererParams;
+  getRowHeight: (params: RowHeightParams) => number | null;
 };
 
 const CustomTable = <T,>({
@@ -66,6 +69,7 @@ const CustomTable = <T,>({
   handleCellEditingStopped = () => {
     return;
   },
+  getRowHeight = () => null,
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy
@@ -94,14 +98,7 @@ const CustomTable = <T,>({
         paginationPageSize={10}
         rowHeight={rowHeight}
         detailRowHeight={400}
-        getRowHeight={(params) => {
-          if (params.node.detail) {
-            const productCount = params.data?.product_details?.length || 0;
-            const depositsCount = params.data?.deposits?.length || 0;
-            return (productCount + depositsCount) * 80 + 100;
-          }
-          return 50;
-        }}
+        getRowHeight={getRowHeight}
         getRowStyle={(params) => getRowStyle(params)}
         components={{
           customDetailRenderer: CustomDetailRenderer,
@@ -112,7 +109,6 @@ const CustomTable = <T,>({
         loading={isLoading}
         autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
-        // getRowId={onGetRowId}
       />
     </div>
   );

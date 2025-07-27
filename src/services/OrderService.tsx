@@ -1,3 +1,4 @@
+import { setExpiredRentalOrders } from "../store/OrdersSlice";
 import { PatchPayload } from "../types/common";
 import { RentalOrderInfo } from "../types/order";
 import { rootApi } from "./ApiService";
@@ -49,7 +50,15 @@ export const contactApi = rootApi.injectEndpoints({
     }),
     getExpiredRentalOrders: build.query<RentalOrderInfo[], void>({
       query: () => `orders/rentals/expired`,
-      providesTags: ["Rental"],
+      providesTags: ["Expired"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setExpiredRentalOrders(data)); // ✅ Update Redux state
+        } catch (err) {
+          console.error("Failed to fetch customers:", err);
+        }
+      },
     }),
     patchRentalOrder: build.mutation<RentalOrderInfo, PatchPayload>({
       query: ({ id, payload }) => {
@@ -60,6 +69,22 @@ export const contactApi = rootApi.injectEndpoints({
         };
       },
       invalidatesTags: ["Rental"],
+      async onQueryStarted({ payload }, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          // Check if the patched field includes "in_date"
+          const inDatePatched = payload.some(
+            (op) => op.path === "/expected_date" || op.path === "/status"
+          );
+
+          if (inDatePatched) {
+            // Manually invalidate or trigger related query
+            dispatch(rootApi.util.invalidateTags(["Expired"])); // or use your specific tag/query
+          }
+        } catch (err) {
+          console.error("Patch failed:", err);
+        }
+      },
     }),
   }),
 });

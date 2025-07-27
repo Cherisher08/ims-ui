@@ -4,43 +4,67 @@ import { LuPlus } from "react-icons/lu";
 import { FaWhatsapp } from "react-icons/fa";
 import { MdOutlineMail } from "react-icons/md";
 import { Box, Tab, Tabs } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import RentalOrderTable from "./RentalOrderTable";
 // import SalesOrderTable from "./SalesOrderTable";
 // import ServiceOrderTable from "./ServiceOrderTable";
-import { useGetRentalOrdersQuery } from "../../../services/OrderService";
-import { RentalOrderInfo } from "../../../types/order";
+import {
+  useCreateRentalOrderMutation,
+  useGetRentalOrdersQuery,
+} from "../../../services/OrderService";
+import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
+import { useGetContactsQuery } from "../../../services/ContactService";
+import { getDefaultRentalOrder, getNewOrderId } from "./utils";
+import { toast } from "react-toastify";
+import { TOAST_IDS } from "../../../constants/constants";
 
-// const transformRentalOrderData = (
-//   rentalOrders: RentalOrderInfo[]
-// ): RentalOrderType[] => {
-//   return rentalOrders.map((rentalOrder) => {
-//     return {
-//       _id: rentalOrder._id!,
-//       order_id: rentalOrder.order_id,
-//       in_date: rentalOrder.in_date,
-//       expected_date: rentalOrder.expected_date,
-//       out_date: rentalOrder.out_date,
-//       deposits: rentalOrder.deposits,
-//       customer: rentalOrder.customer,
-//       products: rentalOrder.product_details,
-//       payment_status: rentalOrder.status,
-//     };
-//   });
-// };
+const transformRentalOrderData = (
+  rentalOrders: RentalOrderInfo[]
+): RentalOrderType[] => {
+  return rentalOrders.map((rentalOrder) => {
+    return {
+      ...rentalOrder,
+      customer: {
+        _id: rentalOrder.customer._id,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
+      },
+    };
+  });
+};
 
 const Orders = () => {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
+  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
+    useGetContactsQuery();
+  const [createRentalOrder] = useCreateRentalOrderMutation();
+
   const isCommunicationsFeatureDone: boolean = false;
 
-  const [rentalOrders, setRentalOrders] = useState<RentalOrderInfo[]>([]);
+  const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
+
+  const handleNewRentalOrder = async () => {
+    if (isRentalOrdersQuerySuccess && isGetContactsSuccess) {
+      const orderId = getNewOrderId(rentalOrderData);
+      const defaultCustomer = contactsQueryData[0];
+      const newOrderData = getDefaultRentalOrder(orderId, defaultCustomer);
+      try {
+        const orderResponse = await createRentalOrder(newOrderData).unwrap();
+        toast.success("Rental Order Created Successfully", {
+          toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
+        });
+        console.log("✅ Order created successfully", orderResponse);
+      } catch {
+        toast.error("Rental Order was not Created Successfully", {
+          toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
-      setRentalOrders(rentalOrderData);
+      setRentalOrders(transformRentalOrderData(rentalOrderData));
     }
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
@@ -49,7 +73,7 @@ const Orders = () => {
       {/* Header */}
       <div className="flex justify-between">
         <CustomButton
-          onClick={() => navigate("new-rental-order")}
+          onClick={() => handleNewRentalOrder()}
           label="New Order"
           icon={<LuPlus color="white" />}
         />

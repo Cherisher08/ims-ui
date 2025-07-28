@@ -17,6 +17,12 @@ export const MenuItems: MenuItemsType[] = [
     logo: <MdDashboardCustomize size={30} />,
   },
   {
+    id: 5,
+    title: "Summary",
+    path: "/orders",
+    logo: <LuClipboardList size={30} />,
+  },
+  {
     id: 2,
     title: "Entries",
     path: "/orders/rentals",
@@ -33,11 +39,5 @@ export const MenuItems: MenuItemsType[] = [
     title: "Contacts",
     path: "/contacts",
     logo: <IoIosContact size={30} />,
-  },
-  {
-    id: 5,
-    title: "Summary",
-    path: "/orders",
-    logo: <LuClipboardList size={30} />,
   },
 ];

@@ -17,7 +17,7 @@ import {
   RentalType,
 } from "../../../types/order";
 import DeleteOrderModal from "../Contacts/modals/DeleteOrderModal";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -49,6 +49,9 @@ const RentalOrderTable = ({
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
     useGetContactsQuery();
 
+  const gridApiRef = useRef(null);
+  const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
+
   const customerList = useRef<IdNamePair[]>([]);
 
   const expiredOrderIds = useMemo(
@@ -58,6 +61,10 @@ const RentalOrderTable = ({
 
   const orderData = rentalOrders.map((order) => ({ ...order }));
 
+  // Child passes grid API up
+  const onGridReady = (api: null) => {
+    gridApiRef.current = api;
+  };
   // const patchOrder = async (patchPayload: PatchPayload) => {
   //   // Call your API here (RTK Query, axios, fetch, etc.)
   //   console.log("Patching order", patchPayload);
@@ -128,6 +135,7 @@ const RentalOrderTable = ({
       headerName: "Order Id",
       headerClass: "ag-header-wrap",
       minWidth: 100,
+      pinned: "left",
       filter: "agTextColumnFilter",
       cellRenderer: "agGroupCellRenderer",
       sort: "desc",
@@ -300,6 +308,32 @@ const RentalOrderTable = ({
       cellEditor: "agNumberCellEditor",
       cellEditorParams: {
         step: 1,
+      },
+    },
+    {
+      field: "discount_amount",
+      headerName: "Discount Amount",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agNumberColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        step: 1,
+      },
+      valueFormatter: (params) => {
+        const data = params.data;
+        if (data && data.type === ProductType.RENTAL && data.product_details) {
+          const percent = data.discount;
+          const total_amount = calculateTotalAmount(data);
+          const discount_amount = parseFloat(
+            (total_amount * percent * 0.01).toFixed(2)
+          );
+          return discount_amount;
+        }
+        return 0;
       },
     },
     {
@@ -509,11 +543,19 @@ const RentalOrderTable = ({
 
   const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
     const { data, colDef, oldValue, newValue } = event;
-    const field = colDef.field;
-
+    let field = colDef.field;
     if (!field || newValue === oldValue) return;
     try {
       let value = newValue;
+
+      //expandedRows
+      const expanded = [];
+      if (gridApiRef.current !== null) {
+        gridApiRef.current.forEachNode((node) => {
+          if (node.expanded) expanded.push(node.data._id);
+        });
+      }
+      setExpandedRowIds(expanded);
 
       // Special case for customer field
       if (field === "customer") {
@@ -534,6 +576,11 @@ const RentalOrderTable = ({
           value = "pending";
       }
 
+      if (field === "discount_amount") {
+        field = "discount";
+        value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
+      }
+
       const patchPayload: PatchOperation[] = [
         {
           op: "replace",
@@ -543,6 +590,7 @@ const RentalOrderTable = ({
       ];
 
       await patchRentalOrder({ id: data._id, payload: patchPayload }).unwrap();
+
       console.log(`Successfully patched ${field} for order ${data._id}`);
     } catch (err) {
       console.error("Failed to patch rental order:", err);
@@ -556,6 +604,15 @@ const RentalOrderTable = ({
     }
     return 45;
   };
+
+  const onRowDataUpdated = useCallback(() => {
+    if (gridApiRef.current === null) return;
+    gridApiRef.current.forEachNode((node) => {
+      if (expandedRowIds.includes(node.data._id)) {
+        node.setExpanded(true);
+      }
+    });
+  }, [expandedRowIds]);
 
   useEffect(() => {
     if (isGetContactsSuccess) {
@@ -574,6 +631,7 @@ const RentalOrderTable = ({
         isLoading={false}
         colDefs={rentalOrderColDef}
         rowData={orderData}
+        onGridReady={onGridReady}
         getRowStyle={(params) => {
           const orderId = params.data?.order_id;
           if (orderId && expiredOrderIds.has(orderId)) {
@@ -582,11 +640,14 @@ const RentalOrderTable = ({
               color: "white",
             };
           }
-          return undefined;
+          return {
+            backGroundColor: "white",
+          };
         }}
         masterDetail={true}
         handleCellEditingStopped={handleCellEditingStopped}
         getRowHeight={handleRowHeight}
+        onRowDataUpdated={onRowDataUpdated}
       />
       <DeleteOrderModal
         deleteOrderOpen={deleteOrderOpen}

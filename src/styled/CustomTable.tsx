@@ -26,7 +26,7 @@ import {
   ContextMenuModule,
   MasterDetailModule,
 } from "ag-grid-enterprise";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import CustomDetailRenderer from "../pages/private/Summary/CustomDetailRenderer";
 
 ModuleRegistry.registerModules([
@@ -47,6 +47,8 @@ type CustomTableProps<T> = {
   rowHeight?: number;
   masterDetail?: boolean;
   rowModelType?: RowModelType;
+  onGridReady?: (api: { sizeColumnsToFit: () => void }) => void;
+  onRowDataUpdated?: () => void;
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
   onGetRowId?: (params: GetRowIdParams) => string;
@@ -61,6 +63,10 @@ const CustomTable = <T,>({
   masterDetail = false,
   rowModelType = "clientSide",
   pagination = true,
+  onRowDataUpdated = () => {},
+  onGridReady = (api: { sizeColumnsToFit: () => void }) => {
+    api.sizeColumnsToFit();
+  },
   getRowStyle = () => {
     return {};
   },
@@ -80,6 +86,14 @@ const CustomTable = <T,>({
     };
   }, []);
 
+  const handleGridReady = useCallback(
+    (params) => {
+      console.log(params.api);
+      onGridReady(params.api);
+    },
+    [onGridReady]
+  );
+
   return (
     <div
       className="ag-theme-alpine"
@@ -96,6 +110,7 @@ const CustomTable = <T,>({
         paginationPageSize={10}
         rowHeight={rowHeight}
         detailRowHeight={400}
+        onRowDataUpdated={onRowDataUpdated}
         getRowHeight={getRowHeight}
         getRowStyle={(params) => getRowStyle(params)}
         components={{
@@ -105,6 +120,7 @@ const CustomTable = <T,>({
         domLayout="autoHeight"
         localeText={{ noRowsToShow: "No data Found..." }}
         loading={isLoading}
+        onGridReady={handleGridReady}
         autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
       />

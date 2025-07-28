@@ -54,8 +54,12 @@ export const contactApi = rootApi.injectEndpoints({
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          dispatch(setExpiredRentalOrders(data)); // ✅ Update Redux state
+          dispatch(setExpiredRentalOrders(data));
         } catch (err) {
+          if (err?.error.status === 404) {
+            dispatch(setExpiredRentalOrders([]));
+            return;
+          }
           console.error("Failed to fetch customers:", err);
         }
       },

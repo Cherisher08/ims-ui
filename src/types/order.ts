@@ -98,6 +98,7 @@ export type RentalOrderInfo = OrderInfo & {
   in_date: string;
   product_details: ProductDetails[];
   event_address: string;
+  eway_amount: number;
 };
 
 export type SalesOrderInfo = OrderInfo & {

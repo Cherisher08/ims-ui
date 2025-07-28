@@ -89,6 +89,7 @@ const RentalOrderTable = ({
   const calculateFinalAmount = (orderInfo: RentalOrderType) => {
     const finalAmount = calculateTotalAmount(orderInfo);
     const roundOff = orderInfo.round_off || 0;
+    const ewayBillAmount = orderInfo.eway_amount || 0;
     const discountAmount = calculateDiscountAmount(
       orderInfo.discount || 0,
       finalAmount
@@ -98,7 +99,13 @@ const RentalOrderTable = ({
       finalAmount - discountAmount
     );
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff).toFixed(2)
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        ewayBillAmount
+      ).toFixed(2)
     );
   };
 
@@ -296,6 +303,21 @@ const RentalOrderTable = ({
     {
       field: "round_off",
       headerName: "Round Off",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agTextColumnFilter",
+      editable: true,
+      valueFormatter: currencyFormatter,
+      singleClickEdit: true,
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        step: 1,
+      },
+    },
+    {
+      field: "eway_amount",
+      headerName: "E-Way Amount",
       headerClass: "ag-header-wrap",
       minWidth: 150,
       maxWidth: 200,

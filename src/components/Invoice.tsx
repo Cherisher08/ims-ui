@@ -140,13 +140,20 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
   const calcTotal = () => {
     const finalAmount = calcFinalAmount();
     const roundOff = data.round_off || 0;
+    const ewayBillAmount = data.eway_amount || 0;
     const discountAmount = data.discount_amount || 0;
     const gstAmount = calculateDiscountAmount(
       data.gst || 0,
       finalAmount - discountAmount
     );
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff).toFixed(2)
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        ewayBillAmount
+      ).toFixed(2)
     );
   };
 
@@ -671,6 +678,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <Text>Discount Amount</Text>
                       <Text>GST</Text>
                       <Text>Round Off</Text>
+                      <Text>E-Way</Text>
                       <Text style={styles.boldText}>Net Total</Text>
                       <Text style={styles.boldText}>Caution Deposit</Text>
                     </View>
@@ -682,6 +690,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
                       <Text>Rs. {gstAmount}</Text>
                       <Text>Rs. {data.round_off?.toFixed(2)}</Text>
+                      <Text>Rs. {data.eway_amount?.toFixed(2)}</Text>
                       <Text style={styles.boldText}>
                         Rs. {Math.abs(calcTotal()).toFixed(2)}
                       </Text>

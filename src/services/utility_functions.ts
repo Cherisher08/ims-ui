@@ -17,11 +17,10 @@ export const calculateProductRent = (product: ProductDetails): number => {
     order_quantity,
     order_repair_count,
   } = product;
-
   if (!in_date || !out_date) return 0;
 
-  const start = dayjs(out_date);
-  const end = dayjs(in_date);
+  const start = dayjs(out_date).second(0).millisecond(0); // truncate to minute
+  const end = dayjs(in_date).second(0).millisecond(0);
 
   let duration = 0;
 

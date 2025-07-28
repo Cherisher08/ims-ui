@@ -19,7 +19,7 @@ import { IdNamePair } from "../Inventory";
 
 dayjs.extend(utc);
 
-const utcString = dayjs().utc().format();
+const utcString = () => dayjs().utc().format();
 
 export const gstAmountGetter = (params: ValueGetterParams) => {
   const amount = Number(params.data.amount ?? 0);
@@ -63,6 +63,7 @@ export const currencyFormatter = (params: ValueFormatterParams) => {
 };
 
 export const getNewOrderId = (orders: OrderInfo[]) => {
+  console.log("orders: ", orders);
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1; // JS months 0-11
@@ -72,7 +73,7 @@ export const getNewOrderId = (orders: OrderInfo[]) => {
 
   const suffixes = orders
     .map((order) => {
-      const match = order.order_id?.match(/INV\/\d{2}-\d{2}\/(\d+)/);
+      const match = order.order_id?.match(/RO\/\d{2}-\d{2}\/(\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter((num) => num > 0);
@@ -94,11 +95,11 @@ export const getDefaultRentalOrder = (
     discount: 0,
     discount_amount: 0,
     event_address: "",
-    expected_date: utcString,
+    expected_date: utcString(),
     gst: 0,
     in_date: "",
     order_id: orderId,
-    out_date: utcString,
+    out_date: utcString(),
     payment_mode: PaymentMode.CASH,
     product_details: [],
     remarks: "",
@@ -112,7 +113,7 @@ export const getDefaultRentalOrder = (
 export const getDefaultDeposit = (products: IdNamePair[]) => {
   return {
     amount: 0,
-    date: utcString,
+    date: utcString(),
     mode: PaymentMode.CASH,
     product: products[0],
   };
@@ -128,10 +129,10 @@ export const getDefaultProduct = () => {
       _id: "",
       name: "",
     },
-    in_date: utcString,
+    in_date: utcString(),
     order_quantity: 0,
     order_repair_count: 0,
-    out_date: utcString,
+    out_date: utcString(),
     rent_per_unit: 0,
   };
 };

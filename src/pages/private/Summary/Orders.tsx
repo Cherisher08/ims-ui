@@ -16,6 +16,7 @@ import { useGetContactsQuery } from "../../../services/ContactService";
 import { getDefaultRentalOrder, getNewOrderId } from "./utils";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
+import AddContactModal from "../Contacts/modals/AddContactModal";
 
 const transformRentalOrderData = (
   rentalOrders: RentalOrderInfo[]
@@ -33,6 +34,7 @@ const transformRentalOrderData = (
 
 const Orders = () => {
   const [activeTab, setActiveTab] = useState(1);
+  const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
@@ -92,6 +94,11 @@ const Orders = () => {
               />
             </>
           )}
+          <CustomButton
+            onClick={() => setAddContactOpen(true)}
+            label="Add Contact"
+            icon={<LuPlus color="white" />}
+          />
         </div>
       </div>
 
@@ -116,6 +123,10 @@ const Orders = () => {
       <div role="tabpanel" hidden={activeTab !== 3}>
         <ServiceOrderTable rentalOrders={rentalOrders} />
       </div> */}
+      <AddContactModal
+        addContactOpen={addContactOpen}
+        setAddContactOpen={(value: boolean) => setAddContactOpen(value)}
+      />
     </div>
   );
 };

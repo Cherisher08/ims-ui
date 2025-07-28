@@ -206,13 +206,15 @@ const RentalOrderTable = ({
       singleClickEdit: true,
       cellDataType: "text",
       filter: "agTextColumnFilter",
-
       cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
         customerOptions: customerList.current,
       },
       valueFormatter: (params) => {
         return params.value.name ?? "";
+      },
+      filterValueGetter: (params: ValueGetterParams) => {
+        return params.data.customer.name;
       },
     },
     {
@@ -510,7 +512,6 @@ const RentalOrderTable = ({
     const field = colDef.field;
 
     if (!field || newValue === oldValue) return;
-
     try {
       let value = newValue;
 

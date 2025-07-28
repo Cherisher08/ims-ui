@@ -2,7 +2,6 @@
 import { CustomCellEditorProps } from "ag-grid-react";
 import { useEffect, useRef, useState } from "react";
 import TextField from "@mui/material/TextField";
-import { IRowNode } from "ag-grid-community";
 
 export const AddressCellEditor = (props: CustomCellEditorProps) => {
   const inputRef = useRef<HTMLInputElement>(null);

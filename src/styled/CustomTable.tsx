@@ -9,7 +9,6 @@ import type {
   SizeColumnsToContentStrategy,
   SizeColumnsToFitGridStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
-  IDetailCellRendererParams,
   RowHeightParams,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
@@ -51,8 +50,7 @@ type CustomTableProps<T> = {
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
   onGetRowId?: (params: GetRowIdParams) => string;
-  detailCellRendererParams?: IDetailCellRendererParams;
-  getRowHeight: (params: RowHeightParams) => number | null;
+  getRowHeight?: (params: RowHeightParams) => number | null;
 };
 
 const CustomTable = <T,>({

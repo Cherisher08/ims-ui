@@ -180,6 +180,7 @@ const initialRentalProduct: RentalOrderInfo = {
   event_address: "",
   product_details: [],
   deposits: [],
+  eway_amount: 0,
 };
 
 const NewOrder = () => {

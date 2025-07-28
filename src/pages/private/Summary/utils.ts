@@ -105,6 +105,7 @@ export const getDefaultRentalOrder = (
     round_off: 0,
     status: PaymentStatus.PENDING,
     type: ProductType.RENTAL,
+    eway_amount: 0,
   };
 };
 

@@ -447,6 +447,12 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           <View style={styles.detailContainer}>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Invoice No:</Text>
+              <Text style={styles.fieldValue}>
+                {data.order_id.replace(/RO/g, "INV")}
+              </Text>
+            </View>
+            <View style={styles.tableField}>
+              <Text style={styles.fieldTitle}>Bill No:</Text>
               <Text style={styles.fieldValue}>{data.order_id}</Text>
             </View>
             <View style={styles.tableField}>

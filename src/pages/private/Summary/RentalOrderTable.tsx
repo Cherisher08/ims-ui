@@ -331,9 +331,9 @@ const RentalOrderTable = ({
           const discount_amount = parseFloat(
             (total_amount * percent * 0.01).toFixed(2)
           );
-          return discount_amount;
+          return `₹${discount_amount.toFixed(2)}`;
         }
-        return 0;
+        return "0";
       },
     },
     {
@@ -549,7 +549,7 @@ const RentalOrderTable = ({
       let value = newValue;
 
       //expandedRows
-      const expanded = [];
+      const expanded: string[] = [];
       if (gridApiRef.current !== null) {
         gridApiRef.current.forEachNode((node) => {
           if (node.expanded) expanded.push(node.data._id);
@@ -578,7 +578,9 @@ const RentalOrderTable = ({
 
       if (field === "discount_amount") {
         field = "discount";
-        value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
+        if (calculateTotalAmount(data))
+          value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
+        else value = 0;
       }
 
       const patchPayload: PatchOperation[] = [

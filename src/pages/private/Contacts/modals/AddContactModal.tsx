@@ -91,7 +91,7 @@ const AddContactModal = ({
       <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full">
           <p className="text-primary text-xl font-semibold w-full text-start">
-            New Contact
+            New Customer
           </p>
           <MdClose
             size={25}

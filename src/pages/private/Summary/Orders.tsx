@@ -96,7 +96,7 @@ const Orders = () => {
           )}
           <CustomButton
             onClick={() => setAddContactOpen(true)}
-            label="Add Contact"
+            label="Add Customer"
             icon={<LuPlus color="white" />}
           />
         </div>

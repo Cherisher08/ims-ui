@@ -36,7 +36,7 @@ export const MenuItems: MenuItemsType[] = [
   },
   {
     id: 4,
-    title: "Contacts",
+    title: "Customer",
     path: "/contacts",
     logo: <IoIosContact size={30} />,
   },

@@ -3,8 +3,8 @@ import { Product, ProductType, Unit } from "./common";
 import { ContactInfoType } from "./contact";
 
 export enum BillingMode {
-  RETAIL = "Retail",
-  BUSINESS = "Business",
+  B2B = "B2B",
+  B2C = "B2C",
 }
 
 export enum BillingUnit {
@@ -99,6 +99,8 @@ export type RentalOrderInfo = OrderInfo & {
   product_details: ProductDetails[];
   event_address: string;
   eway_amount: number;
+  event_name: string;
+  event_venue: string;
 };
 
 export type SalesOrderInfo = OrderInfo & {

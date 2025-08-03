@@ -120,7 +120,7 @@ interface InvoiceRentalOrder {
 
 const Invoice = ({ data }: InvoiceRentalOrder) => {
   const calculateRentAfterGST = (rent: number, gst: number) => {
-    if (data.billing_mode === BillingMode.RETAIL) {
+    if (data.billing_mode === BillingMode.B2C) {
       console.log(gst);
       const exclusiveAmount = rent / (1 + gst / 100);
       return Math.round(exclusiveAmount * 100) / 100;
@@ -130,7 +130,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
   };
 
   const updatedProducts =
-    data.billing_mode === BillingMode.RETAIL && data.product_details
+    data.billing_mode === BillingMode.B2C && data.product_details
       ? data.product_details.map((product: ProductDetails) => ({
           ...product,
           rent_per_unit: calculateRentAfterGST(product.rent_per_unit, data.gst),
@@ -542,6 +542,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           >
             <View>
               <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Event/Project Name:</Text>
+                <Text style={styles.fieldValue}>{data.event_name}</Text>
+              </View>
+              <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
                 <Text style={styles.fieldValue}>
                   {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss")}
@@ -552,6 +556,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 <Text style={styles.fieldValue}>
                   {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss")}
                 </Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
+                <Text style={styles.fieldValue}>{data.event_venue}</Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event Address:</Text>
@@ -684,7 +692,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <Text>Discount Amount</Text>
                       <Text>GST</Text>
                       <Text>Round Off</Text>
-                      <Text>E-Way</Text>
+                      <Text>Transport</Text>
                       <Text style={styles.boldText}>Net Total</Text>
                       <Text style={styles.boldText}>Caution Deposit</Text>
                     </View>

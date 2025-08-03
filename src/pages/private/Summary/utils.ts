@@ -89,7 +89,7 @@ export const getDefaultRentalOrder = (
   default_customer: ContactInfoType
 ): RentalOrderInfo => {
   return {
-    billing_mode: BillingMode.RETAIL,
+    billing_mode: BillingMode.B2C,
     customer: default_customer,
     deposits: [],
     discount: 0,
@@ -107,6 +107,8 @@ export const getDefaultRentalOrder = (
     status: PaymentStatus.PENDING,
     type: ProductType.RENTAL,
     eway_amount: 0,
+    event_name: "",
+    event_venue: "",
   };
 };
 

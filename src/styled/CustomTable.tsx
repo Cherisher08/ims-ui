@@ -1,4 +1,3 @@
-import "ag-grid-community/styles/ag-theme-alpine.css";
 import type {
   CellEditingStoppedEvent,
   ColDef,
@@ -13,7 +12,7 @@ import type {
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 // import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import {
   ModuleRegistry,
   AllCommunityModule,
@@ -96,7 +95,7 @@ const CustomTable = <T,>({
 
   return (
     <div
-      className="ag-theme-alpine"
+      className="ag-theme-quartz"
       style={{ height: "fit-content ", width: "100%", overflowY: "auto" }}
     >
       <AgGridReact<T>

@@ -289,7 +289,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       justifyContent: "center",
       textAlign: "center",
       alignItems: "center",
-      whiteSpace: "nowrap",
+      whiteSpace: "normal",
       wordBreak: "break-all",
     },
     calculationWrapper: {
@@ -637,25 +637,27 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   style={[
                     styles.tableColumn,
                     {
-                      width: 80,
+                      width: 100,
                     },
                   ]}
                 >
                   ITEM
                 </Text>
-                <Text style={[styles.tableColumn, { width: 40 }]}>HSN/ SAC</Text>
+                <Text style={[styles.tableColumn, { width: 40 }]}>
+                  HSN/ SAC
+                </Text>
                 <Text style={[styles.tableColumn, { width: 40 }]}>QTY</Text>
                 <Text style={[styles.tableColumn, { width: 40 }]}>UNIT</Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>
                   UNIT PRICE
                 </Text>
-                <Text style={[styles.tableColumn, { width: 60}]}>
+                <Text style={[styles.tableColumn, { width: 60 }]}>
                   BILLING UNIT
                 </Text>
-                <Text style={[styles.tableColumn, { width: 70 }]}>AMOUNT</Text>
-                <Text style={[styles.tableColumn, { width: 70 }]}>GST</Text>
-                <Text style={[styles.tableColumn, { width: 70 }]}>
-                  FINAL AMOUNT
+                <Text style={[styles.tableColumn, { width: 60 }]}>AMOUNT</Text>
+                <Text style={[styles.tableColumn, { width: 60 }]}>GST(%)</Text>
+                <Text style={[styles.tableColumn, { width: 60 }]}>
+                  TOTAL AMT
                 </Text>
               </View>
               {updatedProducts.map((product: ProductDetails, index: number) => (
@@ -668,8 +670,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       style={[
                         styles.productColumn,
                         {
-                          width: 80,
+                          width: 100,
                           paddingBottom: 5,
+                          wordBreak: "break-word",
                         },
                       ]}
                     >
@@ -688,16 +691,16 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   <Text style={[styles.productColumn, { width: 70 }]}>
                     Rs. {product.rent_per_unit}
                   </Text>
-                  <Text style={[styles.productColumn, { width:60 }]}>
+                  <Text style={[styles.productColumn, { width: 60 }]}>
                     {calculateProductRent(product, true)} {product.billing_unit}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 70 }]}>
+                  <Text style={[styles.productColumn, { width: 60 }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 70 }]}>
-                    Rs. {gstAmount}
+                  <Text style={[styles.productColumn, { width: 60 }]}>
+                    {data.gst}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 70 }]}>
+                  <Text style={[styles.productColumn, { width: 60 }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
                 </View>

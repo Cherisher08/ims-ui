@@ -39,6 +39,7 @@ export type ProductDetails = {
   order_repair_count: number;
   order_quantity: number;
   rent_per_unit: number;
+  product_code: string;
 };
 
 export type ContactSelectionType = {

@@ -136,5 +136,6 @@ export const getDefaultProduct = () => {
     order_repair_count: 0,
     out_date: utcString(),
     rent_per_unit: 0,
+    product_code: "",
   };
 };

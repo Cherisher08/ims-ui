@@ -672,7 +672,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                         {
                           width: 100,
                           paddingBottom: 5,
-                          wordBreak: "break-word",
                         },
                       ]}
                     >

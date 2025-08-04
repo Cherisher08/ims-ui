@@ -1,6 +1,6 @@
 import { IoIosContact } from "react-icons/io";
 import { LuClipboardList, LuShoppingBag } from "react-icons/lu";
-import { MdDashboardCustomize } from "react-icons/md";
+import { MdDashboardCustomize, MdDataSaverOn } from "react-icons/md";
 
 type MenuItemsType = {
   id: number;
@@ -26,7 +26,7 @@ export const MenuItems: MenuItemsType[] = [
     id: 2,
     title: "Entries",
     path: "/orders/rentals",
-    logo: <LuClipboardList size={30} />,
+    logo: <MdDataSaverOn size={30} />,
   },
   {
     id: 3,

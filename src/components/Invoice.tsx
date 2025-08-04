@@ -119,6 +119,7 @@ interface InvoiceRentalOrder {
 }
 
 const Invoice = ({ data }: InvoiceRentalOrder) => {
+  console.log(data);
   const calculateRentAfterGST = (rent: number, gst: number) => {
     if (data.billing_mode === BillingMode.B2C) {
       console.log(gst);
@@ -250,13 +251,14 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     OrderSummaryContainer: {
       padding: 10,
       flexDirection: "column",
-      gap: 5,
+      // gap: 5,
     },
     orderWrapper: {
       flexDirection: "column",
-      gap: 5,
+      // gap: 5,
     },
     tableContainer: {
+      border: "1px solid black",
       flexDirection: "column",
       gap: 0,
     },
@@ -288,36 +290,51 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       alignItems: "center",
     },
     calculationWrapper: {
+      borderLeft: "1px solid black",
+      borderRight: "1px solid black",
+      borderBottom: "1px solid black",
       width: "100%",
       flexDirection: "row",
       justifyContent: "flex-end",
     },
     calculationContainer: {
+      width: "100%",
       flexDirection: "column",
       gap: 3,
     },
     section: {
-      flexDirection: "column",
-      gap: 6,
-      width: 200,
-      fontSize: 10,
+      width: "100%",
+      // padding: 10,
+      backgroundColor: "#fff",
     },
-    gridRow: {
+    row: {
+      flexDirection: "row",
+    },
+    labelText: {
+      flex: 1,
+      paddingVertical: 6,
+      borderRight: "1px solid #000",
+      textAlign: "right",
+      paddingRight: 5,
+    },
+    valueText: {
+      paddingRight: 10,
+      paddingVertical: 6,
+      width: 120,
+      textAlign: "right",
+    },
+    boldText: {
+      fontWeight: "bold",
+    },
+    divider: {
+      height: 1,
+      backgroundColor: "#000",
+      marginVertical: 8,
+    },
+    balanceRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      gap: 10,
-    },
-    labelColumn: {
-      flexDirection: "column",
-      gap: 4,
-      color: "#6B7280",
-    },
-    valueColumn: {
-      flexDirection: "column",
-      gap: 4,
-      color: "#6B7280",
-      alignItems: "flex-end",
-      textAlign: "right",
+      paddingVertical: 8,
     },
     inputSim: {
       minWidth: 50,
@@ -326,36 +343,26 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       borderBottom: "1 solid #000",
       textAlign: "right",
     },
-    divider: {
-      borderTop: "1 solid #E5E7EB",
-      marginVertical: 2,
-    },
     smallNote: {
       fontSize: 8,
       textAlign: "right",
       color: "#6B7280",
     },
-    balanceRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    boldText: {
-      fontWeight: "bold",
-      color: "#000",
-    },
     selectSim: {
       fontSize: 10,
       padding: 2,
+      fontWeight: "bold",
     },
     footerRow: {
       marginTop: 10,
       flexDirection: "row",
       width: "100%",
-      border: "1px solid #000",
+      border: "1px solid black",
     },
     signatureContainer: {
       width: 250,
       flexDirection: "column",
+      padding:5,
       gap: 3,
     },
     signatureHeader: {
@@ -372,6 +379,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       textAlign: "center",
     },
     amountTextContainer: {
+      borderRight: "1px solid #000",
       width: 440,
       display: "flex",
       justifyContent: "center",
@@ -631,7 +639,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     },
                   ]}
                 >
-                  ARTICLE
+                  ITEM
                 </Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>
                   QUANTITY
@@ -695,10 +703,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             </View>
             <View style={styles.calculationWrapper}>
               <View style={styles.calculationContainer}>
-                <View style={styles.section}>
-                  {/* Grid Columns */}
+                {/* <View style={styles.section}>
                   <View style={styles.gridRow}>
-                    {/* Left Column Labels */}
                     <View style={styles.labelColumn}>
                       <Text>Total Amount</Text>
                       <Text>Discount - {data.discount}%</Text>
@@ -709,7 +715,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <Text style={styles.boldText}>Deposit</Text>
                     </View>
 
-                    {/* Right Column Values */}
                     <View style={styles.valueColumn}>
                       <Text>Rs. {calcFinalAmount().toFixed(2)}</Text>
                       <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
@@ -727,13 +732,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     </View>
                   </View>
 
-                  {/* Divider */}
                   <View style={styles.divider} />
 
-                  {/* Final total and mode */}
                   <View style={styles.balanceRow}>
                     <View style={{ flexDirection: "column", gap: 4 }}>
-                      {/* <Text>Outstanding Amount</Text> */}
                       <Text
                         style={{
                           color:
@@ -794,9 +796,166 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                             )
                         ).toFixed(2)}
                       </Text>
-                      {/* <Text> </Text> */}
                       <Text style={styles.selectSim}>
                         {data.payment_mode.toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+                </View> */}
+                <View style={styles.section}>
+                  {/* Grid Columns */}
+                  {[
+                    {
+                      label: "Total Amount",
+                      value: `Rs. ${calcFinalAmount().toFixed(2)}`,
+                      bottom: false,
+                    },
+                    {
+                      label: `Discount - ${data.discount}%`,
+                      value: `Rs. ${data.discount_amount?.toFixed(2)}`,
+                      bottom: true,
+                    },
+                    {
+                      label: `GST - ${data.gst}%`,
+                      value: `Rs. ${gstAmount}`,
+                      bottom: true,
+                    },
+                    {
+                      label: "Round Off",
+                      value: `Rs. ${data.round_off?.toFixed(2)}`,
+                      bottom: true,
+                    },
+                    ...(data.eway_amount
+                      ? [
+                          {
+                            label: "Transport",
+                            value: `Rs. ${data.eway_amount?.toFixed(2)}`,
+                            bottom: true,
+                          },
+                        ]
+                      : []),
+                    {
+                      label: "Net Total",
+                      value: `Rs. ${Math.abs(calcTotal()).toFixed(2)}`,
+                      bottom: true,
+                      bold: true,
+                    },
+                    {
+                      label: "Deposit",
+                      value: `Rs. ${depositTotal().toFixed(2)}`,
+                      bottom: true,
+                      bold: true,
+                    },
+                  ].map((item, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.row,
+                        item.bottom ? { borderBottom: "1px solid black" } : {},
+                      ]}
+                    >
+                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>
+                        {item.label}
+                      </Text>
+                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>
+                        {item.value}
+                      </Text>
+                    </View>
+                  ))}
+
+                  {/* Final total and mode */}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        flexDirection: "column",
+                        width: "100%",
+                        gap: 4,
+                        borderRight: "1px solid black",
+                      }}
+                    >
+                      <View
+                        style={{
+                          display: "flex",
+                          paddingVertical: 8,
+                          justifyContent: "space-between",
+                          flexDirection: "row",
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
+                          {"( Mode of Payment : " +
+                            data.payment_mode.toUpperCase() +
+                            ")"}
+                        </Text>
+                        <Text
+                          style={{
+                            paddingRight: 5,
+                            color:
+                              calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                ) <
+                              0
+                                ? "red"
+                                : "black",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {data.status === PaymentStatus.PAID
+                            ? "Paid"
+                            : calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                ) <
+                              0
+                            ? "Return Payment"
+                            : "Balance"}
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        width: 153,
+                        alignItems: "flex-end",
+                        paddingVertical: 8,
+                        paddingRight: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:
+                            calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) <
+                            0
+                              ? "red"
+                              : "black",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Rs.{" "}
+                        {(data.status === PaymentStatus.PAID
+                          ? 0
+                          : Math.abs(
+                              calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                )
+                            )
+                        ).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -840,7 +999,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   </Text>
                 </View>
               </View>
-
               <View
                 style={{
                   width: "100%",

@@ -147,7 +147,7 @@ const getChartData = (
         const roundOff = order.round_off || 0;
         const discountAmount = order.discount_amount || 0;
         const gstAmount =
-          order.billing_mode === BillingMode.BUSINESS
+          order.billing_mode === BillingMode.B2B
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
@@ -167,7 +167,7 @@ const getChartData = (
         const roundOff = order.round_off || 0;
         const discountAmount = order.discount_amount || 0;
         const gstAmount =
-          order.billing_mode === BillingMode.BUSINESS
+          order.billing_mode === BillingMode.B2B
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
@@ -271,7 +271,7 @@ const getDetailsData = (
       const roundOff = order.round_off || 0;
       const discountAmount = order.discount_amount || 0;
       const gstAmount =
-        order.billing_mode === BillingMode.BUSINESS
+        order.billing_mode === BillingMode.B2B
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
@@ -422,7 +422,7 @@ const Dashboard = () => {
       const roundOff = order.round_off || 0;
       const discountAmount = order.discount_amount || 0;
       const gstAmount =
-        order.billing_mode === BillingMode.BUSINESS
+        order.billing_mode === BillingMode.B2B
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 

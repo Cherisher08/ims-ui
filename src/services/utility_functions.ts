@@ -8,7 +8,10 @@ export const calculateDiscountAmount = (
   return +((discountPercent / 100.0) * finalAmount).toFixed(2);
 };
 
-export const calculateProductRent = (product: ProductDetails): number => {
+export const calculateProductRent = (
+  product: ProductDetails,
+  isReturnDuration: boolean = false
+): number => {
   const {
     in_date,
     out_date,
@@ -44,5 +47,6 @@ export const calculateProductRent = (product: ProductDetails): number => {
   }
 
   const effectiveQuantity = order_quantity - order_repair_count;
+  if (isReturnDuration) return duration;
   return rent_per_unit * effectiveQuantity * duration;
 };

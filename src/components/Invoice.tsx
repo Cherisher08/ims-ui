@@ -120,7 +120,7 @@ interface InvoiceRentalOrder {
 
 const Invoice = ({ data }: InvoiceRentalOrder) => {
   const calculateRentAfterGST = (rent: number, gst: number) => {
-    if (data.billing_mode === BillingMode.RETAIL) {
+    if (data.billing_mode === BillingMode.B2C) {
       console.log(gst);
       const exclusiveAmount = rent / (1 + gst / 100);
       return Math.round(exclusiveAmount * 100) / 100;
@@ -130,7 +130,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
   };
 
   const updatedProducts =
-    data.billing_mode === BillingMode.RETAIL && data.product_details
+    data.billing_mode === BillingMode.B2C && data.product_details
       ? data.product_details.map((product: ProductDetails) => ({
           ...product,
           rent_per_unit: calculateRentAfterGST(product.rent_per_unit, data.gst),
@@ -198,9 +198,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       marginBottom: 10,
     },
     image: {
-      width: 120,
+      width: 200,
       height: 90,
-      marginRight: 10,
+      marginRight: 30,
     },
     ownerDetails: {
       flexDirection: "column",
@@ -351,9 +351,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       marginTop: 10,
       flexDirection: "row",
       width: "100%",
+      border: "1px solid #000",
     },
     signatureContainer: {
-      width: 150,
+      width: 250,
       flexDirection: "column",
       gap: 3,
     },
@@ -382,8 +383,13 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       textAlign: "center",
     },
     footerNoteText: {
+      marginTop: 5,
       fontSize: 8,
       textAlign: "center",
+    },
+    bankDetails: {
+      fontSize: 12,
+      fontWeight: "bold",
     },
   });
 
@@ -391,7 +397,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.container}>
-          <Image src="/named-logo.png" style={styles.image} />
+          <Image src="/customer-logo.png" style={styles.image} />
           <View style={styles.ownerDetails}>
             <Text style={styles.title}>MANI POWER TOOLS</Text>
             <Text style={styles.ownerAddress}>
@@ -542,6 +548,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           >
             <View>
               <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Event/Project Name:</Text>
+                <Text style={styles.fieldValue}>{data.event_name}</Text>
+              </View>
+              <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
                 <Text style={styles.fieldValue}>
                   {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss")}
@@ -552,6 +562,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 <Text style={styles.fieldValue}>
                   {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss")}
                 </Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
+                <Text style={styles.fieldValue}>{data.event_venue}</Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event Address:</Text>
@@ -612,7 +626,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   style={[
                     styles.tableColumn,
                     {
-                      width: 300,
+                      width: 200,
                       textAlign: "left",
                     },
                   ]}
@@ -624,6 +638,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 </Text>
                 <Text style={[styles.tableColumn, { width: 80 }]}>
                   UNIT PRICE
+                </Text>
+                <Text style={[styles.tableColumn, { width: 80 }]}>
+                  BILLING UNITS
                 </Text>
                 <Text style={[styles.tableColumn, { width: 80 }]}>
                   FINAL AMOUNT
@@ -639,7 +656,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       style={[
                         styles.productColumn,
                         {
-                          width: 300,
+                          width: 200,
                           paddingBottom: 5,
                           textAlign: "left",
                         },
@@ -651,7 +668,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       style={[
                         styles.productColumn,
                         {
-                          width: 300,
+                          width: 200,
                           textAlign: "left",
                           color: "#4f4f4f",
                         },
@@ -661,10 +678,14 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     </Text>
                   </View>
                   <Text style={[styles.productColumn, { width: 70 }]}>
-                    {product.order_quantity} Unit(s)
+                    {product.order_quantity}{" "}
+                    {product.product_unit.name || "Unit(s)"}
                   </Text>
                   <Text style={[styles.productColumn, { width: 80 }]}>
                     Rs. {product.rent_per_unit}
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 80 }]}>
+                    {calculateProductRent(product, true)} {product.billing_unit}
                   </Text>
                   <Text style={[styles.productColumn, { width: 80 }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
@@ -680,27 +701,27 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     {/* Left Column Labels */}
                     <View style={styles.labelColumn}>
                       <Text>Total Amount</Text>
-                      <Text>Discount</Text>
-                      <Text>Discount Amount</Text>
-                      <Text>GST</Text>
+                      <Text>Discount - {data.discount}%</Text>
+                      <Text>GST - {data.gst}%</Text>
                       <Text>Round Off</Text>
-                      <Text>E-Way</Text>
+                      {data.eway_amount && <Text>Transport</Text>}
                       <Text style={styles.boldText}>Net Total</Text>
-                      <Text style={styles.boldText}>Caution Deposit</Text>
+                      <Text style={styles.boldText}>Deposit</Text>
                     </View>
 
                     {/* Right Column Values */}
                     <View style={styles.valueColumn}>
                       <Text>Rs. {calcFinalAmount().toFixed(2)}</Text>
-                      <Text>{data.discount?.toFixed(2)}%</Text>
                       <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
                       <Text>Rs. {gstAmount}</Text>
                       <Text>Rs. {data.round_off?.toFixed(2)}</Text>
-                      <Text>Rs. {data.eway_amount?.toFixed(2)}</Text>
+                      {data.eway_amount && (
+                        <Text>Rs. {data.eway_amount?.toFixed(2)}</Text>
+                      )}
                       <Text style={styles.boldText}>
                         Rs. {Math.abs(calcTotal()).toFixed(2)}
                       </Text>
-                      <Text style={[styles.boldText, { color: "red" }]}>
+                      <Text style={styles.boldText}>
                         Rs. {depositTotal().toFixed(2)}
                       </Text>
                     </View>
@@ -713,15 +734,30 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   <View style={styles.balanceRow}>
                     <View style={{ flexDirection: "column", gap: 4 }}>
                       {/* <Text>Outstanding Amount</Text> */}
-                      <Text>
-                        {calcTotal() -
-                          data.deposits.reduce(
-                            (total, deposit) => total + deposit.amount,
+                      <Text
+                        style={{
+                          color:
+                            calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) <
                             0
-                          ) <
-                        0
-                          ? "Outstanding (Refund)"
-                          : "Outstanding (Balance)"}
+                              ? "red"
+                              : "black", // or your default color
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {data.status === PaymentStatus.PAID
+                          ? "Paid"
+                          : calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) <
+                            0
+                          ? "Return Payment"
+                          : "Balance"}
                       </Text>
                       <Text>Mode</Text>
                     </View>
@@ -732,7 +768,20 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                         alignItems: "flex-end",
                       }}
                     >
-                      <Text style={[styles.boldText, { color: "red" }]}>
+                      <Text
+                        style={{
+                          color:
+                            calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) <
+                            0
+                              ? "red"
+                              : "black", // or your default color
+                          fontWeight: "bold",
+                        }}
+                      >
                         Rs.{" "}
                         {(data.status === PaymentStatus.PAID
                           ? 0
@@ -793,7 +842,85 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               </View>
 
               <View
-                style={{ width: "100%", flexDirection: "column", marginTop: 5 }}
+                style={{
+                  width: "100%",
+                  flexDirection: "column",
+                  marginTop: 10,
+                }}
+              >
+                <Text style={styles.bankDetails}>Terms And Conditions</Text>
+                <Text style={styles.bankDetails}>---</Text>
+              </View>
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "column",
+                  marginTop: 5,
+                  lineHeight: 1,
+                }}
+              >
+                <Text style={styles.bankDetails}>Bank Information</Text>
+                <Text style={styles.bankDetails}>---</Text>
+                <Text style={styles.selectSim}>
+                  Kindly make the payment in favour of
+                </Text>
+                <View
+                  style={{
+                    width: "50%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: "50%" }}>Account No</Text>
+                  <Text>50200080502830</Text>
+                </View>
+                <View
+                  style={{
+                    width: "50%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: "50%" }}>Account Name</Text>
+                  <Text>MANI POWER TOOLS</Text>
+                </View>
+                <View
+                  style={{
+                    width: "50%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: "50%" }}>Bank Name</Text>
+                  <Text>HDFC BANK LTD</Text>
+                </View>
+                <View
+                  style={{
+                    width: "50%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: "50%" }}>Branch</Text>
+                  <Text>KELAMBAKKAM</Text>
+                </View>
+                <View
+                  style={{
+                    width: "50%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: "50%" }}>IFSC Code</Text>
+                  <Text>HDFC0002075</Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  width: "100%",
+                  flexDirection: "column",
+                  marginTop: 10,
+                }}
               >
                 <Text style={styles.thankYouText}>
                   Thanks for choosing us - We look forward to serve you again

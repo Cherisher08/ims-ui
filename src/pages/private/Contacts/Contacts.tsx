@@ -178,7 +178,7 @@ const Contacts = () => {
       <div className="flex justify-between">
         <CustomButton
           onClick={() => setAddContactOpen(true)}
-          label="Add Contact"
+          label="Add Customer"
           icon={<LuPlus color="white" />}
         />
         <div className="w-[20rem]">

@@ -1,66 +1,202 @@
 import {
   CellEditingStoppedEvent,
+  ICellRendererParams,
   IDetailCellRendererParams,
+  ValueGetterParams,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { ProductDetails } from "../../../types/order";
+import { RentalType } from "../../../types/order";
 import { FaPlus } from "react-icons/fa";
 import CustomButton from "../../../styled/CustomButton";
+import { PatchOperation, Product } from "../../../types/common";
+import { usePatchRentalOrderMutation } from "../../../services/OrderService";
+import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
+import {
+  currencyFormatter,
+  getDefaultDeposit,
+  getDefaultProduct,
+} from "./utils";
+import { useGetProductsQuery } from "../../../services/ApiService";
+import { useEffect, useRef, useState } from "react";
+import { IdNamePair } from "../Inventory";
+import { AiOutlineDelete } from "react-icons/ai";
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
-const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
-  const productDetails = props.data.product_details || [];
-  const deposits = props.data.deposits || [];
+const CustomDetailRenderer = (
+  props: IDetailCellRendererParams<RentalType, any>
+) => {
+  const { data: productsData, isSuccess: isProductsQuerySuccess } =
+    useGetProductsQuery();
+  const productList = useRef<Product[]>([]);
+  const [productListPairs, setProductListPairs] = useState<IdNamePair[]>([]);
+  const [patchRentalOrder] = usePatchRentalOrderMutation();
+  const orderData = { ...props.data };
+  const productDetails =
+    orderData.product_details?.map((product) => ({
+      ...product,
+    })) || [];
+  const deposits = orderData.deposits?.map((deposit) => ({ ...deposit })) || [];
+  const productPairs =
+    orderData.product_details?.map((product) => {
+      return {
+        _id: product._id,
+        name: product.name,
+      };
+    }) || [];
   // const [patchRentalOrder] = usePatchRentalOrderMutation();
 
-  const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
-    const { data, colDef, oldValue, newValue } = event;
+  const handleProductCellEditing = async (event: CellEditingStoppedEvent) => {
+    const { rowIndex, colDef, oldValue, newValue } = event;
     const field = colDef.field;
-    console.log(field, data);
     if (!field || newValue === oldValue) return;
 
     try {
       let value = newValue;
+      const patchPayload: PatchOperation[] = [];
+      if (field === "name") {
+        const newProduct = productList.current.find(
+          (product) => product._id === newValue._id
+        );
+        value = newValue.name;
+        patchPayload.push({
+          op: "replace",
+          path: `/product_details/${rowIndex}/_id`,
+          value: newValue._id,
+        });
+        patchPayload.push({
+          op: "replace",
+          path: `/product_details/${rowIndex}/rent_per_unit`,
+          value: newProduct?.rent_per_unit,
+        });
+      }
+      patchPayload.push({
+        op: "replace",
+        path: `/product_details/${rowIndex}/${field}`,
+        value,
+      });
 
-      console.log(value);
-
-      // Special case for customer field
-      // if (field === "customer") {
-      //   if (!isGetContactsSuccess) {
-      //     console.error("Customer query not retrieved yet");
-      //     return;
-      //   }
-      //   const customer = contactsQueryData.find((c) => c._id === newValue._id);
-      //   if (!customer) {
-      //     console.error("Customer not found for ID:", newValue);
-      //     return;
-      //   }
-      //   value = { ...customer };
-      // }
-
-      // const patchPayload: PatchOperation[] = [
-      //   {
-      //     op: "replace",
-      //     path: `/${field}`,
-      //     value,
-      //   },
-      // ];
-
-      // await patchRentalOrder({ id: data._id, payload: patchPayload }).unwrap();
-      console.log(`Successfully patched ${field} for order ${data._id}`);
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched ${field} for order ${orderData._id}`);
     } catch (err) {
       console.error("Failed to patch rental order:", err);
       // Optional: revert or notify
     }
   };
 
+  const handleDepositCellEditing = async (event: CellEditingStoppedEvent) => {
+    const { rowIndex, colDef, oldValue, newValue } = event;
+    const field = colDef.field;
+    if (!field || newValue === oldValue) return;
+
+    try {
+      const value = newValue;
+      const patchPayload: PatchOperation[] = [
+        {
+          op: "replace",
+          path: `/deposits/${rowIndex}/${field}`,
+          value,
+        },
+      ];
+
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched ${field} for order ${orderData._id}`);
+    } catch (err) {
+      console.error("Failed to patch rental order:", err);
+      // Optional: revert or notify
+    }
+  };
+
+  const handleNewProduct = async () => {
+    const product = getDefaultProduct();
+    const patchPayload: PatchOperation[] = [
+      {
+        op: "add",
+        path: `/product_details`,
+        value: product,
+      },
+    ];
+    try {
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched for order ${orderData._id}`);
+    } catch (err) {
+      console.error("Failed to patch rental order:", err);
+      // Optional: revert or notify
+    }
+  };
+
+  const deleteSubItem = async (rowId: number | null, target: string) => {
+    if (rowId !== null) {
+      const patchPayload: PatchOperation[] = [
+        {
+          op: "remove",
+          path: `/${target}/${rowId}`,
+        },
+      ];
+      try {
+        await patchRentalOrder({
+          id: orderData._id!,
+          payload: patchPayload,
+        }).unwrap();
+        console.log(`Successfully patched for order ${orderData._id}`);
+      } catch (err) {
+        console.error("Failed to patch rental order:", err);
+        // Optional: revert or notify
+      }
+    }
+  };
+
+  const handleNewDeposit = async () => {
+    const deposit = getDefaultDeposit(productPairs);
+    const patchPayload: PatchOperation[] = [
+      {
+        op: "add",
+        path: `/deposits`,
+        value: deposit,
+      },
+    ];
+    try {
+      await patchRentalOrder({
+        id: orderData._id!,
+        payload: patchPayload,
+      }).unwrap();
+      console.log(`Successfully patched ${deposit} for order ${orderData._id}`);
+    } catch (err) {
+      console.error("Failed to patch rental order:", err);
+      // Optional: revert or notify
+    }
+  };
+
+  useEffect(() => {
+    if (isProductsQuerySuccess) {
+      productList.current = productsData;
+      setProductListPairs(() => {
+        return productsData.map((product) => {
+          return { _id: product._id, name: product.name };
+        });
+      });
+    }
+  }, [isProductsQuerySuccess, productsData]);
+
   return (
     <div className="px-10 py-4 bg-gray-200 h-full overflow-auto">
       <div className="flex justify-between items-center mb-2">
-        <p className="font-semibold text-lg">Products:</p>
-        <CustomButton icon={<FaPlus />} onClick={() => {}} label="Product" />
+        <p className="font-semibold text-lg text-black">Products:</p>
+        <CustomButton
+          icon={<FaPlus />}
+          onClick={() => handleNewProduct()}
+          label="Product"
+        />
       </div>
       <div
         className="ag-theme-alpine"
@@ -70,11 +206,22 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
           rowData={productDetails}
           suppressMenuHide={false}
           columnDefs={[
-            { field: "name", headerName: "Name", flex: 1 },
+            {
+              field: "name",
+              headerName: "Name",
+              minWidth: 150,
+              editable: true,
+              singleClickEdit: true,
+              cellEditor: AutocompleteCellEditor,
+              cellEditorParams: {
+                customerOptions: productListPairs,
+              },
+            },
             {
               field: "billing_unit",
               headerName: "Billing Unit",
               flex: 1,
+              minWidth: 150,
               editable: true,
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
@@ -85,7 +232,7 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
             {
               field: "out_date",
               headerName: "Out Date",
-              flex: 1,
+              minWidth: 150,
               editable: true,
               singleClickEdit: true,
               cellDataType: "dateTime",
@@ -104,8 +251,8 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
             {
               field: "in_date",
               headerName: "In Date",
-              flex: 1,
               editable: true,
+              minWidth: 150,
               singleClickEdit: true,
               cellDataType: "dateTime",
               cellEditor: InDateCellEditor,
@@ -121,9 +268,21 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
               },
             },
             {
+              headerName: "Available Quantity",
+              flex: 1,
+              minWidth: 150,
+              valueGetter: (params: ValueGetterParams) => {
+                const product = productList.current.find(
+                  (prod) => prod._id === params.data._id
+                );
+                return product?.available_stock;
+              },
+            },
+            {
               field: "order_quantity",
               headerName: "Order Quantity",
               flex: 1,
+              minWidth: 180,
               editable: true,
               singleClickEdit: true,
               cellEditor: "agTextCellEditor",
@@ -135,6 +294,7 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
               field: "order_repair_count",
               headerName: "Order Repair Count",
               flex: 1,
+              minWidth: 150,
               editable: true,
               singleClickEdit: true,
               cellEditor: "agTextCellEditor",
@@ -142,14 +302,44 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
                 step: 1,
               },
             },
+            {
+              field: "rent_per_unit",
+              headerName: "Rent Per Unit",
+              flex: 1,
+              minWidth: 150,
+              valueFormatter: currencyFormatter,
+            },
+            {
+              headerName: "Actions",
+              pinned: "right",
+              maxWidth: 120,
+              cellRenderer: (params: ICellRendererParams<RentalType>) => {
+                const rowNode = params.node;
+                return (
+                  <div className="flex gap-2 h-[2rem] items-center">
+                    <AiOutlineDelete
+                      size={20}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        deleteSubItem(rowNode.rowIndex, "product_details");
+                      }}
+                    />
+                  </div>
+                );
+              },
+            },
           ]}
-          onCellEditingStopped={handleCellEditingStopped}
+          onCellEditingStopped={handleProductCellEditing}
         />
       </div>
 
       <div className="flex justify-between items-center mb-2">
-        <p className="font-semibold text-lg">Deposits:</p>
-        <CustomButton icon={<FaPlus />} onClick={() => {}} label="Deposit" />
+        <p className="font-semibold text-lg text-black">Deposits:</p>
+        <CustomButton
+          icon={<FaPlus />}
+          onClick={() => handleNewDeposit()}
+          label="Deposit"
+        />
       </div>
       <div className="ag-theme-alpine" style={{ height: 150 }}>
         <AgGridReact
@@ -190,15 +380,15 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
               field: "product",
               headerName: "Product",
               valueFormatter: (params) => {
-                const product = params.value;
+                const product = params.value || {};
                 return product.name || " ";
               },
               flex: 1,
               editable: true,
               singleClickEdit: true,
-              cellEditor: SelectCellEditor,
+              cellEditor: AutocompleteCellEditor,
               cellEditorParams: {
-                options: productDetails.map((p: ProductDetails) => p.name),
+                customerOptions: productPairs,
               },
             },
             {
@@ -209,11 +399,30 @@ const CustomDetailRenderer = (props: IDetailCellRendererParams<any, any>) => {
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                options: ["Retail", "Business"],
+                options: ["cash", "account", "upi"],
+              },
+            },
+            {
+              headerName: "Actions",
+              pinned: "right",
+              maxWidth: 120,
+              cellRenderer: (params: ICellRendererParams<RentalType>) => {
+                const rowNode = params.node;
+                return (
+                  <div className="flex gap-2 h-[2rem] items-center">
+                    <AiOutlineDelete
+                      size={20}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        deleteSubItem(rowNode.rowIndex, "deposits");
+                      }}
+                    />
+                  </div>
+                );
               },
             },
           ]}
-          onCellEditingStopped={handleCellEditingStopped}
+          onCellEditingStopped={handleDepositCellEditing}
         />
       </div>
     </div>

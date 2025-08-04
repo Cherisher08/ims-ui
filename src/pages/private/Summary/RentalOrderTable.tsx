@@ -76,7 +76,7 @@ const RentalOrderTable = ({
   const calculateTotalAmount = (orderInfo: RentalOrderType) => {
     if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
       let total = 0;
-      if (orderInfo.billing_mode === BillingMode.RETAIL) {
+      if (orderInfo.billing_mode === BillingMode.B2C) {
         total = orderInfo.product_details.reduce((sum, prod) => {
           const rent_per_unit = calculateProductRent(prod);
           const exclusiveAmount = rent_per_unit / (1 + orderInfo.gst / 100);
@@ -121,7 +121,7 @@ const RentalOrderTable = ({
   //   gst: number,
   //   orderInfo: RentalOrderType
   // ) => {
-  //   if (orderInfo.billing_mode === BillingMode.RETAIL) {
+  //   if (orderInfo.billing_mode === BillingMode.B2C) {
   //     const exclusiveAmount = rent / (1 + gst / 100);
   //     return Math.round(exclusiveAmount * 100) / 100;
   //   } else {
@@ -226,6 +226,28 @@ const RentalOrderTable = ({
       },
     },
     {
+      field: "event_name",
+      headerName: "Event Name",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 200,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: AddressCellEditor,
+    },
+    {
+      field: "event_venue",
+      headerName: "Event Venue",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 200,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: AddressCellEditor,
+    },
+    {
       field: "event_address",
       headerName: "Event Address",
       flex: 1,
@@ -249,7 +271,7 @@ const RentalOrderTable = ({
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["Retail", "Business"],
+        options: ["B2C", "B2B"],
       },
     },
     {
@@ -331,9 +353,9 @@ const RentalOrderTable = ({
           const discount_amount = parseFloat(
             (total_amount * percent * 0.01).toFixed(2)
           );
-          return discount_amount;
+          return `₹${discount_amount.toFixed(2)}`;
         }
-        return 0;
+        return "0";
       },
     },
     {
@@ -353,7 +375,7 @@ const RentalOrderTable = ({
     },
     {
       field: "eway_amount",
-      headerName: "E-Way Amount",
+      headerName: "Transport Amount",
       headerClass: "ag-header-wrap",
       minWidth: 150,
       maxWidth: 200,
@@ -450,7 +472,7 @@ const RentalOrderTable = ({
       },
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["paid", "pending", "product fault"],
+        options: ["paid", "pending"],
       },
       cellStyle: (params) => {
         const data = params.data;
@@ -549,7 +571,7 @@ const RentalOrderTable = ({
       let value = newValue;
 
       //expandedRows
-      const expanded = [];
+      const expanded: string[] = [];
       if (gridApiRef.current !== null) {
         gridApiRef.current.forEachNode((node) => {
           if (node.expanded) expanded.push(node.data._id);
@@ -578,7 +600,9 @@ const RentalOrderTable = ({
 
       if (field === "discount_amount") {
         field = "discount";
-        value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
+        if (calculateTotalAmount(data))
+          value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
+        else value = 0;
       }
 
       const patchPayload: PatchOperation[] = [
@@ -636,8 +660,7 @@ const RentalOrderTable = ({
           const orderId = params.data?.order_id;
           if (orderId && expiredOrderIds.has(orderId)) {
             return {
-              backgroundColor: "red",
-              color: "white",
+              backgroundColor: "#D1D1D1",
             };
           }
           return {

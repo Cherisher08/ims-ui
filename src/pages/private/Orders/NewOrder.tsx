@@ -169,7 +169,7 @@ const initialRentalProduct: RentalOrderInfo = {
   gst: 10,
   remarks: "",
   type: ProductType.RENTAL,
-  billing_mode: BillingMode.RETAIL,
+  billing_mode: BillingMode.B2C,
   status: PaymentStatus.PENDING,
   payment_mode: PaymentMode.CASH,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
@@ -181,6 +181,8 @@ const initialRentalProduct: RentalOrderInfo = {
   product_details: [],
   deposits: [],
   eway_amount: 0,
+  event_name: "",
+  event_venue: "",
 };
 
 const NewOrder = () => {
@@ -282,7 +284,7 @@ const NewOrder = () => {
   const calculateTotalAmount = useMemo(() => {
     if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
       let total = 0;
-      if (orderInfo.billing_mode === BillingMode.RETAIL) {
+      if (orderInfo.billing_mode === BillingMode.B2C) {
         total = orderInfo.product_details.reduce((sum, prod) => {
           const rent_per_unit = calculateProductRent(prod);
           const exclusiveAmount = rent_per_unit / (1 + orderInfo.gst / 100);
@@ -326,7 +328,7 @@ const NewOrder = () => {
   ]);
 
   const calculateRentAfterGST = (rent: number, gst: number) => {
-    if (orderInfo.billing_mode === BillingMode.RETAIL) {
+    if (orderInfo.billing_mode === BillingMode.B2C) {
       const exclusiveAmount = rent / (1 + gst / 100);
       return Math.round(exclusiveAmount * 100) / 100;
     } else {
@@ -676,20 +678,18 @@ const NewOrder = () => {
               </div>
 
               <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
-                <p>Retail</p>
+                <p>B2C</p>
                 <AntSwitch
-                  checked={orderInfo.billing_mode === BillingMode.BUSINESS}
+                  checked={orderInfo.billing_mode === BillingMode.B2B}
                   onChange={(e) => {
                     handleValueChange(
                       "billing_mode",
-                      e.target.checked
-                        ? BillingMode.BUSINESS
-                        : BillingMode.RETAIL
+                      e.target.checked ? BillingMode.B2B : BillingMode.B2C
                     );
                     handleValueChange("gst", e.target.checked ? 0 : 10);
                   }}
                 />
-                <p>Business</p>
+                <p>B2B</p>
               </div>
             </div>
           </>

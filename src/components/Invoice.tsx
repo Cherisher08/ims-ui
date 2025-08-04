@@ -277,7 +277,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     tableColumn: {
       fontSize: 10,
       color: "#4f4f4f",
-      textAlign: "left",
+      textAlign: "center",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
@@ -287,8 +287,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       color: "black",
       display: "flex",
       justifyContent: "center",
-      textAlign: "left",
+      textAlign: "center",
       alignItems: "center",
+      whiteSpace: "nowrap",
+      wordBreak: "break-all",
     },
     calculationWrapper: {
       borderLeft: "1px solid black",
@@ -630,7 +632,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           <View style={styles.orderWrapper}>
             <View style={styles.tableContainer}>
               <View style={styles.tableHeader}>
-                <Text style={[styles.tableColumn, { width: 30 }]}>NO</Text>
+                <Text style={[styles.tableColumn, { width: 20 }]}>NO</Text>
                 <Text
                   style={[
                     styles.tableColumn,
@@ -641,13 +643,13 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   ITEM
                 </Text>
-                <Text style={[styles.tableColumn, { width: 50 }]}>HSN/SAC</Text>
+                <Text style={[styles.tableColumn, { width: 40 }]}>HSN/ SAC</Text>
                 <Text style={[styles.tableColumn, { width: 40 }]}>QTY</Text>
                 <Text style={[styles.tableColumn, { width: 40 }]}>UNIT</Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>
                   UNIT PRICE
                 </Text>
-                <Text style={[styles.tableColumn, { width: 70 }]}>
+                <Text style={[styles.tableColumn, { width: 60}]}>
                   BILLING UNIT
                 </Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>AMOUNT</Text>
@@ -658,7 +660,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               </View>
               {updatedProducts.map((product: ProductDetails, index: number) => (
                 <View key={product._id} style={styles.tableRow}>
-                  <Text style={[styles.productColumn, { width: 30 }]}>
+                  <Text style={[styles.productColumn, { width: 20 }]}>
                     {index + 1}
                   </Text>
                   <View>
@@ -674,7 +676,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       {product.name}
                     </Text>
                   </View>
-                  <Text style={[styles.productColumn, { width: 50 }]}>
+                  <Text style={[styles.productColumn, { width: 40 }]}>
                     {product.product_code || ""}
                   </Text>
                   <Text style={[styles.productColumn, { width: 40 }]}>
@@ -686,7 +688,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   <Text style={[styles.productColumn, { width: 70 }]}>
                     Rs. {product.rent_per_unit}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 70 }]}>
+                  <Text style={[styles.productColumn, { width:60 }]}>
                     {calculateProductRent(product, true)} {product.billing_unit}
                   </Text>
                   <Text style={[styles.productColumn, { width: 70 }]}>

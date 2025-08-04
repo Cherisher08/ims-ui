@@ -22,6 +22,7 @@ import { useGetProductsQuery } from "../../../services/ApiService";
 import { useEffect, useRef, useState } from "react";
 import { IdNamePair } from "../Inventory";
 import { AiOutlineDelete } from "react-icons/ai";
+import dayjs from "dayjs";
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
 const CustomDetailRenderer = (
@@ -239,13 +240,7 @@ const CustomDetailRenderer = (
               cellEditor: InDateCellEditor,
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return date.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
+                return dayjs(date).format("DD-MMM-YYYY hh:mm A");
               },
             },
             {
@@ -258,13 +253,7 @@ const CustomDetailRenderer = (
               cellEditor: InDateCellEditor,
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return date.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
+                return dayjs(date).format("DD-MMM-YYYY hh:mm A");
               },
             },
             {
@@ -367,13 +356,7 @@ const CustomDetailRenderer = (
               cellEditor: InDateCellEditor,
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return date.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
+                return dayjs(date).format("DD-MMM-YYYY hh:mm A");
               },
             },
             {

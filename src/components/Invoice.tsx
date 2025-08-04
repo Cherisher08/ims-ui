@@ -266,6 +266,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       flexDirection: "row",
       backgroundColor: "#f4f4f4",
       padding: 5,
+      borderBottom: "1px solid #00000",
     },
     tableRow: {
       flexDirection: "row",
@@ -276,7 +277,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     tableColumn: {
       fontSize: 10,
       color: "#4f4f4f",
-      textAlign: "center",
+      textAlign: "left",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
@@ -286,7 +287,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       color: "black",
       display: "flex",
       justifyContent: "center",
-      textAlign: "center",
+      textAlign: "left",
       alignItems: "center",
     },
     calculationWrapper: {
@@ -362,7 +363,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     signatureContainer: {
       width: 250,
       flexDirection: "column",
-      padding:5,
+      padding: 5,
       gap: 3,
     },
     signatureHeader: {
@@ -562,13 +563,13 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss")}
+                  {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss A")}
                 </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss")}
+                  {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss A")}
                 </Text>
               </View>
               <View style={styles.tableField}>
@@ -623,7 +624,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           </View>
         </View>
         <View style={styles.OrderSummaryContainer}>
-          <Text style={{ fontSize: 15, fontWeight: "bold" }}>
+          <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
             Order Summary
           </Text>
           <View style={styles.orderWrapper}>
@@ -634,23 +635,24 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   style={[
                     styles.tableColumn,
                     {
-                      width: 200,
-                      textAlign: "left",
+                      width: 80,
                     },
                   ]}
                 >
                   ITEM
                 </Text>
+                <Text style={[styles.tableColumn, { width: 50 }]}>HSN/SAC</Text>
+                <Text style={[styles.tableColumn, { width: 40 }]}>QTY</Text>
+                <Text style={[styles.tableColumn, { width: 40 }]}>UNIT</Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>
-                  QUANTITY
-                </Text>
-                <Text style={[styles.tableColumn, { width: 80 }]}>
                   UNIT PRICE
                 </Text>
-                <Text style={[styles.tableColumn, { width: 80 }]}>
-                  BILLING UNITS
+                <Text style={[styles.tableColumn, { width: 70 }]}>
+                  BILLING UNIT
                 </Text>
-                <Text style={[styles.tableColumn, { width: 80 }]}>
+                <Text style={[styles.tableColumn, { width: 70 }]}>AMOUNT</Text>
+                <Text style={[styles.tableColumn, { width: 70 }]}>GST</Text>
+                <Text style={[styles.tableColumn, { width: 70 }]}>
                   FINAL AMOUNT
                 </Text>
               </View>
@@ -664,38 +666,36 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       style={[
                         styles.productColumn,
                         {
-                          width: 200,
+                          width: 80,
                           paddingBottom: 5,
-                          textAlign: "left",
                         },
                       ]}
                     >
                       {product.name}
                     </Text>
-                    <Text
-                      style={[
-                        styles.productColumn,
-                        {
-                          width: 200,
-                          textAlign: "left",
-                          color: "#4f4f4f",
-                        },
-                      ]}
-                    >
-                      {product.category}
-                    </Text>
                   </View>
-                  <Text style={[styles.productColumn, { width: 70 }]}>
+                  <Text style={[styles.productColumn, { width: 50 }]}>
+                    {product.product_code || ""}
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 40 }]}>
                     {product.order_quantity}{" "}
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 40 }]}>
                     {product.product_unit.name || "Unit(s)"}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 80 }]}>
+                  <Text style={[styles.productColumn, { width: 70 }]}>
                     Rs. {product.rent_per_unit}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 80 }]}>
+                  <Text style={[styles.productColumn, { width: 70 }]}>
                     {calculateProductRent(product, true)} {product.billing_unit}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 80 }]}>
+                  <Text style={[styles.productColumn, { width: 70 }]}>
+                    Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 70 }]}>
+                    Rs. {gstAmount}
+                  </Text>
+                  <Text style={[styles.productColumn, { width: 70 }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
                 </View>
@@ -703,105 +703,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             </View>
             <View style={styles.calculationWrapper}>
               <View style={styles.calculationContainer}>
-                {/* <View style={styles.section}>
-                  <View style={styles.gridRow}>
-                    <View style={styles.labelColumn}>
-                      <Text>Total Amount</Text>
-                      <Text>Discount - {data.discount}%</Text>
-                      <Text>GST - {data.gst}%</Text>
-                      <Text>Round Off</Text>
-                      {data.eway_amount && <Text>Transport</Text>}
-                      <Text style={styles.boldText}>Net Total</Text>
-                      <Text style={styles.boldText}>Deposit</Text>
-                    </View>
-
-                    <View style={styles.valueColumn}>
-                      <Text>Rs. {calcFinalAmount().toFixed(2)}</Text>
-                      <Text>Rs. {data.discount_amount?.toFixed(2)}</Text>
-                      <Text>Rs. {gstAmount}</Text>
-                      <Text>Rs. {data.round_off?.toFixed(2)}</Text>
-                      {data.eway_amount && (
-                        <Text>Rs. {data.eway_amount?.toFixed(2)}</Text>
-                      )}
-                      <Text style={styles.boldText}>
-                        Rs. {Math.abs(calcTotal()).toFixed(2)}
-                      </Text>
-                      <Text style={styles.boldText}>
-                        Rs. {depositTotal().toFixed(2)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.divider} />
-
-                  <View style={styles.balanceRow}>
-                    <View style={{ flexDirection: "column", gap: 4 }}>
-                      <Text
-                        style={{
-                          color:
-                            calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              ) <
-                            0
-                              ? "red"
-                              : "black", // or your default color
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {data.status === PaymentStatus.PAID
-                          ? "Paid"
-                          : calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              ) <
-                            0
-                          ? "Return Payment"
-                          : "Balance"}
-                      </Text>
-                      <Text>Mode</Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "column",
-                        gap: 4,
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color:
-                            calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              ) <
-                            0
-                              ? "red"
-                              : "black", // or your default color
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Rs.{" "}
-                        {(data.status === PaymentStatus.PAID
-                          ? 0
-                          : Math.abs(
-                              calcTotal() -
-                                data.deposits.reduce(
-                                  (total, deposit) => total + deposit.amount,
-                                  0
-                                )
-                            )
-                        ).toFixed(2)}
-                      </Text>
-                      <Text style={styles.selectSim}>
-                        {data.payment_mode.toUpperCase()}
-                      </Text>
-                    </View>
-                  </View>
-                </View> */}
                 <View style={styles.section}>
                   {/* Grid Columns */}
                   {[

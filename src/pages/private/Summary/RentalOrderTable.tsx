@@ -35,6 +35,7 @@ import {
   calculateProductRent,
 } from "../../../services/utility_functions";
 import { currencyFormatter } from "./utils";
+import dayjs from "dayjs";
 
 const RentalOrderTable = ({
   rentalOrders,
@@ -151,13 +152,7 @@ const RentalOrderTable = ({
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
         const date = new Date(params.value);
-        return date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        return dayjs(date).format("DD-MMM-YYYY hh:mm A");
       },
     },
     {
@@ -171,13 +166,7 @@ const RentalOrderTable = ({
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
         const date = new Date(params.value);
-        return date.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        return dayjs(date).format("DD-MMM-YYYY hh:mm A");
       },
     },
     {
@@ -193,14 +182,7 @@ const RentalOrderTable = ({
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
         const date = params.value ? new Date(params.value) : "";
-        if (date)
-          return date.toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+        if (date) return dayjs(date).format("DD-MMM-YYYY hh:mm A");
         return "";
       },
     },

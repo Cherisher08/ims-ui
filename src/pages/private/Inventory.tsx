@@ -170,7 +170,7 @@ const Inventory = () => {
       },
       {
         field: "product_code",
-        headerName: "Product Code",
+        headerName: "HSN Code",
         flex: 1,
         headerClass: "ag-header-wrap",
         minWidth: 100,
@@ -530,10 +530,10 @@ const Inventory = () => {
 
             <div className="flex flex-col gap-3">
               <CustomInput
-                label="Product Code"
+                label="HSN Code"
                 value={newProductData.product_code}
                 onChange={(value) => handleProductChange("product_code", value)}
-                placeholder="Enter Product Code"
+                placeholder="Enter HSN Code"
               />
               <CustomDatePicker
                 label="Purchase Date"
@@ -754,7 +754,7 @@ const Inventory = () => {
 
             <div className="flex flex-col gap-3">
               <CustomInput
-                label="Product Code"
+                label="HSN Code"
                 value={updateData?.product_code ?? ""}
                 onChange={(value) =>
                   setUpdateData((prev) => {
@@ -766,7 +766,7 @@ const Inventory = () => {
                     return prev;
                   })
                 }
-                placeholder="Enter Product Code"
+                placeholder="Enter HSN Code"
               />
               <CustomDatePicker
                 label="Purchase Date"

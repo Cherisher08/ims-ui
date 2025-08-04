@@ -244,6 +244,7 @@ const NewOrder = () => {
     order_repair_count: 0,
     out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
     rent_per_unit: 0,
+    product_code: "",
   });
 
   const [depositOpen, setDepositOpen] = useState<boolean>(false);
@@ -378,6 +379,7 @@ const NewOrder = () => {
         order_repair_count: 0,
         out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
         rent_per_unit: 0,
+        product_code: "",
       });
     }
   };

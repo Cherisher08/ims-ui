@@ -35,6 +35,7 @@ const initialProductState: ProductDetails = {
   order_repair_count: 0,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
   rent_per_unit: 0,
+  product_code: "",
 };
 
 const formatProducts = (products: Product[]) => {

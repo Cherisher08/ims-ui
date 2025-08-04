@@ -71,6 +71,16 @@ const CustomDetailRenderer = (
           path: `/product_details/${rowIndex}/rent_per_unit`,
           value: newProduct?.rent_per_unit,
         });
+        patchPayload.push({
+          op: "replace",
+          path: `/product_details/${rowIndex}/product_unit`,
+          value: newProduct?.unit,
+        });
+        patchPayload.push({
+          op: "replace",
+          path: `/product_details/${rowIndex}/product_code`,
+          value: newProduct?.product_code,
+        });
       }
       patchPayload.push({
         op: "replace",

@@ -26,6 +26,7 @@ import dayjs from "dayjs";
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
 const CustomDetailRenderer = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   props: IDetailCellRendererParams<RentalType, any>
 ) => {
   const { data: productsData, isSuccess: isProductsQuerySuccess } =
@@ -184,7 +185,6 @@ const CustomDetailRenderer = (
       console.log(`Successfully patched ${deposit} for order ${orderData._id}`);
     } catch (err) {
       console.error("Failed to patch rental order:", err);
-      // Optional: revert or notify
     }
   };
 
@@ -216,6 +216,7 @@ const CustomDetailRenderer = (
         <AgGridReact
           rowData={productDetails}
           suppressMenuHide={false}
+          onCellEditingStopped={handleProductCellEditing}
           columnDefs={[
             {
               field: "name",
@@ -328,7 +329,6 @@ const CustomDetailRenderer = (
               },
             },
           ]}
-          onCellEditingStopped={handleProductCellEditing}
         />
       </div>
 

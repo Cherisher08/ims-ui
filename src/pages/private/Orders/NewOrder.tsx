@@ -275,6 +275,7 @@ const NewOrder = () => {
     }
   }, [errors, orderInfo]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleValueChange = (key: string, value: any) => {
     setOrderInfo((prev) => ({
       ...prev,
@@ -644,23 +645,23 @@ const NewOrder = () => {
       </div>
 
       {/* === Order Info Form === */}
-      <div className="max-w-full overflow-x-hidden flex flex-col sm gap-2 max-h-full">
+      <div className="max-w-full flex flex-col sm gap-2 max-h-full">
         {orderInfo.type === ProductType.RENTAL && (
           <>
             <div className="max-w-full flex flex-wrap justify-between items-start mr-4">
-              <div className="flex max-lg:flex-wrap gap-3">
+              <div className="flex max-lg:flex-wrap gap-14">
                 <CustomInput
                   onChange={() => {}}
                   label="Order Id"
                   placeholder="Enter Order Id"
                   value={orderInfo?.order_id ?? ""}
                   disabled
-                  className="min-w-[15rem] max-w-[35rem]"
+                  className="min-w-[15.5rem] max-w-[35rem]"
                 />
 
                 <CustomSelect
                   label="Payment Status"
-                  className="w-[15rem]"
+                  className="w-[15.5rem]"
                   labelClass="w-fit"
                   options={paymentStatusOptions}
                   value={
@@ -702,7 +703,7 @@ const NewOrder = () => {
           <CustomSelect
             label="Customer"
             labelClass="min-w-[5rem]"
-            wrapperClass="min-w-[15rem] max-w-[20rem]"
+            wrapperClass="min-w-[16rem] max-w-[20rem]"
             options={formatContacts(contacts)}
             value={
               formatContacts(contacts).find(

@@ -27,8 +27,8 @@ const SideBar = ({ open, setOpen }: SideBar) => {
 
   return (
     <div
-      className={`w-fit h-full z-50 absolute md:relative ${
-        open ? "" : "-translate-x-25 md:-translate-x-0"
+      className={`w-fit h-full z-50 absolute md:hidden md:relative ${
+        open ? "" : "-translate-x-25 md:-translate-x-10"
       }`}
     >
       <motion.div
@@ -75,7 +75,10 @@ const SideBar = ({ open, setOpen }: SideBar) => {
               return (
                 <li
                   key={item.path}
-                  onClick={() => navigate(item.path)}
+                  onClick={() => {
+                    setOpen(false);
+                    navigate(item.path);
+                  }}
                   className={`relative cursor-pointer flex items-center gap-3 w-full pl-3 py-2 text-white hover:rounded-md rounded-r-md hover:menu-active hover:bg-[#006fc431] ${
                     item.id === active ? "menu-active bg-[#006fc431]" : ""
                   }`}

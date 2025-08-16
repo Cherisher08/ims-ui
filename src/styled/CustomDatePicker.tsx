@@ -1,4 +1,6 @@
 import React from "react";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import dayjs, { Dayjs } from "dayjs";
 
 interface CustomDatePickerProps {
   label: string;
@@ -25,24 +27,39 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 }) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${wrapperClass}`}
+      className={`grid grid-cols-[auto_2fr] h-[3.5rem] justify-between min-w-fit gap-2 ${wrapperClass} `}
     >
       <label
-        className={`pt-2 min-w-[4rem] line-clamp-2 break-words h-fit ${labelClass}`}
+        className={`pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
       >
         {label}
       </label>
-      <div className="flex flex-col">
-        <input
-          type="datetime-local"
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          className={`rounded-sm border border-[#ced4da] focus:border-0 px-3 h-[2.5rem] text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2] ${className}`}
-          placeholder={placeholder}
+      <div className="flex flex-col gap-2 w-full">
+        <DateTimePicker
+          value={value ? dayjs(value) : null}
+          onChange={(newValue: Dayjs | null) =>
+            onChange(newValue ? newValue.format("YYYY-MM-DDTHH:mm") : "")
+          }
+          slotProps={{
+            textField: {
+              error,
+              helperText: error ? helperText : "",
+              placeholder,
+              className,
+              fullWidth: true,
+              sx: {
+                "& .MuiPickersSectionList-root": {
+                  padding: "0.7rem",
+                },
+                "& .MuiFormHelperText-root": {
+                  margin: "0",
+                },
+              },
+            },
+          }}
+          ampm
+          format="DD/MM/YYYY hh:mm A"
         />
-        {error && (
-          <span className="text-red-500 text-xs mt-1">{helperText}</span>
-        )}
       </div>
     </div>
   );

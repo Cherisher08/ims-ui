@@ -44,6 +44,7 @@ const UpdateProductModal = ({
     updateProduct.order_quantity <= 0 ||
     (currentAvailableStock ?? 0) < updateProduct.order_quantity ||
     updateProduct.order_quantity < updateProduct.order_repair_count;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleValueChange = (key: string, value: any) => {
     setUpdateProduct((prev) => ({
       ...prev,

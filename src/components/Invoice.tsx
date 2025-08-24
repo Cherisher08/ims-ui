@@ -590,7 +590,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             <View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Project Name:</Text>
-                <Text style={styles.fieldValue}>{data.event_name}</Text>
+                <Text style={styles.fieldValue}>
+                  {data.event_name.trim().length ? data.event_name : " "}
+                </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
@@ -1013,15 +1015,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     Amount in words:
                   </Text>
                   <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                    {numberToWordsIndian(
-                      Math.abs(
-                        calcTotal() -
-                          data.deposits.reduce(
-                            (total, deposit) => total + deposit.amount,
-                            0
-                          )
-                      ) || 0
-                    )}
+                    {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
                   </Text>
                 </View>
                 <View style={styles.signatureContainer}>

@@ -44,6 +44,7 @@ const UpdateProductModal = ({
     updateProduct.order_quantity <= 0 ||
     (currentAvailableStock ?? 0) < updateProduct.order_quantity ||
     updateProduct.order_quantity < updateProduct.order_repair_count;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleValueChange = (key: string, value: any) => {
     setUpdateProduct((prev) => ({
       ...prev,
@@ -118,18 +119,6 @@ const UpdateProductModal = ({
                 );
               }}
             />
-            <CustomDatePicker
-              value={updateProduct.out_date}
-              labelClass="w-[8rem]"
-              label="Out Date"
-              onChange={(value) => handleValueChange("out_date", value)}
-            />
-            <CustomDatePicker
-              value={updateProduct.in_date}
-              labelClass="w-[8rem]"
-              label="In Date"
-              onChange={(value) => handleValueChange("in_date", value)}
-            />
             <CustomInput
               label="Order Quantity"
               type="number"
@@ -144,6 +133,18 @@ const UpdateProductModal = ({
                 handleValueChange("order_quantity", parseInt(value))
               }
             />
+            <CustomDatePicker
+              value={updateProduct.out_date}
+              labelClass="w-[8rem]"
+              label="Out Date"
+              onChange={(value) => handleValueChange("out_date", value)}
+            />
+            <CustomDatePicker
+              value={updateProduct.in_date}
+              labelClass="w-[8rem]"
+              label="In Date"
+              onChange={(value) => handleValueChange("in_date", value)}
+            />
             <CustomInput
               label="Order Repair Count"
               type="number"
@@ -157,6 +158,16 @@ const UpdateProductModal = ({
                 updateProduct.order_quantity < updateProduct.order_repair_count
               }
               helperText="Repair Count higher than Order Quantity"
+            />
+            <CustomInput
+              label="Duration"
+              type="number"
+              labelClass="w-[8rem]"
+              placeholder="Enter Duration"
+              value={updateProduct.duration}
+              onChange={(value) =>
+                handleValueChange("duration", parseInt(value))
+              }
             />
             <CustomInput
               label="Available Stock"

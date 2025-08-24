@@ -75,7 +75,7 @@ const CustomTable = <T,>({
     return;
   },
   getRowHeight = () => null,
-  onRowGroupOpened = () => {},
+  onRowGroupOpened = () => null,
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy

@@ -37,12 +37,14 @@ const CustomInput: React.FC<CustomInputProps> = ({
 }) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr]  justify-between min-w-fit gap-2 ${wrapperClass} ${
-        multiline ? "h-fit pb-8" : "h-[3.5rem]"
-      }`}
+      className={`grid grid-cols-[auto_2fr] justify-between min-w-fit gap-2 ${
+        helperText ? "" : "items-center"
+      } ${wrapperClass} ${multiline ? "h-fit pb-8" : "h-[3.5rem]"}`}
     >
       <label
-        className={`1pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+        className={`${
+          helperText ? "pt-3" : ""
+        } min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
       >
         {label}
       </label>

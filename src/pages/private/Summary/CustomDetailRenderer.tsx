@@ -7,7 +7,7 @@ import {
 import { AgGridReact } from "ag-grid-react";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { RentalType } from "../../../types/order";
+import { BillingUnit, RentalType } from "../../../types/order";
 import { FaPlus } from "react-icons/fa";
 import CustomButton from "../../../styled/CustomButton";
 import { PatchOperation, Product } from "../../../types/common";
@@ -127,7 +127,11 @@ const CustomDetailRenderer = (
   };
 
   const handleNewProduct = async () => {
-    const product = getDefaultProduct();
+    const product = getDefaultProduct(
+      orderData.out_date || "",
+      orderData.expected_date || "",
+      BillingUnit.DAYS
+    );
     const patchPayload: PatchOperation[] = [
       {
         op: "add",
@@ -244,28 +248,41 @@ const CustomDetailRenderer = (
             {
               field: "out_date",
               headerName: "Out Date",
-              minWidth: 150,
+              minWidth: 100,
               editable: true,
               singleClickEdit: true,
               cellDataType: "dateTime",
               cellEditor: InDateCellEditor,
+              cellEditorParams: {
+                format: "DD/MM/YYYY",
+              },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format("DD-MMM-YYYY hh:mm A");
+                return dayjs(date).format("DD-MMM-YYYY");
               },
             },
             {
               field: "in_date",
               headerName: "In Date",
               editable: true,
-              minWidth: 150,
+              minWidth: 100,
               singleClickEdit: true,
               cellDataType: "dateTime",
               cellEditor: InDateCellEditor,
+              cellEditorParams: {
+                format: "DD/MM/YYYY",
+              },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format("DD-MMM-YYYY hh:mm A");
+                return dayjs(date).format("DD-MMM-YYYY");
               },
+            },
+            {
+              field: "duration",
+              headerName: "Total Duration",
+              minWidth: 100,
+              editable: true,
+              singleClickEdit: true,
             },
             {
               headerName: "Available Quantity",

@@ -36,6 +36,7 @@ export type ProductDetails = {
   product_unit: Unit;
   in_date: string;
   out_date: string;
+  duration: number;
   order_repair_count: number;
   order_quantity: number;
   rent_per_unit: number;

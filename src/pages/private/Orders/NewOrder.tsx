@@ -173,7 +173,7 @@ const initialRentalProduct: RentalOrderInfo = {
   status: PaymentStatus.PENDING,
   payment_mode: PaymentMode.CASH,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-  expected_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  expected_date: dayjs().add(10, "day").format("YYYY-MM-DDTHH:mm"),
   in_date: "",
   round_off: 0,
   customer: initialContactType,
@@ -244,6 +244,7 @@ const NewOrder = () => {
     order_quantity: 0,
     order_repair_count: 0,
     out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+    duration: 1,
     rent_per_unit: 0,
     product_code: "",
   });
@@ -379,6 +380,7 @@ const NewOrder = () => {
         in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
         order_quantity: 0,
         order_repair_count: 0,
+        duration: 1,
         out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
         rent_per_unit: 0,
         product_code: "",
@@ -401,7 +403,6 @@ const NewOrder = () => {
 
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
-
     if (rentalId) {
       updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {

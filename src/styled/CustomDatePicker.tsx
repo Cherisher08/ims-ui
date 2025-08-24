@@ -27,10 +27,14 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 }) => {
   return (
     <div
-      className={`grid grid-cols-[auto_2fr] h-[3.5rem] justify-between min-w-fit gap-2 ${wrapperClass} `}
+      className={`grid grid-cols-[auto_2fr] h-[3.5rem] justify-between min-w-fit gap-2 ${
+        helperText ? "" : "items-center"
+      } ${wrapperClass} `}
     >
       <label
-        className={`pt-2 min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+        className={`${
+          helperText ? "pt-3" : ""
+        } min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
       >
         {label}
       </label>
@@ -38,7 +42,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         <DateTimePicker
           value={value ? dayjs(value) : null}
           onChange={(newValue: Dayjs | null) =>
-            onChange(newValue ? newValue.format("YYYY-MM-DDTHH:mm") : "")
+            onChange(newValue ? newValue.format("YYYY-MM-DDThh:mm") : "")
           }
           slotProps={{
             textField: {

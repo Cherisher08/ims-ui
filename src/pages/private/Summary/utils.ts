@@ -122,7 +122,44 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
   };
 };
 
-export const getDefaultProduct = () => {
+const getDuration = (
+  out_date: string,
+  in_date: string,
+  billing_unit: BillingUnit
+) => {
+  let duration = 0;
+  const start = dayjs(out_date).second(0).millisecond(0);
+  const end = dayjs(in_date).second(0).millisecond(0);
+
+  switch (billing_unit) {
+    case BillingUnit.SHIFT: {
+      const hoursDiff = end.diff(start, "hour");
+      duration = Math.ceil(hoursDiff / 8) || 1;
+      break;
+    }
+    case BillingUnit.DAYS:
+      duration = end.diff(start, "day") || 1;
+      break;
+    case BillingUnit.WEEKS:
+      duration = end.diff(start, "week") || 1;
+      break;
+    case BillingUnit.MONTHS:
+      duration = end.diff(start, "month") || 1;
+      break;
+    default:
+      duration = 1;
+  }
+  return duration;
+};
+
+export const getDefaultProduct = (
+  out_date: string,
+  in_date: string,
+  billing_unit: BillingUnit
+) => {
+  const inDate = in_date || utcString();
+  const outDate = out_date || utcString();
+  const duration = getDuration(outDate, inDate, billing_unit);
   return {
     _id: "",
     name: "",
@@ -132,10 +169,11 @@ export const getDefaultProduct = () => {
       _id: "",
       name: "",
     },
-    in_date: utcString(),
+    in_date: inDate,
     order_quantity: 0,
     order_repair_count: 0,
-    out_date: utcString(),
+    out_date: outDate,
+    duration: duration,
     rent_per_unit: 0,
     product_code: "",
   };

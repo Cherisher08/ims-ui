@@ -15,12 +15,13 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export const InDateCellEditor = forwardRef(
-  (props: CustomCellEditorProps, ref) => {
+  (props: CustomCellEditorProps & { format: string }, ref) => {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [value, setValue] = useState<Dayjs | null>(() =>
       props.value ? dayjs(props.value) : null
     );
 
+    const format = props.format || "DD/MM/YYYY hh:mm A";
     useImperativeHandle(ref, () => ({
       getValue() {
         return value ? value.tz(dayjs.tz.guess()).format() : null;
@@ -65,7 +66,7 @@ export const InDateCellEditor = forwardRef(
           value={value}
           onChange={handleChange}
           ampm
-          format="DD/MM/YYYY hh:mm A"
+          format={format}
           slotProps={{
             textField: {
               fullWidth: true,

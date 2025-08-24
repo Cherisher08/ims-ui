@@ -51,6 +51,7 @@ export interface Product {
 export interface PatchOperation {
   op: "add" | "remove" | "replace";
   path: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value?: any;
 }
 

@@ -101,6 +101,7 @@ export type RentalOrderInfo = OrderInfo & {
   product_details: ProductDetails[];
   event_address: string;
   eway_amount: number;
+  eway_mode: PaymentMode;
   event_name: string;
   event_venue: string;
 };

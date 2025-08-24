@@ -430,10 +430,38 @@ const RentalOrderTable = ({
       },
     },
     {
+      field: "remarks",
+      headerName: "Remarks",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 200,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: AddressCellEditor,
+      valueFormatter: (params) => {
+        return params.value?.replace(/\n/g, " ") ?? "";
+      },
+    },
+    {
+      field: "payment_mode",
+      headerName: "Payment Mode",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: ["cash", "account", "upi"],
+      },
+    },
+    {
       field: "status",
       headerName: "Payment Status",
       headerClass: "ag-header-wrap",
-      minWidth: 150,
+      minWidth: 120,
+      pinned: "right",
       filter: "agTextColumnFilter",
       editable: true,
       singleClickEdit: true,
@@ -484,33 +512,6 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "remarks",
-      headerName: "Remarks",
-      flex: 1,
-      headerClass: "ag-header-wrap",
-      minWidth: 200,
-      filter: "agTextColumnFilter",
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: AddressCellEditor,
-      valueFormatter: (params) => {
-        return params.value?.replace(/\n/g, " ") ?? "";
-      },
-    },
-    {
-      field: "payment_mode",
-      headerName: "Payment Mode",
-      headerClass: "ag-header-wrap",
-      minWidth: 150,
-      filter: "agTextColumnFilter",
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: SelectCellEditor,
-      cellEditorParams: {
-        options: ["cash", "account", "upi"],
-      },
-    },
-    {
       field: "actions",
       headerName: "Actions",
       pinned: "right",
@@ -557,6 +558,7 @@ const RentalOrderTable = ({
       if (gridApiRef.current !== null) {
         gridApiRef.current.forEachNode((node) => {
           if (node.expanded) expanded.push(node.data._id);
+          console.log(node);
         });
       }
       setExpandedRowIds(expanded);
@@ -613,7 +615,8 @@ const RentalOrderTable = ({
 
   const onRowDataUpdated = useCallback(() => {
     if (gridApiRef.current === null) return;
-    gridApiRef.current.forEachNode((node) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    gridApiRef?.current?.forEachNode((node: any) => {
       if (expandedRowIds.includes(node.data._id)) {
         node.setExpanded(true);
       }
@@ -630,6 +633,28 @@ const RentalOrderTable = ({
       });
     }
   }, [contactsQueryData, isGetContactsSuccess]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onRowGroupOpened = (params: any) => {
+    const rowId = params.node.data?._id;
+    if (!rowId) return;
+
+    setExpandedRowIds((prev) => {
+      if (prev) {
+        if (params.node.expanded) {
+          return prev.includes(rowId) ? prev : [...prev, rowId];
+        } else {
+          return prev.filter((id) => id !== rowId);
+        }
+      } else {
+        return [rowId];
+      }
+    });
+  };
+
+  useEffect(() => {
+    console.log(orderData);
+  }, [orderData]);
 
   return (
     <>
@@ -649,6 +674,7 @@ const RentalOrderTable = ({
             backGroundColor: "white",
           };
         }}
+        onRowGroupOpened={onRowGroupOpened}
         masterDetail={true}
         handleCellEditingStopped={handleCellEditingStopped}
         getRowHeight={handleRowHeight}

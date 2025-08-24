@@ -223,7 +223,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     },
     invoiceDetails: {
       borderRadius: "5px",
-      backgroundColor: "#f4f4f4",
       padding: 5,
       flexDirection: "row",
       width: "100%",
@@ -290,6 +289,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       textAlign: "center",
       alignItems: "center",
       whiteSpace: "normal",
+      wordWrap: "break-word",
+      width: "100%",
       wordBreak: "break-all",
     },
     calculationWrapper: {

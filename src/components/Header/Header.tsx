@@ -20,14 +20,16 @@ import CustomButton from "../../styled/CustomButton";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store/store";
 import { User, UserRole } from "../../types/user";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { rootApi, useRegisterUserMutation } from "../../services/ApiService";
 import { clearUser } from "../../store/UserSlice";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../constants/constants";
 import { useLazyGetExpiredRentalOrdersQuery } from "../../services/OrderService";
 import { setExpiredRentalOrders } from "../../store/OrdersSlice";
-import { RiMenu3Line } from "react-icons/ri";
+import Logo from "../../assets/logo.svg";
+import { MenuItems } from "../../constants/MenuItems";
+import { useMenu } from "../../contexts/MenuContext";
 
 type NewUserErrorType = {
   name: boolean;
@@ -48,6 +50,9 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const expiredOrdersCount = expiredRentalOrders.length;
 
   const navigate = useNavigate();
+  const { active, setActive } = useMenu();
+  const location = useLocation();
+  const { pathname } = location;
   const dispatch = useDispatch();
   const [
     registerUser,
@@ -74,6 +79,13 @@ const Header = ({ open, setOpen }: HeaderType) => {
     email: false,
     password: false,
   });
+
+  useEffect(() => {
+    const activeMenuItem = MenuItems.find((item) => item.path === pathname);
+    if (activeMenuItem) {
+      setActive(activeMenuItem.id);
+    }
+  }, [pathname, setActive]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -205,17 +217,35 @@ const Header = ({ open, setOpen }: HeaderType) => {
   );
 
   return (
-    <div className="w-full flex justify-between">
-      {open && (
-        <div
-          className="md:hidden w-screen h-screen absolute bg-black opacity-50 z-30"
-          onClick={() => setOpen(false)}
-        ></div>
-      )}
-      <div className="flex items-center md:hidden">
-        <RiMenu3Line size={30} onClick={() => setOpen(!open)} />
-      </div>
-      <div className="w-full px-6 h-18 flex justify-end">
+    <div className="w-full flex justify-between bg-primary items-center mb-3 shadow-lg">
+      <div className="w-full px-6 h-18 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <div className="rounded-full overflow-hidden min-w-12 h-12 aspect-square content-center bg-white">
+            <img
+              src={Logo}
+              className="w-12 h-12"
+              onClick={() => setOpen(!open)}
+            />
+          </div>
+          <span className="text-white text-2xl hidden md:block">
+            Mani Power Tools
+          </span>
+        </div>
+        <ul className="px-2 gap-4 h-fit max-md:hidden flex">
+          {MenuItems.map((item) => {
+            return (
+              <li
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`text-lg font-semibold relative cursor-pointer flex flex-col items-center w-fit pl-3 py-2 ${
+                  active === item.id ? "text-[#0091ff]" : "text-white"
+                } hover:rounded-md rounded-r-md hover:menu-active hover:text-[#0091ff]`}
+              >
+                {item.title}
+              </li>
+            );
+          })}
+        </ul>
         <div className="flex items-center gap-4">
           <IconButton
             onClick={toggleDrawer(true)}
@@ -229,14 +259,17 @@ const Header = ({ open, setOpen }: HeaderType) => {
               badgeContent={expiredOrdersCount > 0 ? expiredOrdersCount : null}
               overlap="circular"
             >
-              <NotificationsNoneIcon sx={{ fontSize: 28 }} />
+              <NotificationsNoneIcon
+                className="text-white"
+                sx={{ fontSize: 28 }}
+              />
             </Badge>
           </IconButton>
           <Avatar className="min-w-12 h-12 rounded-full">
             {strippedUserName}
           </Avatar>
           <div ref={ref} onClick={() => handleMenu(true)}>
-            <IoMdMore size={28} className="cursor-pointer" />
+            <IoMdMore size={28} className="text-white cursor-pointer" />
           </div>
           <CustomMenu
             anchorEl={ref.current}

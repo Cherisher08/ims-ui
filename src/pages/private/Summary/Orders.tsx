@@ -71,7 +71,7 @@ const Orders = () => {
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
   return (
-    <div className="h-fit flex gap-3 flex-col">
+    <div className="h-full flex gap-3 flex-col">
       {/* Header */}
       <div className="flex justify-between">
         <CustomButton
@@ -107,7 +107,7 @@ const Orders = () => {
         <Tabs
           value={activeTab}
           onChange={(_, value) => setActiveTab(value)}
-          aria-label="basic tabs example"
+          aria-label="order type"
         >
           <Tab label="Rental" value={1} />
           {/* <Tab label="Sales" value={2} />

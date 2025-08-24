@@ -92,11 +92,11 @@ const privateRoutes = [
       },
       {
         path: "*",
-        element: <Navigate to="/orders/rentals" replace />,
+        element: <Navigate to="/orders" replace />,
       },
       {
         path: "/",
-        element: <Navigate to="/orders/rentals" replace />,
+        element: <Navigate to="/orders" replace />,
       },
     ],
   },

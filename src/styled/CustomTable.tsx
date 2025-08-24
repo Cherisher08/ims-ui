@@ -25,7 +25,7 @@ import {
   ContextMenuModule,
   MasterDetailModule,
 } from "ag-grid-enterprise";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import CustomDetailRenderer from "../pages/private/Summary/CustomDetailRenderer";
 
 ModuleRegistry.registerModules([
@@ -48,10 +48,12 @@ type CustomTableProps<T> = {
   rowModelType?: RowModelType;
   onGridReady?: (api: { sizeColumnsToFit: () => void }) => void;
   onRowDataUpdated?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
   onGetRowId?: (params: GetRowIdParams) => string;
   getRowHeight?: (params: RowHeightParams) => number | null;
+  onRowGroupOpened?: () => null;
 };
 
 const CustomTable = <T,>({
@@ -73,6 +75,7 @@ const CustomTable = <T,>({
     return;
   },
   getRowHeight = () => null,
+  onRowGroupOpened = () => {},
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy
@@ -86,7 +89,7 @@ const CustomTable = <T,>({
   }, []);
 
   const handleGridReady = useCallback(
-    (params) => {
+    (params: { api: { sizeColumnsToFit: () => void } }) => {
       console.log(params.api);
       onGridReady(params.api);
     },
@@ -106,10 +109,12 @@ const CustomTable = <T,>({
         pagination={pagination}
         rowModelType={rowModelType}
         headerHeight={40}
+        paginationPageSizeSelector={[10]}
         paginationPageSize={10}
         rowHeight={rowHeight}
         detailRowHeight={400}
         onRowDataUpdated={onRowDataUpdated}
+        onRowGroupOpened={onRowGroupOpened}
         getRowHeight={getRowHeight}
         getRowStyle={(params) => getRowStyle(params)}
         components={{

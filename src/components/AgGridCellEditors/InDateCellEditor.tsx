@@ -1,40 +1,99 @@
 import { CustomCellEditorProps } from "ag-grid-react";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
+import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useState, useEffect, useRef } from "react";
+import timezone from "dayjs/plugin/timezone";
+import {
+  useState,
+  useRef,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const InDateCellEditor = (props: CustomCellEditorProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState<string>(() => {
-    if (!props.value) return "";
-    return dayjs(props.value).format("YYYY-MM-DDTHH:mm");
-  });
+export const InDateCellEditor = forwardRef(
+  (props: CustomCellEditorProps, ref) => {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const [value, setValue] = useState<Dayjs | null>(() =>
+      props.value ? dayjs(props.value) : null
+    );
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    useImperativeHandle(ref, () => ({
+      getValue() {
+        return value ? value.tz(dayjs.tz.guess()).format() : null;
+      },
+      isPopup() {
+        return true;
+      },
+      afterGuiAttached() {
+        const input = wrapperRef.current?.querySelector("input");
+        input?.focus();
+      },
+    }));
 
-  const handleBlur = () => {
-    props.stopEditing();
-  };
+    const handleChange = (newValue: Dayjs | null) => {
+      setValue(newValue);
+    };
 
-  const handleValueChange = (updatedValue: string) => {
-    setValue(updatedValue);
-    props.onValueChange(dayjs(updatedValue).tz(dayjs.tz.guess()).format());
-  };
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          wrapperRef.current &&
+          !wrapperRef.current.contains(event.target as Node)
+        ) {
+          props.stopEditing();
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [props]);
 
-  return (
-    <input
-      ref={inputRef}
-      type="datetime-local"
-      value={value}
-      onChange={(e) => handleValueChange(e.target.value)}
-      onBlur={handleBlur}
-      className="ag-input-field-input ag-text-field-input"
-    />
-  );
-};
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+      if (event.key === "Enter") {
+        props.stopEditing();
+      }
+    };
+
+    return (
+      <div ref={wrapperRef} onKeyDown={handleKeyDown}>
+        <DateTimePicker
+          value={value}
+          onChange={handleChange}
+          ampm
+          format="DD/MM/YYYY hh:mm A"
+          slotProps={{
+            textField: {
+              fullWidth: true,
+              size: "small",
+              autoFocus: true,
+              sx: {
+                "& .MuiPickersInputBase-root": {
+                  height: "100%",
+                  outline: "none",
+                  "&:hover fieldset": { border: "none" },
+                  "&.Mui-focused fieldset": { border: "none" },
+                },
+                "& .MuiOutlinedInput-root": {
+                  height: "2.5rem",
+                  border: 0,
+                  width: "fit-content",
+                },
+                "& .MuiPickersSectionList-root": { width: "fit-content" },
+                "& .MuiInputBase-input": {
+                  padding: "0.25rem 0.5rem",
+                  fontSize: "0.8rem",
+                },
+                "& fieldset": { border: "none" },
+              },
+            },
+          }}
+        />
+      </div>
+    );
+  }
+);

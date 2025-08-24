@@ -20,15 +20,17 @@ import {
   calculateDiscountAmount,
   calculateProductRent,
 } from "../services/utility_functions";
+// import InterRegular from "/Inter_18pt-Regular.ttf";
+// import InterBold from "/Inter_18pt-Bold.ttf";
 
 Font.register({
   family: "Inter",
-  src: "/public/Inter_18pt-Regular.ttf",
+  src: "/Inter_18pt-Regular.ttf",
   fontWeight: "normal",
 });
 Font.register({
   family: "Inter",
-  src: "/public/Inter_18pt-Bold.ttf",
+  src: "/Inter_18pt-Bold.ttf",
   fontWeight: "bold",
 });
 

@@ -566,13 +566,13 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss A")}
+                  {dayjs(data.out_date).format("DD-MM-YYYY hh:mm:ss A")}
                 </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss A")}
+                  {dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")}
                 </Text>
               </View>
               <View style={styles.tableField}>
@@ -644,13 +644,15 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   ITEM
                 </Text>
-                <Text style={[styles.tableColumn, { width: 40 }]}>HSN/ SAC</Text>
+                <Text style={[styles.tableColumn, { width: 40 }]}>
+                  HSN/ SAC
+                </Text>
                 <Text style={[styles.tableColumn, { width: 40 }]}>QTY</Text>
                 <Text style={[styles.tableColumn, { width: 40 }]}>UNIT</Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>
                   UNIT PRICE
                 </Text>
-                <Text style={[styles.tableColumn, { width: 60}]}>
+                <Text style={[styles.tableColumn, { width: 60 }]}>
                   BILLING UNIT
                 </Text>
                 <Text style={[styles.tableColumn, { width: 70 }]}>AMOUNT</Text>
@@ -689,7 +691,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   <Text style={[styles.productColumn, { width: 70 }]}>
                     Rs. {product.rent_per_unit}
                   </Text>
-                  <Text style={[styles.productColumn, { width:60 }]}>
+                  <Text style={[styles.productColumn, { width: 60 }]}>
                     {calculateProductRent(product, true)} {product.billing_unit}
                   </Text>
                   <Text style={[styles.productColumn, { width: 70 }]}>

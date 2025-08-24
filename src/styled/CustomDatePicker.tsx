@@ -38,7 +38,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         <DateTimePicker
           value={value ? dayjs(value) : null}
           onChange={(newValue: Dayjs | null) =>
-            onChange(newValue ? newValue.format("YYYY-MM-DDTHH:mm") : "")
+            onChange(newValue ? newValue.format("YYYY-MM-DDThh:mm") : "")
           }
           slotProps={{
             textField: {

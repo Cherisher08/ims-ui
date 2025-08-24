@@ -451,7 +451,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       fontWeight: "bold",
     },
   });
-  console.log("data.deposits[0]: ", data.deposits);
 
   return (
     <Document>
@@ -516,7 +515,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               <Text style={styles.fieldTitle}>Billing Address:</Text>
               <Text style={styles.fieldValue}>{data.customer.name}</Text>
               <Text style={styles.fieldValue}>
-                {data.customer.address ?? " "}
+                {data.customer.address.trim().length
+                  ? data.customer.address
+                  : " "}
               </Text>
               <Text style={styles.fieldValue}>
                 <Text
@@ -614,7 +615,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
-                <Text style={styles.fieldValue}>{data.event_venue}</Text>
+                <Text style={styles.fieldValue}>
+                  {data.event_venue.trim().length ? data.event_venue : " "}
+                </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event Address:</Text>

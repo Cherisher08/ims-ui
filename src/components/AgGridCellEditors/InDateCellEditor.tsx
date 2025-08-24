@@ -2,63 +2,53 @@ import { CustomCellEditorProps } from "ag-grid-react";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import {
-  useState,
-  useRef,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import { useState, useRef, useEffect, forwardRef } from "react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export const InDateCellEditor = forwardRef(
-  (props: CustomCellEditorProps & { format: string }, ref) => {
+  (props: CustomCellEditorProps & { format: string }) => {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [value, setValue] = useState<Dayjs | null>(() =>
       props.value ? dayjs(props.value) : null
     );
 
     const format = props.format || "DD/MM/YYYY hh:mm A";
-    useImperativeHandle(ref, () => ({
-      getValue() {
-        return value ? value.tz(dayjs.tz.guess()).format() : null;
-      },
-      isPopup() {
-        return true;
-      },
-      afterGuiAttached() {
-        const input = wrapperRef.current?.querySelector("input");
-        input?.focus();
-      },
-    }));
 
     const handleChange = (newValue: Dayjs | null) => {
+      console.log("newValue: ", newValue, value);
       setValue(newValue);
+      props.onValueChange(newValue?.toDate());
     };
 
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          wrapperRef.current &&
-          !wrapperRef.current.contains(event.target as Node)
-        ) {
-          props.stopEditing();
-        }
-      };
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [props]);
+    // useEffect(() => {
+    //   const handleClickOutside = (event: MouseEvent) => {
+    //     if (
+    //       wrapperRef.current &&
+    // !wrapperRef.current.contains(event.target as Node)
+    //     ) {
+    //       props.stopEditing();
+    //     }
+    //   };
+    //   document.addEventListener("mousedown", handleClickOutside);
+    //   return () => {
+    //     document.removeEventListener("mousedown", handleClickOutside);
+    //   };
+    // }, [props]);
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
+      console.log("event.key: ", event.key);
       if (event.key === "Enter") {
         props.stopEditing();
       }
     };
+
+    useEffect(() => {
+      // Auto focus after mount
+      setTimeout(() => wrapperRef.current?.focus(), 10);
+    }, []);
 
     return (
       <div ref={wrapperRef} onKeyDown={handleKeyDown}>

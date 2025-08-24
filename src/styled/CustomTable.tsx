@@ -90,7 +90,6 @@ const CustomTable = <T,>({
 
   const handleGridReady = useCallback(
     (params: { api: { sizeColumnsToFit: () => void } }) => {
-      console.log(params.api);
       onGridReady(params.api);
     },
     [onGridReady]

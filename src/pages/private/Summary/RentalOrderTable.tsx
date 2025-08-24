@@ -371,6 +371,19 @@ const RentalOrderTable = ({
       },
     },
     {
+      field: "eway_mode",
+      headerName: "Transport Payment Mode",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: ["cash", "account", "upi"],
+      },
+    },
+    {
       headerName: "Amount (After Taxes)",
       flex: 1,
       minWidth: 200,

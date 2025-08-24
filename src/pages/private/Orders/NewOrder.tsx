@@ -181,6 +181,7 @@ const initialRentalProduct: RentalOrderInfo = {
   product_details: [],
   deposits: [],
   eway_amount: 0,
+  eway_mode: PaymentMode.CASH,
   event_name: "",
   event_venue: "",
 };

@@ -34,6 +34,7 @@ const initialProductState: ProductDetails = {
   order_quantity: 0,
   order_repair_count: 0,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  duration: 1,
   rent_per_unit: 0,
   product_code: "",
 };
@@ -61,6 +62,7 @@ const AddProductModal = ({
     (currentAvailableStock ?? 0) < newProduct.order_quantity ||
     newProduct.order_quantity < newProduct.order_repair_count;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleValueChange = (key: string, value: any) => {
     setNewProduct((prev) => ({
       ...prev,
@@ -140,6 +142,18 @@ const AddProductModal = ({
                 );
               }}
             />
+            <CustomInput
+              label="Order Quantity"
+              type="number"
+              labelClass="w-[8rem]"
+              placeholder="Enter Order Quantity"
+              value={newProduct.order_quantity}
+              error={(currentAvailableStock ?? 0) < newProduct.order_quantity}
+              helperText="Quantity cannot be greater than Available Stock"
+              onChange={(value) =>
+                handleValueChange("order_quantity", parseInt(value))
+              }
+            />
             <CustomDatePicker
               value={newProduct.out_date}
               labelClass="w-[8rem]"
@@ -156,18 +170,6 @@ const AddProductModal = ({
               onChange={(value) => handleValueChange("in_date", value)}
             />
             <CustomInput
-              label="Order Quantity"
-              type="number"
-              labelClass="w-[8rem]"
-              placeholder="Enter Order Quantity"
-              value={newProduct.order_quantity}
-              error={(currentAvailableStock ?? 0) < newProduct.order_quantity}
-              helperText="Quantity cannot be greater than Available Stock"
-              onChange={(value) =>
-                handleValueChange("order_quantity", parseInt(value))
-              }
-            />
-            <CustomInput
               label="Order Repair Count"
               type="number"
               labelClass="w-[8rem]"
@@ -178,6 +180,16 @@ const AddProductModal = ({
               }
               error={newProduct.order_quantity < newProduct.order_repair_count}
               helperText="Repair Count cannot be higher than Order Quantity"
+            />
+            <CustomInput
+              label="Duration"
+              type="number"
+              labelClass="w-[8rem]"
+              placeholder="Enter Duration"
+              value={newProduct.duration}
+              onChange={(value) =>
+                handleValueChange("duration", parseInt(value))
+              }
             />
             <CustomInput
               label="Available Stock"

@@ -119,7 +119,9 @@ interface InvoiceRentalOrder {
 }
 
 const Invoice = ({ data }: InvoiceRentalOrder) => {
-  console.log(data);
+  const deposits = data.deposits;
+  const sameKindOfDeposit =
+    deposits.length > 0 && deposits.every((d) => d.mode === deposits[0].mode);
   const calculateRentAfterGST = (rent: number, gst: number) => {
     if (data.billing_mode === BillingMode.B2C) {
       console.log(gst);
@@ -294,9 +296,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       wordBreak: "break-all",
     },
     calculationWrapper: {
-      borderLeft: "1px solid black",
-      borderRight: "1px solid black",
-      borderBottom: "1px solid black",
+      border: "1px solid black",
       width: "100%",
       flexDirection: "row",
       justifyContent: "flex-end",
@@ -401,6 +401,39 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     },
     bankDetails: {
       fontSize: 12,
+      fontWeight: "bold",
+    },
+    depositContainer: {
+      width: "50%",
+      flexDirection: "column",
+      marginTop: 10,
+    },
+    depositTable: {
+      width: "100%",
+      borderStyle: "solid",
+      borderWidth: 1,
+      borderRightWidth: 0,
+      borderBottomWidth: 0,
+    },
+    depositTableRow: {
+      flexDirection: "row",
+    },
+    depositTableCol: {
+      flex: 1,
+      borderStyle: "solid",
+      borderWidth: 1,
+      borderLeftWidth: 0,
+      borderTopWidth: 0,
+      padding: 5,
+    },
+    depositTableHeader: {
+      flex: 1,
+      borderStyle: "solid",
+      borderWidth: 1,
+      borderLeftWidth: 0,
+      borderTopWidth: 0,
+      padding: 5,
+      backgroundColor: "#eee",
       fontWeight: "bold",
     },
   });
@@ -706,7 +739,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 </View>
               ))}
             </View>
-            <View style={styles.calculationWrapper}>
+            <View wrap={false} break style={styles.calculationWrapper}>
               <View style={styles.calculationContainer}>
                 <View style={styles.section}>
                   {/* Grid Columns */}
@@ -915,6 +948,44 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 <Text style={styles.bankDetails}>Terms And Conditions</Text>
                 <Text style={styles.bankDetails}>---</Text>
               </View>
+              {!sameKindOfDeposit && (
+                <View style={styles.depositContainer}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "bold",
+                      paddingBottom: 10,
+                    }}
+                  >
+                    Deposit Details
+                  </Text>
+                  <View style={styles.depositTable}>
+                    {/* Header row */}
+                    <View style={styles.depositTableRow}>
+                      <Text style={styles.depositTableHeader}>Date</Text>
+                      <Text style={styles.depositTableHeader}>Amount</Text>
+                      <Text style={styles.depositTableHeader}>
+                        Payment Mode
+                      </Text>
+                    </View>
+
+                    {/* Data rows */}
+                    {deposits.map((deposit, idx) => (
+                      <View style={styles.depositTableRow} key={idx}>
+                        <Text style={styles.depositTableCol}>
+                          {dayjs(deposit.date).format("DD-MM-YYYY")}
+                        </Text>
+                        <Text style={styles.depositTableCol}>
+                          {deposit.amount}
+                        </Text>
+                        <Text style={styles.depositTableCol}>
+                          {deposit.mode}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
               <View
                 style={{
                   width: "100%",

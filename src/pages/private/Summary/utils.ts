@@ -107,6 +107,7 @@ export const getDefaultRentalOrder = (
     status: PaymentStatus.PENDING,
     type: ProductType.RENTAL,
     eway_amount: 0,
+    eway_mode: PaymentMode.CASH,
     event_name: "",
     event_venue: "",
   };

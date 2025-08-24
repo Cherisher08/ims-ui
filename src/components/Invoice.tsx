@@ -5,6 +5,7 @@ import {
   Text,
   View,
   Image,
+  Font,
 } from "@react-pdf/renderer";
 import {
   BillingMode,
@@ -19,6 +20,17 @@ import {
   calculateDiscountAmount,
   calculateProductRent,
 } from "../services/utility_functions";
+
+Font.register({
+  family: "Inter",
+  src: "/public/Inter_18pt-Regular.ttf",
+  fontWeight: "normal",
+});
+Font.register({
+  family: "Inter",
+  src: "/public/Inter_18pt-Bold.ttf",
+  fontWeight: "bold",
+});
 
 function numberToWordsIndian(num: number) {
   if (typeof num !== "number" || isNaN(num)) return "Invalid number";
@@ -192,10 +204,12 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       backgroundColor: "white",
       fontSize: 10,
       padding: 10,
+      fontFamily: "Inter",
     },
     container: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "space-around",
       marginBottom: 10,
     },
     image: {
@@ -205,8 +219,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     },
     ownerDetails: {
       flexDirection: "column",
-      flexGrow: 1,
-      width: 100,
     },
     title: {
       fontSize: 12,
@@ -216,10 +228,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     ownerAddress: {
       marginBottom: 2,
     },
-    totalAmount: {
-      height: "100%",
+    pageTitle: {
+      textAlign: "center",
       flexDirection: "column",
-      justifyContent: "flex-end",
     },
     invoiceDetails: {
       borderRadius: "5px",
@@ -238,13 +249,14 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       marginBottom: "8px",
     },
     fieldTitle: {
-      fontWeight: "bold",
+      fontWeight: "normal",
       color: "#4f4f4f",
       marginBottom: "3px",
     },
     fieldValue: {
       color: "black",
-      fontSize: "12px",
+      fontSize: "10px",
+      fontWeight: "extrabold",
       marginBottom: "3px",
     },
     OrderSummaryContainer: {
@@ -322,10 +334,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       paddingRight: 5,
     },
     valueText: {
-      paddingRight: 10,
+      paddingLeft: 10,
       paddingVertical: 6,
-      width: 120,
-      textAlign: "right",
+      width: 70,
+      textAlign: "left",
     },
     boldText: {
       fontWeight: "bold",
@@ -404,10 +416,22 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       fontWeight: "bold",
     },
   });
+  console.log("data.deposits[0]: ", data.deposits);
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <View style={styles.pageTitle}>
+          <Text
+            style={{
+              fontSize: "15px",
+              fontWeight: "bold",
+              marginVertical: "10px",
+            }}
+          >
+            Tax Invoice
+          </Text>
+        </View>
         <View style={styles.container}>
           <Image src="/customer-logo.png" style={styles.image} />
           <View style={styles.ownerDetails}>
@@ -428,38 +452,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               GST No - 33FGDPP7447A1ZI
             </Text>
           </View>
-          <View style={styles.totalAmount}>
-            <Text style={{ color: "#4f4f4f" }}>
-              Total Amount (
-              {Math.abs(calcTotal()) -
-                data.deposits.reduce(
-                  (total, deposit) => total + deposit.amount,
-                  0
-                ) <
-              0
-                ? "CR"
-                : "DR"}
-              )
-            </Text>
-            <Text
-              style={{
-                fontSize: "13px",
-                fontWeight: "bold",
-                marginTop: "3px",
-              }}
-            >
-              Rs.{" "}
-              {(
-                Math.abs(
-                  calcTotal() -
-                    data.deposits.reduce(
-                      (total, deposit) => total + deposit.amount,
-                      0
-                    )
-                ) || 0
-              ).toFixed(2)}
-            </Text>
-          </View>
         </View>
         <View style={styles.invoiceDetails}>
           <View style={styles.detailContainer}>
@@ -476,7 +468,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Bill Date:</Text>
               <Text style={styles.fieldValue}>
-                {dayjs(data.in_date).format("DD-MM-YYYY")}
+                {dayjs(data.in_date).isValid()
+                  ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
+                  : " "}
               </Text>
             </View>
             <View style={styles.tableField}>
@@ -486,7 +480,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Billing Address:</Text>
               <Text style={styles.fieldValue}>{data.customer.name}</Text>
-              <Text style={styles.fieldValue}>{data.customer.address}</Text>
+              <Text style={styles.fieldValue}>
+                {data.customer.address ?? " "}
+              </Text>
               <Text style={styles.fieldValue}>
                 <Text
                   style={{
@@ -495,7 +491,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     color: "#4f4f4f",
                   }}
                 >
-                  Pincode -{" "}
+                  Pincode - {data.customer.pincode}
                 </Text>
                 {data.customer.pincode}
               </Text>
@@ -566,13 +562,17 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.out_date).format("DD-MM-YYYY HH:mm:ss A")}
+                  {dayjs(data.out_date).isValid()
+                    ? dayjs(data.out_date).format("DD-MM-YYYY hh:mm:ss A")
+                    : " "}
                 </Text>
               </View>
               <View style={styles.tableField}>
                 <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.in_date).format("DD-MM-YYYY HH:mm:ss A")}
+                  {dayjs(data.in_date).isValid()
+                    ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
+                    : " "}
                 </Text>
               </View>
               <View style={styles.tableField}>
@@ -716,42 +716,29 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       value: `Rs. ${calcFinalAmount().toFixed(2)}`,
                       bottom: false,
                     },
-                    {
-                      label: `Discount - ${data.discount}%`,
-                      value: `Rs. ${data.discount_amount?.toFixed(2)}`,
-                      bottom: true,
-                    },
-                    {
-                      label: `GST - ${data.gst}%`,
-                      value: `Rs. ${gstAmount}`,
-                      bottom: true,
-                    },
-                    {
-                      label: "Round Off",
-                      value: `Rs. ${data.round_off?.toFixed(2)}`,
-                      bottom: true,
-                    },
-                    ...(data.eway_amount
+                    ...(data.discount
                       ? [
                           {
-                            label: "Transport",
-                            value: `Rs. ${data.eway_amount?.toFixed(2)}`,
+                            label: `Discount - ${data.discount}%`,
+                            value: `Rs. ${data.discount_amount?.toFixed(2)}`,
                             bottom: true,
                           },
                         ]
                       : []),
                     {
-                      label: "Net Total",
-                      value: `Rs. ${Math.abs(calcTotal()).toFixed(2)}`,
+                      label: `GST - ${data.gst}%`,
+                      value: `Rs. ${gstAmount}`,
                       bottom: true,
-                      bold: true,
                     },
-                    {
-                      label: "Deposit",
-                      value: `Rs. ${depositTotal().toFixed(2)}`,
-                      bottom: true,
-                      bold: true,
-                    },
+                    ...(data.round_off
+                      ? [
+                          {
+                            label: "Round Off",
+                            value: `Rs. ${data.round_off?.toFixed(2)}`,
+                            bottom: true,
+                          },
+                        ]
+                      : []),
                   ].map((item, index) => (
                     <View
                       key={index}
@@ -768,7 +755,128 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       </Text>
                     </View>
                   ))}
-
+                  ...(data.eway_amount ? [
+                  {
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        borderBottom: "1px solid black",
+                      }}
+                    >
+                      <View
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          flexDirection: "column",
+                          width: "100%",
+                          gap: 4,
+                        }}
+                      >
+                        <View
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            flexDirection: "row",
+                            gap: 4,
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.selectSim,
+                              { paddingLeft: 50, paddingTop: 5 },
+                            ]}
+                          >
+                            {"( Mode of Payment : " +
+                              data.eway_mode.toUpperCase() +
+                              ")"}
+                          </Text>
+                          <Text
+                            style={[styles.labelText, { fontWeight: "bold" }]}
+                          >
+                            Transport
+                          </Text>
+                        </View>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: "column",
+                          width: 80,
+                          alignItems: "flex-end",
+                        }}
+                      >
+                        <Text
+                          style={[styles.valueText, { fontWeight: "bold" }]}
+                        >
+                          {`Rs. ${data.eway_amount?.toFixed(2)}`}
+                        </Text>
+                      </View>
+                    </View>
+                  }
+                  ]:[])
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      borderBottom: "1px solid black",
+                    }}
+                  >
+                    <Text style={[styles.labelText, { fontWeight: "bold" }]}>
+                      Net Total
+                    </Text>
+                    <Text style={[styles.valueText, { fontWeight: "bold" }]}>
+                      {`Rs. ${Math.abs(calcTotal()).toFixed(2)}`}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      borderBottom: "1px solid black",
+                    }}
+                  >
+                    <View
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        flexDirection: "column",
+                        width: "100%",
+                        gap: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          flexDirection: "row",
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
+                          {data.deposits.length
+                            ? "( Mode of Payment : " +
+                              data.deposits[0].mode.toUpperCase() +
+                              ")"
+                            : ""}
+                        </Text>
+                        <Text
+                          style={[styles.labelText, { fontWeight: "bold" }]}
+                        >
+                          Deposit
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: "column",
+                        width: 80,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>
+                        {`Rs. ${depositTotal().toFixed(2)}`}
+                      </Text>
+                    </View>
+                  </View>
                   {/* Final total and mode */}
                   <View
                     style={{
@@ -789,7 +897,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       <View
                         style={{
                           display: "flex",
-                          paddingVertical: 8,
+                          paddingVertical: 4,
                           justifyContent: "space-between",
                           flexDirection: "row",
                           gap: 4,
@@ -831,10 +939,10 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     <View
                       style={{
                         flexDirection: "column",
-                        width: 153,
-                        alignItems: "flex-end",
-                        paddingVertical: 8,
-                        paddingRight: 10,
+                        width: 80,
+                        alignItems: "flex-start",
+                        paddingVertical: 4,
+                        paddingLeft: 10,
                       }}
                     >
                       <Text
@@ -852,14 +960,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                         }}
                       >
                         Rs.{" "}
-                        {(data.status === PaymentStatus.PAID
-                          ? 0
-                          : Math.abs(
-                              calcTotal() -
-                                data.deposits.reduce(
-                                  (total, deposit) => total + deposit.amount,
-                                  0
-                                )
+                        {Math.abs(
+                          calcTotal() -
+                            data.deposits.reduce(
+                              (total, deposit) => total + deposit.amount,
+                              0
                             )
                         ).toFixed(2)}
                       </Text>

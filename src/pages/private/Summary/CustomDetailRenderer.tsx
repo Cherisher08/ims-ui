@@ -127,9 +127,12 @@ const CustomDetailRenderer = (
   };
 
   const handleNewProduct = async () => {
+    const outDate = new Date(orderData.out_date || "");
+    const expectedDate = new Date(outDate);
+    expectedDate.setDate(outDate.getDate() + (orderData.rental_duration ?? 0));
     const product = getDefaultProduct(
       orderData.out_date || "",
-      orderData.expected_date || "",
+      expectedDate.toISOString(),
       BillingUnit.DAYS
     );
     const patchPayload: PatchOperation[] = [

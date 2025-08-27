@@ -96,7 +96,7 @@ export type RentalOrderInfo = OrderInfo & {
   type: ProductType.RENTAL;
   deposits: DepositType[];
   out_date: string;
-  expected_date: string;
+  rental_duration: number;
   in_date: string;
   product_details: ProductDetails[];
   event_address: string;

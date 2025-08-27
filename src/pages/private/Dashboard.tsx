@@ -281,12 +281,12 @@ const getDetailsData = (
       if (order.status === PaymentStatus.PENDING) {
         if (chartType === "incoming_pending" && pendingAmount > 0) {
           pending.push({
-            name: order.customer.name,
+            name: order.customer ? order.customer.name : "",
             amount: Math.abs(pendingAmount),
           });
         } else if (chartType === "repayment_pending" && pendingAmount < 0) {
           pending.push({
-            name: order.customer.name,
+            name: order.customer ? order.customer.name : "",
             amount: Math.abs(pendingAmount),
           });
         }
@@ -294,12 +294,12 @@ const getDetailsData = (
         // paid section
         if (chartType === "incoming_pending" && pendingAmount > 0) {
           paid.push({
-            name: order.customer.name,
+            name: order.customer ? order.customer.name : "",
             amount: Math.abs(pendingAmount),
           });
         } else if (chartType === "repayment_pending" && pendingAmount < 0) {
           paid.push({
-            name: order.customer.name,
+            name: order.customer ? order.customer.name : "",
             amount: Math.abs(pendingAmount),
           });
         }

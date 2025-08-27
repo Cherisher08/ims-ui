@@ -91,7 +91,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     discount: 0,
     discount_amount: 0,
     event_address: "",
-    expected_date: utcString(),
+    rental_duration: 0,
     gst: 0,
     in_date: "",
     order_id: orderId,

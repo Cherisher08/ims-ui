@@ -29,7 +29,6 @@ export const transformRentalOrderResponse = (
     ...order,
     in_date: formatLocalDateTime(order.in_date),
     out_date: formatLocalDateTime(order.out_date),
-    expected_date: formatLocalDateTime(order.expected_date),
     deposits:
       order.deposits?.map((d) => ({
         ...d,
@@ -59,7 +58,6 @@ export const transformRentalOrderToUTC = (order: RentalOrderInfo) => {
     ...order,
     in_date: toUTCISOString(order.in_date),
     out_date: toUTCISOString(order.out_date),
-    expected_date: toUTCISOString(order.expected_date),
     customer: order.customer
       ? {
           ...order.customer,

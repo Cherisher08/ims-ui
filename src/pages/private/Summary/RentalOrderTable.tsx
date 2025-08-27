@@ -152,17 +152,17 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "expected_date",
-      headerName: "Order Expected Date",
-      minWidth: 100,
-      filter: "agDateColumnFilter",
+      field: "rental_duration",
+      headerName: "Rental Duration (Days)",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agNumberColumnFilter",
       editable: true,
       singleClickEdit: true,
-      cellDataType: "dateTime",
-      cellEditor: InDateCellEditor,
-      valueFormatter: (params) => {
-        const date = new Date(params.value);
-        return dayjs(date).format("DD-MMM-YYYY hh:mm A");
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        step: 1,
       },
     },
     {

@@ -513,9 +513,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             </View>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Billing Address:</Text>
-              <Text style={styles.fieldValue}>{data.customer.name}</Text>
               <Text style={styles.fieldValue}>
-                {data.customer.address.trim().length
+                {data.customer ? data.customer.name : ""}
+              </Text>
+              <Text style={styles.fieldValue}>
+                {data.customer && data.customer.address.trim().length
                   ? data.customer.address
                   : " "}
               </Text>
@@ -527,9 +529,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     color: "#4f4f4f",
                   }}
                 >
-                  Pincode - {data.customer.pincode}
+                  Pincode - {data.customer ? data.customer.pincode : ""}
                 </Text>
-                {data.customer.pincode}
               </Text>
               <Text style={styles.fieldValue}>
                 <Text
@@ -541,7 +542,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   Mobile -{" "}
                 </Text>
-                {data.customer.personal_number}
+                {data.customer ? data.customer.personal_number : ""}
               </Text>
               <Text style={styles.fieldValue}>
                 <Text
@@ -553,7 +554,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   GSTIN -{" "}
                 </Text>
-                {data.customer.gstin}
+                {data.customer ? data.customer.gstin : ""}
               </Text>
             </View>
             <View style={styles.tableField}>

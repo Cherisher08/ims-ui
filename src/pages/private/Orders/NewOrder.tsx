@@ -173,7 +173,7 @@ const initialRentalProduct: RentalOrderInfo = {
   status: PaymentStatus.PENDING,
   payment_mode: PaymentMode.CASH,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-  expected_date: dayjs().add(10, "day").format("YYYY-MM-DDTHH:mm"),
+  rental_duration: 0,
   in_date: "",
   round_off: 0,
   customer: initialContactType,
@@ -267,7 +267,7 @@ const NewOrder = () => {
   useEffect(() => {
     const hasErrors = Object.values(errors).find((error) => error === true);
     if (
-      !orderInfo.customer._id ||
+      (orderInfo.customer && !orderInfo.customer._id) ||
       orderInfo.product_details.length == 0 ||
       hasErrors
     ) {
@@ -732,7 +732,7 @@ const NewOrder = () => {
                 placeholder="Enter Out Date"
               />
 
-              <CustomDatePicker
+              {/* <CustomDatePicker
                 label="Expected Date"
                 value={orderInfo.expected_date ?? ""}
                 className="w-fit"
@@ -754,7 +754,7 @@ const NewOrder = () => {
                   handleValueChange("expected_date", value);
                 }}
                 placeholder="Enter Expected Date"
-              />
+              /> */}
 
               <CustomDatePicker
                 label="In Date"

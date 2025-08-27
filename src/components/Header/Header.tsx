@@ -184,34 +184,42 @@ const Header = ({ open, setOpen }: HeaderType) => {
           pr: 1,
         }}
       >
-        {expiredRentalOrders.map((order) => (
-          <Card
-            key={order.order_id}
-            variant="outlined"
-            sx={{ mb: 2, backgroundColor: "#f9f9f9" }}
-          >
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Order ID: {order.order_id}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Expected Date:{" "}
-                {new Date(order.expected_date).toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </Typography>
-              <CustomButton
-                variant="contained"
-                onClick={() => {
-                  navigate(`/orders/rentals/${order._id}`);
-                }}
-                className="mt-1"
-                label={"View Order"}
-              />
-            </CardContent>
-          </Card>
-        ))}
+        {expiredRentalOrders.map((order) => {
+          const outDate = new Date(order.out_date);
+          const expectedDate = new Date(outDate);
+          expectedDate.setDate(
+            outDate.getDate() + (order.rental_duration ?? 0)
+          );
+
+          return (
+            <Card
+              key={order.order_id}
+              variant="outlined"
+              sx={{ mb: 2, backgroundColor: "#f9f9f9" }}
+            >
+              <CardContent>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Order ID: {order.order_id}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Expected Date:{" "}
+                  {expectedDate.toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </Typography>
+                <CustomButton
+                  variant="contained"
+                  onClick={() => {
+                    navigate(`/orders/rentals/${order._id}`);
+                  }}
+                  className="mt-1"
+                  label={"View Order"}
+                />
+              </CardContent>
+            </Card>
+          );
+        })}
       </Box>
     </Box>
   );

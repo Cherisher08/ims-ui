@@ -12,7 +12,6 @@ import {
   useGetRentalOrdersQuery,
 } from "../../../services/OrderService";
 import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
-import { useGetContactsQuery } from "../../../services/ContactService";
 import { getDefaultRentalOrder, getNewOrderId } from "./utils";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
@@ -22,6 +21,15 @@ const transformRentalOrderData = (
   rentalOrders: RentalOrderInfo[]
 ): RentalOrderType[] => {
   return rentalOrders.map((rentalOrder) => {
+    if (!rentalOrder.customer) {
+      return {
+        ...rentalOrder,
+        customer: {
+          _id: "",
+          name: "",
+        },
+      };
+    }
     return {
       ...rentalOrder,
       customer: {
@@ -37,8 +45,6 @@ const Orders = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
-  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
-    useGetContactsQuery();
   const [createRentalOrder] = useCreateRentalOrderMutation();
 
   const isCommunicationsFeatureDone: boolean = false;
@@ -46,10 +52,9 @@ const Orders = () => {
   const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
 
   const handleNewRentalOrder = async () => {
-    if (isRentalOrdersQuerySuccess && isGetContactsSuccess) {
+    if (isRentalOrdersQuerySuccess) {
       const orderId = getNewOrderId(rentalOrderData);
-      const defaultCustomer = contactsQueryData[0];
-      const newOrderData = getDefaultRentalOrder(orderId, defaultCustomer);
+      const newOrderData = getDefaultRentalOrder(orderId);
       try {
         const orderResponse = await createRentalOrder(newOrderData).unwrap();
         toast.success("Rental Order Created Successfully", {

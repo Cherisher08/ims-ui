@@ -81,7 +81,7 @@ export type OrderSummaryType = {
 export type OrderInfo = {
   _id?: string;
   order_id: string;
-  customer: ContactInfoType;
+  customer?: ContactInfoType;
   billing_mode: BillingMode;
   discount: number;
   discount_amount: number;

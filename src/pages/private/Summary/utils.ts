@@ -11,7 +11,6 @@ import {
   PaymentStatus,
   RentalOrderInfo,
 } from "../../../types/order";
-import { ContactInfoType } from "../../../types/contact";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { ProductType } from "../../../types/common";
@@ -84,13 +83,10 @@ export const getNewOrderId = (orders: OrderInfo[]) => {
   return `RO/${fy}/${nextSuffix}`;
 };
 
-export const getDefaultRentalOrder = (
-  orderId: string,
-  default_customer: ContactInfoType
-): RentalOrderInfo => {
+export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
   return {
     billing_mode: BillingMode.B2C,
-    customer: default_customer,
+    customer: undefined,
     deposits: [],
     discount: 0,
     discount_amount: 0,

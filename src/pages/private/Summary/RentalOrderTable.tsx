@@ -190,7 +190,6 @@ const RentalOrderTable = ({
       minWidth: 200,
       editable: true,
       singleClickEdit: true,
-      cellDataType: "text",
       filter: "agTextColumnFilter",
       cellEditor: AutocompleteCellEditor,
       cellEditorParams: {

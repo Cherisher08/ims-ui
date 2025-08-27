@@ -788,6 +788,22 @@ const NewOrder = () => {
             <CustomInput
               wrapperClass="w-[30rem] max-w-full"
               labelClass="w-[5rem]"
+              value={orderInfo?.event_name ?? ""}
+              onChange={(value) => handleValueChange("event_name", value)}
+              label="Event Name"
+              placeholder="Enter Event Name"
+            />
+            <CustomInput
+              wrapperClass="w-[30rem] max-w-full"
+              labelClass="w-[5rem]"
+              value={orderInfo?.event_venue ?? ""}
+              onChange={(value) => handleValueChange("event_venue", value)}
+              label="Event Venue"
+              placeholder="Enter Event Venue"
+            />
+            <CustomInput
+              wrapperClass="w-[30rem] max-w-full"
+              labelClass="w-[5rem]"
               value={orderInfo?.event_address ?? ""}
               onChange={(value) => handleValueChange("event_address", value)}
               label="Event Address"
@@ -815,7 +831,7 @@ const NewOrder = () => {
             />
           </div>
           <div className="pb-8 mx-2">
-            <div className=" flex flex-wrap gap-2 border bg-gray-100 border-[#ced4da] content-start rounded-md w-full !h-[20rem] sm:h-full overflow-hidden">
+            <div className=" flex flex-wrap gap-2 border bg-gray-100 border-[#ced4da] content-start rounded-md w-full h-full overflow-hidden">
               <div className=" w-full p-2 justify-between flex">
                 <p className="w-fit text-right content-center px-2 pt-1">
                   Products
@@ -872,6 +888,8 @@ const NewOrder = () => {
                     <p>Discount Amount</p>
                     <p>GST</p>
                     <p>Round Off</p>
+                    <p>Transport Amount</p>
+                    <p>Transport Payment Mode</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
                     <p>
@@ -984,6 +1002,37 @@ const NewOrder = () => {
                         }
                       />{" "}
                       ₹
+                    </div>
+                    <div>
+                      <input
+                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                        type="number"
+                        value={orderInfo.eway_amount}
+                        onChange={(e) =>
+                          setOrderInfo((prev) => ({
+                            ...prev,
+                            eway_amount: parseFloat(
+                              parseFloat(e.target.value).toFixed(2)
+                            ),
+                          }))
+                        }
+                      />{" "}
+                      ₹
+                    </div>
+                    <div>
+                      <select
+                        className="w-fit outline-none"
+                        onChange={(e) =>
+                          handleValueChange("eway_mode", e.target.value)
+                        }
+                        value={orderInfo.eway_mode}
+                      >
+                        {Object.entries(PaymentMode).map(([id, key]) => (
+                          <option key={id} value={key.toLowerCase()}>
+                            {key.toUpperCase()}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>

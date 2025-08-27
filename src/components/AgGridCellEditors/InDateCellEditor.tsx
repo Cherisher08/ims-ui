@@ -18,7 +18,6 @@ export const InDateCellEditor = forwardRef(
     const format = props.format || "DD/MM/YYYY hh:mm A";
 
     const handleChange = (newValue: Dayjs | null) => {
-      console.log("newValue: ", newValue, value);
       setValue(newValue);
       props.onValueChange(newValue?.toDate());
     };
@@ -39,7 +38,6 @@ export const InDateCellEditor = forwardRef(
     // }, [props]);
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
-      console.log("event.key: ", event.key);
       if (event.key === "Enter") {
         props.stopEditing();
       }

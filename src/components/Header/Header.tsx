@@ -3,6 +3,7 @@ import { FaUserPlus } from "react-icons/fa";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import { IoMdMore } from "react-icons/io";
 import { PiSignOut } from "react-icons/pi";
+import { IoMenu } from "react-icons/io5";
 import CustomMenu, { type CustomMenuItemProps } from "../../styled/CustomMenu";
 import {
   Avatar,
@@ -228,13 +229,19 @@ const Header = ({ open, setOpen }: HeaderType) => {
     <div className="w-full flex justify-between bg-primary items-center mb-3 shadow-lg">
       <div className="w-full px-6 h-18 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="rounded-full overflow-hidden min-w-12 h-12 aspect-square content-center bg-white">
+          <div className="rounded-full max-md:hidden overflow-hidden min-w-12 h-12 aspect-square content-center bg-white">
             <img
               src={Logo}
               className="w-12 h-12"
               onClick={() => setOpen(!open)}
             />
           </div>
+          <IoMenu
+            size={30}
+            className="md:hidden cursor-pointer"
+            color="white"
+            onClick={() => setOpen(!open)}
+          />
           <span className="text-white text-2xl hidden md:block">
             Mani Power Tools
           </span>

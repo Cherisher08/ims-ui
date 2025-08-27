@@ -17,6 +17,7 @@ import {
   currencyFormatter,
   getDefaultDeposit,
   getDefaultProduct,
+  getDuration,
 } from "./utils";
 import { useGetProductsQuery } from "../../../services/ApiService";
 import { useEffect, useRef, useState } from "react";
@@ -83,12 +84,31 @@ const CustomDetailRenderer = (
           value: newProduct?.product_code,
         });
       }
+      if (
+        field === "billing_unit" ||
+        field === "out_date" ||
+        field === "in_date"
+      ) {
+        if (rowIndex !== null && !isNaN(rowIndex)) {
+          const currentProduct = productDetails[rowIndex];
+          const duration = getDuration(
+            currentProduct.out_date,
+            currentProduct.in_date,
+            currentProduct.billing_unit
+          );
+          patchPayload.push({
+            op: "replace",
+            path: `/product_details/${rowIndex}/duration`,
+            value: duration,
+          });
+        }
+      }
+
       patchPayload.push({
         op: "replace",
         path: `/product_details/${rowIndex}/${field}`,
         value,
       });
-
       await patchRentalOrder({
         id: orderData._id!,
         payload: patchPayload,

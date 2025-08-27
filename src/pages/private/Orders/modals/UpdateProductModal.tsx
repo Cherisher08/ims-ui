@@ -6,6 +6,8 @@ import { Product } from "../../../../types/common";
 import CustomSelect from "../../../../styled/CustomSelect";
 import CustomInput from "../../../../styled/CustomInput";
 import CustomDatePicker from "../../../../styled/CustomDatePicker";
+import { getDuration } from "../../Summary/utils";
+import { useEffect } from "react";
 
 type UpdateProductModalOpen = {
   updateProductOpen: boolean;
@@ -51,6 +53,20 @@ const UpdateProductModal = ({
       [key]: value,
     }));
   };
+
+  useEffect(() => {
+    const duration = getDuration(
+      updateProduct.out_date,
+      updateProduct.in_date,
+      updateProduct.billing_unit
+    );
+    handleValueChange("duration", duration);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    updateProduct.billing_unit,
+    updateProduct.in_date,
+    updateProduct.out_date,
+  ]);
 
   return (
     <Modal

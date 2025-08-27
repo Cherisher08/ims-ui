@@ -43,7 +43,7 @@ interface OneProduct {
   actions?: string;
 }
 
-const initialProductData: Product = {
+export const initialProductData: Product = {
   product_code: "",
   name: "",
   quantity: 0,

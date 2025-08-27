@@ -122,7 +122,7 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
   };
 };
 
-const getDuration = (
+export const getDuration = (
   out_date: string,
   in_date: string,
   billing_unit: BillingUnit

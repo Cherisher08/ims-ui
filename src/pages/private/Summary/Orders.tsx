@@ -17,6 +17,13 @@ import { getDefaultRentalOrder, getNewOrderId } from "./utils";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
 import AddContactModal from "../Contacts/modals/AddContactModal";
+import {
+  useGetProductCategoriesQuery,
+  useGetUnitsQuery,
+} from "../../../services/ApiService";
+import { transformIdNamePair } from "../Inventory";
+import { CustomOptionProps } from "../../../styled/CustomAutoComplete";
+import NewProductModal from "../../../components/NewProductModal.";
 
 const transformRentalOrderData = (
   rentalOrders: RentalOrderInfo[]
@@ -35,12 +42,22 @@ const transformRentalOrderData = (
 const Orders = () => {
   const [activeTab, setActiveTab] = useState(1);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
-  // const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
+  const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
+  const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
+  const {
+    data: productCategoryData,
+    isSuccess: isProductCategoryQuerySuccess,
+  } = useGetProductCategoriesQuery();
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
     useGetContactsQuery();
   const [createRentalOrder] = useCreateRentalOrderMutation();
+
+  const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
+  const [productCategories, setProductCategories] = useState<
+    CustomOptionProps[]
+  >([]);
 
   const isCommunicationsFeatureDone: boolean = false;
 
@@ -71,6 +88,21 @@ const Orders = () => {
     }
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
+  useEffect(() => {
+    if (isUnitQuerySuccess)
+      setProductUnits(() => {
+        return transformIdNamePair(unitData);
+      });
+  }, [isUnitQuerySuccess, unitData]);
+
+  useEffect(() => {
+    if (isProductCategoryQuerySuccess) {
+      setProductCategories(() => {
+        return transformIdNamePair(productCategoryData);
+      });
+    }
+  }, [isProductCategoryQuerySuccess, productCategoryData]);
+
   return (
     <div className="h-full flex gap-3 flex-col">
       {/* Header */}
@@ -95,11 +127,11 @@ const Orders = () => {
               />
             </>
           )}
-          {/* <CustomButton
+          <CustomButton
             onClick={() => setAddProductOpen(true)}
             label="Add Product"
             icon={<LuPlus color="white" />}
-          /> */}
+          />
           <CustomButton
             onClick={() => setAddContactOpen(true)}
             label="Add Customer"
@@ -132,6 +164,14 @@ const Orders = () => {
       <AddContactModal
         addContactOpen={addContactOpen}
         setAddContactOpen={(value: boolean) => setAddContactOpen(value)}
+      />
+
+      <NewProductModal
+        addProductOpen={addProductOpen}
+        productCategories={productCategories}
+        productUnits={productUnits}
+        key="New Product"
+        setAddProductOpen={setAddProductOpen}
       />
     </div>
   );

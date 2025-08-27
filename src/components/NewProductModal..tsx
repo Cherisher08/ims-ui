@@ -1,14 +1,27 @@
 import { Modal } from "@mui/material";
-import React from "react";
+import { useMemo, useState } from "react";
 import { MdClose } from "react-icons/md";
 import CustomInput from "../styled/CustomInput";
-import CustomAutoComplete from "../styled/CustomAutoComplete";
+import CustomAutoComplete, {
+  CustomOptionProps,
+} from "../styled/CustomAutoComplete";
 import {
+  IdNamePair,
+  initialProductData,
   transformIdNamePair,
   transformIdValuePair,
 } from "../pages/private/Inventory";
 import CustomSelect from "../styled/CustomSelect";
 import CustomDatePicker from "../styled/CustomDatePicker";
+import { DiscountType, Product } from "../types/common";
+import {
+  useCreateProductCategoryMutation,
+  useCreateProductMutation,
+  useCreateUnitMutation,
+} from "../services/ApiService";
+import CustomButton from "../styled/CustomButton";
+import { useSelector } from "react-redux";
+import { RootState } from "../store/store";
 
 const productTypes = [
   { id: "rental", value: "RENTAL" },
@@ -16,14 +29,87 @@ const productTypes = [
   { id: "service", value: "SERVICE" },
 ];
 
+const discountTypeValues = [
+  {
+    id: "PERCENT",
+    value: "%",
+  },
+  {
+    id: "RUPEES",
+    value: "₹",
+  },
+];
+
+type NewProductType = {
+  addProductOpen: boolean;
+  setAddProductOpen: (val: boolean) => void;
+  productCategories: CustomOptionProps[];
+  productUnits: CustomOptionProps[];
+};
+
 const NewProductModal = ({
   addProductOpen,
   setAddProductOpen,
-  newProductData,
-  handleProductChange,
+  productCategories,
   productUnits,
-  createUnit,
-}) => {
+}: NewProductType) => {
+  const [newProductData, setNewProductData] =
+    useState<Product>(initialProductData);
+  const [createUnit] = useCreateUnitMutation();
+  const [createProductCategory] = useCreateProductCategoryMutation();
+  const [createProduct] = useCreateProductMutation();
+  const userEmail = useSelector((state: RootState) => state.user.email);
+  const calculateTotal = useMemo(() => {
+    if (addProductOpen) {
+      if (
+        newProductData?.discount_type === DiscountType.PERCENT &&
+        newProductData.price &&
+        newProductData.quantity
+      ) {
+        const totalPrice = newProductData.price * newProductData.quantity;
+        if (newProductData.discount === 0 || isNaN(newProductData.discount))
+          return `₹${totalPrice}`;
+        const value =
+          totalPrice -
+          +((newProductData.discount / 100) * totalPrice).toFixed(2);
+        return `₹${value}`;
+      }
+      if (
+        newProductData?.discount_type === DiscountType.RUPEES &&
+        newProductData.price &&
+        newProductData.quantity
+      ) {
+        const value =
+          newProductData.price * newProductData.quantity -
+          newProductData.discount;
+        return `₹${value}`;
+      }
+    }
+    return `₹0`;
+  }, [
+    addProductOpen,
+    newProductData.discount,
+    newProductData?.discount_type,
+    newProductData.price,
+    newProductData.quantity,
+  ]);
+
+  const handleProductChange = (
+    key: string,
+    value: string | number | IdNamePair | undefined
+  ) => {
+    setNewProductData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const addProduct = () => {
+    createProduct({
+      ...newProductData,
+      created_by: userEmail,
+      created_at: new Date().toISOString(),
+    });
+    setAddProductOpen(false);
+  };
+
   return (
     <Modal
       open={addProductOpen}

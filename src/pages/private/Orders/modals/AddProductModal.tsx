@@ -2,12 +2,13 @@ import { Modal } from "@mui/material";
 import { BillingUnit, ProductDetails } from "../../../../types/order";
 import { MdClose } from "react-icons/md";
 import CustomButton from "../../../../styled/CustomButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Product } from "../../../../types/common";
 import CustomSelect from "../../../../styled/CustomSelect";
 import dayjs from "dayjs";
 import CustomInput from "../../../../styled/CustomInput";
 import CustomDatePicker from "../../../../styled/CustomDatePicker";
+import { getDuration } from "../../Summary/utils";
 
 type AddProductModalOpen = {
   addProductOpen: boolean;
@@ -30,7 +31,7 @@ const initialProductState: ProductDetails = {
     _id: "",
     name: "",
   },
-  in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  in_date: "",
   order_quantity: 0,
   order_repair_count: 0,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
@@ -70,6 +71,15 @@ const AddProductModal = ({
     }));
   };
 
+  useEffect(() => {
+    const duration = getDuration(
+      newProduct.out_date,
+      newProduct.in_date,
+      newProduct.billing_unit
+    );
+    handleValueChange("duration", duration);
+  }, [newProduct.billing_unit, newProduct.in_date, newProduct.out_date]);
+
   return (
     <Modal
       open={addProductOpen}
@@ -80,7 +90,7 @@ const AddProductModal = ({
       }}
       className="w-screen h-screen flex justify-center items-center"
     >
-      <div className="flex flex-col gap-4 justify-center items-center w-3/5 lg:w-4/5 xl:w-3/5 max-h-4/5 overflow-y-auto mt-2 bg-white rounded-lg p-4">
+      <div className="flex flex-col gap-4 justify-center items-center w-3/5 lg:w-4/5 xl:w-3/5 max-h-5/6 overflow-y-auto mt-2 bg-white rounded-lg p-4">
         <div className="flex flex-col gap-4 overflow-y-auto w-full max-h-[80vh]">
           <div className="flex justify-between w-full">
             <p className="text-primary text-xl font-semibold w-full text-start">
@@ -147,6 +157,7 @@ const AddProductModal = ({
               type="number"
               labelClass="w-[8rem]"
               placeholder="Enter Order Quantity"
+              wrapperClass="h-fit"
               value={newProduct.order_quantity}
               error={(currentAvailableStock ?? 0) < newProduct.order_quantity}
               helperText="Quantity cannot be greater than Available Stock"

@@ -206,7 +206,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       backgroundColor: "white",
       fontSize: 10,
       padding: 10,
-      fontFamily: "Inter",
+      fontFamily: "Times-Roman",
     },
     container: {
       flexDirection: "row",

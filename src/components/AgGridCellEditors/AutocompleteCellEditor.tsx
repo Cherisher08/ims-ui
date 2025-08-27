@@ -25,7 +25,6 @@ export const AutocompleteCellEditor = ({
   }, []);
 
   const handleChange = (_: any, newValue: IdNamePair) => {
-    // console.log("newValue: ", newValue);
     setSelected(newValue);
     onValueChange(newValue);
   };

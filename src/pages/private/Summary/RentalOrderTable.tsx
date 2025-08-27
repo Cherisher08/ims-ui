@@ -66,10 +66,6 @@ const RentalOrderTable = ({
   const onGridReady = (api: null) => {
     gridApiRef.current = api;
   };
-  // const patchOrder = async (patchPayload: PatchPayload) => {
-  //   // Call your API here (RTK Query, axios, fetch, etc.)
-  //   console.log("Patching order", patchPayload);
-  // };
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
   const [deleteOrderId, setDeleteOrderId] = useState<string>("");
@@ -156,17 +152,17 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "expected_date",
-      headerName: "Order Expected Date",
-      minWidth: 100,
-      filter: "agDateColumnFilter",
+      field: "rental_duration",
+      headerName: "Rental Duration (Days)",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agNumberColumnFilter",
       editable: true,
       singleClickEdit: true,
-      cellDataType: "dateTime",
-      cellEditor: InDateCellEditor,
-      valueFormatter: (params) => {
-        const date = new Date(params.value);
-        return dayjs(date).format("DD-MMM-YYYY hh:mm A");
+      cellEditor: "agNumberCellEditor",
+      cellEditorParams: {
+        step: 1,
       },
     },
     {
@@ -194,11 +190,13 @@ const RentalOrderTable = ({
       minWidth: 200,
       editable: true,
       singleClickEdit: true,
-      cellDataType: "text",
       filter: "agTextColumnFilter",
       cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
         customerOptions: customerList.current,
+      },
+      valueParser: (params) => {
+        return params.newValue;
       },
       valueFormatter: (params) => {
         return params.value.name ?? "";
@@ -254,22 +252,6 @@ const RentalOrderTable = ({
       cellEditor: SelectCellEditor,
       cellEditorParams: {
         options: ["B2C", "B2B"],
-      },
-    },
-    {
-      headerName: "Amount (Before Taxes)",
-      flex: 1,
-      minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
-      valueFormatter: currencyFormatter,
-      valueGetter: (params: ValueGetterParams) => {
-        const value = calculateTotalAmount(params.data);
-        return isNaN(value) ? null : value;
-      },
-      cellRenderer: (params: ICellRendererParams) => {
-        const data = params.data;
-        return <p>₹ {calculateTotalAmount(data)}</p>;
       },
     },
     {
@@ -571,7 +553,6 @@ const RentalOrderTable = ({
       if (gridApiRef.current !== null) {
         gridApiRef.current.forEachNode((node) => {
           if (node.expanded) expanded.push(node.data._id);
-          console.log(node);
         });
       }
       setExpandedRowIds(expanded);

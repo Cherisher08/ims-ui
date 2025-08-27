@@ -10,7 +10,6 @@ import {
 import {
   BillingMode,
   DepositType,
-  PaymentStatus,
   ProductDetails,
   RentalOrderInfo,
 } from "../types/order";
@@ -20,8 +19,7 @@ import {
   calculateDiscountAmount,
   calculateProductRent,
 } from "../services/utility_functions";
-// import InterRegular from "/Inter_18pt-Regular.ttf";
-// import InterBold from "/Inter_18pt-Bold.ttf";
+import paidStamp from "/Red_paid_stamp.png";
 
 Font.register({
   family: "Inter",
@@ -135,10 +133,10 @@ interface InvoiceRentalOrder {
 const Invoice = ({ data }: InvoiceRentalOrder) => {
   const deposits = data.deposits;
   const sameKindOfDeposit =
-    deposits.length > 0 && deposits.every((d) => d.mode === deposits[0].mode);
+    deposits.length === 0 ||
+    (deposits.length > 0 && deposits.every((d) => d.mode === deposits[0].mode));
   const calculateRentAfterGST = (rent: number, gst: number) => {
     if (data.billing_mode === BillingMode.B2C) {
-      console.log(gst);
       const exclusiveAmount = rent / (1 + gst / 100);
       return Math.round(exclusiveAmount * 100) / 100;
     } else {
@@ -513,9 +511,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             </View>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Billing Address:</Text>
-              <Text style={styles.fieldValue}>{data.customer.name}</Text>
               <Text style={styles.fieldValue}>
-                {data.customer.address.trim().length
+                {data.customer ? data.customer.name : ""}
+              </Text>
+              <Text style={styles.fieldValue}>
+                {data.customer && data.customer.address.trim().length
                   ? data.customer.address
                   : " "}
               </Text>
@@ -527,9 +527,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     color: "#4f4f4f",
                   }}
                 >
-                  Pincode - {data.customer.pincode}
+                  Pincode - {data.customer ? data.customer.pincode : ""}
                 </Text>
-                {data.customer.pincode}
               </Text>
               <Text style={styles.fieldValue}>
                 <Text
@@ -541,7 +540,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   Mobile -{" "}
                 </Text>
-                {data.customer.personal_number}
+                {data.customer ? data.customer.personal_number : ""}
               </Text>
               <Text style={styles.fieldValue}>
                 <Text
@@ -553,7 +552,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   GSTIN -{" "}
                 </Text>
-                {data.customer.gstin}
+                {data.customer ? data.customer.gstin : ""}
               </Text>
             </View>
             <View style={styles.tableField}>
@@ -795,8 +794,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       </Text>
                     </View>
                   ))}
-                  ...(data.eway_amount ? [
-                  {
+                  {data.eway_amount ? (
                     <View
                       style={{
                         flexDirection: "row",
@@ -852,8 +850,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                         </Text>
                       </View>
                     </View>
-                  }
-                  ]:[])
+                  ) : null}
+
                   <View
                     style={{
                       flexDirection: "row",
@@ -963,14 +961,12 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                             fontWeight: "bold",
                           }}
                         >
-                          {data.status === PaymentStatus.PAID
-                            ? "Paid"
-                            : calcTotal() -
-                                data.deposits.reduce(
-                                  (total, deposit) => total + deposit.amount,
-                                  0
-                                ) <
+                          {calcTotal() -
+                            data.deposits.reduce(
+                              (total, deposit) => total + deposit.amount,
                               0
+                            ) <
+                          0
                             ? "Return Payment"
                             : "Balance"}
                         </Text>
@@ -1036,7 +1032,25 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       MANI POWER TOOLS
                     </Text>
                   </View>
-                  <Image src="/sign.png" style={styles.signImage} />
+                  <View
+                    style={{ position: "relative", width: 150, height: 80 }}
+                  >
+                    <Image src="/sign.png" style={styles.signImage} />
+                    {data.status === "paid" && (
+                      <Image
+                        src={paidStamp}
+                        style={{
+                          position: "absolute",
+                          top: "60%",
+                          left: "80%",
+                          width: 50,
+                          height: 30,
+                          // transform: "translate(-50%, -50%)",
+                          opacity: 0.7,
+                        }}
+                      />
+                    )}
+                  </View>
                   <Text style={styles.signatureFooter}>
                     Authorized Signatory
                   </Text>

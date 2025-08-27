@@ -78,7 +78,7 @@ export const contactApi = rootApi.injectEndpoints({
           await queryFulfilled;
           // Check if the patched field includes "in_date"
           const inDatePatched = payload.some(
-            (op) => op.path === "/expected_date" || op.path === "/status"
+            (op) => op.path === "/rental_duration" || op.path === "/status"
           );
 
           if (inDatePatched) {

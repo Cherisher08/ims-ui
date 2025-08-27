@@ -347,6 +347,9 @@ const CustomDetailRenderer = (
               headerName: "Rent Per Unit",
               flex: 1,
               minWidth: 150,
+              editable: true,
+              singleClickEdit: true,
+              cellEditor: "agTextCellEditor",
               valueFormatter: currencyFormatter,
             },
             {

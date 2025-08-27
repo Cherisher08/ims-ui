@@ -66,10 +66,6 @@ const RentalOrderTable = ({
   const onGridReady = (api: null) => {
     gridApiRef.current = api;
   };
-  // const patchOrder = async (patchPayload: PatchPayload) => {
-  //   // Call your API here (RTK Query, axios, fetch, etc.)
-  //   console.log("Patching order", patchPayload);
-  // };
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
   const [deleteOrderId, setDeleteOrderId] = useState<string>("");
@@ -254,22 +250,6 @@ const RentalOrderTable = ({
       cellEditor: SelectCellEditor,
       cellEditorParams: {
         options: ["B2C", "B2B"],
-      },
-    },
-    {
-      headerName: "Amount (Before Taxes)",
-      flex: 1,
-      minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
-      valueFormatter: currencyFormatter,
-      valueGetter: (params: ValueGetterParams) => {
-        const value = calculateTotalAmount(params.data);
-        return isNaN(value) ? null : value;
-      },
-      cellRenderer: (params: ICellRendererParams) => {
-        const data = params.data;
-        return <p>₹ {calculateTotalAmount(data)}</p>;
       },
     },
     {
@@ -562,6 +542,7 @@ const RentalOrderTable = ({
   const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
     const { data, colDef, oldValue, newValue } = event;
     let field = colDef.field;
+    console.log("field: ", field, event, oldValue);
     if (!field || newValue === oldValue) return;
     try {
       let value = newValue;

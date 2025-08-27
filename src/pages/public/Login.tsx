@@ -50,7 +50,7 @@ const Login = () => {
         toastId: TOAST_IDS.SUCCESS_LOGIN,
       });
       dispatch(rootApi.util.resetApiState());
-      navigate("/orders/rentals");
+      navigate("/");
     }
   }, [dispatch, headerData, isValidUser, navigate, user.email]);
 

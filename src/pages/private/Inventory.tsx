@@ -70,14 +70,14 @@ export interface IdNamePair {
   name: string;
 }
 
-const transformIdNamePair = (idNamePairs: IdNamePair[]) => {
+export const transformIdNamePair = (idNamePairs: IdNamePair[]) => {
   return idNamePairs.map((pair) => ({
     id: pair._id!,
     value: pair.name,
   }));
 };
 
-const transformIdValuePair = (idValuePair: CustomOptionProps) => {
+export const transformIdValuePair = (idValuePair: CustomOptionProps) => {
   return {
     _id: idValuePair.id,
     name: idValuePair.value,

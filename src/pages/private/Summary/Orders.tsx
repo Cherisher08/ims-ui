@@ -35,6 +35,7 @@ const transformRentalOrderData = (
 const Orders = () => {
   const [activeTab, setActiveTab] = useState(1);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
+  // const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
@@ -94,6 +95,11 @@ const Orders = () => {
               />
             </>
           )}
+          {/* <CustomButton
+            onClick={() => setAddProductOpen(true)}
+            label="Add Product"
+            icon={<LuPlus color="white" />}
+          /> */}
           <CustomButton
             onClick={() => setAddContactOpen(true)}
             label="Add Customer"

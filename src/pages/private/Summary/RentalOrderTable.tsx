@@ -195,6 +195,9 @@ const RentalOrderTable = ({
       cellEditorParams: {
         customerOptions: customerList.current,
       },
+      valueParser: (params) => {
+        return params.newValue;
+      },
       valueFormatter: (params) => {
         return params.value.name ?? "";
       },
@@ -541,7 +544,6 @@ const RentalOrderTable = ({
   const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
     const { data, colDef, oldValue, newValue } = event;
     let field = colDef.field;
-    console.log("field: ", field, event, oldValue);
     if (!field || newValue === oldValue) return;
     try {
       let value = newValue;
@@ -551,7 +553,6 @@ const RentalOrderTable = ({
       if (gridApiRef.current !== null) {
         gridApiRef.current.forEachNode((node) => {
           if (node.expanded) expanded.push(node.data._id);
-          console.log(node);
         });
       }
       setExpandedRowIds(expanded);

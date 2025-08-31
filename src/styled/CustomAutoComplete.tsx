@@ -64,10 +64,8 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   }, [options, value]);
 
   return (
-    <div className="grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem]">
-      <label className="pt-2 w-[5rem] line-clamp-2 break-words h-fit">
-        {label}
-      </label>
+    <div className="flex flex-col w-full">
+      <label className="line-clamp-2 break-words h-fit">{label}</label>
       <div className="flex flex-col gap-2 w-auto">
         <Autocomplete
           autoHighlight
@@ -91,11 +89,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
                   className: "h-[2.5rem] px-2",
                 }}
               />
-              {error && (
-                <span className="text-red-700 text-[12px] ml-4">
-                  {helperText}
-                </span>
-              )}
+              {error && <span className="text-red-700 text-[12px] ml-4">{helperText}</span>}
             </div>
           )}
           renderOption={(props, option) =>

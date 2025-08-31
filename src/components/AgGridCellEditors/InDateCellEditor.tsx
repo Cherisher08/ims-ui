@@ -22,21 +22,6 @@ export const InDateCellEditor = forwardRef(
       props.onValueChange(newValue?.toDate());
     };
 
-    // useEffect(() => {
-    //   const handleClickOutside = (event: MouseEvent) => {
-    //     if (
-    //       wrapperRef.current &&
-    // !wrapperRef.current.contains(event.target as Node)
-    //     ) {
-    //       props.stopEditing();
-    //     }
-    //   };
-    //   document.addEventListener("mousedown", handleClickOutside);
-    //   return () => {
-    //     document.removeEventListener("mousedown", handleClickOutside);
-    //   };
-    // }, [props]);
-
     const handleKeyDown = (event: React.KeyboardEvent) => {
       if (event.key === "Enter") {
         props.stopEditing();
@@ -44,7 +29,6 @@ export const InDateCellEditor = forwardRef(
     };
 
     useEffect(() => {
-      // Auto focus after mount
       setTimeout(() => wrapperRef.current?.focus(), 10);
     }, []);
 

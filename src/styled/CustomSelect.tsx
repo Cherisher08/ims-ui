@@ -31,11 +31,9 @@ const CustomSelect = ({
   wrapperClass = "",
 }: CustomSelectProps) => {
   return (
-    <div className={`flex flex-col justify-between w-full ${wrapperClass}`}>
-      <label className={` line-clamp-2 break-words h-fit ${labelClass}`}>
-        {label}
-      </label>
-      <div className="flex flex-col gap-2 w-full">
+    <div className={`flex flex-col w-full h-fit ${wrapperClass}`}>
+      <label className={` line-clamp-2 break-words h-fit ${labelClass}`}>{label}</label>
+      <div className="flex flex-col gap-2">
         <Select
           className={`h-[2.5rem] ${className}`}
           error={error}
@@ -51,9 +49,7 @@ const CustomSelect = ({
             </MenuItem>
           ))}
         </Select>
-        {error && (
-          <span className="text-red-700 text-[12px] ml-4">{helperText}</span>
-        )}
+        {error && <span className="text-red-700 text-[12px] ml-4">{helperText}</span>}
       </div>
     </div>
   );

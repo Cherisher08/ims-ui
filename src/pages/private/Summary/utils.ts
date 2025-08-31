@@ -1,8 +1,4 @@
-import {
-  ValueFormatterParams,
-  ValueGetterParams,
-  ValueSetterParams,
-} from "ag-grid-community";
+import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from "ag-grid-community";
 import {
   BillingMode,
   BillingUnit,
@@ -13,7 +9,7 @@ import {
 } from "../../../types/order";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { ProductType } from "../../../types/common";
+import { Product, ProductType } from "../../../types/common";
 import { IdNamePair } from "../Inventory";
 
 dayjs.extend(utc);
@@ -43,9 +39,7 @@ export const gstAmountSetter = (params: ValueSetterParams): boolean => {
 
   if (isNaN(newGstAmount) || baseAmount === 0) return false;
 
-  const newGstPercent = parseFloat(
-    ((newGstAmount / baseAmount) * 100).toFixed(2)
-  );
+  const newGstPercent = parseFloat(((newGstAmount / baseAmount) * 100).toFixed(2));
 
   if (params.data.gst_percent !== newGstPercent) {
     params.data.gst_percent = newGstPercent;
@@ -118,15 +112,12 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
   };
 };
 
-export const getDuration = (
-  out_date: string,
-  in_date: string,
-  billing_unit: BillingUnit
-) => {
+export const getDuration = (out_date: string, in_date: string, billing_unit: BillingUnit) => {
   let duration = 0;
   const start = dayjs(out_date).second(0).millisecond(0);
   const end = dayjs(in_date).second(0).millisecond(0);
 
+  console.log(billing_unit, BillingUnit.SHIFT);
   switch (billing_unit) {
     case BillingUnit.SHIFT: {
       const hoursDiff = end.diff(start, "hour");
@@ -145,14 +136,12 @@ export const getDuration = (
     default:
       duration = 1;
   }
+
+  console.log("duration", duration);
   return duration;
 };
 
-export const getDefaultProduct = (
-  out_date: string,
-  in_date: string,
-  billing_unit: BillingUnit
-) => {
+export const getDefaultProduct = (out_date: string, in_date: string, billing_unit: BillingUnit) => {
   const inDate = in_date || utcString();
   const outDate = out_date || utcString();
   const duration = getDuration(outDate, inDate, billing_unit);
@@ -174,3 +163,15 @@ export const getDefaultProduct = (
     product_code: "",
   };
 };
+
+export const formatProducts = (products: Product[]) => {
+  return products.map((product) => ({
+    id: product._id || "",
+    value: product.name,
+  }));
+};
+
+export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+  id: key,
+  value,
+}));

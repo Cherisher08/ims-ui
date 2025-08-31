@@ -12,6 +12,7 @@ interface CustomDatePickerProps {
   helperText?: string;
   wrapperClass?: string;
   labelClass?: string;
+  format?: string;
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
@@ -24,20 +25,21 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   className = "",
   wrapperClass = "",
   labelClass = "",
+  format = "DD/MM/YYYY hh:mm A",
 }) => {
+  const dateFormat = format || "DD/MM/YYYY hh:mm A";
+
+  const handleChange = (newValue: string | Dayjs | null) => {
+    onChange(newValue?.toString() || "");
+  };
+
   return (
-    <div className={`flex flex-col justify-between min-w-fit ${wrapperClass} `}>
-      <label
-        className={`min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
-      >
-        {label}
-      </label>
+    <div className={`flex flex-col  ${wrapperClass} `}>
+      <label className={`min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}>{label}</label>
       <div className="flex flex-col gap-2 w-full">
         <DateTimePicker
           value={value ? dayjs(value) : null}
-          onChange={(newValue: Dayjs | null) =>
-            onChange(newValue ? newValue.format("YYYY-MM-DDThh:mm") : "")
-          }
+          onChange={handleChange}
           slotProps={{
             textField: {
               error,
@@ -47,7 +49,8 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               fullWidth: true,
               sx: {
                 "& .MuiPickersSectionList-root": {
-                  padding: "0.7rem",
+                  padding: "0.6rem",
+                  height: "2.5rem",
                 },
                 "& .MuiFormHelperText-root": {
                   margin: "0",
@@ -56,7 +59,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             },
           }}
           ampm
-          format="DD/MM/YYYY hh:mm A"
+          format={dateFormat}
         />
       </div>
     </div>

@@ -47,11 +47,12 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
     const filteredOptions = options.filter((option) =>
       option.value.toLowerCase().startsWith(inputValue.toLowerCase())
     );
-
-    return [
-      { id: "0", value: "add-new" },
-      ...filteredOptions.sort((a, b) => a.value.localeCompare(b.value)),
-    ];
+    return createOption
+      ? [
+          { id: "0", value: "add-new" },
+          ...filteredOptions.sort((a, b) => a.value.localeCompare(b.value)),
+        ]
+      : [...filteredOptions.sort((a, b) => a.value.localeCompare(b.value))];
   };
 
   const currentValue = useMemo(() => {

@@ -112,39 +112,17 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
   };
 };
 
-export const getDuration = (out_date: string, in_date: string, billing_unit: BillingUnit) => {
-  let duration = 0;
+export const getDuration = (out_date: string, in_date: string) => {
   const start = dayjs(out_date).second(0).millisecond(0);
-  const end = dayjs(in_date).second(0).millisecond(0);
-
-  console.log(billing_unit, BillingUnit.SHIFT);
-  switch (billing_unit) {
-    case BillingUnit.SHIFT: {
-      const hoursDiff = end.diff(start, "hour");
-      duration = Math.ceil(hoursDiff / 8) || 1;
-      break;
-    }
-    case BillingUnit.DAYS:
-      duration = end.diff(start, "day") || 1;
-      break;
-    case BillingUnit.WEEKS:
-      duration = end.diff(start, "week") || 1;
-      break;
-    case BillingUnit.MONTHS:
-      duration = end.diff(start, "month") || 1;
-      break;
-    default:
-      duration = 1;
-  }
-
-  console.log("duration", duration);
+  const end = dayjs(in_date).second(0).endOf("day");
+  const duration = end.diff(start, "day");
   return duration;
 };
 
-export const getDefaultProduct = (out_date: string, in_date: string, billing_unit: BillingUnit) => {
+export const getDefaultProduct = (out_date: string, in_date: string) => {
   const inDate = in_date || utcString();
   const outDate = out_date || utcString();
-  const duration = getDuration(outDate, inDate, billing_unit);
+  const duration = getDuration(outDate, inDate);
   return {
     _id: "",
     name: "",
@@ -172,6 +150,11 @@ export const formatProducts = (products: Product[]) => {
 };
 
 export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+  id: key,
+  value,
+}));
+
+export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
   id: key,
   value,
 }));

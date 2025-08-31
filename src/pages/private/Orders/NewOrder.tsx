@@ -15,7 +15,6 @@ import {
   RentalOrderInfo,
 } from "../../../types/order";
 import { ContactInfoType, initialContactType } from "../../../types/contact";
-import DepositModal from "./DepositModal";
 import dayjs from "dayjs";
 import { Product, ProductType } from "../../../types/common";
 import { useGetProductsQuery, useUpdateProductMutation } from "../../../services/ApiService";
@@ -36,10 +35,13 @@ import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
 import {
   billingUnitOptions,
   formatProducts,
+  getDefaultDeposit,
   getDefaultProduct,
   getDuration,
   getNewOrderId,
+  paymentModeOptions,
 } from "../Summary/utils";
+import CustomAutoComplete from "../../../styled/CustomAutoComplete";
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -119,7 +121,6 @@ const NewOrder = () => {
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const [depositOpen, setDepositOpen] = useState<boolean>(false);
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
       amount: 0,
@@ -182,15 +183,6 @@ const NewOrder = () => {
     const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
     return parseFloat((finalAmount - discountAmount + gstAmount + roundOff).toFixed(2));
   }, [calculateTotalAmount, orderInfo.discount, orderInfo.gst, orderInfo.round_off]);
-
-  const calculateRentAfterGST = (rent: number, gst: number) => {
-    if (orderInfo.billing_mode === BillingMode.B2C) {
-      const exclusiveAmount = rent / (1 + gst / 100);
-      return Math.round(exclusiveAmount * 100) / 100;
-    } else {
-      return rent;
-    }
-  };
 
   const removeOrderProduct = (id: string) => {
     if (orderInfo.type === ProductType.RENTAL) {
@@ -410,11 +402,6 @@ const NewOrder = () => {
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
             to proceed.
           </p>
-          {orderInfo.type === ProductType.RENTAL &&
-            orderInfo.product_details &&
-            orderInfo?.product_details?.length > 0 && (
-              <CustomButton label="Deposits" onClick={() => setDepositOpen(true)} />
-            )}
         </div>
       </div>
       <div className="flex justify-between">
@@ -446,6 +433,28 @@ const NewOrder = () => {
             disabled
           />
         )}
+        <CustomAutoComplete
+          options={contacts.map((contact) => ({
+            id: contact.personal_number,
+            value: contact.personal_number,
+          }))}
+          addNewValue={() => {}}
+          placeholder=""
+          createOption={false}
+          value={
+            contacts.find((cont) => cont?.personal_number === orderInfo?.customer?.personal_number)
+              ?.personal_number || ""
+          }
+          label="Customer Mobile"
+          onChange={(value) => {
+            const contact = contacts.find((c) => c.personal_number === value);
+            if (contact) {
+              handleValueChange("customer", contact);
+            } else {
+              handleValueChange("customer", { ...initialContactType, personal_number: value });
+            }
+          }}
+        />
         <CustomSelect
           label="Customer"
           options={formatContacts(contacts)}
@@ -459,18 +468,6 @@ const NewOrder = () => {
               contacts.find((option) => option._id === id)
             )
           }
-        />
-        <CustomInput
-          value={
-            orderInfo?.customer
-              ? contacts.filter((contact) => contact._id === orderInfo.customer?._id)[0]
-                  ?.personal_number || ""
-              : ""
-          }
-          label="Customer Mobile"
-          placeholder="Customer Mobile Number"
-          onChange={() => {}}
-          disabled
         />
         {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
@@ -530,7 +527,11 @@ const NewOrder = () => {
 
         <CustomInput
           value={orderInfo?.rental_duration ?? ""}
-          onChange={(value) => handleValueChange("rental_duration", value)}
+          onChange={(value) => {
+            const inDate = dayjs(orderInfo.out_date).add(Number(value), "days");
+            handleValueChange("in_date", inDate);
+            handleValueChange("rental_duration", value);
+          }}
           label="Event Expected Days"
           type="number"
           placeholder="Enter expected days"
@@ -552,14 +553,6 @@ const NewOrder = () => {
           multiline
           minRows={5}
         />
-        <CustomInput
-          value={orderInfo?.remarks ?? ""}
-          onChange={(value) => handleValueChange("remarks", value)}
-          label="Remarks"
-          placeholder="Enter remarks"
-          multiline
-          minRows={5}
-        />
       </div>
 
       {/* Products */}
@@ -572,11 +565,7 @@ const NewOrder = () => {
               orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
             }
             onClick={() => {
-              const newProduct = getDefaultProduct(
-                orderInfo?.out_date,
-                orderInfo.in_date,
-                BillingUnit.DAYS
-              );
+              const newProduct = getDefaultProduct(orderInfo?.out_date, orderInfo.in_date);
               setOrderInfo((prev) => ({
                 ...prev,
                 product_details: [...(prev.product_details || []), newProduct],
@@ -667,8 +656,7 @@ const NewOrder = () => {
                           const newProducts = [...orderInfo.product_details];
                           const duration = getDuration(
                             newProducts[index].out_date,
-                            newProducts[index].in_date,
-                            currentUnit
+                            newProducts[index].in_date
                           );
                           newProducts[index] = {
                             ...product,
@@ -718,11 +706,7 @@ const NewOrder = () => {
                         className="w-[11rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(
-                            val,
-                            newProducts[index].in_date,
-                            newProducts[index].billing_unit
-                          );
+                          const duration = getDuration(val, newProducts[index].in_date);
                           newProducts[index] = { ...product, out_date: val, duration: duration };
                           setOrderInfo({ ...orderInfo, product_details: newProducts });
                         }}
@@ -739,11 +723,7 @@ const NewOrder = () => {
                         className="w-[11rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(
-                            newProducts[index].out_date,
-                            val,
-                            newProducts[index].billing_unit
-                          );
+                          const duration = getDuration(newProducts[index].out_date, val);
                           newProducts[index] = { ...product, in_date: val, duration: duration };
                           setOrderInfo({ ...orderInfo, product_details: newProducts });
                         }}
@@ -784,8 +764,12 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[8rem] p-2"
-                        value={calculateRentAfterGST(product.rent_per_unit, orderInfo.gst) || 0}
-                        onChange={() => {}}
+                        value={product.rent_per_unit}
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          newProducts[index] = { ...product, rent_per_unit: Number(val) };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
                       />
                     </td>
                     <td className="px-1 py-1">
@@ -795,11 +779,7 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[8rem] p-2"
-                        value={
-                          (calculateRentAfterGST(product.rent_per_unit, orderInfo.gst) || 0) *
-                          product.order_quantity *
-                          product.duration
-                        }
+                        value={product.rent_per_unit * product.order_quantity}
                         onChange={() => {}}
                       />
                     </td>
@@ -816,13 +796,132 @@ const NewOrder = () => {
               ) : (
                 <tr>
                   <td colSpan={12} className="h-[5rem] text-center py-4">
-                    No products Available...
+                    No Products Available...
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Deposits */}
+      <div className="w-full h-fit flex flex-col">
+        <div className="w-full flex justify-between my-2">
+          <label className="text-xl font-bold underline">Deposits:</label>
+          <CustomButton
+            label="Add Deposit"
+            disabled={
+              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
+            }
+            onClick={() => {
+              const newDeposit = getDefaultDeposit(products);
+              setDepositData((prev) => {
+                if (prev) return [...prev, newDeposit];
+                else return [newDeposit];
+              });
+            }}
+          />
+        </div>
+        <table className="w-full table-auto border border-gray-300">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="px-1 py-1 text-left w-[15rem]">Amount</th>
+              <th className="px-1 py-1 text-left w-[15rem]">Date</th>
+              <th className="px-1 py-1 text-left w-[15rem]">Product</th>
+              <th className="px-1 py-1 text-left w-[20rem]">Payment Mode</th>
+              <th className="px-1 py-1 text-left w-[10rem]">Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {depositData.length > 0 ? (
+              depositData.map((deposit, index) => (
+                <tr key={index} className="border-b border-gray-200">
+                  <td className="px-1 py-1">
+                    <CustomInput
+                      type="number"
+                      label=""
+                      placeholder=""
+                      className="w-[14rem] p-2"
+                      value={deposit.amount || 0}
+                      onChange={(val) => {
+                        const newDeposits = [...depositData];
+                        newDeposits[index] = { ...deposit, amount: Number(val) };
+                        setDepositData(newDeposits);
+                      }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <CustomDatePicker
+                      label=""
+                      placeholder=""
+                      className="w-[14rem] p-2"
+                      value={deposit.date}
+                      onChange={(val) => {
+                        const newDeposits = [...depositData];
+                        newDeposits[index] = { ...deposit, date: val };
+                        setDepositData(newDeposits);
+                      }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <CustomSelect
+                      label=""
+                      value={
+                        formatProducts(products).find((prod) =>
+                          deposit.product ? prod.id === deposit.product._id : false
+                        )?.id ?? ""
+                      }
+                      options={formatProducts(orderInfo.product_details || [])}
+                      onChange={(id) =>
+                        setDepositData((prev) => {
+                          const newDeposits = [...prev];
+                          const product = products.find((prod) => prod._id === id) || null;
+                          newDeposits[index] = { ...deposit, product: product };
+                          return newDeposits;
+                        })
+                      }
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <CustomSelect
+                      label=""
+                      options={paymentModeOptions}
+                      className="w-[14rem]"
+                      value={
+                        paymentModeOptions.find((mode) => deposit.mode === mode.value)?.id || ""
+                      }
+                      onChange={(mode) => {
+                        const currentMode =
+                          paymentModeOptions.find((md) => md.id === mode)?.value ??
+                          BillingUnit.DAYS;
+                        const newDeposits = [...depositData];
+                        newDeposits[index] = { ...deposit, mode: currentMode as PaymentMode };
+                        setDepositData(newDeposits);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <CustomButton
+                      label="Delete"
+                      icon=""
+                      onClick={() => {
+                        const newDeposits = depositData.filter((_, i) => i !== index);
+                        setDepositData(newDeposits);
+                      }}
+                    ></CustomButton>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="h-[5rem] text-center py-4">
+                  No Deposits Available...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* === Order Info Form === */}
@@ -1020,16 +1119,6 @@ const NewOrder = () => {
           </div>
         )}
       </div>
-
-      {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
-        <DepositModal
-          depositOpen={depositOpen}
-          setDepositOpen={(value: boolean) => setDepositOpen(value)}
-          productData={orderInfo.product_details}
-          depositData={depositData}
-          setDepositData={setDepositData}
-        />
-      )}
     </div>
   );
 };

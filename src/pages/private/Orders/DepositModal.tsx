@@ -76,9 +76,7 @@ const DepositModal = ({
     >
       <div className="flex flex-col gap-4 justify-center items-center w-4/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full">
-          <p className="text-primary text-xl font-semibold w-full text-start">
-            Deposits
-          </p>
+          <p className="text-primary text-xl font-semibold w-full text-start">Deposits</p>
           <MdClose
             size={25}
             className="cursor-pointer"
@@ -100,9 +98,7 @@ const DepositModal = ({
                 value={deposit.amount}
                 type="number"
                 placeholder="Enter Amount"
-                onChange={(value) =>
-                  handleDepositChange("amount", parseFloat(value), index)
-                }
+                onChange={(value) => handleDepositChange("amount", parseFloat(value), index)}
               />
               <CustomDatePicker
                 label="Date"
@@ -132,15 +128,11 @@ const DepositModal = ({
                 className="w-[10rem]"
                 labelClass="w-fit"
                 options={paymentModeOptions}
-                value={
-                  paymentModeOptions.find((opt) => opt.value === deposit?.mode)
-                    ?.id ?? ""
-                }
+                value={paymentModeOptions.find((opt) => opt.value === deposit?.mode)?.id ?? ""}
                 onChange={(id) =>
                   handleDepositChange(
                     "mode",
-                    paymentModeOptions.find((opt) => opt.id === id)
-                      ?.value as PaymentMode,
+                    paymentModeOptions.find((opt) => opt.id === id)?.value as PaymentMode,
                     index
                   )
                 }
@@ -150,11 +142,7 @@ const DepositModal = ({
         </div>
 
         <div className="flex gap-4 my-3 w-full justify-end">
-          <CustomButton
-            label="Cancel"
-            onClick={() => setDepositOpen(false)}
-            variant="outlined"
-          />
+          <CustomButton label="Cancel" onClick={() => setDepositOpen(false)} variant="outlined" />
           <CustomButton label="Done" onClick={() => setDepositOpen(false)} />
         </div>
       </div>

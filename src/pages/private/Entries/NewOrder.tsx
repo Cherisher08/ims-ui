@@ -562,6 +562,14 @@ const NewOrder = () => {
           multiline
           minRows={5}
         />
+        <CustomInput
+          value={orderInfo?.remarks ?? ""}
+          onChange={(value) => handleValueChange("remarks", value)}
+          label="Event Remarks"
+          placeholder="Enter Remarks"
+          multiline
+          minRows={5}
+        />
       </div>
 
       {/* Products */}

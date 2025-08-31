@@ -724,9 +724,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   key={product._id}
                   style={[
                     styles.tableRow,
-                    updatedProducts.length - 1 === index
-                      ? {}
-                      : { borderBottom: "1px solid #000" },
+                    updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
                   ]}
                 >
                   <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>
@@ -1111,7 +1109,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   </View>
                 </View>
 
-                {!sameKindOfDeposit && (
+                {/* {!sameKindOfDeposit && (
                   <View style={styles.depositContainer}>
                     <Text
                       style={{
@@ -1123,14 +1121,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       Deposit Details
                     </Text>
                     <View style={styles.depositTable}>
-                      {/* Header row */}
                       <View style={styles.depositTableRow}>
                         <Text style={styles.depositTableHeader}>Date</Text>
                         <Text style={styles.depositTableHeader}>Amount</Text>
                         <Text style={styles.depositTableHeader}>Payment Mode</Text>
                       </View>
-
-                      {/* Data rows */}
                       {deposits.map((deposit, idx) => (
                         <View style={styles.depositTableRow} key={idx}>
                           <Text style={styles.depositTableCol}>
@@ -1142,7 +1137,17 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       ))}
                     </View>
                   </View>
-                )}
+                )} */}
+                <View
+                  style={{
+                    width:"100%",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    marginTop: 10,
+                  }}
+                >
+                  <Image src="/qr.jpeg" style={{ width: 130, height: 130 }} />
+                </View>
               </View>
               <View
                 style={{

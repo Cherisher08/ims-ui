@@ -88,6 +88,9 @@ const initialRentalProduct: RentalOrderInfo = {
   deposits: [],
   eway_amount: 0,
   eway_mode: PaymentMode.CASH,
+  balance_paid: 0,
+  balance_paid_mode: PaymentMode.CASH,
+  repay_amount: 0,
   event_name: "",
   event_venue: "",
 };
@@ -606,6 +609,7 @@ const NewOrder = () => {
                 <th className="px-1 py-1 text-left w-[8rem]">Order Repair Quantity</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Rent Per Unit</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Final Amount</th>
+                <th className="px-1 py-1 text-left w-[20rem]">Damage</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Options</th>
               </tr>
             </thead>
@@ -613,7 +617,7 @@ const NewOrder = () => {
               {orderInfo.product_details.length > 0 ? (
                 orderInfo.product_details?.map((product, index) => (
                   <tr key={product._id} className="border-b border-gray-200">
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomSelect
                         label=""
                         options={formatProducts(
@@ -647,7 +651,7 @@ const NewOrder = () => {
                         }}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         label=""
                         placeholder=""
@@ -657,7 +661,7 @@ const NewOrder = () => {
                         onChange={() => {}}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomSelect
                         label=""
                         className="w-[8rem]"
@@ -684,7 +688,7 @@ const NewOrder = () => {
                         }}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         disabled
                         value={products.find((p) => p._id === product._id)?.available_stock || 0}
@@ -695,7 +699,7 @@ const NewOrder = () => {
                         placeholder=""
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         type="number"
                         label=""
@@ -713,7 +717,7 @@ const NewOrder = () => {
                         }}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomDatePicker
                         label=""
                         value={
@@ -730,7 +734,7 @@ const NewOrder = () => {
                         format="DD/MM/YYYY"
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomDatePicker
                         label=""
                         value={
@@ -747,7 +751,7 @@ const NewOrder = () => {
                         format="DD/MM/YYYY"
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         type="number"
                         label=""
@@ -761,7 +765,7 @@ const NewOrder = () => {
                         }}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         type="number"
                         label=""
@@ -775,7 +779,7 @@ const NewOrder = () => {
                         }}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         type="number"
                         label=""
@@ -789,7 +793,7 @@ const NewOrder = () => {
                         }}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
                       <CustomInput
                         disabled
                         type="number"
@@ -800,7 +804,23 @@ const NewOrder = () => {
                         onChange={() => {}}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2 content-start">
+                      <CustomInput
+                        type="number"
+                        label=""
+                        placeholder=""
+                        className="w-[20rem]"
+                        multiline
+                        minRows={1}
+                        value={orderInfo.product_details[index].damage || ""}
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          newProducts[index] = { ...product, damage: val };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-2 content-start">
                       <div className="flex gap-2">
                         <CustomButton
                           label="Remove"
@@ -828,9 +848,6 @@ const NewOrder = () => {
           <label className="text-xl font-bold underline">Deposits:</label>
           <CustomButton
             label="Add Deposit"
-            disabled={
-              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
-            }
             onClick={() => {
               const newDeposit = getDefaultDeposit(products);
               setDepositData((prev) => {
@@ -911,7 +928,7 @@ const NewOrder = () => {
                       onChange={(mode) => {
                         const currentMode =
                           paymentModeOptions.find((md) => md.id === mode)?.value ??
-                          BillingUnit.DAYS;
+                          PaymentMode.CASH;
                         const newDeposits = [...depositData];
                         newDeposits[index] = { ...deposit, mode: currentMode as PaymentMode };
                         setDepositData(newDeposits);
@@ -941,6 +958,109 @@ const NewOrder = () => {
         </table>
       </div>
 
+      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-x-10 my-4">
+        <div className="flex gap-2">
+          <CustomInput
+            label="Transport"
+            type="number"
+            wrapperClass="w-full"
+            placeholder="Enter Transport"
+            value={orderInfo.eway_amount}
+            onChange={(val) => {
+              handleValueChange("eway_amount", val);
+            }}
+          />
+          <div className="flex items-end">
+            <CustomSelect
+              label=""
+              className="w-[8rem]"
+              options={paymentModeOptions}
+              value={
+                paymentModeOptions.find((mode) => orderInfo.eway_mode === mode.value)?.id || ""
+              }
+              onChange={(mode) => {
+                const currentMode =
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                handleValueChange("eway_mode", currentMode);
+              }}
+            />
+          </div>
+        </div>
+        <CustomInput
+          label="Discount Amount"
+          type="number"
+          wrapperClass="w-full"
+          placeholder="Enter Discount Amount"
+          value={orderInfo.discount_amount}
+          onChange={(val) => {
+            const value = val || "0";
+            const amount = parseFloat(value) || 0;
+            const total_amount = calculateTotalAmount;
+            const percent =
+              total_amount > 0 ? parseFloat(((amount * 100) / total_amount).toFixed(2)) : 0;
+
+            setOrderInfo((prev) => ({
+              ...prev,
+              discount: percent,
+              discount_amount: parseFloat(value),
+            }));
+          }}
+        />
+        <div className="flex gap-2">
+          <CustomInput
+            label="Balance Paid"
+            placeholder="Enter Balance Paid"
+            wrapperClass="w-full"
+            value={orderInfo.balance_paid}
+            onChange={(val) => {
+              handleValueChange("balance_paid", Number(val));
+            }}
+          />
+          <div className="flex items-end">
+            <CustomSelect
+              label=""
+              className="w-[8rem]"
+              options={paymentModeOptions}
+              value={
+                paymentModeOptions.find((mode) => orderInfo.balance_paid_mode === mode.value)?.id ||
+                ""
+              }
+              onChange={(mode) => {
+                const currentMode =
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                handleValueChange("balance_paid_mode", currentMode);
+              }}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <CustomInput
+            label="Repay Amount"
+            wrapperClass="w-full"
+            placeholder="Enter Repay Amount"
+            value={orderInfo.repay_amount}
+            onChange={(val) => {
+              handleValueChange("repay_amount", val);
+            }}
+          />
+          <div className="flex items-end">
+            <CustomSelect
+              label=""
+              className="w-[8rem]"
+              options={paymentModeOptions}
+              value={
+                paymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ""
+              }
+              onChange={(mode) => {
+                const currentMode =
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                handleValueChange("payment_mode", currentMode);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* === Order Info Form === */}
       <div className="max-w-full flex flex-col gap-2">
         {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
@@ -952,11 +1072,8 @@ const NewOrder = () => {
                     <p>Deposit</p>
                     <p>Amount before Taxes</p>
                     <p>Discount</p>
-                    <p>Discount Amount</p>
                     <p>GST</p>
                     <p>Round Off</p>
-                    <p>Transport Amount</p>
-                    <p>Transport Payment Mode</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
                     <p>₹ {depositData.reduce((total, deposit) => total + deposit.amount, 0)}</p>
@@ -989,29 +1106,6 @@ const NewOrder = () => {
                       />
                       <span className="w-2">%</span>
                     </div>
-                    <p>
-                      <input
-                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                        type="number"
-                        value={orderInfo.discount_amount}
-                        onChange={(e) => {
-                          const value = e.target.value || "0";
-                          const amount = parseFloat(value) || 0;
-                          const total_amount = calculateTotalAmount;
-                          const percent =
-                            total_amount > 0
-                              ? parseFloat(((amount * 100) / total_amount).toFixed(2))
-                              : 0;
-
-                          setOrderInfo((prev) => ({
-                            ...prev,
-                            discount: percent,
-                            discount_amount: parseFloat(value),
-                          }));
-                        }}
-                      />{" "}
-                      ₹
-                    </p>
                     <div className="flex justify-end gap-1">
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
@@ -1049,50 +1143,23 @@ const NewOrder = () => {
                       />{" "}
                       ₹
                     </div>
-                    <div>
-                      <input
-                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                        type="number"
-                        value={orderInfo.eway_amount}
-                        onChange={(e) =>
-                          setOrderInfo((prev) => ({
-                            ...prev,
-                            eway_amount: parseFloat(parseFloat(e.target.value).toFixed(2)),
-                          }))
-                        }
-                      />{" "}
-                      ₹
-                    </div>
-                    <div>
-                      <select
-                        className="w-fit outline-none"
-                        onChange={(e) => handleValueChange("eway_mode", e.target.value)}
-                        value={orderInfo.eway_mode}
-                      >
-                        {Object.entries(PaymentMode).map(([id, key]) => (
-                          <option key={id} value={key.toLowerCase()}>
-                            {key.toUpperCase()}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 border-t border-t-gray-200">
                   <div className="flex flex-col gap-1 font-semibold pb-2">
                     <p>Amount after Taxes</p>
-                    <p>
+                    {/* <p>
                       {calculateFinalAmount() -
                         depositData.reduce((total, deposit) => total + deposit.amount, 0) >
                       0
                         ? "Balance"
                         : "Refund"}
                     </p>
-                    <p>Mode</p>
+                    <p>Mode</p> */}
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
                     <p>₹ {Math.abs(calculateFinalAmount())}</p>
-                    <p className="font-semibold text-black">
+                    {/* <p className="font-semibold text-black">
                       ₹{" "}
                       {Math.abs(
                         calculateFinalAmount() -
@@ -1109,7 +1176,7 @@ const NewOrder = () => {
                           {key.toUpperCase()}
                         </option>
                       ))}
-                    </select>
+                    </select> */}
                   </div>
                 </div>
               </div>

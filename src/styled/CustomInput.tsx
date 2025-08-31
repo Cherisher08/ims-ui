@@ -37,9 +37,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 }) => {
   return (
     <div className={`flex flex-col min-w-fit ${wrapperClass}`}>
-      <label className={`w-full line-clamp-2 break-words ${labelClass}`}>
-        {label}
-      </label>
+      <label className={`w-full line-clamp-2 break-words ${labelClass}`}>{label}</label>
       <TextField
         onChange={(e) => onChange(e.target.value)}
         value={value}
@@ -54,16 +52,14 @@ const CustomInput: React.FC<CustomInputProps> = ({
         slotProps={{
           input: {
             ...(startIcon && {
-              startAdornment: (
-                <InputAdornment position="start">{startIcon}</InputAdornment>
-              ),
+              startAdornment: <InputAdornment position="start">{startIcon}</InputAdornment>,
             }),
           },
           htmlInput: {
             min: type === "number" ? 0 : undefined,
             maxLength: maxLength,
             className: `${
-              multiline ? "h-fit" : "h-[2.5rem] p-2"
+              multiline ? "h-fit p-0 box-border" : "h-[2.5rem]"
             } box-border ${className}`,
           },
         }}

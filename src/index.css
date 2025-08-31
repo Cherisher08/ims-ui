@@ -57,7 +57,7 @@ input[type="number"] {
   border: none !important;
 }
 
-.ag-watermark { 
+.ag-watermark {
   display: none !important;
 }
 
@@ -101,4 +101,8 @@ input[type="number"] {
   padding-top: 0.5rem;
   height: fit-content !important ;
   border: 0px;
+}
+
+.MuiInputBase-multiline {
+  padding: 8px !important;
 }

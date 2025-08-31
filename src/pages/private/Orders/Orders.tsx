@@ -20,6 +20,7 @@ import { useGetProductCategoriesQuery, useGetUnitsQuery } from "../../../service
 import { transformIdNamePair } from "../Inventory";
 import { CustomOptionProps } from "../../../styled/CustomAutoComplete";
 import NewProductModal from "../../../components/NewProductModal.";
+import { useNavigate } from "react-router-dom";
 
 const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
   return rentalOrders.map((rentalOrder) => {
@@ -43,6 +44,7 @@ const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderT
 };
 
 const Orders = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
@@ -60,23 +62,23 @@ const Orders = () => {
 
   const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
 
-  const handleNewRentalOrder = async () => {
-    if (isRentalOrdersQuerySuccess) {
-      const orderId = getNewOrderId(rentalOrderData);
-      const newOrderData = getDefaultRentalOrder(orderId);
-      try {
-        const orderResponse = await createRentalOrder(newOrderData).unwrap();
-        toast.success("Rental Order Created Successfully", {
-          toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
-        });
-        console.log("✅ Order created successfully", orderResponse);
-      } catch {
-        toast.error("Rental Order was not Created Successfully", {
-          toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
-        });
-      }
-    }
-  };
+  // const handleNewRentalOrder = async () => {
+  //   if (isRentalOrdersQuerySuccess) {
+  //     const orderId = getNewOrderId(rentalOrderData);
+  //     const newOrderData = getDefaultRentalOrder(orderId);
+  //     try {
+  //       const orderResponse = await createRentalOrder(newOrderData).unwrap();
+  //       toast.success("Rental Order Created Successfully", {
+  //         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
+  //       });
+  //       console.log("✅ Order created successfully", orderResponse);
+  //     } catch {
+  //       toast.error("Rental Order was not Created Successfully", {
+  //         toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+  //       });
+  //     }
+  //   }
+  // };
 
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
@@ -104,7 +106,7 @@ const Orders = () => {
       {/* Header */}
       <div className="flex justify-between">
         <CustomButton
-          onClick={() => handleNewRentalOrder()}
+          onClick={() => navigate("/orders/rentals")}
           label="New Order"
           icon={<LuPlus color="white" />}
         />

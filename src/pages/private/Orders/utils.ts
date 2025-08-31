@@ -139,6 +139,7 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
     duration: duration,
     rent_per_unit: 0,
     product_code: "",
+    damage: "",
   };
 };
 

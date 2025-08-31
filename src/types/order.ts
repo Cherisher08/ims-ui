@@ -41,6 +41,7 @@ export type ProductDetails = {
   order_quantity: number;
   rent_per_unit: number;
   product_code: string;
+  damage: string;
 };
 
 export type ContactSelectionType = {
@@ -88,6 +89,7 @@ export type OrderInfo = {
   status: PaymentStatus;
   remarks: string;
   round_off: number;
+  repay_amount: number;
   payment_mode: PaymentMode;
   gst: number;
 };
@@ -102,6 +104,8 @@ export type RentalOrderInfo = OrderInfo & {
   event_address: string;
   eway_amount: number;
   eway_mode: PaymentMode;
+  balance_paid: number;
+  balance_paid_mode: PaymentMode;
   event_name: string;
   event_venue: string;
 };

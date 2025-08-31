@@ -127,9 +127,12 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     const roundOff = data.round_off || 0;
     const ewayBillAmount = data.eway_amount || 0;
     const discountAmount = data.discount_amount || 0;
+    const balance_paid = data.balance_paid || 0;
     const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount - discountAmount);
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount - balance_paid).toFixed(
+        2
+      )
     );
   };
 
@@ -159,7 +162,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       flexDirection: "column",
       backgroundColor: "white",
       fontSize: 10,
-      padding: 10,
+      paddingHorizontal: 20,
       // paddingLeft: 50,
       fontFamily: "Times-Roman",
     },
@@ -227,14 +230,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     tableHeader: {
       flexDirection: "row",
       backgroundColor: "#f4f4f4",
-      padding: 5,
       borderBottom: "1px solid #00000",
     },
     tableRow: {
       flexDirection: "row",
       height: 20,
-      padding: 3,
-      borderBottom: "1px solid #f4f4f4",
     },
     tableColumn: {
       fontSize: 10,
@@ -243,6 +243,9 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
+      borderRight: "1px solid black",
+      alignContent: "center",
+      paddingVertical: 2,
     },
     productColumn: {
       fontSize: 10,
@@ -253,8 +256,13 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
       alignItems: "center",
       whiteSpace: "normal",
       wordWrap: "break-word",
+      padding: 0,
+      margin: 0,
       width: "100%",
+      minHeight: "100%",
       wordBreak: "break-all",
+      borderRight: "1px solid black",
+      alignContent: "center",
     },
     calculationWrapper: {
       marginTop: 1,
@@ -270,7 +278,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     },
     section: {
       width: "100%",
-      // padding: 10,
       backgroundColor: "#fff",
     },
     row: {
@@ -414,7 +421,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             style={{
               fontSize: "15px",
               fontWeight: "bold",
-              marginVertical: "10px",
+              marginTop: "10px",
             }}
           >
             Tax Invoice
@@ -444,45 +451,25 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
               <Text style={styles.fieldValue}>-</Text>
             </View>
             <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Billing Address:</Text>
-              <Text style={styles.fieldValue}>{data.customer ? data.customer.name : ""}</Text>
+              <Text style={styles.fieldTitle}>Event/Project Name:</Text>
               <Text style={styles.fieldValue}>
-                {data.customer && data.customer.address.trim().length ? data.customer.address : " "}
+                {data.event_name.trim().length ? data.event_name : " "}
               </Text>
+            </View>
+            <View style={styles.tableField}>
+              <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
               <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  Pincode - {data.customer ? data.customer.pincode : ""}
-                </Text>
+                {dayjs(data.out_date).isValid()
+                  ? dayjs(data.out_date).format("DD-MM-YYYY hh:mm:ss A")
+                  : " "}
               </Text>
+            </View>
+            <View style={styles.tableField}>
+              <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
               <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  Mobile -{" "}
-                </Text>
-                {data.customer ? data.customer.personal_number : ""}
-              </Text>
-              <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  GSTIN -{" "}
-                </Text>
-                {data.customer ? data.customer.gstin : ""}
+                {dayjs(data.in_date).isValid()
+                  ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
+                  : " "}
               </Text>
             </View>
             <View style={styles.tableField}>
@@ -515,52 +502,71 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           </View>
           <View style={styles.container}>
             <Image src="/customer-logo.png" style={styles.image} />
-            <View style={styles.ownerDetails}>
-              <Text style={styles.title}>MANI POWER TOOLS</Text>
-              <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
-              <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
-              <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
-              <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
-                manipowertools9153@gmail.com
+            <View style={styles.tableField}>
+              <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
+              <Text style={styles.fieldValue}>
+                {data.event_venue.trim().length ? data.event_venue : " "}
               </Text>
-              <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
-                GST No - 33FGDPP7447A1ZI
-              </Text>
+            </View>
+            <View style={styles.tableField}>
+              <Text style={styles.fieldTitle}>Event Address:</Text>
+              <Text style={styles.fieldValue}>{data.event_address}</Text>
             </View>
           </View>
           <View style={[styles.detailContainer, { justifyContent: "space-between" }]}>
             <View>
-              <View style={styles.tableField}>
-                <Text style={styles.fieldTitle}>Event/Project Name:</Text>
-                <Text style={styles.fieldValue}>
-                  {data.event_name.trim().length ? data.event_name : " "}
+              <View style={styles.ownerDetails}>
+                <Text style={styles.title}>MANI POWER TOOLS</Text>
+                <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
+                <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
+                <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
+                <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
+                  manipowertools9153@gmail.com
+                </Text>
+                <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
+                  GST No - 33FGDPP7447A1ZI
                 </Text>
               </View>
-              <View style={styles.tableField}>
-                <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
+              <View style={[styles.tableField, { marginTop: 5 }]}>
+                <Text style={[styles.title]}>CUSTOMER ADDRESS</Text>
+                {/* <Text style={styles.fieldValue}>{data.customer ? data.customer.name : ""}</Text> */}
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.out_date).isValid()
-                    ? dayjs(data.out_date).format("DD-MM-YYYY hh:mm:ss A")
+                  {data.customer && data.customer.address.trim().length
+                    ? data.customer.address
                     : " "}
                 </Text>
-              </View>
-              <View style={styles.tableField}>
-                <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {dayjs(data.in_date).isValid()
-                    ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
-                    : " "}
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                    }}
+                  >
+                    Pincode - {data.customer ? data.customer.pincode : ""}
+                  </Text>
                 </Text>
-              </View>
-              <View style={styles.tableField}>
-                <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
                 <Text style={styles.fieldValue}>
-                  {data.event_venue.trim().length ? data.event_venue : " "}
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                    }}
+                  >
+                    Mobile -{" "}
+                  </Text>
+                  {data.customer ? data.customer.personal_number : ""}
                 </Text>
-              </View>
-              <View style={styles.tableField}>
-                <Text style={styles.fieldTitle}>Event Address:</Text>
-                <Text style={styles.fieldValue}>{data.event_address}</Text>
+                <Text style={styles.fieldValue}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                    }}
+                  >
+                    GST No -{" "}
+                  </Text>
+                  {data.customer ? data.customer.gstin : ""}
+                </Text>
               </View>
               {/* <Text style={styles.fieldValue}>
                 <Text
@@ -605,12 +611,22 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
             </View>
           </View>
         </View>
+
         <View style={styles.OrderSummaryContainer}>
           <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>Order Summary</Text>
           <View style={styles.orderWrapper}>
             <View style={styles.tableContainer}>
               <View style={styles.tableHeader}>
-                <Text style={[styles.tableColumn, { width: 20 }]}>NO</Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 20,
+                    },
+                  ]}
+                >
+                  NO
+                </Text>
                 <Text
                   style={[
                     styles.tableColumn,
@@ -621,32 +637,114 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 >
                   ITEM
                 </Text>
-                <Text style={[styles.tableColumn, { width: 50 }]}>HSN/ SAC</Text>
-                <Text style={[styles.tableColumn, { width: 40 }]}>QTY</Text>
-                <Text style={[styles.tableColumn, { width: 40 }]}>UNIT</Text>
-                <Text style={[styles.tableColumn, { width: 70 }]}>UNIT PRICE</Text>
-                <Text style={[styles.tableColumn, { width: 80 }]}>BILLING UNIT</Text>
-                <Text style={[styles.tableColumn, { width: 60 }]}>AMOUNT</Text>
-                <Text style={[styles.tableColumn, { width: 60 }]}>GST(%)</Text>
-                <Text style={[styles.tableColumn, { width: 60 }]}>TOTAL AMT</Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 50,
+                    },
+                  ]}
+                >
+                  HSN/ SAC
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 40,
+                    },
+                  ]}
+                >
+                  QTY
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 40,
+                    },
+                  ]}
+                >
+                  UNIT
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 70,
+                    },
+                  ]}
+                >
+                  UNIT PRICE
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 80,
+                    },
+                  ]}
+                >
+                  BILLING UNIT
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 60,
+                    },
+                  ]}
+                >
+                  AMOUNT
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 60,
+                    },
+                  ]}
+                >
+                  GST(%)
+                </Text>
+                <Text
+                  style={[
+                    styles.tableColumn,
+                    {
+                      width: 60,
+                      borderRight: "0px",
+                      alignContent: "center",
+                      paddingVertical: 2,
+                      alignItems: "center",
+                    },
+                  ]}
+                >
+                  TOTAL AMT
+                </Text>
               </View>
               {updatedProducts.map((product: ProductDetails, index: number) => (
-                <View key={product._id} style={styles.tableRow}>
+                <View
+                  key={product._id}
+                  style={[
+                    styles.tableRow,
+                    updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
+                  ]}
+                >
                   <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>
                   <View>
                     <Text
                       style={[
                         styles.productColumn,
                         {
-                          width: 100,
-                          paddingBottom: 5,
+                          width: 99,
+                          maxWidth: "95.4px !important",
                         },
                       ]}
                     >
                       {product.name}
                     </Text>
                   </View>
-                  <Text style={[styles.productColumn, { width: 50 }]}>
+                  <Text style={[styles.productColumn, { width: 55 }]}>
                     {product.product_code || ""}
                   </Text>
                   <Text style={[styles.productColumn, { width: 40 }]}>
@@ -665,7 +763,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
                   <Text style={[styles.productColumn, { width: 60 }]}>{data.gst}</Text>
-                  <Text style={[styles.productColumn, { width: 60 }]}>
+                  <Text style={[styles.productColumn, { width: 60, borderRight: "0px" }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
                 </View>
@@ -943,7 +1041,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                     style={{
                       width: "100%",
                       flexDirection: "column",
-                      marginTop: 10,
+                      marginTop: 5,
                     }}
                   >
                     <Text style={styles.bankDetails}>Terms And Conditions</Text>
@@ -958,8 +1056,8 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       lineHeight: 1,
                     }}
                   >
-                    <Text style={styles.bankDetails}>Bank Information</Text>
-                    <Text style={styles.bankDetails}>---</Text>
+                    {/* <Text style={styles.bankDetails}>Bank Information</Text>
+                    <Text style={styles.bankDetails}>---</Text> */}
                     <Text style={styles.selectSim}>Kindly make the payment in favour of</Text>
                     <View
                       style={{
@@ -1014,7 +1112,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                   </View>
                 </View>
 
-                {!sameKindOfDeposit && (
+                {/* {!sameKindOfDeposit && (
                   <View style={styles.depositContainer}>
                     <Text
                       style={{
@@ -1026,14 +1124,11 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       Deposit Details
                     </Text>
                     <View style={styles.depositTable}>
-                      {/* Header row */}
                       <View style={styles.depositTableRow}>
                         <Text style={styles.depositTableHeader}>Date</Text>
                         <Text style={styles.depositTableHeader}>Amount</Text>
                         <Text style={styles.depositTableHeader}>Payment Mode</Text>
                       </View>
-
-                      {/* Data rows */}
                       {deposits.map((deposit, idx) => (
                         <View style={styles.depositTableRow} key={idx}>
                           <Text style={styles.depositTableCol}>
@@ -1045,7 +1140,17 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                       ))}
                     </View>
                   </View>
-                )}
+                )} */}
+                <View
+                  style={{
+                    width: "60%",
+                    display: "flex",
+                    alignItems: "flex-end",
+                    marginTop: 10,
+                  }}
+                >
+                  <Image src="/qr.jpeg" style={{ width: 130, height: 130 }} />
+                </View>
               </View>
               <View
                 style={{

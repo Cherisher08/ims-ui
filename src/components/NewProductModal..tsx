@@ -8,7 +8,6 @@ import CustomAutoComplete, {
 import {
   IdNamePair,
   initialProductData,
-  transformIdNamePair,
   transformIdValuePair,
 } from "../pages/private/Inventory";
 import CustomSelect from "../styled/CustomSelect";
@@ -156,7 +155,7 @@ const NewProductModal = ({
                   });
                   handleProductChange(
                     "unit",
-                    transformIdNamePair(
+                    transformIdValuePair(
                       value
                         ? productUnits.find(
                             (productUnit) => productUnit.value === value

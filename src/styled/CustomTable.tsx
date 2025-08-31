@@ -9,6 +9,8 @@ import type {
   SizeColumnsToFitGridStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
   RowHeightParams,
+  GridReadyEvent,
+  GridApi,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 // import "ag-grid-community/styles/ag-grid.css";
@@ -46,14 +48,14 @@ type CustomTableProps<T> = {
   rowHeight?: number;
   masterDetail?: boolean;
   rowModelType?: RowModelType;
-  onGridReady?: (api: { sizeColumnsToFit: () => void }) => void;
+  onGridReady?: (api: GridApi<any>) => void;
   onRowDataUpdated?: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getRowStyle?: (params: RowClassParams<T, any>) => RowStyle | undefined;
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
   onGetRowId?: (params: GetRowIdParams) => string;
   getRowHeight?: (params: RowHeightParams) => number | null;
-  onRowGroupOpened?: () => null;
+  onRowGroupOpened?: (params: any) => void;
 };
 
 const CustomTable = <T,>({
@@ -89,7 +91,7 @@ const CustomTable = <T,>({
   }, []);
 
   const handleGridReady = useCallback(
-    (params: { api: { sizeColumnsToFit: () => void } }) => {
+    (params: GridReadyEvent) => {
       onGridReady(params.api);
     },
     [onGridReady]

@@ -6,9 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BsSearch } from "react-icons/bs";
 import { Modal } from "@mui/material";
 import CustomSelect from "../../styled/CustomSelect";
-import CustomAutoComplete, {
-  CustomOptionProps,
-} from "../../styled/CustomAutoComplete";
+import CustomAutoComplete, { CustomOptionProps } from "../../styled/CustomAutoComplete";
 import CustomTable from "../../styled/CustomTable";
 import type { ColDef } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
@@ -86,33 +84,22 @@ export const transformIdValuePair = (idValuePair: CustomOptionProps) => {
 
 const Inventory = () => {
   const userEmail = useSelector((state: RootState) => state.user.email);
-  const { data: productData, isLoading: isProductsLoading } =
-    useGetProductsQuery();
-  const {
-    data: productCategoryData,
-    isSuccess: isProductCategoryQuerySuccess,
-  } = useGetProductCategoriesQuery();
+  const { data: productData, isLoading: isProductsLoading } = useGetProductsQuery();
+  const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
+    useGetProductCategoriesQuery();
   const [createProductCategory, { isSuccess: isProductCategoryCreateSuccess }] =
     useCreateProductCategoryMutation();
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
-  const [createUnit, { isSuccess: isUnitCreateSuccess }] =
-    useCreateUnitMutation();
-  const [
-    createProduct,
-    { isSuccess: isProductCreated, isError: isProductCreateError },
-  ] = useCreateProductMutation();
-  const [
-    updateProduct,
-    { isSuccess: isProductUpdated, isError: isProductUpdateError },
-  ] = useUpdateProductMutation();
-  const [
-    deleteProduct,
-    { isSuccess: isProductDeleted, isError: isProductDeleteError },
-  ] = useDeleteProductMutation();
+  const [createUnit, { isSuccess: isUnitCreateSuccess }] = useCreateUnitMutation();
+  const [createProduct, { isSuccess: isProductCreated, isError: isProductCreateError }] =
+    useCreateProductMutation();
+  const [updateProduct, { isSuccess: isProductUpdated, isError: isProductUpdateError }] =
+    useUpdateProductMutation();
+  const [deleteProduct, { isSuccess: isProductDeleted, isError: isProductDeleteError }] =
+    useDeleteProductMutation();
 
   const [search, setSearch] = useState<string>("");
-  const [newProductData, setNewProductData] =
-    useState<Product>(initialProductData);
+  const [newProductData, setNewProductData] = useState<Product>(initialProductData);
   const [deleteData, setDeleteData] = useState<OneProduct | null>(null);
   const [updateData, setUpdateData] = useState<Product | null>(null);
 
@@ -120,9 +107,7 @@ const Inventory = () => {
   const [deleteProductOpen, setDeleteProductOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
 
-  const [productCategories, setProductCategories] = useState<
-    CustomOptionProps[]
-  >([]);
+  const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
 
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
 
@@ -203,9 +188,7 @@ const Inventory = () => {
                 className="cursor-pointer"
                 onClick={() => {
                   const currentRowData =
-                    productData?.find(
-                      (product) => product._id === rowData._id
-                    ) ?? productData![0];
+                    productData?.find((product) => product._id === rowData._id) ?? productData![0];
                   setUpdateData({
                     ...currentRowData,
                     purchase_date: new Date(currentRowData.purchase_date)
@@ -260,9 +243,7 @@ const Inventory = () => {
         const totalPrice = newProductData.price * newProductData.quantity;
         if (newProductData.discount === 0 || isNaN(newProductData.discount))
           return `₹${totalPrice}`;
-        const value =
-          totalPrice -
-          +((newProductData.discount / 100) * totalPrice).toFixed(2);
+        const value = totalPrice - +((newProductData.discount / 100) * totalPrice).toFixed(2);
         return `₹${value}`;
       }
       if (
@@ -270,9 +251,7 @@ const Inventory = () => {
         newProductData.price &&
         newProductData.quantity
       ) {
-        const value =
-          newProductData.price * newProductData.quantity -
-          newProductData.discount;
+        const value = newProductData.price * newProductData.quantity - newProductData.discount;
         return `₹${value}`;
       }
     }
@@ -283,10 +262,8 @@ const Inventory = () => {
         updateData.quantity
       ) {
         const totalPrice = updateData.price * updateData.quantity;
-        if (updateData.discount === 0 || isNaN(updateData.discount))
-          return `₹${totalPrice}`;
-        const value =
-          totalPrice - +((updateData.discount / 100) * totalPrice).toFixed(2);
+        if (updateData.discount === 0 || isNaN(updateData.discount)) return `₹${totalPrice}`;
+        const value = totalPrice - +((updateData.discount / 100) * totalPrice).toFixed(2);
         return `₹${value}`;
       }
       if (
@@ -294,8 +271,7 @@ const Inventory = () => {
         updateData.price &&
         updateData.quantity
       ) {
-        const value =
-          updateData.price * updateData.quantity - updateData.discount;
+        const value = updateData.price * updateData.quantity - updateData.discount;
         return `₹${value}`;
       }
     }
@@ -313,17 +289,11 @@ const Inventory = () => {
     updateModalOpen,
   ]);
 
-  const handleProductChange = (
-    key: string,
-    value: string | number | IdNamePair | undefined
-  ) => {
+  const handleProductChange = (key: string, value: string | number | IdNamePair | undefined) => {
     setNewProductData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleUpdateProduct = (
-    key: string,
-    value: string | number | IdNamePair | undefined
-  ) => {
+  const handleUpdateProduct = (key: string, value: string | number | IdNamePair | undefined) => {
     setUpdateData((prev) => ({ ...prev!, [key]: value }));
   };
 
@@ -337,11 +307,7 @@ const Inventory = () => {
       toast.success("Product Category created successfully", {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_CATEGORY_CREATE,
       });
-  }, [
-    isProductCategoryCreateSuccess,
-    isProductCategoryQuerySuccess,
-    productCategoryData,
-  ]);
+  }, [isProductCategoryCreateSuccess, isProductCategoryQuerySuccess, productCategoryData]);
 
   useEffect(() => {
     if (isUnitQuerySuccess)
@@ -448,9 +414,7 @@ const Inventory = () => {
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
           <div className="flex justify-between w-full pb-4">
-            <p className="text-primary text-2xl font-semibold w-full text-start">
-              New Product
-            </p>
+            <p className="text-primary text-2xl font-semibold w-full text-start">New Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -476,9 +440,7 @@ const Inventory = () => {
                 addNewValue={(value) => {
                   const exists =
                     productUnits.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createUnit({
@@ -488,9 +450,8 @@ const Inventory = () => {
                       "unit",
                       transformIdValuePair(
                         value
-                          ? productUnits.find(
-                              (productUnit) => productUnit.value === value
-                            ) ?? productUnits[0]
+                          ? productUnits.find((productUnit) => productUnit.value === value) ??
+                              productUnits[0]
                           : productUnits[0]
                       )
                     );
@@ -501,9 +462,8 @@ const Inventory = () => {
                     "unit",
                     transformIdValuePair(
                       value
-                        ? productUnits.find(
-                            (productUnit) => productUnit.value === value
-                          ) ?? productUnits[0]
+                        ? productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0]
                         : productUnits[0]
                     )
                   )
@@ -513,9 +473,8 @@ const Inventory = () => {
                 label="Type"
                 options={productTypes}
                 value={
-                  productTypes.find(
-                    (productType) => newProductData.type === productType.id
-                  )?.id ?? productTypes[0].id
+                  productTypes.find((productType) => newProductData.type === productType.id)?.id ??
+                  productTypes[0].id
                 }
                 onChange={(value) => handleProductChange("type", value)}
               />
@@ -538,9 +497,7 @@ const Inventory = () => {
               <CustomDatePicker
                 label="Purchase Date"
                 value={newProductData.purchase_date}
-                onChange={(value) =>
-                  handleProductChange("purchase_date", value)
-                }
+                onChange={(value) => handleProductChange("purchase_date", value)}
                 placeholder="Enter Purchase Date"
               />
               <CustomAutoComplete
@@ -554,9 +511,7 @@ const Inventory = () => {
                 addNewValue={(value) => {
                   const exists =
                     productCategories.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createProductCategory({
@@ -581,9 +536,7 @@ const Inventory = () => {
               <CustomInput
                 label="Rental Price"
                 value={newProductData.rent_per_unit}
-                onChange={(value) =>
-                  handleProductChange("rent_per_unit", value)
-                }
+                onChange={(value) => handleProductChange("rent_per_unit", value)}
                 placeholder="Enter Rental Price"
               />
             </div>
@@ -595,10 +548,7 @@ const Inventory = () => {
                 value={newProductData.quantity}
                 onChange={(value) => {
                   handleProductChange("quantity", value ? parseInt(value) : "");
-                  handleProductChange(
-                    "available_stock",
-                    value ? parseInt(value) : ""
-                  );
+                  handleProductChange("available_stock", value ? parseInt(value) : "");
                 }}
                 placeholder="Enter Product Quantity"
               />
@@ -607,9 +557,7 @@ const Inventory = () => {
                 label="Price"
                 value={newProductData.price}
                 type="number"
-                onChange={(value) =>
-                  handleProductChange("price", value ? parseInt(value) : "")
-                }
+                onChange={(value) => handleProductChange("price", value ? parseInt(value) : "")}
                 placeholder="Enter Product Price"
               />
 
@@ -620,24 +568,19 @@ const Inventory = () => {
                   value={newProductData.discount}
                   type="number"
                   onChange={(value) =>
-                    handleProductChange(
-                      "discount",
-                      value ? parseInt(value) : ""
-                    )
+                    handleProductChange("discount", value ? parseInt(value) : "")
                   }
                 />
                 <CustomSelect
                   label=""
+                  wrapperClass="mt-6"
                   options={discountTypeValues}
                   value={
                     discountTypeValues.find(
-                      (discountType) =>
-                        newProductData.discount_type === discountType.id
+                      (discountType) => newProductData.discount_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
-                  onChange={(value) =>
-                    handleProductChange("discount_type", value)
-                  }
+                  onChange={(value) => handleProductChange("discount_type", value)}
                 />
               </div>
 
@@ -676,9 +619,7 @@ const Inventory = () => {
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Update Product
-            </p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Update Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -707,9 +648,7 @@ const Inventory = () => {
                 addNewValue={(value) => {
                   const exists =
                     productUnits.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createUnit({
@@ -723,9 +662,8 @@ const Inventory = () => {
                     "unit",
                     transformIdValuePair(
                       value
-                        ? productUnits.find(
-                            (productUnit) => productUnit.value === value
-                          ) ?? productUnits[0]
+                        ? productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0]
                         : productUnits[0]
                     )
                   )
@@ -735,9 +673,8 @@ const Inventory = () => {
                 label="Type"
                 options={productTypes}
                 value={
-                  productTypes.find(
-                    (productType) => newProductData.type === productType.id
-                  )?.id ?? productTypes[0].id
+                  productTypes.find((productType) => newProductData.type === productType.id)?.id ??
+                  productTypes[0].id
                 }
                 onChange={(value) => {
                   handleUpdateProduct("type", value);
@@ -794,9 +731,7 @@ const Inventory = () => {
                 addNewValue={(value) => {
                   const exists =
                     productCategories.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createProductCategory({
@@ -844,16 +779,14 @@ const Inventory = () => {
                   setUpdateData((prev) => {
                     if (prev) {
                       const quantityDelta =
-                        (productData?.find(
-                          (product) => product._id === updateData?._id
-                        )?.quantity || 0) - parseInt(value);
+                        (productData?.find((product) => product._id === updateData?._id)
+                          ?.quantity || 0) - parseInt(value);
                       return {
                         ...prev,
                         quantity: parseInt(value),
                         available_stock:
-                          (productData?.find(
-                            (product) => product._id === updateData?._id
-                          )?.available_stock || 0) - quantityDelta,
+                          (productData?.find((product) => product._id === updateData?._id)
+                            ?.available_stock || 0) - quantityDelta,
                       };
                     }
                     return prev;
@@ -898,17 +831,15 @@ const Inventory = () => {
                 />
                 <CustomSelect
                   label=""
+                  wrapperClass="mt-6"
                   options={discountTypeValues}
                   defaultValue="%"
                   value={
                     discountTypeValues.find(
-                      (discountType) =>
-                        newProductData.discount_type === discountType.id
+                      (discountType) => newProductData.discount_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
-                  onChange={(value) =>
-                    handleUpdateProduct("discount_type", value)
-                  }
+                  onChange={(value) => handleUpdateProduct("discount_type", value)}
                 />
               </div>
 
@@ -943,9 +874,7 @@ const Inventory = () => {
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-2/5 max-h-4/5 bg-white rounded-lg p-4">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Delete Product
-            </p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Delete Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -962,8 +891,8 @@ const Inventory = () => {
               <span className="text-xl">Warning!</span>
             </div>
             <p>
-              Deleting this product will make this stock quantity to zero and
-              can negatively impact in the balance sheet
+              Deleting this product will make this stock quantity to zero and can negatively impact
+              in the balance sheet
             </p>
           </div>
           <div className="flex w-full gap-3 justify-end">

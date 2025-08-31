@@ -1,11 +1,9 @@
-import { Box, Chip, Tab, Tabs } from "@mui/material";
+import { Box, Tab, Tabs } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
-import CustomSelect, {
-  CustomSelectOptionProps,
-} from "../../../styled/CustomSelect";
+import CustomSelect, { CustomSelectOptionProps } from "../../../styled/CustomSelect";
 import AntSwitch from "../../../styled/CustomSwitch";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import {
@@ -14,21 +12,12 @@ import {
   DepositType,
   PaymentMode,
   PaymentStatus,
-  ProductDetails,
   RentalOrderInfo,
 } from "../../../types/order";
 import { ContactInfoType, initialContactType } from "../../../types/contact";
-import DepositModal from "./DepositModal";
-import CustomTable from "../../../styled/CustomTable";
-import type { ColDef, ICellRendererParams } from "ag-grid-community";
 import dayjs from "dayjs";
 import { Product, ProductType } from "../../../types/common";
-import AddProductModal from "./modals/AddProductModal";
-import UpdateProductModal from "./modals/UpdateProductModal";
-import {
-  useGetProductsQuery,
-  useUpdateProductMutation,
-} from "../../../services/ApiService";
+import { useGetProductsQuery, useUpdateProductMutation } from "../../../services/ApiService";
 import { useGetContactsQuery } from "../../../services/ContactService";
 import {
   useCreateRentalOrderMutation,
@@ -40,17 +29,21 @@ import {
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  calculateDiscountAmount,
-  calculateProductRent,
-} from "../../../services/utility_functions";
+import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
 import { useDispatch } from "react-redux";
 import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
-import { getNewOrderId } from "../Summary/utils";
+import {
+  billingUnitOptions,
+  formatProducts,
+  getDefaultDeposit,
+  getDefaultProduct,
+  getDuration,
+  getNewOrderId,
+  paymentModeOptions,
+} from "../Summary/utils";
+import CustomAutoComplete from "../../../styled/CustomAutoComplete";
 
-const formatContacts = (
-  contacts: ContactInfoType[]
-): CustomSelectOptionProps[] =>
+const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
     id: contact._id ?? "",
     value: contact.name,
@@ -70,97 +63,10 @@ const getCurrentFY = () => {
   return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
 };
 
-const colDefs: ColDef<ProductDetails>[] = [
-  {
-    headerName: "NO.",
-    flex: 1,
-    maxWidth: 70,
-    headerClass: "ag-header-wrap text-start",
-    cellRenderer: (params: ICellRendererParams) => {
-      const rowIndex = params.node?.rowIndex ?? 0;
-      return <p>{rowIndex + 1}</p>;
-    },
-  },
-  {
-    field: "name",
-    headerName: "PRODUCT",
-    flex: 1,
-    headerClass: "ag-header-wrap",
-    minWidth: 200,
-    filter: "agTextColumnFilter",
-    cellRenderer: (params: ICellRendererParams) => {
-      const data = params.data as ProductDetails;
-      return (
-        <div className="flex flex-col p-0">
-          <p className="h-[2rem] text-start align-top">{data.name}</p>
-          <span className="text-xs text-gray-500">{data.category}</span>
-        </div>
-      );
-    },
-  },
-  {
-    field: "order_repair_count",
-    headerName: "REPAIR COUNT",
-    flex: 1,
-    minWidth: 120,
-    headerClass: "ag-header-wrap",
-    filter: "agNumberColumnFilter",
-    cellRenderer: (params: ICellRendererParams) => {
-      const data = params.data as ProductDetails;
-      return (
-        <div className="flex gap-2 flex-wrap">
-          {data.order_repair_count} <span>Unit(s)</span>
-        </div>
-      );
-    },
-  },
-  {
-    field: "order_quantity",
-    headerName: "QUANTITY",
-    flex: 1,
-    minWidth: 120,
-    headerClass: "ag-header-wrap",
-    filter: "agNumberColumnFilter",
-    cellRenderer: (params: ICellRendererParams) => {
-      const data = params.data as ProductDetails;
-      return (
-        <div className="flex gap-2 flex-wrap">
-          {data.order_quantity} <span>Unit(s)</span>
-        </div>
-      );
-    },
-  },
-  {
-    field: "rent_per_unit",
-    headerName: "RENT PER UNIT",
-    flex: 1,
-    minWidth: 120,
-    headerClass: "ag-header-wrap",
-    filter: "agNumberColumnFilter",
-    cellRenderer: (params: ICellRendererParams) => {
-      const data = params.data as ProductDetails;
-      return <p>₹ {data?.rent_per_unit}</p>;
-    },
-  },
-  {
-    headerName: "FINAL AMOUNT",
-    flex: 1,
-    minWidth: 120,
-    headerClass: "ag-header-wrap",
-    filter: "agNumberColumnFilter",
-    cellRenderer: (params: ICellRendererParams) => {
-      const data = params.data as ProductDetails;
-      return <p>₹ {calculateProductRent(data)}</p>;
-    },
-  },
-];
-
-const paymentStatusOptions = Object.entries(PaymentStatus).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
+const paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
+  id: key,
+  value,
+}));
 
 const initialRentalProduct: RentalOrderInfo = {
   order_id: "",
@@ -193,63 +99,28 @@ const NewOrder = () => {
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const isAllOrdersAllowed: boolean = false;
-  const { data: productsData, isSuccess: isProductsQuerySuccess } =
-    useGetProductsQuery();
-  const { data: contactsData, isSuccess: isContactsQuerySuccess } =
-    useGetContactsQuery();
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } =
-    useGetRentalOrdersQuery();
-  const {
-    data: existingRentalOrder,
-    isSuccess: isRentalOrderQueryByIdSuccess,
-  } = useGetRentalOrderByIdQuery(rentalId!, {
-    skip: !rentalId,
-  });
-  const [updateProductData, { isSuccess: isUpdateProductSuccess }] =
-    useUpdateProductMutation();
+  const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
+  const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
+  const { data: existingRentalOrder, isSuccess: isRentalOrderQueryByIdSuccess } =
+    useGetRentalOrderByIdQuery(rentalId!, {
+      skip: !rentalId,
+    });
+  const [updateProductData, { isSuccess: isUpdateProductSuccess }] = useUpdateProductMutation();
   const [
     createRentalOrder,
-    {
-      isSuccess: isRentalOrderCreateSuccess,
-      isError: isRentalOrderCreateError,
-    },
+    { isSuccess: isRentalOrderCreateSuccess, isError: isRentalOrderCreateError },
   ] = useCreateRentalOrderMutation();
   const [
     updateRentalOrder,
-    {
-      isSuccess: isRentalOrderUpdateSuccess,
-      isError: isRentalOrderUpdateError,
-    },
+    { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
   ] = useUpdateRentalOrderMutation();
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
-  const [orderInfo, setOrderInfo] =
-    useState<RentalOrderInfo>(initialRentalProduct);
-
+  const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalProduct);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
-  const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const [updateProductOpen, setUpdateProductOpen] = useState<boolean>(false);
-  const [updateProduct, setUpdateProduct] = useState<ProductDetails>({
-    _id: "",
-    name: "",
-    category: "",
-    billing_unit: BillingUnit.DAYS,
-    product_unit: {
-      _id: "",
-      name: "",
-    },
-    in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-    order_quantity: 0,
-    order_repair_count: 0,
-    out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-    duration: 1,
-    rent_per_unit: 0,
-    product_code: "",
-  });
-
-  const [depositOpen, setDepositOpen] = useState<boolean>(false);
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
       amount: 0,
@@ -303,96 +174,19 @@ const NewOrder = () => {
       return parseFloat(total.toFixed(2));
     }
     return 0;
-  }, [
-    orderInfo.type,
-    orderInfo.product_details,
-    orderInfo.billing_mode,
-    orderInfo.gst,
-  ]);
+  }, [orderInfo.type, orderInfo.product_details, orderInfo.billing_mode, orderInfo.gst]);
 
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
-    const discountAmount = calculateDiscountAmount(
-      orderInfo.discount || 0,
-      finalAmount
-    );
-    const gstAmount = calculateDiscountAmount(
-      orderInfo.gst || 0,
-      finalAmount - discountAmount
-    );
-    return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff).toFixed(2)
-    );
-  }, [
-    calculateTotalAmount,
-    orderInfo.discount,
-    orderInfo.gst,
-    orderInfo.round_off,
-  ]);
-
-  const calculateRentAfterGST = (rent: number, gst: number) => {
-    if (orderInfo.billing_mode === BillingMode.B2C) {
-      const exclusiveAmount = rent / (1 + gst / 100);
-      return Math.round(exclusiveAmount * 100) / 100;
-    } else {
-      return rent;
-    }
-  };
-
-  const addProductToOrder = (product: ProductDetails) => {
-    if (orderInfo.type === ProductType.RENTAL) {
-      const products = orderInfo.product_details || [];
-
-      const alreadyAdded = products.some((p) => p._id === product._id);
-      if (alreadyAdded) return;
-
-      const newProducts = [...products, product];
-
-      setOrderInfo({
-        ...orderInfo,
-        product_details: newProducts,
-      });
-    }
-  };
-
-  const updateProductToOrder = () => {
-    if (orderInfo.type === ProductType.RENTAL) {
-      const products = orderInfo.product_details || [];
-      const newProducts = products.map((prod) =>
-        prod._id === updateProduct._id ? updateProduct : prod
-      );
-
-      setOrderInfo({
-        ...orderInfo,
-        product_details: newProducts,
-      });
-
-      setUpdateProduct({
-        _id: "",
-        name: "",
-        category: "",
-        billing_unit: BillingUnit.DAYS,
-        product_unit: {
-          _id: "",
-          name: "",
-        },
-        in_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-        order_quantity: 0,
-        order_repair_count: 0,
-        duration: 1,
-        out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
-        rent_per_unit: 0,
-        product_code: "",
-      });
-    }
-  };
+    const discountAmount = calculateDiscountAmount(orderInfo.discount || 0, finalAmount);
+    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+    return parseFloat((finalAmount - discountAmount + gstAmount + roundOff).toFixed(2));
+  }, [calculateTotalAmount, orderInfo.discount, orderInfo.gst, orderInfo.round_off]);
 
   const removeOrderProduct = (id: string) => {
     if (orderInfo.type === ProductType.RENTAL) {
-      const filteredProducts = (orderInfo.product_details || []).filter(
-        (prod) => prod._id !== id
-      );
+      const filteredProducts = (orderInfo.product_details || []).filter((prod) => prod._id !== id);
 
       setOrderInfo({
         ...orderInfo,
@@ -407,24 +201,19 @@ const NewOrder = () => {
       updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {
         newOrderInfo.product_details.forEach((updatedProductDetail) => {
-          const previousProductDetail =
-            existingRentalOrder.product_details.find(
-              (prev) => prev._id === updatedProductDetail._id
-            );
+          const previousProductDetail = existingRentalOrder.product_details.find(
+            (prev) => prev._id === updatedProductDetail._id
+          );
 
           const previousQuantity = previousProductDetail?.order_quantity ?? 0;
           const previousRepair = previousProductDetail?.order_repair_count ?? 0;
 
-          const quantityDelta =
-            updatedProductDetail.order_quantity - previousQuantity;
-          const repairDelta =
-            updatedProductDetail.order_repair_count - previousRepair;
+          const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
+          const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
 
           // find the product in inventory
           const currentProduct = {
-            ...products.find(
-              (product) => product._id === updatedProductDetail._id
-            )!,
+            ...products.find((product) => product._id === updatedProductDetail._id)!,
           };
 
           // apply the delta
@@ -443,32 +232,24 @@ const NewOrder = () => {
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
           newOrderInfo.product_details.map((product_detail) => {
-            const currentProduct = products.find(
-              (product) => product._id === product_detail._id
-            );
+            const currentProduct = products.find((product) => product._id === product_detail._id);
 
             if (!currentProduct) {
-              console.warn(
-                `⚠️ Product ${product_detail._id} not found, skipping`
-              );
+              console.warn(`⚠️ Product ${product_detail._id} not found, skipping`);
               return Promise.resolve();
             }
 
             return updateProductData({
               ...currentProduct,
-              available_stock:
-                currentProduct.available_stock - product_detail.order_quantity,
-              repair_count:
-                currentProduct.repair_count + product_detail.order_repair_count,
+              available_stock: currentProduct.available_stock - product_detail.order_quantity,
+              repair_count: currentProduct.repair_count + product_detail.order_repair_count,
             }).unwrap();
           })
         );
 
         results.forEach((result, idx) => {
           if (result.status === "fulfilled") {
-            console.log(
-              `✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`
-            );
+            console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
           } else {
             console.error(
               `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
@@ -506,12 +287,7 @@ const NewOrder = () => {
       });
       navigate("/orders");
     }
-  }, [
-    isRentalOrderCreateError,
-    isRentalOrderCreateSuccess,
-    isUpdateProductSuccess,
-    navigate,
-  ]);
+  }, [isRentalOrderCreateError, isRentalOrderCreateSuccess, isUpdateProductSuccess, navigate]);
 
   useEffect(() => {
     if (isRentalOrderUpdateSuccess) {
@@ -535,12 +311,9 @@ const NewOrder = () => {
       navigate("/orders");
     }
     if (isRentalOrderUpdateError) {
-      toast.error(
-        "Rental Order was not Updated Successfully. Please Try Again",
-        {
-          toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
-        }
-      );
+      toast.error("Rental Order was not Updated Successfully. Please Try Again", {
+        toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+      });
       navigate("/orders");
     }
   }, [
@@ -559,12 +332,7 @@ const NewOrder = () => {
     if (isContactsQuerySuccess) {
       setContacts(contactsData);
     }
-  }, [
-    contactsData,
-    isContactsQuerySuccess,
-    isProductsQuerySuccess,
-    productsData,
-  ]);
+  }, [contactsData, isContactsQuerySuccess, isProductsQuerySuccess, productsData]);
 
   useEffect(() => {
     if (rentalId) {
@@ -599,10 +367,11 @@ const NewOrder = () => {
         };
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderInfo.gst, orderInfo.billing_mode]); // Dont add orderInfo Hereeeeee
 
   return (
-    <div className="w-full flex flex-col h-full">
+    <div className="w-full flex flex-col ">
       {/* === Top Tabs and Add Button === */}
       <div className="w-full flex justify-between mb-4">
         {isAllOrdersAllowed ? (
@@ -625,259 +394,540 @@ const NewOrder = () => {
             ))}
           </Tabs>
         ) : (
-          <Box className="font-primary text-2xl font-bold w-full">
-            Rental Order
-          </Box>
+          <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
         )}
 
         <div className="flex gap-3">
           <p className="text-sm text-primary whitespace-nowrap mt-3">
-            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add
-            at least one product to proceed.
+            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
+            to proceed.
           </p>
-          {orderInfo.type === ProductType.RENTAL &&
-            orderInfo.product_details &&
-            orderInfo?.product_details?.length > 0 && (
-              <CustomButton
-                label="Deposits"
-                onClick={() => setDepositOpen(true)}
-              />
-            )}
+        </div>
+      </div>
+      <div className="flex justify-between">
+        <label className="underline text-xl font-bold">Details:</label>
+        <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
+          <p>B2C</p>
+          <AntSwitch
+            checked={orderInfo.billing_mode === BillingMode.B2B}
+            onChange={(e) => {
+              handleValueChange(
+                "billing_mode",
+                e.target.checked ? BillingMode.B2B : BillingMode.B2C
+              );
+              handleValueChange("gst", e.target.checked ? 0 : 10);
+            }}
+          />
+          <p>B2B</p>
         </div>
       </div>
 
-      {/* === Order Info Form === */}
-      <div className="max-w-full flex flex-col sm gap-2 max-h-full">
+      {/* Basic Details */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {orderInfo.type === ProductType.RENTAL && (
-          <>
-            <div className="max-w-full flex flex-wrap justify-between items-start mr-4">
-              <div className="flex max-lg:flex-wrap gap-14">
-                <CustomInput
-                  onChange={() => {}}
-                  label="Order Id"
-                  placeholder="Enter Order Id"
-                  value={orderInfo?.order_id ?? ""}
-                  disabled
-                  className="min-w-[15.5rem] max-w-[35rem]"
-                />
-
-                <CustomSelect
-                  label="Payment Status"
-                  className="w-[15.5rem]"
-                  labelClass="w-fit"
-                  options={paymentStatusOptions}
-                  value={
-                    paymentStatusOptions.find(
-                      (paymentStatus) =>
-                        orderInfo.status === paymentStatus.value
-                    )?.id ?? ""
-                  }
-                  onChange={(id) =>
-                    handleValueChange(
-                      "status",
-                      paymentStatusOptions.find((option) => option.id === id)
-                        ?.value
-                    )
-                  }
-                />
-              </div>
-
-              <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
-                <p>B2C</p>
-                <AntSwitch
-                  checked={orderInfo.billing_mode === BillingMode.B2B}
-                  onChange={(e) => {
-                    handleValueChange(
-                      "billing_mode",
-                      e.target.checked ? BillingMode.B2B : BillingMode.B2C
-                    );
-                    handleValueChange("gst", e.target.checked ? 0 : 10);
-                  }}
-                />
-                <p>B2B</p>
-              </div>
-            </div>
-          </>
+          <CustomInput
+            onChange={() => {}}
+            label="Order Id"
+            placeholder="Enter Order Id"
+            value={orderInfo?.order_id ?? ""}
+            disabled
+          />
         )}
-
-        {/* === Customer + Rental Data === */}
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(20rem,_1fr))] gap-2  w-full">
+        <CustomAutoComplete
+          options={contacts.map((contact) => ({
+            id: contact.personal_number,
+            value: contact.personal_number,
+          }))}
+          addNewValue={() => {}}
+          placeholder=""
+          createOption={false}
+          value={
+            contacts.find((cont) => cont?.personal_number === orderInfo?.customer?.personal_number)
+              ?.personal_number || ""
+          }
+          label="Customer Mobile"
+          onChange={(value) => {
+            const contact = contacts.find((c) => c.personal_number === value);
+            if (contact) {
+              handleValueChange("customer", contact);
+            } else {
+              handleValueChange("customer", { ...initialContactType, personal_number: value });
+            }
+          }}
+        />
+        <CustomSelect
+          label="Customer"
+          options={formatContacts(contacts)}
+          value={
+            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)?.id ??
+            ""
+          }
+          onChange={(id) =>
+            handleValueChange(
+              "customer",
+              contacts.find((option) => option._id === id)
+            )
+          }
+        />
+        {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
-            label="Customer"
-            labelClass="min-w-[5rem]"
-            wrapperClass="min-w-[16rem] max-w-[20rem]"
-            options={formatContacts(contacts)}
+            label="Payment Status"
+            options={paymentStatusOptions}
             value={
-              formatContacts(contacts).find(
-                (option) => option.id === orderInfo.customer?._id
-              )?.id ?? ""
+              paymentStatusOptions.find((paymentStatus) => orderInfo.status === paymentStatus.value)
+                ?.id ?? ""
             }
             onChange={(id) =>
               handleValueChange(
-                "customer",
-                contacts.find((option) => option._id === id)
+                "status",
+                paymentStatusOptions.find((option) => option.id === id)?.value
               )
             }
           />
+        )}
+        <CustomInput
+          value={orderInfo?.event_name ?? ""}
+          onChange={(value) => handleValueChange("event_name", value)}
+          label="Event Name"
+          placeholder="Enter Event Name"
+        />
 
-          {ProductType.RENTAL === orderInfo.type && (
-            <>
-              <CustomDatePicker
-                label="Out Date"
-                value={orderInfo.out_date ?? ""}
-                className="w-fit"
-                wrapperClass="w-[13rem]"
-                labelClass="w-fit"
-                onChange={(value) => handleValueChange("out_date", value)}
-                placeholder="Enter Out Date"
-              />
+        {ProductType.RENTAL === orderInfo.type && (
+          <>
+            <CustomDatePicker
+              label="Event Start Date/Entry Date"
+              value={orderInfo.out_date ?? ""}
+              onChange={(value) => handleValueChange("out_date", value)}
+              placeholder="Enter Out Date"
+            />
 
-              {/* <CustomDatePicker
-                label="Expected Date"
-                value={orderInfo.expected_date ?? ""}
-                className="w-fit"
-                error={errors.expectedDate}
-                helperText="Expected date should be after Out Date"
-                wrapperClass="w-[13rem]"
-                onChange={(value) => {
-                  if (dayjs(value).isBefore(dayjs(orderInfo.out_date))) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      expectedDate: true,
-                    }));
-                  } else {
-                    setErrors((prev) => ({
-                      ...prev,
-                      expectedDate: false,
-                    }));
-                  }
-                  handleValueChange("expected_date", value);
-                }}
-                placeholder="Enter Expected Date"
-              /> */}
+            <CustomDatePicker
+              label="Bill Date/End Date"
+              value={orderInfo.in_date ?? ""}
+              error={errors.inDate}
+              helperText="In Date must be after Out Date"
+              onChange={(value) => {
+                if (dayjs(value).isBefore(dayjs(orderInfo.out_date))) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    inDate: true,
+                  }));
+                } else {
+                  setErrors((prev) => ({
+                    ...prev,
+                    inDate: false,
+                  }));
+                }
+                handleValueChange("in_date", value);
+              }}
+              placeholder="Enter In Date"
+            />
+          </>
+        )}
 
-              <CustomDatePicker
-                label="In Date"
-                value={orderInfo.in_date ?? ""}
-                error={errors.inDate}
-                helperText="In Date must be after Out Date"
-                className="w-fit"
-                wrapperClass="w-[13rem]"
-                onChange={(value) => {
-                  if (dayjs(value).isBefore(dayjs(orderInfo.out_date))) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      inDate: true,
-                    }));
-                  } else {
-                    setErrors((prev) => ({
-                      ...prev,
-                      inDate: false,
-                    }));
-                  }
-                  handleValueChange("in_date", value);
-                }}
-                placeholder="Enter In Date"
-              />
-            </>
-          )}
+        <CustomInput
+          value={orderInfo?.rental_duration ?? ""}
+          onChange={(value) => {
+            const inDate = dayjs(orderInfo.out_date).add(Number(value), "days");
+            handleValueChange("in_date", inDate);
+            handleValueChange("rental_duration", value);
+          }}
+          label="Event Expected Days"
+          type="number"
+          placeholder="Enter expected days"
+        />
+
+        <CustomInput
+          value={orderInfo?.event_venue ?? ""}
+          onChange={(value) => handleValueChange("event_venue", value)}
+          label="Event Venue"
+          placeholder="Enter Event Venue"
+          multiline
+          minRows={5}
+        />
+        <CustomInput
+          value={orderInfo?.event_address ?? ""}
+          onChange={(value) => handleValueChange("event_address", value)}
+          label="Event Address"
+          placeholder="Enter Event Address"
+          multiline
+          minRows={5}
+        />
+      </div>
+
+      {/* Products */}
+      <div className="w-full h-fit flex flex-col">
+        <div className="w-full flex justify-between my-2">
+          <label className="text-xl font-bold underline">Products:</label>
+          <CustomButton
+            label="Add Product"
+            disabled={
+              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
+            }
+            onClick={() => {
+              const newProduct = getDefaultProduct(orderInfo?.out_date, orderInfo.in_date);
+              setOrderInfo((prev) => ({
+                ...prev,
+                product_details: [...(prev.product_details || []), newProduct],
+              }));
+            }}
+          />
         </div>
-        {/* ===Event Data === */}
-        <div className="grid grid-cols-1 md:grid-cols-2 justify-between">
-          <div className="flex flex-col">
-            <CustomInput
-              wrapperClass="w-[30rem] max-w-full"
-              labelClass="w-[5rem]"
-              value={orderInfo?.event_name ?? ""}
-              onChange={(value) => handleValueChange("event_name", value)}
-              label="Event Name"
-              placeholder="Enter Event Name"
-            />
-            <CustomInput
-              wrapperClass="w-[30rem] max-w-full"
-              labelClass="w-[5rem]"
-              value={orderInfo?.event_venue ?? ""}
-              onChange={(value) => handleValueChange("event_venue", value)}
-              label="Event Venue"
-              placeholder="Enter Event Venue"
-            />
-            <CustomInput
-              wrapperClass="w-[30rem] max-w-full"
-              labelClass="w-[5rem]"
-              value={orderInfo?.event_address ?? ""}
-              onChange={(value) => handleValueChange("event_address", value)}
-              label="Event Address"
-              placeholder="Enter Event Address"
-              multiline
-              minRows={5}
-            />
-            {/* <CustomInput
-              wrapperClass="w-[30rem] max-w-full"
-              labelClass="w-[5rem]"
-              value={orderInfo?.event_pincode ?? ""}
-              onChange={(value) => handleValueChange("event_pincode", value)}
-              label="Event Pincode"
-              placeholder="Enter Event Pincode"
-            /> */}
-            <CustomInput
-              value={orderInfo?.remarks ?? ""}
-              onChange={(value) => handleValueChange("remarks", value)}
-              label="Remarks"
-              wrapperClass="w-[30rem] max-w-full"
-              className="h-full"
-              placeholder="Enter remarks"
-              multiline
-              minRows={3}
-            />
-          </div>
-          <div className="pb-8 mx-2">
-            <div className=" flex flex-wrap gap-2 border bg-gray-100 border-[#ced4da] content-start rounded-md w-full h-full overflow-hidden">
-              <div className=" w-full p-2 justify-between flex">
-                <p className="w-fit text-right content-center px-2 pt-1">
-                  Products
-                </p>
-                <CustomButton
-                  label="Add product"
-                  onClick={() => setAddProductOpen(true)}
-                />
-              </div>
-              <div className="flex flex-wrap gap-2 mx-2 mb-2 p-4 rounded-sm border border-gray-300 bg-white w-full h-[78%] max-h-full overflow-auto">
-                {orderInfo.type === ProductType.RENTAL &&
-                  orderInfo.product_details?.map((product) => (
-                    <Chip
-                      key={product._id}
-                      label={product.name}
-                      onClick={() => {
-                        setUpdateProductOpen(true);
-                        setUpdateProduct(product);
+
+        <div className="w-full overflow-x-auto">
+          <table className="w-full table-auto border border-gray-300">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="px-1 py-1 text-left w-[15rem]">Product</th>
+                <th className="px-1 py-1 text-left w-[8rem]">Product Unit</th>
+                <th className="px-1 py-1 text-left w-[9rem]">Billing Unit</th>
+                <th className="px-1 py-1 text-left w-[9rem]">Available Stock</th>
+                <th className="px-1 py-1 text-left w-[6rem]">Order Quantity</th>
+                <th className="px-1 py-1 text-left w-[11rem]">Out Date</th>
+                <th className="px-1 py-1 text-left w-[11rem]">In Date</th>
+                <th className="px-1 py-1 text-left w-[8rem]">Duration</th>
+                <th className="px-1 py-1 text-left w-[8rem]">Order Repair Quantity</th>
+                <th className="px-1 py-1 text-left w-[10rem]">Rent Per Unit</th>
+                <th className="px-1 py-1 text-left w-[10rem]">Final Amount</th>
+                <th className="px-1 py-1 text-left w-[10rem]">Options</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderInfo.product_details.length > 0 ? (
+                orderInfo.product_details?.map((product, index) => (
+                  <tr key={product._id} className="border-b border-gray-200">
+                    <td className="px-1 py-1">
+                      <CustomSelect
+                        label=""
+                        options={formatProducts(
+                          products.filter(
+                            (prod) =>
+                              !orderInfo.product_details?.find(
+                                (current) => current._id === prod._id && prod._id !== product._id
+                              )
+                          )
+                        )}
+                        className="w-[14rem]"
+                        value={
+                          formatProducts(products).find(
+                            (val) => val.id === orderInfo.product_details![index]?._id
+                          )?.id ?? ""
+                        }
+                        onChange={(id) => {
+                          const data = products.find((prod) => prod._id === id);
+                          if (data) {
+                            const newProducts = [...orderInfo.product_details];
+                            newProducts[index] = {
+                              ...product,
+                              _id: id,
+                              name: data?.name,
+                              category: data?.category.name,
+                              product_unit: data.unit,
+                              rent_per_unit: data.rent_per_unit,
+                            };
+                            setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        label=""
+                        placeholder=""
+                        disabled
+                        className="w-[7rem] p-2"
+                        value={orderInfo.product_details[index].product_unit.name || ""}
+                        onChange={() => {}}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomSelect
+                        label=""
+                        className="w-[8rem]"
+                        options={billingUnitOptions}
+                        value={
+                          billingUnitOptions.find((unit) => product.billing_unit === unit.value)
+                            ?.id || ""
+                        }
+                        onChange={(unit) => {
+                          const currentUnit =
+                            billingUnitOptions.find((ut) => ut.id === unit)?.value ??
+                            BillingUnit.DAYS;
+                          const newProducts = [...orderInfo.product_details];
+                          const duration = getDuration(
+                            newProducts[index].out_date,
+                            newProducts[index].in_date
+                          );
+                          newProducts[index] = {
+                            ...product,
+                            billing_unit: currentUnit,
+                            duration: duration,
+                          };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        disabled
+                        value={products.find((p) => p._id === product._id)?.available_stock || 0}
+                        type="number"
+                        className="w-[8rem] p-2"
+                        onChange={() => {}}
+                        label=""
+                        placeholder=""
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        type="number"
+                        label=""
+                        placeholder=""
+                        className="w-[5rem] p-2"
+                        value={orderInfo.product_details[index].order_quantity || 0}
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          const available_stock =
+                            products.find((p) => p._id === product._id)?.available_stock || 0;
+                          const quantity =
+                            available_stock < Number(val) ? available_stock : Number(val);
+                          newProducts[index] = { ...product, order_quantity: quantity };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomDatePicker
+                        label=""
+                        value={
+                          dayjs(orderInfo.product_details[index].out_date).format("DD-MMM-YYYY") ||
+                          ""
+                        }
+                        className="w-[11rem]"
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          const duration = getDuration(val, newProducts[index].in_date);
+                          newProducts[index] = { ...product, out_date: val, duration: duration };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                        format="DD/MM/YYYY"
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomDatePicker
+                        label=""
+                        value={
+                          dayjs(orderInfo.product_details[index].in_date).format("DD-MMM-YYYY") ||
+                          ""
+                        }
+                        className="w-[11rem]"
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          const duration = getDuration(newProducts[index].out_date, val);
+                          newProducts[index] = { ...product, in_date: val, duration: duration };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                        format="DD/MM/YYYY"
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        type="number"
+                        label=""
+                        placeholder=""
+                        className="w-[5rem] p-2"
+                        value={orderInfo.product_details[index].duration || 0}
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          newProducts[index] = { ...product, duration: Number(val) };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        type="number"
+                        label=""
+                        placeholder=""
+                        className="w-[8rem] p-2"
+                        value={orderInfo.product_details[index].order_repair_count || 0}
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          newProducts[index] = { ...product, order_repair_count: Number(val) };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        type="number"
+                        label=""
+                        placeholder=""
+                        className="w-[8rem] p-2"
+                        value={product.rent_per_unit}
+                        onChange={(val) => {
+                          const newProducts = [...orderInfo.product_details];
+                          newProducts[index] = { ...product, rent_per_unit: Number(val) };
+                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                        }}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <CustomInput
+                        disabled
+                        type="number"
+                        label=""
+                        placeholder=""
+                        className="w-[8rem] p-2"
+                        value={product.rent_per_unit * product.order_quantity}
+                        onChange={() => {}}
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <div className="flex gap-2">
+                        <CustomButton
+                          label="Remove"
+                          onClick={() => removeOrderProduct(product._id)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={12} className="h-[5rem] text-center py-4">
+                    No Products Available...
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Deposits */}
+      <div className="w-full h-fit flex flex-col">
+        <div className="w-full flex justify-between my-2">
+          <label className="text-xl font-bold underline">Deposits:</label>
+          <CustomButton
+            label="Add Deposit"
+            disabled={
+              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
+            }
+            onClick={() => {
+              const newDeposit = getDefaultDeposit(products);
+              setDepositData((prev) => {
+                if (prev) return [...prev, newDeposit];
+                else return [newDeposit];
+              });
+            }}
+          />
+        </div>
+        <table className="w-full table-auto border border-gray-300">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="px-1 py-1 text-left w-[15rem]">Amount</th>
+              <th className="px-1 py-1 text-left w-[15rem]">Date</th>
+              <th className="px-1 py-1 text-left w-[15rem]">Product</th>
+              <th className="px-1 py-1 text-left w-[20rem]">Payment Mode</th>
+              <th className="px-1 py-1 text-left w-[10rem]">Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            {depositData.length > 0 ? (
+              depositData.map((deposit, index) => (
+                <tr key={index} className="border-b border-gray-200">
+                  <td className="px-1 py-1">
+                    <CustomInput
+                      type="number"
+                      label=""
+                      placeholder=""
+                      className="w-[14rem] p-2"
+                      value={deposit.amount || 0}
+                      onChange={(val) => {
+                        const newDeposits = [...depositData];
+                        newDeposits[index] = { ...deposit, amount: Number(val) };
+                        setDepositData(newDeposits);
                       }}
-                      onDelete={() => removeOrderProduct(product._id)}
                     />
-                  ))}
-              </div>
-            </div>
-          </div>
-        </div>
+                  </td>
+                  <td className="px-1 py-1">
+                    <CustomDatePicker
+                      label=""
+                      placeholder=""
+                      className="w-[14rem] p-2"
+                      value={deposit.date}
+                      onChange={(val) => {
+                        const newDeposits = [...depositData];
+                        newDeposits[index] = { ...deposit, date: val };
+                        setDepositData(newDeposits);
+                      }}
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <CustomSelect
+                      label=""
+                      value={
+                        formatProducts(products).find((prod) =>
+                          deposit.product ? prod.id === deposit.product._id : false
+                        )?.id ?? ""
+                      }
+                      options={formatProducts(orderInfo.product_details || [])}
+                      onChange={(id) =>
+                        setDepositData((prev) => {
+                          const newDeposits = [...prev];
+                          const product = products.find((prod) => prod._id === id) || null;
+                          newDeposits[index] = { ...deposit, product: product };
+                          return newDeposits;
+                        })
+                      }
+                    />
+                  </td>
+                  <td className="px-1 py-1">
+                    <CustomSelect
+                      label=""
+                      options={paymentModeOptions}
+                      className="w-[14rem]"
+                      value={
+                        paymentModeOptions.find((mode) => deposit.mode === mode.value)?.id || ""
+                      }
+                      onChange={(mode) => {
+                        const currentMode =
+                          paymentModeOptions.find((md) => md.id === mode)?.value ??
+                          BillingUnit.DAYS;
+                        const newDeposits = [...depositData];
+                        newDeposits[index] = { ...deposit, mode: currentMode as PaymentMode };
+                        setDepositData(newDeposits);
+                      }}
+                    />
+                  </td>
+                  <td>
+                    <CustomButton
+                      label="Delete"
+                      icon=""
+                      onClick={() => {
+                        const newDeposits = depositData.filter((_, i) => i !== index);
+                        setDepositData(newDeposits);
+                      }}
+                    ></CustomButton>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="h-[5rem] text-center py-4">
+                  No Deposits Available...
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* === Order Summary === */}
+      {/* === Order Info Form === */}
+      <div className="max-w-full flex flex-col gap-2">
         {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
           <div className="w-full flex flex-col px-3">
-            <p className="text-xl font-semibold">Order Summary</p>
-            <CustomTable
-              rowData={
-                orderInfo.product_details?.map((product) => ({
-                  ...product,
-                  rent_per_unit: calculateRentAfterGST(
-                    product.rent_per_unit,
-                    orderInfo.gst
-                  ),
-                })) ?? []
-              }
-              colDefs={colDefs}
-              pagination={false}
-              isLoading={false}
-              rowHeight={60}
-            />
             <div className="flex justify-end w-full">
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-3">
@@ -892,13 +942,7 @@ const NewOrder = () => {
                     <p>Transport Payment Mode</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
-                    <p>
-                      ₹{" "}
-                      {depositData.reduce(
-                        (total, deposit) => total + deposit.amount,
-                        0
-                      )}
-                    </p>
+                    <p>₹ {depositData.reduce((total, deposit) => total + deposit.amount, 0)}</p>
                     <p>₹ {calculateTotalAmount}</p>
 
                     <div className="flex justify-end gap-1">
@@ -909,13 +953,8 @@ const NewOrder = () => {
                         min={0}
                         value={orderInfo.discount}
                         onChange={(e) => {
-                          if (
-                            orderInfo.type === ProductType.RENTAL &&
-                            orderInfo.product_details
-                          ) {
-                            let percent = parseFloat(
-                              parseFloat(e.target.value).toFixed(2)
-                            );
+                          if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+                            let percent = parseFloat(parseFloat(e.target.value).toFixed(2));
                             if (percent >= 100) {
                               percent = 100;
                             }
@@ -944,9 +983,7 @@ const NewOrder = () => {
                           const total_amount = calculateTotalAmount;
                           const percent =
                             total_amount > 0
-                              ? parseFloat(
-                                  ((amount * 100) / total_amount).toFixed(2)
-                                )
+                              ? parseFloat(((amount * 100) / total_amount).toFixed(2))
                               : 0;
 
                           setOrderInfo((prev) => ({
@@ -966,14 +1003,8 @@ const NewOrder = () => {
                         type="number"
                         value={orderInfo.gst}
                         onChange={(e) => {
-                          if (
-                            orderInfo.type === ProductType.RENTAL &&
-                            orderInfo.product_details
-                          ) {
-                            let percent =
-                              parseFloat(
-                                parseFloat(e.target.value).toFixed(0)
-                              ) || 0;
+                          if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+                            let percent = parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
                             if (percent >= 100) {
                               percent = 100;
                             }
@@ -995,9 +1026,7 @@ const NewOrder = () => {
                         onChange={(e) =>
                           setOrderInfo((prev) => ({
                             ...prev,
-                            round_off: parseFloat(
-                              parseFloat(e.target.value).toFixed(2)
-                            ),
+                            round_off: parseFloat(parseFloat(e.target.value).toFixed(2)),
                           }))
                         }
                       />{" "}
@@ -1011,9 +1040,7 @@ const NewOrder = () => {
                         onChange={(e) =>
                           setOrderInfo((prev) => ({
                             ...prev,
-                            eway_amount: parseFloat(
-                              parseFloat(e.target.value).toFixed(2)
-                            ),
+                            eway_amount: parseFloat(parseFloat(e.target.value).toFixed(2)),
                           }))
                         }
                       />{" "}
@@ -1022,9 +1049,7 @@ const NewOrder = () => {
                     <div>
                       <select
                         className="w-fit outline-none"
-                        onChange={(e) =>
-                          handleValueChange("eway_mode", e.target.value)
-                        }
+                        onChange={(e) => handleValueChange("eway_mode", e.target.value)}
                         value={orderInfo.eway_mode}
                       >
                         {Object.entries(PaymentMode).map(([id, key]) => (
@@ -1041,10 +1066,7 @@ const NewOrder = () => {
                     <p>Amount after Taxes</p>
                     <p>
                       {calculateFinalAmount() -
-                        depositData.reduce(
-                          (total, deposit) => total + deposit.amount,
-                          0
-                        ) >
+                        depositData.reduce((total, deposit) => total + deposit.amount, 0) >
                       0
                         ? "Balance"
                         : "Refund"}
@@ -1057,17 +1079,12 @@ const NewOrder = () => {
                       ₹{" "}
                       {Math.abs(
                         calculateFinalAmount() -
-                          depositData.reduce(
-                            (total, deposit) => total + deposit.amount,
-                            0
-                          )
+                          depositData.reduce((total, deposit) => total + deposit.amount, 0)
                       )}
                     </p>
                     <select
                       className="w-fit outline-none"
-                      onChange={(e) =>
-                        handleValueChange("payment_mode", e.target.value)
-                      }
+                      onChange={(e) => handleValueChange("payment_mode", e.target.value)}
                       value={orderInfo.payment_mode}
                     >
                       {Object.entries(PaymentMode).map(([id, key]) => (
@@ -1102,46 +1119,6 @@ const NewOrder = () => {
           </div>
         )}
       </div>
-
-      <AddProductModal
-        addProductOpen={addProductOpen}
-        addProductToOrder={addProductToOrder}
-        products={products.filter((prod) => {
-          if (prod.available_stock <= 0) {
-            return false;
-          }
-          if (
-            orderInfo.type === ProductType.RENTAL &&
-            orderInfo.product_details
-          ) {
-            return orderInfo.product_details.every(
-              (detail) => detail._id !== prod._id
-            );
-          } else {
-            return true;
-          }
-        })}
-        setAddProductOpen={(value: boolean) => setAddProductOpen(value)}
-      />
-
-      <UpdateProductModal
-        updateProduct={updateProduct}
-        updateProductOpen={updateProductOpen}
-        updateProductToOrder={updateProductToOrder}
-        products={products.filter((prod) => prod._id === updateProduct?._id)}
-        setUpdateProduct={setUpdateProduct}
-        setUpdateProductOpen={(value: boolean) => setUpdateProductOpen(value)}
-      />
-
-      {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
-        <DepositModal
-          depositOpen={depositOpen}
-          setDepositOpen={(value: boolean) => setDepositOpen(value)}
-          productData={orderInfo.product_details}
-          depositData={depositData}
-          setDepositData={setDepositData}
-        />
-      )}
     </div>
   );
 };

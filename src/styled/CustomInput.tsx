@@ -37,7 +37,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 }) => {
   return (
     <div className={`flex flex-col min-w-fit ${wrapperClass}`}>
-      <label className={`w-fit line-clamp-2 break-words ${labelClass}`}>
+      <label className={`w-full line-clamp-2 break-words ${labelClass}`}>
         {label}
       </label>
       <TextField

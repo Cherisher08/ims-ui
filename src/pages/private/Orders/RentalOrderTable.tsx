@@ -11,7 +11,12 @@ import type { GridApi } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
-import { BillingMode, DepositType, RentalOrderType, RentalType } from "../../../types/order";
+import {
+  BillingMode,
+  DepositType,
+  RentalOrderType,
+  RentalType,
+} from "../../../types/order";
 import DeleteOrderModal from "../Customers/modals/DeleteOrderModal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -26,15 +31,25 @@ import { IdNamePair } from "../Inventory";
 import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
 import { AddressCellEditor } from "../../../components/AgGridCellEditors/AddressCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../../../services/utility_functions";
 import { currencyFormatter } from "./utils";
 import dayjs from "dayjs";
 
-const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
+const RentalOrderTable = ({
+  rentalOrders,
+}: {
+  rentalOrders: RentalOrderType[];
+}) => {
   const navigate = useNavigate();
-  const expiredOrders = useSelector((state: RootState) => state.rentalOrder.data);
+  const expiredOrders = useSelector(
+    (state: RootState) => state.rentalOrder.data
+  );
   const [patchRentalOrder] = usePatchRentalOrderMutation();
-  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
+  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
+    useGetContactsQuery();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
@@ -80,10 +95,22 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     const finalAmount = calculateTotalAmount(orderInfo);
     const roundOff = orderInfo.round_off || 0;
     const ewayBillAmount = orderInfo.eway_amount || 0;
-    const discountAmount = calculateDiscountAmount(orderInfo.discount || 0, finalAmount);
-    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+    const discountAmount = calculateDiscountAmount(
+      orderInfo.discount || 0,
+      finalAmount
+    );
+    const gstAmount = calculateDiscountAmount(
+      orderInfo.gst || 0,
+      finalAmount - discountAmount
+    );
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        ewayBillAmount
+      ).toFixed(2)
     );
   };
 
@@ -112,6 +139,59 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       sort: "desc",
     },
     {
+      field: "customer",
+      headerName: "Customer",
+      flex: 1,
+      headerClass: "ag-header-wrap",
+      minWidth: 200,
+      editable: true,
+      singleClickEdit: true,
+      filter: "agTextColumnFilter",
+      pinned: "left",
+      cellEditor: AutocompleteCellEditor,
+      cellEditorParams: {
+        customerOptions: customerList.current,
+      },
+      valueParser: (params) => {
+        return params.newValue;
+      },
+      valueFormatter: (params) => {
+        return params.value.name ?? "";
+      },
+      filterValueGetter: (params: ValueGetterParams) => {
+        return params.data.customer.name;
+      },
+    },
+    {
+      headerName: "Outstanding Amount",
+      flex: 1,
+      minWidth: 200,
+      headerClass: "ag-header-wrap",
+      filter: "agNumberColumnFilter",
+      pinned: "left",
+      valueGetter: (params: ValueGetterParams) => {
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        const value =
+          calculateFinalAmount(params.data) -
+          depositData.reduce((total, deposit) => total + deposit.amount, 0);
+
+        return isNaN(value) ? null : value;
+      },
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return (
+          <p>
+            ₹{" "}
+            {(
+              calculateFinalAmount(data) -
+              depositData.reduce((total, deposit) => total + deposit.amount, 0)
+            ).toFixed(2)}
+          </p>
+        );
+      },
+    },
+    {
       field: "out_date",
       headerName: "Order Out Date",
       minWidth: 100,
@@ -123,20 +203,6 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       valueFormatter: (params) => {
         const date = new Date(params.value);
         return dayjs(date).format("DD-MMM-YYYY hh:mm A");
-      },
-    },
-    {
-      field: "rental_duration",
-      headerName: "Rental Duration (Days)",
-      headerClass: "ag-header-wrap",
-      minWidth: 150,
-      maxWidth: 200,
-      filter: "agNumberColumnFilter",
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
-      cellEditorParams: {
-        step: 1,
       },
     },
     {
@@ -157,26 +223,17 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       },
     },
     {
-      field: "customer",
-      headerName: "Customer",
-      flex: 1,
+      field: "rental_duration",
+      headerName: "Rental Duration (Days)",
       headerClass: "ag-header-wrap",
-      minWidth: 200,
+      minWidth: 150,
+      maxWidth: 200,
+      filter: "agNumberColumnFilter",
       editable: true,
       singleClickEdit: true,
-      filter: "agTextColumnFilter",
-      cellEditor: AutocompleteCellEditor,
+      cellEditor: "agNumberCellEditor",
       cellEditorParams: {
-        customerOptions: customerList.current,
-      },
-      valueParser: (params) => {
-        return params.newValue;
-      },
-      valueFormatter: (params) => {
-        return params.value.name ?? "";
-      },
-      filterValueGetter: (params: ValueGetterParams) => {
-        return params.data.customer.name;
+        step: 1,
       },
     },
     {
@@ -288,7 +345,9 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
         if (data && data.type === ProductType.RENTAL && data.product_details) {
           const percent = data.discount;
           const total_amount = calculateTotalAmount(data);
-          const discount_amount = parseFloat((total_amount * percent * 0.01).toFixed(2));
+          const discount_amount = parseFloat(
+            (total_amount * percent * 0.01).toFixed(2)
+          );
           return `₹${discount_amount.toFixed(2)}`;
         }
         return "0";
@@ -362,34 +421,9 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
         const depositData: DepositType[] = params.data.deposits ?? 0;
-        return depositData.reduce((total, deposit) => total + deposit.amount, 0);
-      },
-    },
-    {
-      headerName: "Outstanding Amount",
-      flex: 1,
-      minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
-      valueGetter: (params: ValueGetterParams) => {
-        const depositData: DepositType[] = params.data.deposits ?? 0;
-        const value =
-          calculateFinalAmount(params.data) -
-          depositData.reduce((total, deposit) => total + deposit.amount, 0);
-
-        return isNaN(value) ? null : value;
-      },
-      cellRenderer: (params: ICellRendererParams) => {
-        const data = params.data;
-        const depositData: DepositType[] = params.data.deposits ?? 0;
-        return (
-          <p>
-            ₹{" "}
-            {(
-              calculateFinalAmount(data) -
-              depositData.reduce((total, deposit) => total + deposit.amount, 0)
-            ).toFixed(2)}
-          </p>
+        return depositData.reduce(
+          (total, deposit) => total + deposit.amount,
+          0
         );
       },
     },
@@ -425,7 +459,6 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       headerName: "Payment Status",
       headerClass: "ag-header-wrap",
       minWidth: 120,
-      pinned: "right",
       filter: "agTextColumnFilter",
       editable: true,
       singleClickEdit: true,
@@ -541,7 +574,8 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       }
 
       if (field === "status") {
-        if (typeof newValue === "string" && newValue.includes("pending")) value = "pending";
+        if (typeof newValue === "string" && newValue.includes("pending"))
+          value = "pending";
       }
 
       if (field === "discount_amount") {

@@ -553,6 +553,15 @@ const NewOrder = () => {
           multiline
           minRows={5}
         />
+        <CustomInput
+          onChange={() => {}}
+          value={contacts.find((contact) => contact._id === orderInfo.customer?._id)?.address || ""}
+          disabled
+          label="Customer Address"
+          placeholder="Customer Address"
+          multiline
+          minRows={5}
+        />
       </div>
 
       {/* Products */}

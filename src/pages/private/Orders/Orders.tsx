@@ -15,18 +15,13 @@ import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
 import { getDefaultRentalOrder, getNewOrderId } from "./utils";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
-import AddContactModal from "../Contacts/modals/AddContactModal";
-import {
-  useGetProductCategoriesQuery,
-  useGetUnitsQuery,
-} from "../../../services/ApiService";
+import AddContactModal from "../Customers/modals/AddContactModal";
+import { useGetProductCategoriesQuery, useGetUnitsQuery } from "../../../services/ApiService";
 import { transformIdNamePair } from "../Inventory";
 import { CustomOptionProps } from "../../../styled/CustomAutoComplete";
 import NewProductModal from "../../../components/NewProductModal.";
 
-const transformRentalOrderData = (
-  rentalOrders: RentalOrderInfo[]
-): RentalOrderType[] => {
+const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
   return rentalOrders.map((rentalOrder) => {
     if (!rentalOrder.customer) {
       return {
@@ -52,18 +47,14 @@ const Orders = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
-  const {
-    data: productCategoryData,
-    isSuccess: isProductCategoryQuerySuccess,
-  } = useGetProductCategoriesQuery();
+  const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
+    useGetProductCategoriesQuery();
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
   const [createRentalOrder] = useCreateRentalOrderMutation();
 
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
-  const [productCategories, setProductCategories] = useState<
-    CustomOptionProps[]
-  >([]);
+  const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
 
   const isCommunicationsFeatureDone: boolean = false;
 

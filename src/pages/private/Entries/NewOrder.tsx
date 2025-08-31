@@ -40,7 +40,7 @@ import {
   getDuration,
   getNewOrderId,
   paymentModeOptions,
-} from "../Summary/utils";
+} from "../Orders/utils";
 import CustomAutoComplete from "../../../styled/CustomAutoComplete";
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>

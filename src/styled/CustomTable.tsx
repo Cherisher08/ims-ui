@@ -26,7 +26,7 @@ import {
   MasterDetailModule,
 } from "ag-grid-enterprise";
 import { useCallback, useMemo } from "react";
-import CustomDetailRenderer from "../pages/private/Summary/CustomDetailRenderer";
+import CustomDetailRenderer from "../pages/private/Orders/CustomDetailRenderer";
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,

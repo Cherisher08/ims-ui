@@ -7,18 +7,14 @@ import RequireAuth from "../components/RequireAuth/RequireAuth";
 const MainLayout = React.lazy(() => import("../components/Layouts/MainLayout"));
 const AuthLayout = React.lazy(() => import("../components/Layouts/AuthLayout"));
 const Login = React.lazy(() => import("../pages/public/Login"));
-const ForgotPassword = React.lazy(
-  () => import("../pages/public/ForgotPassword")
-);
+const ForgotPassword = React.lazy(() => import("../pages/public/ForgotPassword"));
 const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
 const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
 const Inventory = React.lazy(() => import("../pages/private/Inventory"));
-const Contacts = React.lazy(() => import("../pages/private/Contacts/Contacts"));
-const Orders = React.lazy(() => import("../pages/private/Summary/Orders"));
-const NewOrder = React.lazy(() => import("../pages/private/Orders/NewOrder"));
-const OrderInvoice = React.lazy(
-  () => import("../pages/private/Orders/OrderInvoice")
-);
+const Contacts = React.lazy(() => import("../pages/private/Customers/Contacts"));
+const Orders = React.lazy(() => import("../pages/private/Orders/Orders"));
+const NewOrder = React.lazy(() => import("../pages/private/Entries/NewOrder"));
+const OrderInvoice = React.lazy(() => import("../pages/private/Entries/OrderInvoice"));
 
 type RouteType = {
   path: string;
@@ -92,11 +88,11 @@ const privateRoutes = [
       },
       {
         path: "*",
-        element: <Navigate to="/orders" replace />,
+        element: <Navigate to="/orders/rentals" replace />,
       },
       {
         path: "/",
-        element: <Navigate to="/orders" replace />,
+        element: <Navigate to="/orders/rentals" replace />,
       },
     ],
   },

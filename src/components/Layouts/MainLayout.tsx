@@ -11,7 +11,7 @@ const MainLayout = () => {
     <div className="relative flex h-screen w-screen overflow-hidden">
       <Sidebar open={open} setOpen={(value: boolean) => setOpen(value)} />
       <div className="flex flex-col w-full h-full overflow-hidden">
-        <Header open={open} setOpen={(value: boolean) => setOpen(value)} />
+      <Header open={open} setOpen={(value: boolean) => setOpen(value)} />
         <div className="flex-1 overflow-y-auto sm:px-6 px-2 w-full py-1">
           <Outlet />
         </div>

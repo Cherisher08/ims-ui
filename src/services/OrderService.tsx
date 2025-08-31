@@ -56,7 +56,15 @@ export const contactApi = rootApi.injectEndpoints({
           const { data } = await queryFulfilled;
           dispatch(setExpiredRentalOrders(data));
         } catch (err) {
-          if (err?.error.status === 404) {
+          if (
+            typeof err === "object" &&
+            err !== null &&
+            "error" in err &&
+            typeof (err as any).error === "object" &&
+            (err as any).error !== null &&
+            "status" in (err as any).error &&
+            (err as any).error.status === 404
+          ) {
             dispatch(setExpiredRentalOrders([]));
             return;
           }

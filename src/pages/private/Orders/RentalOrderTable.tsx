@@ -7,6 +7,7 @@ import type {
   ValueFormatterParams,
   ValueGetterParams,
 } from "ag-grid-community";
+import type { GridApi } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
@@ -35,7 +36,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
   const [patchRentalOrder] = usePatchRentalOrderMutation();
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
 
-  const gridApiRef = useRef(null);
+  const gridApiRef = useRef<GridApi | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
 
   const customerList = useRef<IdNamePair[]>([]);
@@ -48,7 +49,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
   const orderData = rentalOrders.map((order) => ({ ...order }));
 
   // Child passes grid API up
-  const onGridReady = (api: null) => {
+  const onGridReady = (api: GridApi) => {
     gridApiRef.current = api;
   };
 
@@ -595,7 +596,6 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     }
   }, [contactsQueryData, isGetContactsSuccess]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onRowGroupOpened = (params: any) => {
     const rowId = params.node.data?._id;
     if (!rowId) return;
@@ -632,7 +632,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
             };
           }
           return {
-            backGroundColor: "white",
+            backgroundColor: "white",
           };
         }}
         onRowGroupOpened={onRowGroupOpened}

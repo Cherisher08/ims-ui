@@ -31,18 +31,8 @@ const CustomSelect = ({
   wrapperClass = "",
 }: CustomSelectProps) => {
   return (
-    <div
-      className={`grid grid-cols-[auto_2fr] justify-between w-full gap-2 h-[3.5rem] ${
-        helperText ? "" : "items-center"
-      } ${wrapperClass}`}
-    >
-      <label
-        className={`${
-          helperText ? "pt-3" : ""
-        } line-clamp-2 break-words h-fit ${labelClass} ${
-          label ? "w-[5rem]" : "w-0"
-        }`}
-      >
+    <div className={`flex flex-col justify-between w-full ${wrapperClass}`}>
+      <label className={` line-clamp-2 break-words h-fit ${labelClass}`}>
         {label}
       </label>
       <div className="flex flex-col gap-2 w-full">

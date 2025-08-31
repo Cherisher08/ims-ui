@@ -36,16 +36,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
   labelClass = "",
 }) => {
   return (
-    <div
-      className={`grid grid-cols-[auto_2fr] justify-between min-w-fit gap-2 ${
-        helperText ? "" : "items-center"
-      } ${wrapperClass} ${multiline ? "h-fit pb-8" : "h-[3.5rem]"}`}
-    >
-      <label
-        className={`${
-          helperText ? "pt-3" : ""
-        } min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
-      >
+    <div className={`flex flex-col min-w-fit ${wrapperClass}`}>
+      <label className={`w-fit line-clamp-2 break-words ${labelClass}`}>
         {label}
       </label>
       <TextField

@@ -26,15 +26,9 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   labelClass = "",
 }) => {
   return (
-    <div
-      className={`grid grid-cols-[auto_2fr] h-[3.5rem] justify-between min-w-fit gap-2 ${
-        helperText ? "" : "items-center"
-      } ${wrapperClass} `}
-    >
+    <div className={`flex flex-col justify-between min-w-fit ${wrapperClass} `}>
       <label
-        className={`${
-          helperText ? "pt-3" : ""
-        } min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
+        className={`min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
       >
         {label}
       </label>

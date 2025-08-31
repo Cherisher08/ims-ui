@@ -127,9 +127,12 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
     const roundOff = data.round_off || 0;
     const ewayBillAmount = data.eway_amount || 0;
     const discountAmount = data.discount_amount || 0;
+    const balance_paid = data.balance_paid || 0;
     const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount - discountAmount);
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount - balance_paid).toFixed(
+        2
+      )
     );
   };
 
@@ -1140,7 +1143,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 )} */}
                 <View
                   style={{
-                    width:"100%",
+                    width: "60%",
                     display: "flex",
                     alignItems: "flex-end",
                     marginTop: 10,

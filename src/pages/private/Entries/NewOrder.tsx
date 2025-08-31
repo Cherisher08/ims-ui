@@ -182,10 +182,19 @@ const NewOrder = () => {
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
+    const balancePaid = orderInfo.balance_paid || 0;
     const discountAmount = calculateDiscountAmount(orderInfo.discount || 0, finalAmount);
     const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
-    return parseFloat((finalAmount - discountAmount + gstAmount + roundOff).toFixed(2));
-  }, [calculateTotalAmount, orderInfo.discount, orderInfo.gst, orderInfo.round_off]);
+    return parseFloat(
+      (finalAmount - discountAmount + gstAmount + roundOff - balancePaid).toFixed(2)
+    );
+  }, [
+    calculateTotalAmount,
+    orderInfo.discount,
+    orderInfo.gst,
+    orderInfo.round_off,
+    orderInfo.balance_paid,
+  ]);
 
   const removeOrderProduct = (id: string) => {
     if (orderInfo.type === ProductType.RENTAL) {

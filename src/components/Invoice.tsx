@@ -3,7 +3,7 @@ import { BillingMode, DepositType, ProductDetails, RentalOrderInfo } from "../ty
 import dayjs from "dayjs";
 import { ProductType } from "../types/common";
 import { calculateDiscountAmount, calculateProductRent } from "../services/utility_functions";
-import paidStamp from "/Red_paid_stamp.png";
+import paidStamp from "/paid-icon.png";
 
 Font.register({
   family: "Inter",
@@ -98,9 +98,10 @@ function numberToWordsIndian(num: number) {
 
 interface InvoiceRentalOrder {
   data: RentalOrderInfo;
+  invoiceId: string;
 }
 
-const Invoice = ({ data }: InvoiceRentalOrder) => {
+const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   const deposits = data.deposits;
   const sameKindOfDeposit =
     deposits.length === 0 ||
@@ -432,7 +433,7 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
           <View style={styles.detailContainer}>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Invoice No:</Text>
-              <Text style={styles.fieldValue}>{data.order_id.replace(/RO/g, "INV")}</Text>
+              <Text style={styles.fieldValue}>{invoiceId}</Text>
             </View>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Bill No:</Text>
@@ -1000,6 +1001,19 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 <Text style={{ fontSize: 13, fontWeight: "bold" }}>
                   {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
                 </Text>
+                {data.status === "paid" && (
+                  <Image
+                    src={paidStamp}
+                    style={{
+                      position: "absolute",
+                      bottom: "2%",
+                      right: "1%",
+                      width: 60,
+                      height: 60,
+                      // transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                )}
               </View>
               <View style={styles.signatureContainer}>
                 <View style={styles.signatureHeader}>
@@ -1016,20 +1030,6 @@ const Invoice = ({ data }: InvoiceRentalOrder) => {
                 </View>
                 <View style={{ position: "relative", width: 150, height: 50 }}>
                   <Image src="/sign.png" style={styles.signImage} />
-                  {data.status === "paid" && (
-                    <Image
-                      src={paidStamp}
-                      style={{
-                        position: "absolute",
-                        top: "60%",
-                        left: "80%",
-                        width: 50,
-                        height: 30,
-                        // transform: "translate(-50%, -50%)",
-                        opacity: 0.7,
-                      }}
-                    />
-                  )}
                 </View>
                 <Text style={styles.signatureFooter}>Authorized Signatory</Text>
               </View>

@@ -42,6 +42,8 @@ import {
   paymentModeOptions,
 } from "../Orders/utils";
 import CustomAutoComplete from "../../../styled/CustomAutoComplete";
+import { LuPlus } from "react-icons/lu";
+import AddContactModal from "../Customers/modals/AddContactModal";
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -123,6 +125,8 @@ const NewOrder = () => {
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalProduct);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+
+  const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
@@ -409,7 +413,13 @@ const NewOrder = () => {
           <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex flex-col items-end">
+          <CustomButton
+          className="w-[6rem]"
+            onClick={() => setAddContactOpen(true)}
+            label="Add Customer"
+            icon={<LuPlus color="white" />}
+          />
           <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
             to proceed.
@@ -1212,6 +1222,10 @@ const NewOrder = () => {
           </div>
         )}
       </div>
+      <AddContactModal
+        addContactOpen={addContactOpen}
+        setAddContactOpen={(value: boolean) => setAddContactOpen(value)}
+      />
     </div>
   );
 };

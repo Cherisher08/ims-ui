@@ -56,7 +56,6 @@ export const currencyFormatter = (params: ValueFormatterParams) => {
 };
 
 export const getNewOrderId = (orders: OrderInfo[]) => {
-  console.log("orders: ", orders);
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1; // JS months 0-11
@@ -98,6 +97,9 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     type: ProductType.RENTAL,
     eway_amount: 0,
     eway_mode: PaymentMode.CASH,
+    balance_paid: 0,
+    balance_paid_mode: PaymentMode.CASH,
+    repay_amount: 0,
     event_name: "",
     event_venue: "",
   };

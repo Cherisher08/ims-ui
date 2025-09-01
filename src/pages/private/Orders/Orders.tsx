@@ -5,16 +5,8 @@ import { FaWhatsapp } from "react-icons/fa";
 import { MdOutlineMail } from "react-icons/md";
 import { Box, Tab, Tabs } from "@mui/material";
 import RentalOrderTable from "./RentalOrderTable";
-// import SalesOrderTable from "./SalesOrderTable";
-// import ServiceOrderTable from "./ServiceOrderTable";
-import {
-  useCreateRentalOrderMutation,
-  useGetRentalOrdersQuery,
-} from "../../../services/OrderService";
+import { useGetRentalOrdersQuery } from "../../../services/OrderService";
 import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
-import { getDefaultRentalOrder, getNewOrderId } from "./utils";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../../constants/constants";
 import AddContactModal from "../Customers/modals/AddContactModal";
 import { useGetProductCategoriesQuery, useGetUnitsQuery } from "../../../services/ApiService";
 import { transformIdNamePair } from "../Inventory";
@@ -53,7 +45,6 @@ const Orders = () => {
     useGetProductCategoriesQuery();
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
-  const [createRentalOrder] = useCreateRentalOrderMutation();
 
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
   const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);

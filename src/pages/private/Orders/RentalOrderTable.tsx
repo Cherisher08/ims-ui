@@ -163,29 +163,97 @@ const RentalOrderTable = ({
       },
     },
     {
-      headerName: "Outstanding Amount",
+      headerName: "Amount (After Taxes)",
       flex: 1,
       minWidth: 200,
       headerClass: "ag-header-wrap",
       filter: "agNumberColumnFilter",
-      pinned: "left",
+      valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
-        const depositData: DepositType[] = params.data.deposits ?? 0;
-        const value =
-          calculateFinalAmount(params.data) -
-          depositData.reduce((total, deposit) => total + deposit.amount, 0);
-
+        const value = calculateFinalAmount(params.data);
         return isNaN(value) ? null : value;
       },
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        return <p>₹ {calculateFinalAmount(data)}</p>;
+      },
+    },
+    // {
+    //   headerName: "Outstanding Amount",
+    //   flex: 1,
+    //   minWidth: 200,
+    //   headerClass: "ag-header-wrap",
+    //   filter: "agNumberColumnFilter",
+    //   pinned: "left",
+    //   valueGetter: (params: ValueGetterParams) => {
+    //     const depositData: DepositType[] = params.data.deposits ?? 0;
+    //     const value =
+    //       calculateFinalAmount(params.data) -
+    //       depositData.reduce((total, deposit) => total + deposit.amount, 0);
+
+    //     return isNaN(value) ? null : value;
+    //   },
+    //   cellRenderer: (params: ICellRendererParams) => {
+    //     const data = params.data;
+    //     const depositData: DepositType[] = params.data.deposits ?? 0;
+    //     return (
+    //       <p>
+    //         ₹{" "}
+    //         {(
+    //           calculateFinalAmount(data) -
+    //           depositData.reduce((total, deposit) => total + deposit.amount, 0)
+    //         ).toFixed(2)}
+    //       </p>
+    //     );
+    //   },
+    // },
+    {
+      field: "repay_amount",
+      headerName: "Repayment Amount",
+      flex: 1,
+      minWidth: 200,
+      headerClass: "ag-header-wrap",
+      filter: "agNumberColumnFilter",
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
         const depositData: DepositType[] = params.data.deposits ?? 0;
         return (
           <p>
             ₹{" "}
-            {(
+            {Math.abs(
+              Math.min(
+                0,
+                calculateFinalAmount(data) -
+                  depositData.reduce(
+                    (total, deposit) => total + deposit.amount,
+                    0
+                  )
+              )
+            ).toFixed(2)}
+          </p>
+        );
+      },
+    },
+    {
+      field: "balance_paid",
+      headerName: "Balance Amount",
+      flex: 1,
+      minWidth: 200,
+      headerClass: "ag-header-wrap",
+      filter: "agNumberColumnFilter",
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return (
+          <p>
+            ₹{" "}
+            {Math.max(
+              0,
               calculateFinalAmount(data) -
-              depositData.reduce((total, deposit) => total + deposit.amount, 0)
+                depositData.reduce(
+                  (total, deposit) => total + deposit.amount,
+                  0
+                )
             ).toFixed(2)}
           </p>
         );
@@ -397,22 +465,6 @@ const RentalOrderTable = ({
       },
     },
     {
-      headerName: "Amount (After Taxes)",
-      flex: 1,
-      minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
-      valueFormatter: currencyFormatter,
-      valueGetter: (params: ValueGetterParams) => {
-        const value = calculateFinalAmount(params.data);
-        return isNaN(value) ? null : value;
-      },
-      cellRenderer: (params: ICellRendererParams) => {
-        const data = params.data;
-        return <p>₹ {calculateFinalAmount(data)}</p>;
-      },
-    },
-    {
       headerName: "Deposit Amount",
       headerClass: "ag-header-wrap",
       minWidth: 150,
@@ -443,7 +495,20 @@ const RentalOrderTable = ({
     },
     {
       field: "payment_mode",
-      headerName: "Payment Mode",
+      headerName: "Repayment Mode",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: ["cash less", "account less", "kvb less"],
+      },
+    },
+    {
+      field: "balance_paid_mode",
+      headerName: "Balance Payment Mode",
       headerClass: "ag-header-wrap",
       minWidth: 150,
       filter: "agTextColumnFilter",

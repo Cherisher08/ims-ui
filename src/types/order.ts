@@ -20,9 +20,16 @@ export enum PaymentStatus {
 }
 
 export enum PaymentMode {
+  NULL = "-",
   CASH = "cash",
   UPI = "upi",
   ACCOUNT = "account",
+}
+export enum RepaymentMode {
+  NULL = "-",
+  CASHLESS = "cash less",
+  UPILESS = "upi less",
+  KVBLESS = "kvb less",
 }
 
 // --------------------------------------------------------------------------------------------
@@ -90,7 +97,7 @@ export type OrderInfo = {
   remarks: string;
   round_off: number;
   repay_amount: number;
-  payment_mode: PaymentMode;
+  payment_mode: RepaymentMode;
   gst: number;
 };
 

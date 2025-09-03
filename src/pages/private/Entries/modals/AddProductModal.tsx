@@ -38,6 +38,7 @@ const initialProductState: ProductDetails = {
   duration: 1,
   rent_per_unit: 0,
   product_code: "",
+  damage: "",
 };
 
 const formatProducts = (products: Product[]) => {
@@ -53,7 +54,8 @@ const AddProductModal = ({
   setAddProductOpen,
   addProductToOrder,
 }: AddProductModalOpen) => {
-  const [newProduct, setNewProduct] = useState<ProductDetails>(initialProductState);
+  const [newProduct, setNewProduct] =
+    useState<ProductDetails>(initialProductState);
 
   const [currentAvailableStock, setCurrentAvailableStock] = useState<number>(0);
 
@@ -71,7 +73,7 @@ const AddProductModal = ({
   };
 
   useEffect(() => {
-    const duration = getDuration(newProduct.out_date, newProduct.in_date, newProduct.billing_unit);
+    const duration = getDuration(newProduct.out_date, newProduct.in_date);
     handleValueChange("duration", duration);
   }, [newProduct.billing_unit, newProduct.in_date, newProduct.out_date]);
 
@@ -88,7 +90,9 @@ const AddProductModal = ({
       <div className="flex flex-col gap-4 justify-center items-center w-3/5 lg:w-4/5 xl:w-3/5 max-h-5/6 overflow-y-auto mt-2 bg-white rounded-lg p-4">
         <div className="flex flex-col gap-4 overflow-y-auto w-full max-h-[80vh]">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">Add Product</p>
+            <p className="text-primary text-xl font-semibold w-full text-start">
+              Add Product
+            </p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -102,7 +106,11 @@ const AddProductModal = ({
               label="Product"
               labelClass="w-[8rem]"
               options={formatProducts(products)}
-              value={formatProducts(products).find((val) => val.id === newProduct?._id)?.id ?? ""}
+              value={
+                formatProducts(products).find(
+                  (val) => val.id === newProduct?._id
+                )?.id ?? ""
+              }
               onChange={(id) => {
                 const data = products.find((prod) => prod._id === id);
                 if (data) {
@@ -130,7 +138,9 @@ const AddProductModal = ({
               labelClass="w-[8rem]"
               options={billingUnitOptions}
               value={
-                billingUnitOptions.find((val) => val.value === newProduct?.billing_unit)?.id ?? ""
+                billingUnitOptions.find(
+                  (val) => val.value === newProduct?.billing_unit
+                )?.id ?? ""
               }
               onChange={(id) => {
                 handleValueChange(
@@ -148,7 +158,9 @@ const AddProductModal = ({
               value={newProduct.order_quantity}
               error={(currentAvailableStock ?? 0) < newProduct.order_quantity}
               helperText="Quantity cannot be greater than Available Stock"
-              onChange={(value) => handleValueChange("order_quantity", parseInt(value))}
+              onChange={(value) =>
+                handleValueChange("order_quantity", parseInt(value))
+              }
             />
             <CustomDatePicker
               value={newProduct.out_date}
@@ -171,7 +183,9 @@ const AddProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Repair Count"
               value={newProduct.order_repair_count}
-              onChange={(value) => handleValueChange("order_repair_count", parseInt(value))}
+              onChange={(value) =>
+                handleValueChange("order_repair_count", parseInt(value))
+              }
               error={newProduct.order_quantity < newProduct.order_repair_count}
               helperText="Repair Count cannot be higher than Order Quantity"
             />
@@ -181,7 +195,9 @@ const AddProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Duration"
               value={newProduct.duration}
-              onChange={(value) => handleValueChange("duration", parseInt(value))}
+              onChange={(value) =>
+                handleValueChange("duration", parseInt(value))
+              }
             />
             <CustomInput
               label="Available Stock"

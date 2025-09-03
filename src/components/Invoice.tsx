@@ -15,7 +15,10 @@ import {
 } from "../types/order";
 import dayjs from "dayjs";
 import { ProductType } from "../types/common";
-import { calculateDiscountAmount, calculateProductRent } from "../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../services/utility_functions";
 import paidStamp from "/paid-icon.png";
 
 Font.register({
@@ -129,10 +132,10 @@ interface InvoiceRentalOrder {
 }
 
 const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
-  const deposits = data.deposits;
-  const sameKindOfDeposit =
-    deposits.length === 0 ||
-    (deposits.length > 0 && deposits.every((d) => d.mode === deposits[0].mode));
+  // const deposits = data.deposits;
+  // const sameKindOfDeposit =
+  //   deposits.length === 0 ||
+  //   (deposits.length > 0 && deposits.every((d) => d.mode === deposits[0].mode));
   const calculateRentAfterGST = (rent: number, gst: number) => {
     if (data.billing_mode === BillingMode.B2C) {
       const exclusiveAmount = rent / (1 + gst / 100);
@@ -490,7 +493,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               </Text>
             </View>
             <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Ref PO No && PO Date:</Text>
+              <Text style={styles.fieldTitle}>Ref PO No & PO Date:</Text>
               <Text style={styles.fieldValue}>-</Text>
             </View>
             <View style={styles.tableField}>
@@ -1152,8 +1155,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       lineHeight: 1,
                     }}
                   >
-                    {/* <Text style={styles.bankDetails}>Bank Information</Text>
-                    <Text style={styles.bankDetails}>---</Text> */}
+                    <Text style={styles.bankDetails}>Bank Information</Text>
+                    <Text style={styles.bankDetails}>---</Text>
                     <Text style={styles.selectSim}>
                       Kindly make the payment in favour of
                     </Text>

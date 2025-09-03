@@ -22,11 +22,12 @@ export const calculateProductRent = (
   } = product;
   if (!in_date || !out_date) return 0;
 
-  const start = dayjs(out_date).second(0).millisecond(0); // truncate to minute
-  const end = dayjs(in_date).second(0).millisecond(0);
+  const start = dayjs(out_date).hour(0).minute(0).second(0).millisecond(0); // truncate to minute
+  const end = dayjs(in_date).minute(0).second(0).millisecond(0).add(1, "day"); // truncate to minute and add 1 day to include the in_date
 
   let duration = 0;
 
+  console.log("billing_unit: ", billing_unit);
   switch (billing_unit) {
     case BillingUnit.SHIFT: {
       const hoursDiff = end.diff(start, "hour");

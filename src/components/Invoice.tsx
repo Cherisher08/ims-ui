@@ -167,6 +167,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       width: "100%",
       position: "relative",
       // paddingLeft: 50,
+      marginVertical:5,
       fontFamily: "Times-Roman",
     },
     container: {
@@ -422,7 +423,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={{ flexGrow: 1 }}>
+        {/* <View style={{ flexGrow: 1 }}> */}
           <View style={styles.pageTitle}>
             <Text
               style={{
@@ -625,7 +626,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             </View>
           </View>
 
-          <View style={styles.OrderSummaryContainer}>
+          {/* <View style={styles.OrderSummaryContainer}> */}
             <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
               Order Summary
             </Text>
@@ -787,7 +788,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   </View>
                 ))}
               </View>
-              <View style={styles.calculationWrapper}>
+              <View wrap={false} style={styles.calculationWrapper}>
                 <View style={styles.calculationContainer}>
                   <View style={styles.section}>
                     {/* Grid Columns */}
@@ -1017,7 +1018,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   </View>
                 </View>
               </View>
-              <View style={styles.footerRow}>
+              <View wrap={false} style={styles.footerRow}>
                 <View style={styles.amountTextContainer}>
                   <Text style={{ fontSize: 12, marginBottom: 2 }}>Amount in words:</Text>
                   <Text style={{ fontSize: 13, fontWeight: "bold" }}>
@@ -1057,8 +1058,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 </View>
               </View>
             </View>
-          </View>
-        </View>
+          {/* </View> */}
+        {/* </View> */}
         <View
           wrap={false}
           style={{

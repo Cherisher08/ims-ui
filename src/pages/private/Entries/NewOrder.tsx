@@ -3,14 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
-import CustomSelect, {
-  CustomSelectOptionProps,
-} from "../../../styled/CustomSelect";
+import CustomSelect, { CustomSelectOptionProps } from "../../../styled/CustomSelect";
 import AntSwitch from "../../../styled/CustomSwitch";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import {
   BillingMode,
-  BillingUnit,
+  // BillingUnit,
   DepositType,
   PaymentMode,
   PaymentStatus,
@@ -20,10 +18,7 @@ import {
 import { ContactInfoType, initialContactType } from "../../../types/contact";
 import dayjs from "dayjs";
 import { Product, ProductType } from "../../../types/common";
-import {
-  useGetProductsQuery,
-  useUpdateProductMutation,
-} from "../../../services/ApiService";
+import { useGetProductsQuery, useUpdateProductMutation } from "../../../services/ApiService";
 import { useGetContactsQuery } from "../../../services/ContactService";
 import {
   useCreateRentalOrderMutation,
@@ -35,17 +30,15 @@ import {
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  calculateDiscountAmount,
-  calculateProductRent,
-} from "../../../services/utility_functions";
+import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
 import { useDispatch } from "react-redux";
 import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
 import {
-  billingUnitOptions,
+  // billingUnitOptions,
   formatProducts,
   getDefaultDeposit,
   getDefaultProduct,
+  getDuration,
   getNewOrderId,
   paymentModeOptions,
   repaymentModeOptions,
@@ -54,9 +47,7 @@ import CustomAutoComplete from "../../../styled/CustomAutoComplete";
 import { LuPlus } from "react-icons/lu";
 import AddContactModal from "../Customers/modals/AddContactModal";
 
-const formatContacts = (
-  contacts: ContactInfoType[]
-): CustomSelectOptionProps[] =>
+const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
     id: contact._id ?? "",
     value: contact.name,
@@ -76,12 +67,10 @@ const getCurrentFY = () => {
   return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
 };
 
-const paymentStatusOptions = Object.entries(PaymentStatus).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
+const paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
+  id: key,
+  value,
+}));
 
 const initialRentalProduct: RentalOrderInfo = {
   order_id: "",
@@ -117,38 +106,25 @@ const NewOrder = () => {
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const isAllOrdersAllowed: boolean = false;
-  const { data: productsData, isSuccess: isProductsQuerySuccess } =
-    useGetProductsQuery();
-  const { data: contactsData, isSuccess: isContactsQuerySuccess } =
-    useGetContactsQuery();
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } =
-    useGetRentalOrdersQuery();
-  const {
-    data: existingRentalOrder,
-    isSuccess: isRentalOrderQueryByIdSuccess,
-  } = useGetRentalOrderByIdQuery(rentalId!, {
-    skip: !rentalId,
-  });
-  const [updateProductData, { isSuccess: isUpdateProductSuccess }] =
-    useUpdateProductMutation();
+  const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
+  const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
+  const { data: existingRentalOrder, isSuccess: isRentalOrderQueryByIdSuccess } =
+    useGetRentalOrderByIdQuery(rentalId!, {
+      skip: !rentalId,
+    });
+  const [updateProductData, { isSuccess: isUpdateProductSuccess }] = useUpdateProductMutation();
   const [
     createRentalOrder,
-    {
-      isSuccess: isRentalOrderCreateSuccess,
-      isError: isRentalOrderCreateError,
-    },
+    { isSuccess: isRentalOrderCreateSuccess, isError: isRentalOrderCreateError },
   ] = useCreateRentalOrderMutation();
   const [
     updateRentalOrder,
-    {
-      isSuccess: isRentalOrderUpdateSuccess,
-      isError: isRentalOrderUpdateError,
-    },
+    { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
   ] = useUpdateRentalOrderMutation();
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
-  const [orderInfo, setOrderInfo] =
-    useState<RentalOrderInfo>(initialRentalProduct);
+  const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalProduct);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -207,33 +183,16 @@ const NewOrder = () => {
       return parseFloat(total.toFixed(2));
     }
     return 0;
-  }, [
-    orderInfo.type,
-    orderInfo.product_details,
-    orderInfo.billing_mode,
-    orderInfo.gst,
-  ]);
+  }, [orderInfo.type, orderInfo.product_details, orderInfo.billing_mode, orderInfo.gst]);
 
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
     const balancePaid = orderInfo.balance_paid || 0;
-    const discountAmount = calculateDiscountAmount(
-      orderInfo.discount || 0,
-      finalAmount
-    );
-    const gstAmount = calculateDiscountAmount(
-      orderInfo.gst || 0,
-      finalAmount - discountAmount
-    );
+    const discountAmount = calculateDiscountAmount(orderInfo.discount || 0, finalAmount);
+    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
     return parseFloat(
-      (
-        finalAmount -
-        discountAmount +
-        gstAmount +
-        roundOff -
-        balancePaid
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff - balancePaid).toFixed(2)
     );
   }, [
     calculateTotalAmount,
@@ -245,9 +204,7 @@ const NewOrder = () => {
 
   const removeOrderProduct = (id: string) => {
     if (orderInfo.type === ProductType.RENTAL) {
-      const filteredProducts = (orderInfo.product_details || []).filter(
-        (prod) => prod._id !== id
-      );
+      const filteredProducts = (orderInfo.product_details || []).filter((prod) => prod._id !== id);
 
       setOrderInfo({
         ...orderInfo,
@@ -262,24 +219,19 @@ const NewOrder = () => {
       updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {
         newOrderInfo.product_details.forEach((updatedProductDetail) => {
-          const previousProductDetail =
-            existingRentalOrder.product_details.find(
-              (prev) => prev._id === updatedProductDetail._id
-            );
+          const previousProductDetail = existingRentalOrder.product_details.find(
+            (prev) => prev._id === updatedProductDetail._id
+          );
 
           const previousQuantity = previousProductDetail?.order_quantity ?? 0;
           const previousRepair = previousProductDetail?.order_repair_count ?? 0;
 
-          const quantityDelta =
-            updatedProductDetail.order_quantity - previousQuantity;
-          const repairDelta =
-            updatedProductDetail.order_repair_count - previousRepair;
+          const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
+          const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
 
           // find the product in inventory
           const currentProduct = {
-            ...products.find(
-              (product) => product._id === updatedProductDetail._id
-            )!,
+            ...products.find((product) => product._id === updatedProductDetail._id)!,
           };
 
           // apply the delta
@@ -298,32 +250,24 @@ const NewOrder = () => {
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
           newOrderInfo.product_details.map((product_detail) => {
-            const currentProduct = products.find(
-              (product) => product._id === product_detail._id
-            );
+            const currentProduct = products.find((product) => product._id === product_detail._id);
 
             if (!currentProduct) {
-              console.warn(
-                `⚠️ Product ${product_detail._id} not found, skipping`
-              );
+              console.warn(`⚠️ Product ${product_detail._id} not found, skipping`);
               return Promise.resolve();
             }
 
             return updateProductData({
               ...currentProduct,
-              available_stock:
-                currentProduct.available_stock - product_detail.order_quantity,
-              repair_count:
-                currentProduct.repair_count + product_detail.order_repair_count,
+              available_stock: currentProduct.available_stock - product_detail.order_quantity,
+              repair_count: currentProduct.repair_count + product_detail.order_repair_count,
             }).unwrap();
           })
         );
 
         results.forEach((result, idx) => {
           if (result.status === "fulfilled") {
-            console.log(
-              `✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`
-            );
+            console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
           } else {
             console.error(
               `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
@@ -361,12 +305,7 @@ const NewOrder = () => {
       });
       navigate("/orders");
     }
-  }, [
-    isRentalOrderCreateError,
-    isRentalOrderCreateSuccess,
-    isUpdateProductSuccess,
-    navigate,
-  ]);
+  }, [isRentalOrderCreateError, isRentalOrderCreateSuccess, isUpdateProductSuccess, navigate]);
 
   useEffect(() => {
     if (isRentalOrderUpdateSuccess) {
@@ -390,12 +329,9 @@ const NewOrder = () => {
       navigate("/orders");
     }
     if (isRentalOrderUpdateError) {
-      toast.error(
-        "Rental Order was not Updated Successfully. Please Try Again",
-        {
-          toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
-        }
-      );
+      toast.error("Rental Order was not Updated Successfully. Please Try Again", {
+        toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+      });
       navigate("/orders");
     }
   }, [
@@ -414,12 +350,7 @@ const NewOrder = () => {
     if (isContactsQuerySuccess) {
       setContacts(contactsData);
     }
-  }, [
-    contactsData,
-    isContactsQuerySuccess,
-    isProductsQuerySuccess,
-    productsData,
-  ]);
+  }, [contactsData, isContactsQuerySuccess, isProductsQuerySuccess, productsData]);
 
   useEffect(() => {
     if (rentalId) {
@@ -455,7 +386,7 @@ const NewOrder = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderInfo.gst, orderInfo.billing_mode]); // Dont add orderInfo Hereeeeee
+  }, [orderInfo.gst, orderInfo.billing_mode]);
 
   return (
     <div className="w-full flex flex-col ">
@@ -481,9 +412,7 @@ const NewOrder = () => {
             ))}
           </Tabs>
         ) : (
-          <Box className="font-primary text-2xl font-bold w-full">
-            Rental Order
-          </Box>
+          <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
         )}
 
         <div className="flex flex-col items-end">
@@ -494,8 +423,8 @@ const NewOrder = () => {
             icon={<LuPlus color="white" />}
           />
           <p className="text-sm text-primary whitespace-nowrap mt-3">
-            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add
-            at least one product to proceed.
+            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
+            to proceed.
           </p>
         </div>
       </div>
@@ -537,10 +466,8 @@ const NewOrder = () => {
           placeholder=""
           createOption={false}
           value={
-            contacts.find(
-              (cont) =>
-                cont?.personal_number === orderInfo?.customer?.personal_number
-            )?.personal_number || ""
+            contacts.find((cont) => cont?.personal_number === orderInfo?.customer?.personal_number)
+              ?.personal_number || ""
           }
           label="Customer Mobile"
           onChange={(value) => {
@@ -555,29 +482,30 @@ const NewOrder = () => {
             }
           }}
         />
-        <CustomSelect
+        <CustomAutoComplete
+          addNewValue={() => setAddContactOpen(true)}
+          placeholder=""
+          createOption={true}
           label="Customer"
           options={formatContacts(contacts)}
           value={
-            formatContacts(contacts).find(
-              (option) => option.id === orderInfo.customer?._id
-            )?.id ?? ""
+            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
+              ?.value ?? ""
           }
-          onChange={(id) =>
+          onChange={(name) => {
             handleValueChange(
               "customer",
-              contacts.find((option) => option._id === id)
-            )
-          }
+              contacts.find((option) => option.name === name)
+            );
+          }}
         />
         {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
             label="Payment Status"
             options={paymentStatusOptions}
             value={
-              paymentStatusOptions.find(
-                (paymentStatus) => orderInfo.status === paymentStatus.value
-              )?.id ?? ""
+              paymentStatusOptions.find((paymentStatus) => orderInfo.status === paymentStatus.value)
+                ?.id ?? ""
             }
             onChange={(id) =>
               handleValueChange(
@@ -599,7 +527,13 @@ const NewOrder = () => {
             <CustomDatePicker
               label="Event Start Date/Entry Date"
               value={orderInfo.out_date ?? ""}
-              onChange={(value) => handleValueChange("out_date", value)}
+              onChange={(value) => {
+                handleValueChange("out_date", value);
+                if (orderInfo.in_date) {
+                  const duration = getDuration(value, orderInfo.in_date);
+                  handleValueChange("rental_duration", duration);
+                }
+              }}
               placeholder="Enter Out Date"
             />
 
@@ -620,6 +554,8 @@ const NewOrder = () => {
                     inDate: false,
                   }));
                 }
+                const duration = getDuration(orderInfo.out_date, value);
+                handleValueChange("rental_duration", duration);
                 handleValueChange("in_date", value);
               }}
               placeholder="Enter In Date"
@@ -630,8 +566,6 @@ const NewOrder = () => {
         <CustomInput
           value={orderInfo?.rental_duration ?? ""}
           onChange={(value) => {
-            const inDate = dayjs(orderInfo.out_date).add(Number(value), "days");
-            handleValueChange("in_date", inDate);
             handleValueChange("rental_duration", value);
           }}
           label="Event Expected Days"
@@ -656,12 +590,14 @@ const NewOrder = () => {
           minRows={5}
         />
         <CustomInput
-          onChange={() => {}}
-          value={
-            contacts.find((contact) => contact._id === orderInfo.customer?._id)
-              ?.address || ""
-          }
-          disabled
+          onChange={(value) => {
+            const contact = {
+              ...(orderInfo.customer || {}),
+              address: value,
+            };
+            handleValueChange("customer", contact);
+          }}
+          value={orderInfo.customer?.address || ""}
           label="Customer Address"
           placeholder="Customer Address"
           multiline
@@ -684,14 +620,10 @@ const NewOrder = () => {
           <CustomButton
             label="Add Product"
             disabled={
-              orderInfo.product_details?.filter((current) => current._id === "")
-                .length > 0 || false
+              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
             }
             onClick={() => {
-              const newProduct = getDefaultProduct(
-                orderInfo?.out_date,
-                orderInfo.in_date
-              );
+              const newProduct = getDefaultProduct(orderInfo?.out_date, orderInfo.in_date);
               setOrderInfo((prev) => ({
                 ...prev,
                 product_details: [...(prev.product_details || []), newProduct],
@@ -707,16 +639,12 @@ const NewOrder = () => {
                 <th className="px-1 py-1 text-left w-[15rem]">Product</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Product Unit</th>
                 <th className="px-1 py-1 text-left w-[9rem]">Billing Unit</th>
-                <th className="px-1 py-1 text-left w-[9rem]">
-                  Available Stock
-                </th>
+                <th className="px-1 py-1 text-left w-[9rem]">Available Stock</th>
                 <th className="px-1 py-1 text-left w-[6rem]">Order Quantity</th>
                 <th className="px-1 py-1 text-left w-[11rem]">Out Date</th>
                 <th className="px-1 py-1 text-left w-[11rem]">In Date</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Duration</th>
-                <th className="px-1 py-1 text-left w-[8rem]">
-                  Order Repair Quantity
-                </th>
+                <th className="px-1 py-1 text-left w-[8rem]">Order Repair Quantity</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Rent Per Unit</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Final Amount</th>
                 <th className="px-1 py-1 text-left w-[20rem]">Damage</th>
@@ -728,23 +656,23 @@ const NewOrder = () => {
                 orderInfo.product_details?.map((product, index) => (
                   <tr key={product._id} className="border-b border-gray-200">
                     <td className="px-1 py-2 content-start">
-                      <CustomSelect
+                      <CustomAutoComplete
+                        addNewValue={() => {}}
+                        placeholder=""
+                        createOption={false}
                         label=""
                         options={formatProducts(
                           products.filter(
                             (prod) =>
                               !orderInfo.product_details?.find(
-                                (current) =>
-                                  current._id === prod._id &&
-                                  prod._id !== product._id
+                                (current) => current._id === prod._id && prod._id !== product._id
                               )
                           )
                         )}
                         className="w-[14rem]"
                         value={
                           formatProducts(products).find(
-                            (val) =>
-                              val.id === orderInfo.product_details![index]?._id
+                            (val) => val.id === orderInfo.product_details![index]?._id
                           )?.id ?? ""
                         }
                         onChange={(id) => {
@@ -753,7 +681,7 @@ const NewOrder = () => {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {
                               ...product,
-                              _id: id,
+                              _id: id || "",
                               name: data?.name,
                               category: data?.category.name,
                               product_unit: data.unit,
@@ -773,14 +701,11 @@ const NewOrder = () => {
                         placeholder=""
                         disabled
                         className="w-[7rem] p-2"
-                        value={
-                          orderInfo.product_details[index].product_unit.name ||
-                          ""
-                        }
+                        value={orderInfo.product_details[index].product_unit.name || ""}
                         onChange={() => {}}
                       />
                     </td>
-                    <td className="px-1 py-2 content-start">
+                    {/* <td className="px-1 py-2 content-start">
                       <CustomSelect
                         label=""
                         className="w-[8rem]"
@@ -813,14 +738,11 @@ const NewOrder = () => {
                           });
                         }}
                       />
-                    </td>
+                    </td> */}
                     <td className="px-1 py-2 content-start">
                       <CustomInput
                         disabled
-                        value={
-                          products.find((p) => p._id === product._id)
-                            ?.available_stock || 0
-                        }
+                        value={products.find((p) => p._id === product._id)?.available_stock || 0}
                         type="number"
                         className="w-[8rem] p-2"
                         onChange={() => {}}
@@ -834,18 +756,13 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[5rem] p-2"
-                        value={
-                          orderInfo.product_details[index].order_quantity || 0
-                        }
+                        value={orderInfo.product_details[index].order_quantity || 0}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
                           const available_stock =
-                            products.find((p) => p._id === product._id)
-                              ?.available_stock || 0;
+                            products.find((p) => p._id === product._id)?.available_stock || 0;
                           const quantity =
-                            available_stock < Number(val)
-                              ? available_stock
-                              : Number(val);
+                            available_stock < Number(val) ? available_stock : Number(val);
                           newProducts[index] = {
                             ...product,
                             order_quantity: quantity,
@@ -861,9 +778,8 @@ const NewOrder = () => {
                       <CustomDatePicker
                         label=""
                         value={
-                          dayjs(
-                            orderInfo.product_details[index].out_date
-                          ).format("DD-MMM-YYYY") || ""
+                          dayjs(orderInfo.product_details[index].out_date).format("DD-MMM-YYYY") ||
+                          ""
                         }
                         className="w-[11rem]"
                         onChange={(val) => {
@@ -892,9 +808,8 @@ const NewOrder = () => {
                       <CustomDatePicker
                         label=""
                         value={
-                          dayjs(
-                            orderInfo.product_details[index].in_date
-                          ).format("DD-MMM-YYYY") || ""
+                          dayjs(orderInfo.product_details[index].in_date).format("DD-MMM-YYYY") ||
+                          ""
                         }
                         className="w-[11rem]"
                         onChange={(val) => {
@@ -945,10 +860,7 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[8rem] p-2"
-                        value={
-                          orderInfo.product_details[index].order_repair_count ||
-                          0
-                        }
+                        value={orderInfo.product_details[index].order_repair_count || 0}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
                           newProducts[index] = {
@@ -1098,17 +1010,14 @@ const NewOrder = () => {
                       label=""
                       value={
                         formatProducts(products).find((prod) =>
-                          deposit.product
-                            ? prod.id === deposit.product._id
-                            : false
+                          deposit.product ? prod.id === deposit.product._id : false
                         )?.id ?? ""
                       }
                       options={formatProducts(orderInfo.product_details || [])}
                       onChange={(id) =>
                         setDepositData((prev) => {
                           const newDeposits = [...prev];
-                          const product =
-                            products.find((prod) => prod._id === id) || null;
+                          const product = products.find((prod) => prod._id === id) || null;
                           newDeposits[index] = { ...deposit, product: product };
                           return newDeposits;
                         })
@@ -1121,14 +1030,12 @@ const NewOrder = () => {
                       options={paymentModeOptions}
                       className="w-[14rem]"
                       value={
-                        paymentModeOptions.find(
-                          (mode) => deposit.mode === mode.value
-                        )?.id || ""
+                        paymentModeOptions.find((mode) => deposit.mode === mode.value)?.id || ""
                       }
                       onChange={(mode) => {
                         const currentMode =
-                          paymentModeOptions.find((md) => md.id === mode)
-                            ?.value ?? PaymentMode.CASH;
+                          paymentModeOptions.find((md) => md.id === mode)?.value ??
+                          PaymentMode.CASH;
                         const newDeposits = [...depositData];
                         newDeposits[index] = {
                           ...deposit,
@@ -1143,9 +1050,7 @@ const NewOrder = () => {
                       label="Delete"
                       icon=""
                       onClick={() => {
-                        const newDeposits = depositData.filter(
-                          (_, i) => i !== index
-                        );
+                        const newDeposits = depositData.filter((_, i) => i !== index);
                         setDepositData(newDeposits);
                       }}
                     ></CustomButton>
@@ -1181,14 +1086,11 @@ const NewOrder = () => {
               className="w-[8rem]"
               options={paymentModeOptions}
               value={
-                paymentModeOptions.find(
-                  (mode) => orderInfo.eway_mode === mode.value
-                )?.id || ""
+                paymentModeOptions.find((mode) => orderInfo.eway_mode === mode.value)?.id || ""
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ??
-                  BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("eway_mode", currentMode);
               }}
             />
@@ -1205,9 +1107,7 @@ const NewOrder = () => {
             const amount = parseFloat(value) || 0;
             const total_amount = calculateTotalAmount;
             const percent =
-              total_amount > 0
-                ? parseFloat(((amount * 100) / total_amount).toFixed(2))
-                : 0;
+              total_amount > 0 ? parseFloat(((amount * 100) / total_amount).toFixed(2)) : 0;
 
             setOrderInfo((prev) => ({
               ...prev,
@@ -1232,14 +1132,12 @@ const NewOrder = () => {
               className="w-[8rem]"
               options={paymentModeOptions}
               value={
-                paymentModeOptions.find(
-                  (mode) => orderInfo.balance_paid_mode === mode.value
-                )?.id || ""
+                paymentModeOptions.find((mode) => orderInfo.balance_paid_mode === mode.value)?.id ||
+                ""
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ??
-                  BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("balance_paid_mode", currentMode);
               }}
             />
@@ -1261,14 +1159,11 @@ const NewOrder = () => {
               className="w-[8rem]"
               options={repaymentModeOptions}
               value={
-                repaymentModeOptions.find(
-                  (mode) => orderInfo.payment_mode === mode.value
-                )?.id || ""
+                repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ""
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ??
-                  BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("payment_mode", currentMode);
               }}
             />
@@ -1291,13 +1186,7 @@ const NewOrder = () => {
                     <p>Round Off</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
-                    <p>
-                      ₹{" "}
-                      {depositData.reduce(
-                        (total, deposit) => total + deposit.amount,
-                        0
-                      )}
-                    </p>
+                    <p>₹ {depositData.reduce((total, deposit) => total + deposit.amount, 0)}</p>
                     <p>₹ {calculateTotalAmount}</p>
 
                     <div className="flex justify-end gap-1">
@@ -1308,13 +1197,8 @@ const NewOrder = () => {
                         min={0}
                         value={orderInfo.discount}
                         onChange={(e) => {
-                          if (
-                            orderInfo.type === ProductType.RENTAL &&
-                            orderInfo.product_details
-                          ) {
-                            let percent = parseFloat(
-                              parseFloat(e.target.value).toFixed(2)
-                            );
+                          if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+                            let percent = parseFloat(parseFloat(e.target.value).toFixed(2));
                             if (percent >= 100) {
                               percent = 100;
                             }
@@ -1340,14 +1224,8 @@ const NewOrder = () => {
                         type="number"
                         value={orderInfo.gst}
                         onChange={(e) => {
-                          if (
-                            orderInfo.type === ProductType.RENTAL &&
-                            orderInfo.product_details
-                          ) {
-                            let percent =
-                              parseFloat(
-                                parseFloat(e.target.value).toFixed(0)
-                              ) || 0;
+                          if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+                            let percent = parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
                             if (percent >= 100) {
                               percent = 100;
                             }
@@ -1369,9 +1247,7 @@ const NewOrder = () => {
                         onChange={(e) =>
                           setOrderInfo((prev) => ({
                             ...prev,
-                            round_off: parseFloat(
-                              parseFloat(e.target.value).toFixed(2)
-                            ),
+                            round_off: parseFloat(parseFloat(e.target.value).toFixed(2)),
                           }))
                         }
                       />{" "}

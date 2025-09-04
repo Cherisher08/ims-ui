@@ -1,11 +1,6 @@
-import {
-  ValueFormatterParams,
-  ValueGetterParams,
-  ValueSetterParams,
-} from "ag-grid-community";
+import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from "ag-grid-community";
 import {
   BillingMode,
-  BillingUnit,
   OrderInfo,
   PaymentMode,
   PaymentStatus,
@@ -45,9 +40,7 @@ export const gstAmountSetter = (params: ValueSetterParams): boolean => {
 
   if (isNaN(newGstAmount) || baseAmount === 0) return false;
 
-  const newGstPercent = parseFloat(
-    ((newGstAmount / baseAmount) * 100).toFixed(2)
-  );
+  const newGstPercent = parseFloat(((newGstAmount / baseAmount) * 100).toFixed(2));
 
   if (params.data.gst_percent !== newGstPercent) {
     params.data.gst_percent = newGstPercent;
@@ -123,10 +116,10 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
 };
 
 export const getDuration = (out_date: string, in_date: string) => {
-  const start = dayjs(out_date).second(0).millisecond(0);
-  const end = dayjs(in_date).second(0).endOf("day");
-  const duration = end.diff(start, "day");
-  return duration + 1;
+  const start = dayjs(out_date).startOf("day");
+  const end = dayjs(in_date).endOf("day");
+  const duration = end.diff(start, "day") + 1;
+  return duration;
 };
 
 export const getDefaultProduct = (out_date: string, in_date: string) => {
@@ -137,7 +130,7 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
     _id: "",
     name: "",
     category: "",
-    billing_unit: BillingUnit.DAYS,
+    // billing_unit: BillingUnit.DAYS,
     product_unit: {
       _id: "",
       name: "",
@@ -160,22 +153,16 @@ export const formatProducts = (products: Product[] | ProductDetails[]) => {
   }));
 };
 
-export const billingUnitOptions = Object.entries(BillingUnit).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
+// export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+//   id: key,
+//   value,
+// }));
 
-export const paymentModeOptions = Object.entries(PaymentMode).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
-export const repaymentModeOptions = Object.entries(RepaymentMode).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
+export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
+  id: key,
+  value,
+}));
+export const repaymentModeOptions = Object.entries(RepaymentMode).map(([key, value]) => ({
+  id: key,
+  value,
+}));

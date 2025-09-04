@@ -9,15 +9,12 @@ import Loader from "../../../components/Loader";
 import { useParams } from "react-router-dom";
 import { ProductType } from "../../../types/common";
 import { useState } from "react";
-import { PaymentStatus } from "../../../types/order";
 const OrderInvoice = () => {
   const { rentalId } = useParams();
-  const {
-    data: existingRentalOrder,
-    isLoading: isRentalOrderQueryByIdLoading,
-  } = useGetRentalOrderByIdQuery(rentalId!, {
-    skip: !rentalId,
-  });
+  const { data: existingRentalOrder, isLoading: isRentalOrderQueryByIdLoading } =
+    useGetRentalOrderByIdQuery(rentalId!, {
+      skip: !rentalId,
+    });
 
   const [invoiceId, setInvoiceId] = useState<string>("");
 
@@ -33,9 +30,9 @@ const OrderInvoice = () => {
   }
 
   if (isRentalOrdersQuerySuccess && rentalOrderData && invoiceId === "") {
-    const newInvoiceId =
-      rentalOrderData.filter((order) => order.status === PaymentStatus.PAID)
-        .length + 1;
+    // const newInvoiceId =
+    //   rentalOrderData.filter((order) => order.status === PaymentStatus.PAID).length + 1;
+    const newInvoiceId = rentalOrderData.filter((order) => order.in_date).length + 1;
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;

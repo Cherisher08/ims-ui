@@ -1,18 +1,5 @@
-import {
-  Document,
-  Page,
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  Font,
-} from "@react-pdf/renderer";
-import {
-  BillingMode,
-  DepositType,
-  ProductDetails,
-  RentalOrderInfo,
-} from "../types/order";
+import { Document, Page, StyleSheet, Text, View, Image, Font } from "@react-pdf/renderer";
+import { BillingMode, DepositType, ProductDetails, RentalOrderInfo } from "../types/order";
 import dayjs from "dayjs";
 import { ProductType } from "../types/common";
 import {
@@ -35,18 +22,7 @@ Font.register({
 function numberToWordsIndian(num: number) {
   if (typeof num !== "number" || isNaN(num)) return "Invalid number";
 
-  const singleDigits = [
-    "",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-  ];
+  const singleDigits = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
 
   const doubleDigits = [
     "",
@@ -79,10 +55,7 @@ function numberToWordsIndian(num: number) {
   function getTwoDigitWords(n: number) {
     if (n < 10) return singleDigits[n];
     if (n < 20) return doubleDigits[n - 9];
-    return (
-      tensMultiple[Math.floor(n / 10)] +
-      (n % 10 !== 0 ? " " + singleDigits[n % 10] : "")
-    );
+    return tensMultiple[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + singleDigits[n % 10] : "");
   }
 
   // Convert to words
@@ -159,29 +132,18 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     const ewayBillAmount = data.eway_amount || 0;
     const discountAmount = data.discount_amount || 0;
     const balance_paid = data.balance_paid || 0;
-    const gstAmount = calculateDiscountAmount(
-      data.gst || 0,
-      finalAmount - discountAmount
-    );
+    const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount - discountAmount);
     return parseFloat(
-      (
-        finalAmount -
-        discountAmount +
-        gstAmount +
-        roundOff +
-        ewayBillAmount -
-        balance_paid
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount - balance_paid).toFixed(
+        2
+      )
     );
   };
 
   const depositTotal = () => {
     return parseFloat(
       data.deposits
-        .reduce(
-          (total: number, deposit: DepositType) => total + deposit.amount,
-          0
-        )
+        .reduce((total: number, deposit: DepositType) => total + deposit.amount, 0)
         .toFixed(2)
     );
   };
@@ -197,11 +159,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     return 0;
   };
 
-  const gstAmount = (
-    (calcFinalAmount() - data.discount_amount) *
-    data.gst *
-    0.01
-  ).toFixed(2);
+  const gstAmount = ((calcFinalAmount() - data.discount_amount) * data.gst * 0.01).toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -376,6 +334,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       marginTop: 1,
       flexDirection: "row",
       width: "100%",
+      height: 60,
       border: "1px solid black",
     },
     signatureContainer: {
@@ -391,7 +350,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
     signImage: {
       width: 150,
-      height: 50,
+      height: 30,
     },
     signatureFooter: {
       width: 150,
@@ -559,24 +518,13 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Text style={styles.fieldValue}>{data.event_address}</Text>
             </View>
           </View>
-          <View
-            style={[
-              styles.detailContainer,
-              { justifyContent: "space-between" },
-            ]}
-          >
+          <View style={[styles.detailContainer, { justifyContent: "space-between" }]}>
             <View>
               <View style={styles.ownerDetails}>
                 <Text style={styles.title}>MANI POWER TOOLS</Text>
-                <Text style={styles.ownerAddress}>
-                  No. 1/290, Angalamman Koil Street, Padur,
-                </Text>
-                <Text style={styles.ownerAddress}>
-                  Chengalpattu, Chennai - 603103, Tamil Nadu
-                </Text>
-                <Text style={styles.ownerAddress}>
-                  Mobile No - 8428429153 , 9042439153
-                </Text>
+                <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
+                <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
+                <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
                 <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
                   manipowertools9153@gmail.com
                 </Text>
@@ -670,9 +618,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         </View>
 
         <View style={styles.OrderSummaryContainer}>
-          <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
-            Order Summary
-          </Text>
+          <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>Order Summary</Text>
           <View style={styles.orderWrapper}>
             <View style={styles.tableContainer}>
               <View style={styles.tableHeader}>
@@ -744,7 +690,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     },
                   ]}
                 >
-                  BILLING UNIT
+                  DURATION
                 </Text>
                 <Text
                   style={[
@@ -786,14 +732,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   key={product._id}
                   style={[
                     styles.tableRow,
-                    updatedProducts.length - 1 === index
-                      ? {}
-                      : { borderBottom: "1px solid #000" },
+                    updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
                   ]}
                 >
-                  <Text style={[styles.productColumn, { width: 20 }]}>
-                    {index + 1}
-                  </Text>
+                  <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>
                   <View>
                     <Text
                       style={[
@@ -820,20 +762,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     Rs. {product.rent_per_unit}
                   </Text>
                   <Text style={[styles.productColumn, { width: 80 }]}>
-                    {calculateProductRent(product, true)} {product.billing_unit}
+                    {calculateProductRent(product, true)}{" "}
+                    {calculateProductRent(product, true) === 1 ? "day" : "days"}
                   </Text>
                   <Text style={[styles.productColumn, { width: 60 }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
-                  <Text style={[styles.productColumn, { width: 60 }]}>
-                    {data.gst}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.productColumn,
-                      { width: 60, borderRight: "0px" },
-                    ]}
-                  >
+                  <Text style={[styles.productColumn, { width: 60 }]}>{data.gst}</Text>
+                  <Text style={[styles.productColumn, { width: 60, borderRight: "0px" }]}>
                     Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                   </Text>
                 </View>
@@ -875,17 +811,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   ].map((item, index) => (
                     <View
                       key={index}
-                      style={[
-                        styles.row,
-                        item.bottom ? { borderBottom: "1px solid black" } : {},
-                      ]}
+                      style={[styles.row, item.bottom ? { borderBottom: "1px solid black" } : {}]}
                     >
-                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>
-                        {item.label}
-                      </Text>
-                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>
-                        {item.value}
-                      </Text>
+                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>{item.label}</Text>
+                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>{item.value}</Text>
                     </View>
                   ))}
                   {data.eway_amount ? (
@@ -913,21 +842,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                             gap: 4,
                           }}
                         >
-                          <Text
-                            style={[
-                              styles.selectSim,
-                              { paddingLeft: 50, paddingTop: 5 },
-                            ]}
-                          >
-                            {"( Mode of Payment : " +
-                              data.eway_mode.toUpperCase() +
-                              ")"}
+                          <Text style={[styles.selectSim, { paddingLeft: 50, paddingTop: 5 }]}>
+                            {"( Mode of Payment : " + data.eway_mode.toUpperCase() + ")"}
                           </Text>
-                          <Text
-                            style={[styles.labelText, { fontWeight: "bold" }]}
-                          >
-                            Transport
-                          </Text>
+                          <Text style={[styles.labelText, { fontWeight: "bold" }]}>Transport</Text>
                         </View>
                       </View>
                       <View
@@ -937,9 +855,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           alignItems: "flex-end",
                         }}
                       >
-                        <Text
-                          style={[styles.valueText, { fontWeight: "bold" }]}
-                        >
+                        <Text style={[styles.valueText, { fontWeight: "bold" }]}>
                           {`Rs. ${data.eway_amount?.toFixed(2)}`}
                         </Text>
                       </View>
@@ -952,9 +868,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       borderBottom: "1px solid black",
                     }}
                   >
-                    <Text style={[styles.labelText, { fontWeight: "bold" }]}>
-                      Net Total
-                    </Text>
+                    <Text style={[styles.labelText, { fontWeight: "bold" }]}>Net Total</Text>
                     <Text style={[styles.valueText, { fontWeight: "bold" }]}>
                       {`Rs. ${Math.abs(calcTotal()).toFixed(2)}`}
                     </Text>
@@ -985,16 +899,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       >
                         <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
                           {data.deposits.length
-                            ? "( Mode of Payment : " +
-                              data.deposits[0].mode.toUpperCase() +
-                              ")"
+                            ? "( Mode of Payment : " + data.deposits[0].mode.toUpperCase() + ")"
                             : ""}
                         </Text>
-                        <Text
-                          style={[styles.labelText, { fontWeight: "bold" }]}
-                        >
-                          Deposit
-                        </Text>
+                        <Text style={[styles.labelText, { fontWeight: "bold" }]}>Deposit</Text>
                       </View>
                     </View>
                     <View
@@ -1036,9 +944,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         }}
                       >
                         <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
-                          {"( Mode of Payment : " +
-                            data.payment_mode.toUpperCase() +
-                            ")"}
+                          {"( Mode of Payment : " + data.payment_mode.toUpperCase() + ")"}
                         </Text>
                         <Text
                           style={{
@@ -1056,10 +962,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           }}
                         >
                           {calcTotal() -
-                            data.deposits.reduce(
-                              (total, deposit) => total + deposit.amount,
-                              0
-                            ) <
+                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
                           0
                             ? "Return Payment"
                             : "Balance"}
@@ -1079,10 +982,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         style={{
                           color:
                             calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              ) <
+                              data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
                             0
                               ? "red"
                               : "black",
@@ -1092,10 +992,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         Rs.{" "}
                         {Math.abs(
                           calcTotal() -
-                            data.deposits.reduce(
-                              (total, deposit) => total + deposit.amount,
-                              0
-                            )
+                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
                         ).toFixed(2)}
                       </Text>
                     </View>
@@ -1105,9 +1002,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             </View>
             <View style={styles.footerRow}>
               <View style={styles.amountTextContainer}>
-                <Text style={{ fontSize: 12, marginBottom: 2 }}>
-                  Amount in words:
-                </Text>
+                <Text style={{ fontSize: 12, marginBottom: 2 }}>Amount in words:</Text>
                 <Text style={{ fontSize: 13, fontWeight: "bold" }}>
                   {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
                 </Text>
@@ -1118,8 +1013,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       position: "absolute",
                       bottom: "2%",
                       right: "1%",
-                      width: 60,
-                      height: 60,
+                      width: 40,
+                      height: 40,
                       // transform: "translate(-50%, -50%)",
                     }}
                   />
@@ -1243,8 +1138,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           lineHeight: 1.1,
                         }}
                       >
-                        Return products in good condition. Damages or loss will
-                        be charged.
+                        Return products in good condition. Damages or loss will be charged.
                       </Text>
                     </View>
                   </View>
@@ -1300,9 +1194,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 <Text style={styles.thankYouText}>
                   Thanks for choosing us - We look forward to serve you again
                 </Text>
-                <Text style={styles.footerNoteText}>
-                  This is computer generated invoice
-                </Text>
+                <Text style={styles.footerNoteText}>This is computer generated invoice</Text>
               </View>
             </View>
           </View>

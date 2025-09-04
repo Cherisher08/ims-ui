@@ -1,5 +1,5 @@
 import { Modal } from "@mui/material";
-import { BillingUnit, ProductDetails } from "../../../../types/order";
+import { ProductDetails } from "../../../../types/order";
 import { MdClose } from "react-icons/md";
 import CustomButton from "../../../../styled/CustomButton";
 import { Product } from "../../../../types/common";
@@ -18,10 +18,10 @@ type UpdateProductModalOpen = {
   updateProductToOrder: () => void;
 };
 
-const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
-  id: key,
-  value,
-}));
+// const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+//   id: key,
+//   value,
+// }));
 
 const formatProducts = (products: Product[]) => {
   return products.map((product) => ({
@@ -39,8 +39,7 @@ const UpdateProductModal = ({
   updateProductToOrder,
 }: UpdateProductModalOpen) => {
   const currentAvailableStock =
-    products.find((product) => product._id === updateProduct?._id)
-      ?.available_stock || 0;
+    products.find((product) => product._id === updateProduct?._id)?.available_stock || 0;
 
   const isDoneDisabled =
     updateProduct.order_quantity <= 0 ||
@@ -55,14 +54,14 @@ const UpdateProductModal = ({
   };
 
   useEffect(() => {
-    const duration = getDuration(updateProduct.out_date, updateProduct.in_date);
+    const duration = getDuration(
+      updateProduct.out_date,
+      updateProduct.in_date
+      // updateProduct.billing_unit
+    );
     handleValueChange("duration", duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    updateProduct.billing_unit,
-    updateProduct.in_date,
-    updateProduct.out_date,
-  ]);
+  }, [updateProduct.in_date, updateProduct.out_date]);
 
   return (
     <Modal
@@ -75,9 +74,7 @@ const UpdateProductModal = ({
       <div className="flex flex-col gap-4 justify-center items-center w-3/5 lg:w-4/5 xl:w-3/5 max-h-4/5 overflow-y-auto mt-2 bg-white rounded-lg p-4">
         <div className="flex flex-col gap-4 overflow-y-auto w-full max-h-[80vh]">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Update Product
-            </p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Update Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -92,9 +89,7 @@ const UpdateProductModal = ({
               labelClass="w-[8rem]"
               options={formatProducts(products)}
               value={
-                formatProducts(products).find(
-                  (val) => val.id === updateProduct?._id
-                )?.id ?? ""
+                formatProducts(products).find((val) => val.id === updateProduct?._id)?.id ?? ""
               }
               onChange={(id) => {
                 const data = products.find((prod) => prod._id === id);
@@ -115,7 +110,7 @@ const UpdateProductModal = ({
               onChange={() => {}}
               placeholder={""}
             />
-            <CustomSelect
+            {/* <CustomSelect
               label="Billing Unit"
               labelClass="w-[8rem]"
               options={billingUnitOptions}
@@ -130,20 +125,16 @@ const UpdateProductModal = ({
                   billingUnitOptions.find((unit) => unit.id === id)?.value
                 );
               }}
-            />
+            /> */}
             <CustomInput
               label="Order Quantity"
               type="number"
               labelClass="w-[8rem]"
               placeholder="Enter Order Quantity"
               value={updateProduct.order_quantity}
-              error={
-                (currentAvailableStock ?? 0) < updateProduct.order_quantity
-              }
+              error={(currentAvailableStock ?? 0) < updateProduct.order_quantity}
               helperText="Quantity greater than Available Stock"
-              onChange={(value) =>
-                handleValueChange("order_quantity", parseInt(value))
-              }
+              onChange={(value) => handleValueChange("order_quantity", parseInt(value))}
             />
             <CustomDatePicker
               value={updateProduct.out_date}
@@ -163,12 +154,8 @@ const UpdateProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Repair Count"
               value={updateProduct.order_repair_count}
-              onChange={(value) =>
-                handleValueChange("order_repair_count", parseInt(value))
-              }
-              error={
-                updateProduct.order_quantity < updateProduct.order_repair_count
-              }
+              onChange={(value) => handleValueChange("order_repair_count", parseInt(value))}
+              error={updateProduct.order_quantity < updateProduct.order_repair_count}
               helperText="Repair Count higher than Order Quantity"
             />
             <CustomInput
@@ -177,9 +164,7 @@ const UpdateProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Duration"
               value={updateProduct.duration}
-              onChange={(value) =>
-                handleValueChange("duration", parseInt(value))
-              }
+              onChange={(value) => handleValueChange("duration", parseInt(value))}
             />
             <CustomInput
               label="Available Stock"

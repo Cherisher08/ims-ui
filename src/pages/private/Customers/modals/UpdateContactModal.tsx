@@ -243,7 +243,7 @@ const UpdateContactModal = ({
           />
           <CustomButton
             onClick={handleUpdateContact}
-            disabled={error !== null || updateContactData.name === ""}
+            disabled={error !== null || updateContactData.name === "" || updateContactData.personal_number === ""}
             label="Update Contact"
           />
         </div>

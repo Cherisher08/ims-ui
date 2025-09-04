@@ -220,7 +220,9 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
           />
           <CustomButton
             onClick={handleAddContact}
-            disabled={error !== null || newContactData.name === ""}
+            disabled={
+              error !== null || newContactData.name === "" || newContactData.personal_number === ""
+            }
             label="Add Contact"
           />
         </div>

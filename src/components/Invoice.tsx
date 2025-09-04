@@ -237,7 +237,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
     tableRow: {
       flexDirection: "row",
-      height: 20,
+      height: 24,
     },
     tableColumn: {
       fontSize: 10,
@@ -1053,7 +1053,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             </View>
           </View>
         </View>
-        <View wrap={false} style={{ position: "absolute", bottom: 10, width: "95%", }}>
+        <View wrap={false} style={{ position: "absolute", bottom: 10, width: "95%" }}>
           <View style={styles.footerDetailsContainer}>
             <View style={styles.footerDataContainer}>
               <View

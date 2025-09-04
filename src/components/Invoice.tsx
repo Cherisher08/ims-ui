@@ -1019,7 +1019,6 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     fontWeight: "bold",
                   }}
                 >
-                  {/* Nine Thousand Nine Hundred AND Ninety Nine Rupees Only */}
                   {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
                 </Text>
                 {data.status === "paid" && (

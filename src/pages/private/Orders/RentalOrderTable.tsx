@@ -675,10 +675,6 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     });
   };
 
-  useEffect(() => {
-    console.log(orderData);
-  }, [orderData]);
-
   return (
     <>
       <CustomTable

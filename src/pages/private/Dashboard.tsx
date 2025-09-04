@@ -403,9 +403,6 @@ const Dashboard = () => {
 
       const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
 
-      console.log("showPendingAmountsOnly: ", showPendingAmountsOnly);
-      console.log("depositSum: ", depositSum);
-      console.log("depositAmount: ", depositAmount);
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
           depositAmount += depositSum;

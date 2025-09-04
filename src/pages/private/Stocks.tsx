@@ -304,7 +304,6 @@ const Inventory = () => {
     }
   }, [rowData, search]);
 
-  console.log("new Product data?.product_code : ", newProductData?.product_code);
   useEffect(() => {
     if (isProductCreated) {
       toast.success("Product Created Successfully", {

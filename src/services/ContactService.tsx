@@ -40,7 +40,6 @@ export const contactApi = rootApi.injectEndpoints({
     updateContact: build.mutation<ContactInfoType, ContactWithFile>({
       query: ({ _id, ...contact }) => {
         const formData = constructContactFormData(contact);
-        console.log("formData: ", formData);
         return {
           url: `contacts/${_id}`,
           method: "PUT",

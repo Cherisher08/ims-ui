@@ -672,7 +672,6 @@ const NewOrder = () => {
                         value={product.name}
                         onChange={(name) => {
                           const data = products.find((prod) => prod.name === name);
-                          console.log(name);
                           if (data) {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {

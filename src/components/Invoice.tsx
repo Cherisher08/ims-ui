@@ -2,10 +2,7 @@ import { Document, Page, StyleSheet, Text, View, Image, Font } from "@react-pdf/
 import { BillingMode, DepositType, ProductDetails, RentalOrderInfo } from "../types/order";
 import dayjs from "dayjs";
 import { ProductType } from "../types/common";
-import {
-  calculateDiscountAmount,
-  calculateProductRent,
-} from "../services/utility_functions";
+import { calculateDiscountAmount, calculateProductRent } from "../services/utility_functions";
 import paidStamp from "/paid-icon.png";
 
 Font.register({
@@ -167,6 +164,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       backgroundColor: "white",
       fontSize: 10,
       paddingHorizontal: 20,
+      width: "100%",
+      position: "relative",
       // paddingLeft: 50,
       fontFamily: "Times-Roman",
     },
@@ -421,159 +420,162 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.pageTitle}>
-          <Text
-            style={{
-              fontSize: "15px",
-              fontWeight: "bold",
-              marginTop: "10px",
-            }}
-          >
-            Tax Invoice
-          </Text>
-        </View>
+        <View style={{ flexGrow: 1 }}>
+          <View style={styles.pageTitle}>
+            <Text
+              style={{
+                fontSize: "15px",
+                fontWeight: "bold",
+                marginTop: "10px",
+              }}
+            >
+              Tax Invoice
+            </Text>
+          </View>
 
-        <View style={styles.invoiceDetails}>
-          <View style={styles.detailContainer}>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Invoice No:</Text>
-              <Text style={styles.fieldValue}>{invoiceId}</Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Bill No:</Text>
-              <Text style={styles.fieldValue}>{data.order_id}</Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Bill Date:</Text>
-              <Text style={styles.fieldValue}>
-                {dayjs(data.in_date).isValid()
-                  ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
-                  : " "}
-              </Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Ref PO No & PO Date:</Text>
-              <Text style={styles.fieldValue}>-</Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Event/Project Name:</Text>
-              <Text style={styles.fieldValue}>
-                {data.event_name.trim().length ? data.event_name : " "}
-              </Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
-              <Text style={styles.fieldValue}>
-                {dayjs(data.out_date).isValid()
-                  ? dayjs(data.out_date).format("DD-MM-YYYY hh:mm:ss A")
-                  : " "}
-              </Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
-              <Text style={styles.fieldValue}>
-                {dayjs(data.in_date).isValid()
-                  ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
-                  : " "}
-              </Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Ref DC No:</Text>
-              <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  Outward:{" "}
-                </Text>
-                -
-              </Text>
-              <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  Inward:{" "}
-                </Text>
-                -
-              </Text>
-            </View>
-          </View>
-          <View style={styles.container}>
-            <Image src="/customer-logo.png" style={styles.image} />
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
-              <Text style={styles.fieldValue}>
-                {data.event_venue.trim().length ? data.event_venue : " "}
-              </Text>
-            </View>
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Event Address:</Text>
-              <Text style={styles.fieldValue}>{data.event_address}</Text>
-            </View>
-          </View>
-          <View style={[styles.detailContainer, { justifyContent: "space-between" }]}>
-            <View>
-              <View style={styles.ownerDetails}>
-                <Text style={styles.title}>MANI POWER TOOLS</Text>
-                <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
-                <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
-                <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
-                <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
-                  manipowertools9153@gmail.com
-                </Text>
-                <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
-                  GST No - 33FGDPP7447A1ZI
-                </Text>
+          <View style={styles.invoiceDetails}>
+            <View style={styles.detailContainer}>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Invoice No:</Text>
+                <Text style={styles.fieldValue}>{invoiceId}</Text>
               </View>
-              <View style={[styles.tableField, { marginTop: 5 }]}>
-                <Text style={[styles.title]}>CUSTOMER ADDRESS</Text>
-                {/* <Text style={styles.fieldValue}>{data.customer ? data.customer.name : ""}</Text> */}
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Bill No:</Text>
+                <Text style={styles.fieldValue}>{data.order_id}</Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Bill Date:</Text>
                 <Text style={styles.fieldValue}>
-                  {data.customer && data.customer.address.trim().length
-                    ? data.customer.address
+                  {dayjs(data.in_date).isValid()
+                    ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
                     : " "}
                 </Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Ref PO No & PO Date:</Text>
+                <Text style={styles.fieldValue}>-</Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Event/Project Name:</Text>
                 <Text style={styles.fieldValue}>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "10px",
-                    }}
-                  >
-                    Pincode - {data.customer ? data.customer.pincode : ""}
-                  </Text>
-                </Text>
-                <Text style={styles.fieldValue}>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "10px",
-                    }}
-                  >
-                    Mobile -{" "}
-                  </Text>
-                  {data.customer ? data.customer.personal_number : ""}
-                </Text>
-                <Text style={styles.fieldValue}>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "10px",
-                    }}
-                  >
-                    GST No -{" "}
-                  </Text>
-                  {data.customer ? data.customer.gstin : ""}
+                  {data.event_name.trim().length ? data.event_name : " "}
                 </Text>
               </View>
-              {/* <Text style={styles.fieldValue}>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Event/Supply Start Date:</Text>
+                <Text style={styles.fieldValue}>
+                  {dayjs(data.out_date).isValid()
+                    ? dayjs(data.out_date).format("DD-MM-YYYY hh:mm:ss A")
+                    : " "}
+                </Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Event/Supply End Date:</Text>
+                <Text style={styles.fieldValue}>
+                  {dayjs(data.in_date).isValid()
+                    ? dayjs(data.in_date).format("DD-MM-YYYY hh:mm:ss A")
+                    : " "}
+                </Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Ref DC No:</Text>
+                <Text style={styles.fieldValue}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                      color: "#4f4f4f",
+                    }}
+                  >
+                    Outward:{" "}
+                  </Text>
+                  -
+                </Text>
+                <Text style={styles.fieldValue}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                      color: "#4f4f4f",
+                    }}
+                  >
+                    Inward:{" "}
+                  </Text>
+                  -
+                </Text>
+              </View>
+            </View>
+            <View style={styles.container}>
+              <Image src="/customer-logo.png" style={styles.image} />
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
+                <Text style={styles.fieldValue}>
+                  {data.event_venue.trim().length ? data.event_venue : " "}
+                </Text>
+              </View>
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Event Address:</Text>
+                <Text style={styles.fieldValue}>{data.event_address}</Text>
+              </View>
+            </View>
+            <View style={[styles.detailContainer, { justifyContent: "space-between" }]}>
+              <View>
+                <View style={styles.ownerDetails}>
+                  <Text style={styles.title}>MANI POWER TOOLS</Text>
+                  <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
+                  <Text style={styles.ownerAddress}>
+                    Chengalpattu, Chennai - 603103, Tamil Nadu
+                  </Text>
+                  <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
+                  <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
+                    manipowertools9153@gmail.com
+                  </Text>
+                  <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
+                    GST No - 33FGDPP7447A1ZI
+                  </Text>
+                </View>
+                <View style={[styles.tableField, { marginTop: 5 }]}>
+                  <Text style={[styles.title]}>To</Text>
+                  <Text style={styles.fieldValue}>{data.customer ? data.customer.name : ""}</Text>
+                  <Text style={styles.fieldValue}>
+                    {data.customer && data.customer.address.trim().length
+                      ? data.customer.address
+                      : " "}
+                  </Text>
+                  <Text style={styles.fieldValue}>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "10px",
+                      }}
+                    >
+                      Pincode - {data.customer ? data.customer.pincode : ""}
+                    </Text>
+                  </Text>
+                  <Text style={styles.fieldValue}>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "10px",
+                      }}
+                    >
+                      Mobile -{" "}
+                    </Text>
+                    {data.customer ? data.customer.personal_number : ""}
+                  </Text>
+                  <Text style={styles.fieldValue}>
+                    <Text
+                      style={{
+                        fontWeight: "bold",
+                        fontSize: "10px",
+                      }}
+                    >
+                      GST No -{" "}
+                    </Text>
+                    {data.customer ? data.customer.gstin : ""}
+                  </Text>
+                </View>
+                {/* <Text style={styles.fieldValue}>
                 <Text
                   style={{
                     fontWeight: "bold",
@@ -585,239 +587,300 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 </Text>
                 {data.event_pincode}
               </Text> */}
-            </View>
+              </View>
 
-            <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Ref E-way Bill No:</Text>
-              <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  Outward:{" "}
+              <View style={styles.tableField}>
+                <Text style={styles.fieldTitle}>Ref E-way Bill No:</Text>
+                <Text style={styles.fieldValue}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                      color: "#4f4f4f",
+                    }}
+                  >
+                    Outward:{" "}
+                  </Text>
+                  -
                 </Text>
-                -
-              </Text>
-              <Text style={styles.fieldValue}>
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: "10px",
-                    color: "#4f4f4f",
-                  }}
-                >
-                  Inward:{" "}
-                </Text>
-                -
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.OrderSummaryContainer}>
-          <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>Order Summary</Text>
-          <View style={styles.orderWrapper}>
-            <View style={styles.tableContainer}>
-              <View style={styles.tableHeader}>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 20,
-                    },
-                  ]}
-                >
-                  NO
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 100,
-                    },
-                  ]}
-                >
-                  ITEM
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 50,
-                    },
-                  ]}
-                >
-                  HSN/ SAC
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 40,
-                    },
-                  ]}
-                >
-                  QTY
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 40,
-                    },
-                  ]}
-                >
-                  UNIT
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 70,
-                    },
-                  ]}
-                >
-                  UNIT PRICE
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 80,
-                    },
-                  ]}
-                >
-                  DURATION
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 60,
-                    },
-                  ]}
-                >
-                  AMOUNT
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 60,
-                    },
-                  ]}
-                >
-                  GST(%)
-                </Text>
-                <Text
-                  style={[
-                    styles.tableColumn,
-                    {
-                      width: 60,
-                      borderRight: "0px",
-                      alignContent: "center",
-                      paddingVertical: 2,
-                      alignItems: "center",
-                    },
-                  ]}
-                >
-                  TOTAL AMT
+                <Text style={styles.fieldValue}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "10px",
+                      color: "#4f4f4f",
+                    }}
+                  >
+                    Inward:{" "}
+                  </Text>
+                  -
                 </Text>
               </View>
-              {updatedProducts.map((product: ProductDetails, index: number) => (
-                <View
-                  key={product._id}
-                  style={[
-                    styles.tableRow,
-                    updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
-                  ]}
-                >
-                  <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>
-                  <View>
-                    <Text
-                      style={[
-                        styles.productColumn,
-                        {
-                          width: 99,
-                          maxWidth: "95.4px !important",
-                        },
-                      ]}
-                    >
-                      {product.name}
-                    </Text>
-                  </View>
-                  <Text style={[styles.productColumn, { width: 55 }]}>
-                    {product.product_code || ""}
+            </View>
+          </View>
+
+          <View style={styles.OrderSummaryContainer}>
+            <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
+              Order Summary
+            </Text>
+            <View style={styles.orderWrapper}>
+              <View style={styles.tableContainer}>
+                <View style={styles.tableHeader}>
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 20,
+                      },
+                    ]}
+                  >
+                    NO
                   </Text>
-                  <Text style={[styles.productColumn, { width: 40 }]}>
-                    {product.order_quantity}{" "}
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 100,
+                      },
+                    ]}
+                  >
+                    ITEM
                   </Text>
-                  <Text style={[styles.productColumn, { width: 40 }]}>
-                    {product.product_unit.name || "Unit(s)"}
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 50,
+                      },
+                    ]}
+                  >
+                    HSN/ SAC
                   </Text>
-                  <Text style={[styles.productColumn, { width: 70 }]}>
-                    Rs. {product.rent_per_unit}
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 40,
+                      },
+                    ]}
+                  >
+                    QTY
                   </Text>
-                  <Text style={[styles.productColumn, { width: 80 }]}>
-                    {calculateProductRent(product, true)}{" "}
-                    {calculateProductRent(product, true) === 1 ? "day" : "days"}
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 40,
+                      },
+                    ]}
+                  >
+                    UNIT
                   </Text>
-                  <Text style={[styles.productColumn, { width: 60 }]}>
-                    Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 70,
+                      },
+                    ]}
+                  >
+                    UNIT PRICE
                   </Text>
-                  <Text style={[styles.productColumn, { width: 60 }]}>{data.gst}</Text>
-                  <Text style={[styles.productColumn, { width: 60, borderRight: "0px" }]}>
-                    Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 80,
+                      },
+                    ]}
+                  >
+                    DURATION
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 60,
+                      },
+                    ]}
+                  >
+                    AMOUNT
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 60,
+                      },
+                    ]}
+                  >
+                    GST(%)
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 60,
+                        borderRight: "0px",
+                        alignContent: "center",
+                        paddingVertical: 2,
+                        alignItems: "center",
+                      },
+                    ]}
+                  >
+                    TOTAL AMT
                   </Text>
                 </View>
-              ))}
-            </View>
-            <View style={styles.calculationWrapper}>
-              <View style={styles.calculationContainer}>
-                <View style={styles.section}>
-                  {/* Grid Columns */}
-                  {[
-                    {
-                      label: "Total Amount",
-                      value: `Rs. ${calcFinalAmount().toFixed(2)}`,
-                      bottom: false,
-                    },
-                    ...(data.discount
-                      ? [
+                {updatedProducts.map((product: ProductDetails, index: number) => (
+                  <View
+                    key={product._id}
+                    style={[
+                      styles.tableRow,
+                      updatedProducts.length - 1 === index
+                        ? {}
+                        : { borderBottom: "1px solid #000" },
+                    ]}
+                  >
+                    <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>
+                    <View>
+                      <Text
+                        style={[
+                          styles.productColumn,
                           {
-                            label: `Discount - ${data.discount}%`,
-                            value: `Rs. ${data.discount_amount?.toFixed(2)}`,
-                            bottom: true,
+                            width: 99,
+                            maxWidth: "95.4px !important",
                           },
-                        ]
-                      : []),
-                    {
-                      label: `GST - ${data.gst}%`,
-                      value: `Rs. ${gstAmount}`,
-                      bottom: true,
-                    },
-                    ...(data.round_off
-                      ? [
-                          {
-                            label: "Round Off",
-                            value: `Rs. ${data.round_off?.toFixed(2)}`,
-                            bottom: true,
-                          },
-                        ]
-                      : []),
-                  ].map((item, index) => (
-                    <View
-                      key={index}
-                      style={[styles.row, item.bottom ? { borderBottom: "1px solid black" } : {}]}
-                    >
-                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>{item.label}</Text>
-                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>{item.value}</Text>
+                        ]}
+                      >
+                        {product.name}
+                      </Text>
                     </View>
-                  ))}
-                  {data.eway_amount ? (
+                    <Text style={[styles.productColumn, { width: 55 }]}>
+                      {product.product_code || ""}
+                    </Text>
+                    <Text style={[styles.productColumn, { width: 40 }]}>
+                      {product.order_quantity}{" "}
+                    </Text>
+                    <Text style={[styles.productColumn, { width: 40 }]}>
+                      {product.product_unit.name || "Unit(s)"}
+                    </Text>
+                    <Text style={[styles.productColumn, { width: 70 }]}>
+                      Rs. {product.rent_per_unit}
+                    </Text>
+                    <Text style={[styles.productColumn, { width: 80 }]}>
+                      {calculateProductRent(product, true)}{" "}
+                      {calculateProductRent(product, true) === 1 ? "day" : "days"}
+                    </Text>
+                    <Text style={[styles.productColumn, { width: 60 }]}>
+                      Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                    </Text>
+                    <Text style={[styles.productColumn, { width: 60 }]}>{data.gst}</Text>
+                    <Text style={[styles.productColumn, { width: 60, borderRight: "0px" }]}>
+                      Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.calculationWrapper}>
+                <View style={styles.calculationContainer}>
+                  <View style={styles.section}>
+                    {/* Grid Columns */}
+                    {[
+                      {
+                        label: "Total Amount",
+                        value: `Rs. ${calcFinalAmount().toFixed(2)}`,
+                        bottom: false,
+                      },
+                      ...(data.discount
+                        ? [
+                            {
+                              label: `Discount - ${data.discount}%`,
+                              value: `Rs. ${data.discount_amount?.toFixed(2)}`,
+                              bottom: true,
+                            },
+                          ]
+                        : []),
+                      {
+                        label: `GST - ${data.gst}%`,
+                        value: `Rs. ${gstAmount}`,
+                        bottom: true,
+                      },
+                      ...(data.round_off
+                        ? [
+                            {
+                              label: "Round Off",
+                              value: `Rs. ${data.round_off?.toFixed(2)}`,
+                              bottom: true,
+                            },
+                          ]
+                        : []),
+                    ].map((item, index) => (
+                      <View
+                        key={index}
+                        style={[styles.row, item.bottom ? { borderBottom: "1px solid black" } : {}]}
+                      >
+                        <Text style={[styles.labelText, { fontWeight: "bold" }]}>{item.label}</Text>
+                        <Text style={[styles.valueText, { fontWeight: "bold" }]}>{item.value}</Text>
+                      </View>
+                    ))}
+                    {data.eway_amount ? (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          borderBottom: "1px solid black",
+                        }}
+                      >
+                        <View
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            flexDirection: "column",
+                            width: "100%",
+                            gap: 4,
+                          }}
+                        >
+                          <View
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              flexDirection: "row",
+                              gap: 4,
+                            }}
+                          >
+                            <Text style={[styles.selectSim, { paddingLeft: 50, paddingTop: 5 }]}>
+                              {"( Mode of Payment : " + data.eway_mode.toUpperCase() + ")"}
+                            </Text>
+                            <Text style={[styles.labelText, { fontWeight: "bold" }]}>
+                              Transport
+                            </Text>
+                          </View>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: "column",
+                            width: 80,
+                            alignItems: "flex-end",
+                          }}
+                        >
+                          <Text style={[styles.valueText, { fontWeight: "bold" }]}>
+                            {`Rs. ${data.eway_amount?.toFixed(2)}`}
+                          </Text>
+                        </View>
+                      </View>
+                    ) : null}
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        borderBottom: "1px solid black",
+                      }}
+                    >
+                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>Net Total</Text>
+                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>
+                        {`Rs. ${Math.abs(calcTotal()).toFixed(2)}`}
+                      </Text>
+                    </View>
                     <View
                       style={{
                         flexDirection: "row",
@@ -842,10 +905,12 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                             gap: 4,
                           }}
                         >
-                          <Text style={[styles.selectSim, { paddingLeft: 50, paddingTop: 5 }]}>
-                            {"( Mode of Payment : " + data.eway_mode.toUpperCase() + ")"}
+                          <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
+                            {data.deposits.length
+                              ? "( Mode of Payment : " + data.deposits[0].mode.toUpperCase() + ")"
+                              : ""}
                           </Text>
-                          <Text style={[styles.labelText, { fontWeight: "bold" }]}>Transport</Text>
+                          <Text style={[styles.labelText, { fontWeight: "bold" }]}>Deposit</Text>
                         </View>
                       </View>
                       <View
@@ -856,99 +921,73 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         }}
                       >
                         <Text style={[styles.valueText, { fontWeight: "bold" }]}>
-                          {`Rs. ${data.eway_amount?.toFixed(2)}`}
+                          {`Rs. ${depositTotal().toFixed(2)}`}
                         </Text>
                       </View>
                     </View>
-                  ) : null}
-
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      borderBottom: "1px solid black",
-                    }}
-                  >
-                    <Text style={[styles.labelText, { fontWeight: "bold" }]}>Net Total</Text>
-                    <Text style={[styles.valueText, { fontWeight: "bold" }]}>
-                      {`Rs. ${Math.abs(calcTotal()).toFixed(2)}`}
-                    </Text>
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      borderBottom: "1px solid black",
-                    }}
-                  >
+                    {/* Final total and mode */}
                     <View
                       style={{
-                        display: "flex",
+                        flexDirection: "row",
                         justifyContent: "space-between",
-                        flexDirection: "column",
-                        width: "100%",
-                        gap: 4,
                       }}
                     >
                       <View
                         style={{
                           display: "flex",
                           justifyContent: "space-between",
-                          flexDirection: "row",
+                          flexDirection: "column",
+                          width: "100%",
                           gap: 4,
+                          borderRight: "1px solid black",
                         }}
                       >
-                        <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
-                          {data.deposits.length
-                            ? "( Mode of Payment : " + data.deposits[0].mode.toUpperCase() + ")"
-                            : ""}
-                        </Text>
-                        <Text style={[styles.labelText, { fontWeight: "bold" }]}>Deposit</Text>
+                        <View
+                          style={{
+                            display: "flex",
+                            paddingVertical: 4,
+                            justifyContent: "space-between",
+                            flexDirection: "row",
+                            gap: 4,
+                          }}
+                        >
+                          <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
+                            {"( Mode of Payment : " + data.payment_mode.toUpperCase() + ")"}
+                          </Text>
+                          <Text
+                            style={{
+                              paddingRight: 5,
+                              color:
+                                calcTotal() -
+                                  data.deposits.reduce(
+                                    (total, deposit) => total + deposit.amount,
+                                    0
+                                  ) <
+                                0
+                                  ? "red"
+                                  : "black",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {calcTotal() -
+                              data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
+                            0
+                              ? "Return Payment"
+                              : "Balance"}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "column",
-                        width: 80,
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <Text style={[styles.valueText, { fontWeight: "bold" }]}>
-                        {`Rs. ${depositTotal().toFixed(2)}`}
-                      </Text>
-                    </View>
-                  </View>
-                  {/* Final total and mode */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <View
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        flexDirection: "column",
-                        width: "100%",
-                        gap: 4,
-                        borderRight: "1px solid black",
-                      }}
-                    >
                       <View
                         style={{
-                          display: "flex",
+                          flexDirection: "column",
+                          width: 80,
+                          alignItems: "flex-start",
                           paddingVertical: 4,
-                          justifyContent: "space-between",
-                          flexDirection: "row",
-                          gap: 4,
+                          paddingLeft: 10,
                         }}
                       >
-                        <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
-                          {"( Mode of Payment : " + data.payment_mode.toUpperCase() + ")"}
-                        </Text>
                         <Text
                           style={{
-                            paddingRight: 5,
                             color:
                               calcTotal() -
                                 data.deposits.reduce(
@@ -961,242 +1000,160 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                             fontWeight: "bold",
                           }}
                         >
-                          {calcTotal() -
-                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                          0
-                            ? "Return Payment"
-                            : "Balance"}
+                          Rs.{" "}
+                          {Math.abs(
+                            calcTotal() -
+                              data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+                          ).toFixed(2)}
                         </Text>
                       </View>
                     </View>
-                    <View
-                      style={{
-                        flexDirection: "column",
-                        width: 80,
-                        alignItems: "flex-start",
-                        paddingVertical: 4,
-                        paddingLeft: 10,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color:
-                            calcTotal() -
-                              data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                            0
-                              ? "red"
-                              : "black",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Rs.{" "}
-                        {Math.abs(
-                          calcTotal() -
-                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-                        ).toFixed(2)}
-                      </Text>
-                    </View>
                   </View>
                 </View>
               </View>
-            </View>
-            <View style={styles.footerRow}>
-              <View style={styles.amountTextContainer}>
-                <Text style={{ fontSize: 12, marginBottom: 2 }}>Amount in words:</Text>
-                <Text style={{ fontSize: 13, fontWeight: "bold" }}>
-                  {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
-                </Text>
-                {data.status === "paid" && (
-                  <Image
-                    src={paidStamp}
-                    style={{
-                      position: "absolute",
-                      bottom: "2%",
-                      right: "1%",
-                      width: 40,
-                      height: 40,
-                      // transform: "translate(-50%, -50%)",
-                    }}
-                  />
-                )}
-              </View>
-              <View style={styles.signatureContainer}>
-                <View style={styles.signatureHeader}>
-                  <Text style={{ fontSize: 12 }}>For</Text>
-                  <Text
-                    style={{
-                      color: "black",
-                      fontWeight: "bold",
-                      fontSize: 12,
-                    }}
-                  >
-                    MANI POWER TOOLS
+              <View style={styles.footerRow}>
+                <View style={styles.amountTextContainer}>
+                  <Text style={{ fontSize: 12, marginBottom: 2 }}>Amount in words:</Text>
+                  <Text style={{ fontSize: 13, fontWeight: "bold" }}>
+                    {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
                   </Text>
+                  {data.status === "paid" && (
+                    <Image
+                      src={paidStamp}
+                      style={{
+                        position: "absolute",
+                        bottom: "2%",
+                        right: "1%",
+                        width: 40,
+                        height: 40,
+                        // transform: "translate(-50%, -50%)",
+                      }}
+                    />
+                  )}
                 </View>
-                <View style={{ position: "relative", width: 150, height: 50 }}>
-                  <Image src="/sign.png" style={styles.signImage} />
-                </View>
-                <Text style={styles.signatureFooter}>Authorized Signatory</Text>
-              </View>
-            </View>
-            <View wrap={false}>
-              <View style={styles.footerDetailsContainer}>
-                <View style={styles.footerDataContainer}>
-                  <View
-                    style={{
-                      width: "100%",
-                      flexDirection: "column",
-                      marginTop: 5,
-                      lineHeight: 1,
-                    }}
-                  >
-                    <Text style={styles.bankDetails}>Bank Information</Text>
-                    <Text style={styles.bankDetails}>---</Text>
-                    <Text style={styles.selectSim}>
-                      Kindly make the payment in favour of
-                    </Text>
-                    <View
-                      style={{
-                        width: "60%",
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Text style={{ width: 90 }}>Account No</Text>
-                      <Text>50200080502830</Text>
-                    </View>
-                    <View
-                      style={{
-                        width: "60%",
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Text style={{ width: 125 }}>Account Name</Text>
-                      <Text>MANI POWER TOOLS</Text>
-                    </View>
-                    <View
-                      style={{
-                        width: "60%",
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Text style={{ width: 100 }}>Bank Name</Text>
-                      <Text>HDFC BANK LTD</Text>
-                    </View>
-                    <View
-                      style={{
-                        width: "60%",
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Text style={{ width: 105 }}>Branch</Text>
-                      <Text>KELAMBAKKAM</Text>
-                    </View>
-                    <View
-                      style={{
-                        width: "60%",
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
-                      <Text style={{ width: 80 }}>IFSC Code</Text>
-                      <Text>HDFC0002075</Text>
-                    </View>
-                    <View style={{ marginTop: 8 }}>
-                      <Text
-                        style={{
-                          ...styles.thankYouText,
-                          textAlign: "left",
-                          marginLeft: 0,
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        Terms & Conditions
-                      </Text>
-                      <Text
-                        style={{
-                          ...styles.thankYouText,
-                          textAlign: "left",
-                          marginLeft: 0,
-                          marginBottom: 1,
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        ---
-                      </Text>
-                      <Text
-                        style={{
-                          ...styles.thankYouText,
-                          textAlign: "left",
-                          marginLeft: 0,
-                          width: "40%",
-                          fontSize: 9, // smaller font
-                          marginBottom: 0,
-                          lineHeight: 1.1,
-                        }}
-                      >
-                        Return products in good condition. Damages or loss will be charged.
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* {!sameKindOfDeposit && (
-                  <View style={styles.depositContainer}>
+                <View style={styles.signatureContainer}>
+                  <View style={styles.signatureHeader}>
+                    <Text style={{ fontSize: 12 }}>For</Text>
                     <Text
                       style={{
-                        fontSize: 12,
+                        color: "black",
                         fontWeight: "bold",
-                        paddingBottom: 10,
+                        fontSize: 12,
                       }}
                     >
-                      Deposit Details
+                      MANI POWER TOOLS
                     </Text>
-                    <View style={styles.depositTable}>
-                      <View style={styles.depositTableRow}>
-                        <Text style={styles.depositTableHeader}>Date</Text>
-                        <Text style={styles.depositTableHeader}>Amount</Text>
-                        <Text style={styles.depositTableHeader}>Payment Mode</Text>
-                      </View>
-                      {deposits.map((deposit, idx) => (
-                        <View style={styles.depositTableRow} key={idx}>
-                          <Text style={styles.depositTableCol}>
-                            {dayjs(deposit.date).format("DD-MM-YYYY")}
-                          </Text>
-                          <Text style={styles.depositTableCol}>{deposit.amount}</Text>
-                          <Text style={styles.depositTableCol}>{deposit.mode}</Text>
-                        </View>
-                      ))}
-                    </View>
                   </View>
-                )} */}
-                <View
-                  style={{
-                    width: "60%",
-                    display: "flex",
-                    alignItems: "flex-end",
-                    marginTop: 10,
-                  }}
-                >
-                  <Image src="/qr.jpeg" style={{ width: 130, height: 130 }} />
+                  <View style={{ position: "relative", width: 150, height: 50 }}>
+                    <Image src="/sign.png" style={styles.signImage} />
+                  </View>
+                  <Text style={styles.signatureFooter}>Authorized Signatory</Text>
                 </View>
               </View>
+            </View>
+          </View>
+        </View>
+        <View wrap={false} style={{ position: "absolute", bottom: 10, width: "95%", }}>
+          <View style={styles.footerDetailsContainer}>
+            <View style={styles.footerDataContainer}>
               <View
                 style={{
                   width: "100%",
                   flexDirection: "column",
-                  marginTop: 10,
+                  marginTop: 5,
+                  lineHeight: 1,
                 }}
               >
-                <Text style={styles.thankYouText}>
-                  Thanks for choosing us - We look forward to serve you again
-                </Text>
-                <Text style={styles.footerNoteText}>This is computer generated invoice</Text>
+                <Text style={styles.bankDetails}>Bank Information</Text>
+                <Text style={styles.selectSim}>Kindly make the payment in favour of</Text>
+                <View
+                  style={{
+                    width: "80%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: 90 }}>Account No</Text>
+                  <Text>50200080502830</Text>
+                </View>
+                <View
+                  style={{
+                    width: "80%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: 125 }}>Account Name</Text>
+                  <Text>MANI POWER TOOLS</Text>
+                </View>
+                <View
+                  style={{
+                    width: "80%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: 100 }}>Bank Name</Text>
+                  <Text>HDFC BANK LTD</Text>
+                </View>
+                <View
+                  style={{
+                    width: "80%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: 105 }}>Branch</Text>
+                  <Text>KELAMBAKKAM</Text>
+                </View>
+                <View
+                  style={{
+                    width: "80%",
+                    display: "flex",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={{ width: 80 }}>IFSC Code</Text>
+                  <Text>HDFC0002075</Text>
+                </View>
               </View>
             </View>
+            <View
+              style={{
+                width: "60%",
+                display: "flex",
+                alignItems: "center",
+                marginTop: 10,
+              }}
+            >
+              <Image src="/qr.jpeg" style={{ width: 100, height: 100 }} />
+            </View>
+            <View style={{ marginTop: 8, width: "40%" }}>
+              <Text style={[styles.bankDetails, { marginBottom: 3 }]}>Terms & Conditions</Text>
+              <Text
+                style={{
+                  ...styles.thankYouText,
+                  textAlign: "left",
+                  marginLeft: 0,
+                  marginBottom: 0,
+                  lineHeight: 1.1,
+                }}
+              >
+                Return products in good condition. Damages or loss will be charged.
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              width: "100%",
+              flexDirection: "column",
+              marginTop: 10,
+            }}
+          >
+            <Text style={styles.thankYouText}>
+              Thanks for choosing us - We look forward to serve you again
+            </Text>
+            <Text style={styles.footerNoteText}>This is computer generated invoice</Text>
           </View>
         </View>
       </Page>

@@ -638,7 +638,6 @@ const NewOrder = () => {
               <tr className="bg-gray-200">
                 <th className="px-1 py-1 text-left w-[15rem]">Product</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Product Unit</th>
-                <th className="px-1 py-1 text-left w-[9rem]">Billing Unit</th>
                 <th className="px-1 py-1 text-left w-[9rem]">Available Stock</th>
                 <th className="px-1 py-1 text-left w-[6rem]">Order Quantity</th>
                 <th className="px-1 py-1 text-left w-[11rem]">Out Date</th>
@@ -670,18 +669,15 @@ const NewOrder = () => {
                           )
                         )}
                         className="w-[14rem]"
-                        value={
-                          formatProducts(products).find(
-                            (val) => val.id === orderInfo.product_details![index]?._id
-                          )?.id ?? ""
-                        }
-                        onChange={(id) => {
-                          const data = products.find((prod) => prod._id === id);
+                        value={product.name}
+                        onChange={(name) => {
+                          const data = products.find((prod) => prod.name === name);
+                          console.log(name);
                           if (data) {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {
                               ...product,
-                              _id: id || "",
+                              _id: data._id || "",
                               name: data?.name,
                               category: data?.category.name,
                               product_unit: data.unit,
@@ -759,14 +755,49 @@ const NewOrder = () => {
                         value={orderInfo.product_details[index].order_quantity || 0}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const available_stock =
-                            products.find((p) => p._id === product._id)?.available_stock || 0;
-                          const quantity =
-                            available_stock < Number(val) ? available_stock : Number(val);
+
+                          const newQuantity = Number(val);
+                          const currentProduct = products.find((p) => p._id === product._id);
+
+                          if (!currentProduct) return;
+
+                          const available_stock = currentProduct.available_stock;
+                          const prevQuantity = product.order_quantity;
+
+                          // Calculate the difference
+                          const diff = newQuantity - prevQuantity;
+
+                          let finalQuantity = prevQuantity;
+                          let finalStock = available_stock;
+
+                          // If user is increasing quantity
+                          if (diff > 0) {
+                            // Only increase up to available stock
+                            const increase = Math.min(diff, available_stock);
+                            finalQuantity += increase;
+                            finalStock -= increase;
+                          }
+
+                          // If user is decreasing quantity
+                          if (diff < 0) {
+                            const decrease = Math.abs(diff);
+                            finalQuantity -= decrease;
+                            finalStock += decrease; // return stock back
+                          }
+
+                          // Update products stock
+                          setProducts((prev) =>
+                            prev.map((p) =>
+                              p._id === product._id ? { ...p, available_stock: finalStock } : p
+                            )
+                          );
+
+                          // Update order info
                           newProducts[index] = {
                             ...product,
-                            order_quantity: quantity,
+                            order_quantity: finalQuantity,
                           };
+
                           setOrderInfo({
                             ...orderInfo,
                             product_details: newProducts,
@@ -865,7 +896,10 @@ const NewOrder = () => {
                           const newProducts = [...orderInfo.product_details];
                           newProducts[index] = {
                             ...product,
-                            order_repair_count: Number(val),
+                            order_repair_count:
+                              Number(val) <= product.order_quantity
+                                ? Number(val)
+                                : product.order_quantity,
                           };
                           setOrderInfo({
                             ...orderInfo,

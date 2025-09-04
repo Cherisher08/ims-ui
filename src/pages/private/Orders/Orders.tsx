@@ -8,13 +8,18 @@ import RentalOrderTable from "./RentalOrderTable";
 import { useGetRentalOrdersQuery } from "../../../services/OrderService";
 import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
 import AddContactModal from "../Customers/modals/AddContactModal";
-import { useGetProductCategoriesQuery, useGetUnitsQuery } from "../../../services/ApiService";
-import { transformIdNamePair } from "../Inventory";
+import {
+  useGetProductCategoriesQuery,
+  useGetUnitsQuery,
+} from "../../../services/ApiService";
 import { CustomOptionProps } from "../../../styled/CustomAutoComplete";
 import NewProductModal from "../../../components/NewProductModal.";
 import { useNavigate } from "react-router-dom";
+import { transformIdNamePair } from "../utils";
 
-const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
+const transformRentalOrderData = (
+  rentalOrders: RentalOrderInfo[]
+): RentalOrderType[] => {
   return rentalOrders.map((rentalOrder) => {
     if (!rentalOrder.customer) {
       return {
@@ -41,13 +46,17 @@ const Orders = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
-  const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
-    useGetProductCategoriesQuery();
+  const {
+    data: productCategoryData,
+    isSuccess: isProductCategoryQuerySuccess,
+  } = useGetProductCategoriesQuery();
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
 
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
-  const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
+  const [productCategories, setProductCategories] = useState<
+    CustomOptionProps[]
+  >([]);
 
   const isCommunicationsFeatureDone: boolean = false;
 

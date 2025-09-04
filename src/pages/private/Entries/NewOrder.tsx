@@ -8,11 +8,12 @@ import AntSwitch from "../../../styled/CustomSwitch";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import {
   BillingMode,
-  BillingUnit,
+  // BillingUnit,
   DepositType,
   PaymentMode,
   PaymentStatus,
   RentalOrderInfo,
+  RepaymentMode,
 } from "../../../types/order";
 import { ContactInfoType, initialContactType } from "../../../types/contact";
 import dayjs from "dayjs";
@@ -33,13 +34,14 @@ import { calculateDiscountAmount, calculateProductRent } from "../../../services
 import { useDispatch } from "react-redux";
 import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
 import {
-  billingUnitOptions,
+  // billingUnitOptions,
   formatProducts,
   getDefaultDeposit,
   getDefaultProduct,
   getDuration,
   getNewOrderId,
   paymentModeOptions,
+  repaymentModeOptions,
 } from "../Orders/utils";
 import CustomAutoComplete from "../../../styled/CustomAutoComplete";
 import { LuPlus } from "react-icons/lu";
@@ -74,12 +76,12 @@ const initialRentalProduct: RentalOrderInfo = {
   order_id: "",
   discount: 0,
   discount_amount: 0,
-  gst: 10,
+  gst: 0,
   remarks: "",
   type: ProductType.RENTAL,
   billing_mode: BillingMode.B2C,
   status: PaymentStatus.PENDING,
-  payment_mode: PaymentMode.CASH,
+  payment_mode: RepaymentMode.NULL,
   out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
   rental_duration: 0,
   in_date: "",
@@ -91,7 +93,7 @@ const initialRentalProduct: RentalOrderInfo = {
   eway_amount: 0,
   eway_mode: PaymentMode.CASH,
   balance_paid: 0,
-  balance_paid_mode: PaymentMode.CASH,
+  balance_paid_mode: PaymentMode.NULL,
   repay_amount: 0,
   event_name: "",
   event_venue: "",
@@ -384,7 +386,7 @@ const NewOrder = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderInfo.gst, orderInfo.billing_mode]); // Dont add orderInfo Hereeeeee
+  }, [orderInfo.gst, orderInfo.billing_mode]);
 
   return (
     <div className="w-full flex flex-col ">
@@ -415,7 +417,7 @@ const NewOrder = () => {
 
         <div className="flex flex-col items-end">
           <CustomButton
-          className="w-[6rem]"
+            className="w-[6rem]"
             onClick={() => setAddContactOpen(true)}
             label="Add Customer"
             icon={<LuPlus color="white" />}
@@ -437,7 +439,7 @@ const NewOrder = () => {
                 "billing_mode",
                 e.target.checked ? BillingMode.B2B : BillingMode.B2C
               );
-              handleValueChange("gst", e.target.checked ? 0 : 10);
+              handleValueChange("gst", e.target.checked ? 0 : orderInfo.gst);
             }}
           />
           <p>B2B</p>
@@ -473,23 +475,29 @@ const NewOrder = () => {
             if (contact) {
               handleValueChange("customer", contact);
             } else {
-              handleValueChange("customer", { ...initialContactType, personal_number: value });
+              handleValueChange("customer", {
+                ...initialContactType,
+                personal_number: value,
+              });
             }
           }}
         />
-        <CustomSelect
+        <CustomAutoComplete
+          addNewValue={() => setAddContactOpen(true)}
+          placeholder=""
+          createOption={true}
           label="Customer"
           options={formatContacts(contacts)}
           value={
-            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)?.id ??
-            ""
+            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
+              ?.value ?? ""
           }
-          onChange={(id) =>
+          onChange={(name) => {
             handleValueChange(
               "customer",
-              contacts.find((option) => option._id === id)
-            )
-          }
+              contacts.find((option) => option.name === name)
+            );
+          }}
         />
         {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
@@ -519,7 +527,13 @@ const NewOrder = () => {
             <CustomDatePicker
               label="Event Start Date/Entry Date"
               value={orderInfo.out_date ?? ""}
-              onChange={(value) => handleValueChange("out_date", value)}
+              onChange={(value) => {
+                handleValueChange("out_date", value);
+                if (orderInfo.in_date) {
+                  const duration = getDuration(value, orderInfo.in_date);
+                  handleValueChange("rental_duration", duration);
+                }
+              }}
               placeholder="Enter Out Date"
             />
 
@@ -540,6 +554,8 @@ const NewOrder = () => {
                     inDate: false,
                   }));
                 }
+                const duration = getDuration(orderInfo.out_date, value);
+                handleValueChange("rental_duration", duration);
                 handleValueChange("in_date", value);
               }}
               placeholder="Enter In Date"
@@ -550,8 +566,6 @@ const NewOrder = () => {
         <CustomInput
           value={orderInfo?.rental_duration ?? ""}
           onChange={(value) => {
-            const inDate = dayjs(orderInfo.out_date).add(Number(value), "days");
-            handleValueChange("in_date", inDate);
             handleValueChange("rental_duration", value);
           }}
           label="Event Expected Days"
@@ -576,9 +590,14 @@ const NewOrder = () => {
           minRows={5}
         />
         <CustomInput
-          onChange={() => {}}
-          value={contacts.find((contact) => contact._id === orderInfo.customer?._id)?.address || ""}
-          disabled
+          onChange={(value) => {
+            const contact = {
+              ...(orderInfo.customer || {}),
+              address: value,
+            };
+            handleValueChange("customer", contact);
+          }}
+          value={orderInfo.customer?.address || ""}
           label="Customer Address"
           placeholder="Customer Address"
           multiline
@@ -637,7 +656,10 @@ const NewOrder = () => {
                 orderInfo.product_details?.map((product, index) => (
                   <tr key={product._id} className="border-b border-gray-200">
                     <td className="px-1 py-2 content-start">
-                      <CustomSelect
+                      <CustomAutoComplete
+                        addNewValue={() => {}}
+                        placeholder=""
+                        createOption={false}
                         label=""
                         options={formatProducts(
                           products.filter(
@@ -659,13 +681,16 @@ const NewOrder = () => {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {
                               ...product,
-                              _id: id,
+                              _id: id || "",
                               name: data?.name,
                               category: data?.category.name,
                               product_unit: data.unit,
                               rent_per_unit: data.rent_per_unit,
                             };
-                            setOrderInfo({ ...orderInfo, product_details: newProducts });
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
                           }
                         }}
                       />
@@ -680,33 +705,40 @@ const NewOrder = () => {
                         onChange={() => {}}
                       />
                     </td>
-                    <td className="px-1 py-2 content-start">
+                    {/* <td className="px-1 py-2 content-start">
                       <CustomSelect
                         label=""
                         className="w-[8rem]"
                         options={billingUnitOptions}
                         value={
-                          billingUnitOptions.find((unit) => product.billing_unit === unit.value)
-                            ?.id || ""
+                          billingUnitOptions.find(
+                            (unit) => product.billing_unit === unit.value
+                          )?.id || ""
                         }
                         onChange={(unit) => {
                           const currentUnit =
-                            billingUnitOptions.find((ut) => ut.id === unit)?.value ??
-                            BillingUnit.DAYS;
+                            billingUnitOptions.find((ut) => ut.id === unit)
+                              ?.value ?? BillingUnit.DAYS;
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(
-                            newProducts[index].out_date,
-                            newProducts[index].in_date
+                          const duration = calculateProductRent(
+                            {
+                              ...newProducts[index],
+                              billing_unit: currentUnit,
+                            },
+                            true
                           );
                           newProducts[index] = {
                             ...product,
                             billing_unit: currentUnit,
                             duration: duration,
                           };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                       />
-                    </td>
+                    </td> */}
                     <td className="px-1 py-2 content-start">
                       <CustomInput
                         disabled
@@ -731,8 +763,14 @@ const NewOrder = () => {
                             products.find((p) => p._id === product._id)?.available_stock || 0;
                           const quantity =
                             available_stock < Number(val) ? available_stock : Number(val);
-                          newProducts[index] = { ...product, order_quantity: quantity };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          newProducts[index] = {
+                            ...product,
+                            order_quantity: quantity,
+                          };
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                       />
                     </td>
@@ -746,9 +784,22 @@ const NewOrder = () => {
                         className="w-[11rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(val, newProducts[index].in_date);
-                          newProducts[index] = { ...product, out_date: val, duration: duration };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          const duration = calculateProductRent(
+                            {
+                              ...newProducts[index],
+                              out_date: val,
+                            },
+                            true
+                          );
+                          newProducts[index] = {
+                            ...product,
+                            out_date: val,
+                            duration: duration,
+                          };
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                         format="DD/MM/YYYY"
                       />
@@ -763,9 +814,22 @@ const NewOrder = () => {
                         className="w-[11rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(newProducts[index].out_date, val);
-                          newProducts[index] = { ...product, in_date: val, duration: duration };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          const duration = calculateProductRent(
+                            {
+                              ...newProducts[index],
+                              in_date: val,
+                            },
+                            true
+                          );
+                          newProducts[index] = {
+                            ...product,
+                            in_date: val,
+                            duration: duration,
+                          };
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                         format="DD/MM/YYYY"
                       />
@@ -779,8 +843,14 @@ const NewOrder = () => {
                         value={orderInfo.product_details[index].duration || 0}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = { ...product, duration: Number(val) };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          newProducts[index] = {
+                            ...product,
+                            duration: Number(val),
+                          };
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                       />
                     </td>
@@ -793,8 +863,14 @@ const NewOrder = () => {
                         value={orderInfo.product_details[index].order_repair_count || 0}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = { ...product, order_repair_count: Number(val) };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          newProducts[index] = {
+                            ...product,
+                            order_repair_count: Number(val),
+                          };
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                       />
                     </td>
@@ -807,8 +883,14 @@ const NewOrder = () => {
                         value={product.rent_per_unit}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = { ...product, rent_per_unit: Number(val) };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          newProducts[index] = {
+                            ...product,
+                            rent_per_unit: Number(val),
+                          };
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                       />
                     </td>
@@ -835,7 +917,10 @@ const NewOrder = () => {
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
                           newProducts[index] = { ...product, damage: val };
-                          setOrderInfo({ ...orderInfo, product_details: newProducts });
+                          setOrderInfo({
+                            ...orderInfo,
+                            product_details: newProducts,
+                          });
                         }}
                       />
                     </td>
@@ -899,7 +984,10 @@ const NewOrder = () => {
                       value={deposit.amount || 0}
                       onChange={(val) => {
                         const newDeposits = [...depositData];
-                        newDeposits[index] = { ...deposit, amount: Number(val) };
+                        newDeposits[index] = {
+                          ...deposit,
+                          amount: Number(val),
+                        };
                         setDepositData(newDeposits);
                       }}
                     />
@@ -949,7 +1037,10 @@ const NewOrder = () => {
                           paymentModeOptions.find((md) => md.id === mode)?.value ??
                           PaymentMode.CASH;
                         const newDeposits = [...depositData];
-                        newDeposits[index] = { ...deposit, mode: currentMode as PaymentMode };
+                        newDeposits[index] = {
+                          ...deposit,
+                          mode: currentMode as PaymentMode,
+                        };
                         setDepositData(newDeposits);
                       }}
                     />
@@ -999,7 +1090,7 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("eway_mode", currentMode);
               }}
             />
@@ -1046,7 +1137,7 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("balance_paid_mode", currentMode);
               }}
             />
@@ -1066,13 +1157,13 @@ const NewOrder = () => {
             <CustomSelect
               label=""
               className="w-[8rem]"
-              options={paymentModeOptions}
+              options={repaymentModeOptions}
               value={
-                paymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ""
+                repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ""
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("payment_mode", currentMode);
               }}
             />

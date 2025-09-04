@@ -1,11 +1,12 @@
 import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from "ag-grid-community";
 import {
   BillingMode,
-  BillingUnit,
   OrderInfo,
   PaymentMode,
   PaymentStatus,
+  ProductDetails,
   RentalOrderInfo,
+  RepaymentMode,
 } from "../../../types/order";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -89,7 +90,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     in_date: "",
     order_id: orderId,
     out_date: utcString(),
-    payment_mode: PaymentMode.CASH,
+    payment_mode: RepaymentMode.NULL,
     product_details: [],
     remarks: "",
     round_off: 0,
@@ -98,7 +99,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     eway_amount: 0,
     eway_mode: PaymentMode.CASH,
     balance_paid: 0,
-    balance_paid_mode: PaymentMode.CASH,
+    balance_paid_mode: PaymentMode.NULL,
     repay_amount: 0,
     event_name: "",
     event_venue: "",
@@ -115,9 +116,9 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
 };
 
 export const getDuration = (out_date: string, in_date: string) => {
-  const start = dayjs(out_date).second(0).millisecond(0);
-  const end = dayjs(in_date).second(0).endOf("day");
-  const duration = end.diff(start, "day");
+  const start = dayjs(out_date).startOf("day");
+  const end = dayjs(in_date).endOf("day");
+  const duration = end.diff(start, "day") + 1;
   return duration;
 };
 
@@ -129,7 +130,7 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
     _id: "",
     name: "",
     category: "",
-    billing_unit: BillingUnit.DAYS,
+    // billing_unit: BillingUnit.DAYS,
     product_unit: {
       _id: "",
       name: "",
@@ -145,19 +146,23 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
   };
 };
 
-export const formatProducts = (products: Product[]) => {
+export const formatProducts = (products: Product[] | ProductDetails[]) => {
   return products.map((product) => ({
     id: product._id || "",
     value: product.name,
   }));
 };
 
-export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+// export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+//   id: key,
+//   value,
+// }));
+
+export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
   id: key,
   value,
 }));
-
-export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
+export const repaymentModeOptions = Object.entries(RepaymentMode).map(([key, value]) => ({
   id: key,
   value,
 }));

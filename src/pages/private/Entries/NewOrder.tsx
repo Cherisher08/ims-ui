@@ -415,7 +415,7 @@ const NewOrder = () => {
 
         <div className="flex flex-col items-end">
           <CustomButton
-          className="w-[6rem]"
+            className="w-[6rem]"
             onClick={() => setAddContactOpen(true)}
             label="Add Customer"
             icon={<LuPlus color="white" />}
@@ -637,7 +637,10 @@ const NewOrder = () => {
                 orderInfo.product_details?.map((product, index) => (
                   <tr key={product._id} className="border-b border-gray-200">
                     <td className="px-1 py-2 content-start">
-                      <CustomSelect
+                      <CustomAutoComplete
+                        addNewValue={() => {}}
+                        placeholder=""
+                        createOption={false}
                         label=""
                         options={formatProducts(
                           products.filter(

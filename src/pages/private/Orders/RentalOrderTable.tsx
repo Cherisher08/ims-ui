@@ -598,6 +598,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     }
   }, [contactsQueryData, isGetContactsSuccess]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onRowGroupOpened = (params: any) => {
     const rowId = params.node.data?._id;
     if (!rowId) return;

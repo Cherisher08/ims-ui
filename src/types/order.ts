@@ -7,12 +7,12 @@ export enum BillingMode {
   B2C = "B2C",
 }
 
-export enum BillingUnit {
-  SHIFT = "shift",
-  DAYS = "days",
-  WEEKS = "weeks",
-  MONTHS = "months",
-}
+// export enum BillingUnit {
+//   SHIFT = "shift",
+//   DAYS = "days",
+//   WEEKS = "weeks",
+//   MONTHS = "months",
+// }
 
 export enum PaymentStatus {
   PENDING = "pending",
@@ -32,7 +32,7 @@ export type ProductDetails = {
   _id: string;
   name: string;
   category: string;
-  billing_unit: BillingUnit;
+  // billing_unit: BillingUnit;
   product_unit: Unit;
   in_date: string;
   out_date: string;

@@ -8,7 +8,7 @@ import AntSwitch from "../../../styled/CustomSwitch";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import {
   BillingMode,
-  BillingUnit,
+  // BillingUnit,
   DepositType,
   PaymentMode,
   PaymentStatus,
@@ -33,7 +33,7 @@ import { calculateDiscountAmount, calculateProductRent } from "../../../services
 import { useDispatch } from "react-redux";
 import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
 import {
-  billingUnitOptions,
+  // billingUnitOptions,
   formatProducts,
   getDefaultDeposit,
   getDefaultProduct,
@@ -477,7 +477,10 @@ const NewOrder = () => {
             }
           }}
         />
-        <CustomSelect
+        <CustomAutoComplete
+          addNewValue={() => setAddContactOpen(true)}
+          placeholder=""
+          createOption={true}
           label="Customer"
           options={formatContacts(contacts)}
           value={
@@ -550,8 +553,6 @@ const NewOrder = () => {
         <CustomInput
           value={orderInfo?.rental_duration ?? ""}
           onChange={(value) => {
-            const inDate = dayjs(orderInfo.out_date).add(Number(value), "days");
-            handleValueChange("in_date", inDate);
             handleValueChange("rental_duration", value);
           }}
           label="Event Expected Days"
@@ -578,7 +579,6 @@ const NewOrder = () => {
         <CustomInput
           onChange={() => {}}
           value={contacts.find((contact) => contact._id === orderInfo.customer?._id)?.address || ""}
-          disabled
           label="Customer Address"
           placeholder="Customer Address"
           multiline
@@ -662,7 +662,7 @@ const NewOrder = () => {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {
                               ...product,
-                              _id: id,
+                              _id: id || "",
                               name: data?.name,
                               category: data?.category.name,
                               product_unit: data.unit,
@@ -683,7 +683,7 @@ const NewOrder = () => {
                         onChange={() => {}}
                       />
                     </td>
-                    <td className="px-1 py-2 content-start">
+                    {/* <td className="px-1 py-2 content-start">
                       <CustomSelect
                         label=""
                         className="w-[8rem]"
@@ -709,7 +709,7 @@ const NewOrder = () => {
                           setOrderInfo({ ...orderInfo, product_details: newProducts });
                         }}
                       />
-                    </td>
+                    </td> */}
                     <td className="px-1 py-2 content-start">
                       <CustomInput
                         disabled
@@ -1002,7 +1002,7 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("eway_mode", currentMode);
               }}
             />
@@ -1049,7 +1049,7 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("balance_paid_mode", currentMode);
               }}
             />
@@ -1075,7 +1075,7 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? BillingUnit.DAYS;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange("payment_mode", currentMode);
               }}
             />

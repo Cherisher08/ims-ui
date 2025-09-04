@@ -106,7 +106,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
                 + Create New
               </li>
             ) : (
-              <li {...props} key={option.value}>
+              <li {...props} key={option.id}>
                 {option.value}
               </li>
             )

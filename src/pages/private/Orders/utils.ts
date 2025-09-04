@@ -1,10 +1,10 @@
 import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from "ag-grid-community";
 import {
   BillingMode,
-  BillingUnit,
   OrderInfo,
   PaymentMode,
   PaymentStatus,
+  ProductDetails,
   RentalOrderInfo,
 } from "../../../types/order";
 import dayjs from "dayjs";
@@ -129,7 +129,7 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
     _id: "",
     name: "",
     category: "",
-    billing_unit: BillingUnit.DAYS,
+    // billing_unit: BillingUnit.DAYS,
     product_unit: {
       _id: "",
       name: "",
@@ -145,17 +145,17 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
   };
 };
 
-export const formatProducts = (products: Product[]) => {
+export const formatProducts = (products: Product[] | ProductDetails[]) => {
   return products.map((product) => ({
     id: product._id || "",
     value: product.name,
   }));
 };
 
-export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
-  id: key,
-  value,
-}));
+// export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+//   id: key,
+//   value,
+// }));
 
 export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
   id: key,

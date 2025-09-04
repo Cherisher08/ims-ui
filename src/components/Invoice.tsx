@@ -417,6 +417,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
   });
 
+  const enoughProduct = (data.product_details?.length || 0) <= 7;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -1057,7 +1059,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             </View>
           </View>
         </View>
-        <View wrap={false} style={{ position: "absolute", bottom: 10, width: "95%" }}>
+        <View
+          wrap={false}
+          style={{
+            flexGrow: 1,
+            justifyContent: enoughProduct ? "flex-end" : "flex-start",
+            marginBottom: 10,
+          }}
+        >
           <View style={styles.footerDetailsContainer}>
             <View style={styles.footerDataContainer}>
               <View

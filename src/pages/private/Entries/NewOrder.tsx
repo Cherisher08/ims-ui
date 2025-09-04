@@ -219,15 +219,15 @@ const NewOrder = () => {
       updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {
         newOrderInfo.product_details.forEach((updatedProductDetail) => {
-          const previousProductDetail = existingRentalOrder.product_details.find(
-            (prev) => prev._id === updatedProductDetail._id
-          );
+          // const previousProductDetail = existingRentalOrder.product_details.find(
+          //   (prev) => prev._id === updatedProductDetail._id
+          // );
 
-          const previousQuantity = previousProductDetail?.order_quantity ?? 0;
-          const previousRepair = previousProductDetail?.order_repair_count ?? 0;
+          // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
+          // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
 
-          const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
-          const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
+          // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
+          // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
 
           // find the product in inventory
           const currentProduct = {
@@ -235,8 +235,8 @@ const NewOrder = () => {
           };
 
           // apply the delta
-          currentProduct.available_stock -= quantityDelta;
-          currentProduct.repair_count += repairDelta;
+          // currentProduct.available_stock -= quantityDelta;
+          // currentProduct.repair_count += repairDelta;
 
           updateProductData(currentProduct);
         });

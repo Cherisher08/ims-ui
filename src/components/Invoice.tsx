@@ -536,43 +536,47 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 </View>
                 <View style={[styles.tableField, { marginTop: 5 }]}>
                   <Text style={[styles.title]}>To</Text>
-                  <Text style={styles.fieldValue}>{data.customer ? data.customer.name : ""}</Text>
-                  <Text style={styles.fieldValue}>
+                  <Text
+                    style={{
+                      color: "black",
+                      fontSize: "10px",
+                      marginBottom: "3px",
+                    }}
+                  >
+                    {data.customer
+                      ? data.customer.name.slice(0, 1).toUpperCase() +
+                        data.customer.name.slice(1).toLowerCase()
+                      : ""}
+                  </Text>
+                  <Text
+                    style={{
+                      color: "black",
+                      fontSize: "10px",
+                      marginBottom: "3px",
+                    }}
+                  >
                     {data.customer && data.customer.address.trim().length
                       ? data.customer.address
                       : " "}
+                    {data.customer ? " - " + data.customer.pincode : ""}
                   </Text>
-                  <Text style={styles.fieldValue}>
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "10px",
-                      }}
-                    >
-                      Pincode - {data.customer ? data.customer.pincode : ""}
-                    </Text>
+                  <Text
+                    style={{
+                      fontSize: "10px",
+                      color: "black",
+                      marginBottom: "3px",
+                    }}
+                  >
+                    Mobile - {data.customer ? data.customer.personal_number : ""}
                   </Text>
-                  <Text style={styles.fieldValue}>
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "10px",
-                      }}
-                    >
-                      Mobile -{" "}
-                    </Text>
-                    {data.customer ? data.customer.personal_number : ""}
-                  </Text>
-                  <Text style={styles.fieldValue}>
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "10px",
-                      }}
-                    >
-                      GST No -{" "}
-                    </Text>
-                    {data.customer ? data.customer.gstin : ""}
+                  <Text
+                    style={{
+                      fontSize: "10px",
+                      color: "black",
+                      marginBottom: "3px",
+                    }}
+                  >
+                    GST No - {data.customer ? data.customer.gstin : ""}
                   </Text>
                 </View>
                 {/* <Text style={styles.fieldValue}>

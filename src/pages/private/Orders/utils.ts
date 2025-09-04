@@ -115,9 +115,9 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
 };
 
 export const getDuration = (out_date: string, in_date: string) => {
-  const start = dayjs(out_date).second(0).millisecond(0);
-  const end = dayjs(in_date).second(0).endOf("day");
-  const duration = end.diff(start, "day");
+  const start = dayjs(out_date).startOf("day");
+  const end = dayjs(in_date).endOf("day");
+  const duration = end.diff(start, "day") + 1;
   return duration;
 };
 

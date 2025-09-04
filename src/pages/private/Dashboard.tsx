@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import AntSwitch from "../../styled/CustomSwitch";
+import { getDuration } from "./Orders/utils";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
@@ -54,10 +55,8 @@ const calcFinalAmount = (order: OrderInfoType): number => {
       //   prod.in_date,
       //   prod.billing_unit
       // );
-      const start = dayjs(prod.out_date).second(0).millisecond(0);
-      const end = dayjs(prod.in_date).second(0).millisecond(0);
 
-      const duration = end.diff(start, "day") || 1;
+      const duration = getDuration(prod.out_date, prod.in_date);
       const quantity = prod.order_quantity - prod.order_repair_count;
       return sum + prod.rent_per_unit * quantity * duration;
     }, 0);

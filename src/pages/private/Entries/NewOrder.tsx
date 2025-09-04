@@ -384,7 +384,7 @@ const NewOrder = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderInfo.gst, orderInfo.billing_mode]); // Dont add orderInfo Hereeeeee
+  }, [orderInfo.gst, orderInfo.billing_mode]);
 
   return (
     <div className="w-full flex flex-col ">
@@ -484,15 +484,15 @@ const NewOrder = () => {
           label="Customer"
           options={formatContacts(contacts)}
           value={
-            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)?.id ??
-            ""
+            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
+              ?.value ?? ""
           }
-          onChange={(id) =>
+          onChange={(name) => {
             handleValueChange(
               "customer",
-              contacts.find((option) => option._id === id)
-            )
-          }
+              contacts.find((option) => option.name === name)
+            );
+          }}
         />
         {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
@@ -522,7 +522,13 @@ const NewOrder = () => {
             <CustomDatePicker
               label="Event Start Date/Entry Date"
               value={orderInfo.out_date ?? ""}
-              onChange={(value) => handleValueChange("out_date", value)}
+              onChange={(value) => {
+                handleValueChange("out_date", value);
+                if (orderInfo.in_date) {
+                  const duration = getDuration(value, orderInfo.in_date);
+                  handleValueChange("rental_duration", duration);
+                }
+              }}
               placeholder="Enter Out Date"
             />
 
@@ -543,6 +549,8 @@ const NewOrder = () => {
                     inDate: false,
                   }));
                 }
+                const duration = getDuration(orderInfo.out_date, value);
+                handleValueChange("rental_duration", duration);
                 handleValueChange("in_date", value);
               }}
               placeholder="Enter In Date"
@@ -577,8 +585,14 @@ const NewOrder = () => {
           minRows={5}
         />
         <CustomInput
-          onChange={() => {}}
-          value={contacts.find((contact) => contact._id === orderInfo.customer?._id)?.address || ""}
+          onChange={(value) => {
+            const contact = {
+              ...(orderInfo.customer || {}),
+              address: value,
+            };
+            handleValueChange("customer", contact);
+          }}
+          value={orderInfo.customer?.address || ""}
           label="Customer Address"
           placeholder="Customer Address"
           multiline

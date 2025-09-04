@@ -1,4 +1,4 @@
-import { IdNamePair } from "../pages/private/Inventory";
+import { IdNamePair } from "../pages/private/Stocks";
 import { Product, ProductType, Unit } from "./common";
 import { ContactInfoType } from "./contact";
 

@@ -13,14 +13,10 @@ import CustomButton from "../../../styled/CustomButton";
 import { PatchOperation, Product } from "../../../types/common";
 import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
-import {
-  currencyFormatter,
-  getDefaultDeposit,
-  getDefaultProduct,
-} from "./utils";
+import { currencyFormatter, getDefaultDeposit, getDefaultProduct } from "./utils";
 import { useGetProductsQuery } from "../../../services/ApiService";
 import { useEffect, useRef, useState } from "react";
-import { IdNamePair } from "../Inventory";
+import { IdNamePair } from "../Stocks";
 import { AiOutlineDelete } from "react-icons/ai";
 import dayjs from "dayjs";
 import { calculateProductRent } from "../../../services/utility_functions";
@@ -30,8 +26,7 @@ const CustomDetailRenderer = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   props: IDetailCellRendererParams<RentalType, any>
 ) => {
-  const { data: productsData, isSuccess: isProductsQuerySuccess } =
-    useGetProductsQuery();
+  const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const productList = useRef<Product[]>([]);
   const [productListPairs, setProductListPairs] = useState<IdNamePair[]>([]);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
@@ -59,9 +54,7 @@ const CustomDetailRenderer = (
       let value = newValue;
       const patchPayload: PatchOperation[] = [];
       if (field === "name") {
-        const newProduct = productList.current.find(
-          (product) => product._id === newValue._id
-        );
+        const newProduct = productList.current.find((product) => product._id === newValue._id);
         value = newValue.name;
         patchPayload.push({
           op: "replace",
@@ -84,11 +77,7 @@ const CustomDetailRenderer = (
           value: newProduct?.product_code,
         });
       }
-      if (
-        field === "billing_unit" ||
-        field === "out_date" ||
-        field === "in_date"
-      ) {
+      if (field === "billing_unit" || field === "out_date" || field === "in_date") {
         if (rowIndex !== null && !isNaN(rowIndex)) {
           const currentProduct = productDetails[rowIndex];
           const duration = calculateProductRent(currentProduct, true);
@@ -146,10 +135,7 @@ const CustomDetailRenderer = (
     const outDate = new Date(orderData.out_date || "");
     const expectedDate = new Date(outDate);
     expectedDate.setDate(outDate.getDate() + (orderData.rental_duration ?? 0));
-    const product = getDefaultProduct(
-      orderData.out_date || "",
-      expectedDate.toISOString()
-    );
+    const product = getDefaultProduct(orderData.out_date || "", expectedDate.toISOString());
     const patchPayload: PatchOperation[] = [
       {
         op: "add",
@@ -225,16 +211,9 @@ const CustomDetailRenderer = (
     <div className="px-10 py-4 bg-gray-200 h-full overflow-auto">
       <div className="flex justify-between items-center mb-2">
         <p className="font-semibold text-lg text-black">Products:</p>
-        <CustomButton
-          icon={<FaPlus />}
-          onClick={() => handleNewProduct()}
-          label="Product"
-        />
+        <CustomButton icon={<FaPlus />} onClick={() => handleNewProduct()} label="Product" />
       </div>
-      <div
-        className="ag-theme-alpine"
-        style={{ height: 200, marginBottom: 20 }}
-      >
+      <div className="ag-theme-alpine" style={{ height: 200, marginBottom: 20 }}>
         <AgGridReact
           rowData={productDetails}
           suppressMenuHide={false}
@@ -307,9 +286,7 @@ const CustomDetailRenderer = (
               flex: 1,
               minWidth: 150,
               valueGetter: (params: ValueGetterParams) => {
-                const product = productList.current.find(
-                  (prod) => prod._id === params.data._id
-                );
+                const product = productList.current.find((prod) => prod._id === params.data._id);
                 return product?.available_stock;
               },
             },
@@ -372,11 +349,7 @@ const CustomDetailRenderer = (
 
       <div className="flex justify-between items-center mb-2">
         <p className="font-semibold text-lg text-black">Deposits:</p>
-        <CustomButton
-          icon={<FaPlus />}
-          onClick={() => handleNewDeposit()}
-          label="Deposit"
-        />
+        <CustomButton icon={<FaPlus />} onClick={() => handleNewDeposit()} label="Deposit" />
       </div>
       <div className="ag-theme-alpine" style={{ height: 150 }}>
         <AgGridReact

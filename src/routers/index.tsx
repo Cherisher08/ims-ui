@@ -10,7 +10,7 @@ const Login = React.lazy(() => import("../pages/public/Login"));
 const ForgotPassword = React.lazy(() => import("../pages/public/ForgotPassword"));
 const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
 const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
-const Inventory = React.lazy(() => import("../pages/private/Inventory"));
+const Inventory = React.lazy(() => import("../pages/private/Stocks"));
 const Contacts = React.lazy(() => import("../pages/private/Customers/Contacts"));
 const Orders = React.lazy(() => import("../pages/private/Orders/Orders"));
 const NewOrder = React.lazy(() => import("../pages/private/Entries/NewOrder"));

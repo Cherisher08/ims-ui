@@ -22,7 +22,7 @@ import { PatchOperation, ProductType } from "../../../types/common";
 import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { useGetContactsQuery } from "../../../services/ContactService";
-import { IdNamePair } from "../Inventory";
+import { IdNamePair } from "../Stocks";
 import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
 import { AddressCellEditor } from "../../../components/AgGridCellEditors/AddressCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
@@ -197,10 +197,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
               Math.min(
                 0,
                 calculateFinalAmount(data) -
-                  depositData.reduce(
-                    (total, deposit) => total + deposit.amount,
-                    0
-                  )
+                  depositData.reduce((total, deposit) => total + deposit.amount, 0)
               )
             ).toFixed(2)}
           </p>
@@ -223,10 +220,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
             {Math.max(
               0,
               calculateFinalAmount(data) -
-                depositData.reduce(
-                  (total, deposit) => total + deposit.amount,
-                  0
-                )
+                depositData.reduce((total, deposit) => total + deposit.amount, 0)
             ).toFixed(2)}
           </p>
         );

@@ -7,7 +7,7 @@ import CustomInput from "../../../styled/CustomInput";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import CustomSelect from "../../../styled/CustomSelect";
 import dayjs from "dayjs";
-import { IdNamePair } from "../Inventory";
+import { IdNamePair } from "../Stocks";
 
 type DepositModalType = {
   depositOpen: boolean;

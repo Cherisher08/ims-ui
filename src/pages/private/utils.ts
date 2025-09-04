@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { CustomOptionProps } from "../../styled/CustomAutoComplete";
 import { Product, ProductType, DiscountType } from "../../types/common";
-import { IdNamePair } from "./Inventory";
+import { IdNamePair } from "./Stocks";
 
 export const transformIdNamePair = (idNamePairs: IdNamePair[]) => {
   return idNamePairs.map((pair) => ({

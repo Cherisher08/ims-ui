@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { CustomCellEditorProps } from "ag-grid-react";
-import { IdNamePair } from "../../pages/private/Inventory";
+import { IdNamePair } from "../../pages/private/Stocks";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 

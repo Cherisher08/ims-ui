@@ -1197,7 +1197,7 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
+                  repaymentModeOptions.find((md) => md.id === mode)?.value ?? RepaymentMode.CASHLESS;
                 handleValueChange("payment_mode", currentMode);
               }}
             />
@@ -1292,35 +1292,9 @@ const NewOrder = () => {
                 <div className="grid grid-cols-2 border-t border-t-gray-200">
                   <div className="flex flex-col gap-1 font-semibold pb-2">
                     <p>Amount after Taxes</p>
-                    {/* <p>
-                      {calculateFinalAmount() -
-                        depositData.reduce((total, deposit) => total + deposit.amount, 0) >
-                      0
-                        ? "Balance"
-                        : "Refund"}
-                    </p>
-                    <p>Mode</p> */}
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
                     <p>₹ {Math.abs(calculateFinalAmount())}</p>
-                    {/* <p className="font-semibold text-black">
-                      ₹{" "}
-                      {Math.abs(
-                        calculateFinalAmount() -
-                          depositData.reduce((total, deposit) => total + deposit.amount, 0)
-                      )}
-                    </p>
-                    <select
-                      className="w-fit outline-none"
-                      onChange={(e) => handleValueChange("payment_mode", e.target.value)}
-                      value={orderInfo.payment_mode}
-                    >
-                      {Object.entries(PaymentMode).map(([id, key]) => (
-                        <option key={id} value={key.toLowerCase()}>
-                          {key.toUpperCase()}
-                        </option>
-                      ))}
-                    </select> */}
                   </div>
                 </div>
               </div>

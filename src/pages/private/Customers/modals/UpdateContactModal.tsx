@@ -5,13 +5,9 @@ import CustomInput from "../../../../styled/CustomInput";
 import { FaTimesCircle } from "react-icons/fa";
 import { LuUpload } from "react-icons/lu";
 import CustomButton from "../../../../styled/CustomButton";
-import {
-  ContactInfoType,
-  ContactWithFile,
-  initialContactType,
-} from "../../../../types/contact";
+import { ContactInfoType, ContactWithFile, initialContactType } from "../../../../types/contact";
 import type { Dispatch, SetStateAction } from "react";
-import { useUpdateContactMutation } from "../../../../services/ContactService";
+import { useGetContactsQuery, useUpdateContactMutation } from "../../../../services/ContactService";
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../../constants/constants";
 
@@ -33,6 +29,8 @@ const UpdateContactModal = ({
     updateContact,
     { isSuccess: isUpdateContactSuccess, isError: IsUpdateContactError, reset },
   ] = useUpdateContactMutation();
+  const { data: contacts } = useGetContactsQuery();
+  const [error, setError] = useState<string | null>(null);
 
   const handleUpdateContact = () => {
     const contactWithFile: ContactWithFile = {
@@ -51,10 +49,7 @@ const UpdateContactModal = ({
     }
   };
 
-  const handleContactChange = (
-    key: keyof ContactInfoType,
-    value: string | number
-  ) => {
+  const handleContactChange = (key: keyof ContactInfoType, value: string | number) => {
     setUpdateContactData((prev) => {
       return {
         ...prev,
@@ -78,12 +73,7 @@ const UpdateContactModal = ({
       setUpdateContactOpen(false);
       reset();
     }
-  }, [
-    IsUpdateContactError,
-    isUpdateContactSuccess,
-    reset,
-    setUpdateContactOpen,
-  ]);
+  }, [IsUpdateContactError, isUpdateContactSuccess, reset, setUpdateContactOpen]);
 
   return (
     <Modal
@@ -97,9 +87,7 @@ const UpdateContactModal = ({
     >
       <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full">
-          <p className="text-primary text-xl font-semibold w-full text-start">
-            Update Contact
-          </p>
+          <p className="text-primary text-xl font-semibold w-full text-start">Update Contact</p>
           <MdClose
             size={25}
             className="cursor-pointer"
@@ -113,83 +101,80 @@ const UpdateContactModal = ({
 
         <div className=" flex flex-col gap-3 h-4/5 px-3 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ">
-            <div className="flex flex-col gap-3">
-              <CustomInput
-                label="Name"
-                value={updateContactData?.name ?? ""}
-                onChange={(value) => handleContactChange("name", value)}
-                placeholder="Enter Name"
-              />
-              <CustomInput
-                label="Email"
-                value={updateContactData?.email ?? ""}
-                onChange={(value) => handleContactChange("email", value)}
-                placeholder="Enter Email"
-              />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <CustomInput
-                label="Personal Number"
-                value={updateContactData?.personal_number ?? ""}
-                onChange={(value) =>
-                  handleContactChange("personal_number", value)
+            <CustomInput
+              label="Name"
+              value={updateContactData?.name ?? ""}
+              onChange={(value) => handleContactChange("name", value)}
+              placeholder="Enter Name"
+            />
+            <CustomInput
+              label="Personal Number"
+              error={error !== null && updateContactData.personal_number !== ""}
+              helperText={error || ""}
+              value={updateContactData?.personal_number ?? ""}
+              onChange={(value) => {
+                const normalizedValue = value.trim();
+                handleContactChange("personal_number", normalizedValue);
+                if (!normalizedValue) {
+                  setError(null);
+                  return;
                 }
-                placeholder="Enter Personal Number"
-              />
-              <CustomInput
-                label="Office Number"
-                value={updateContactData?.office_number ?? ""}
-                onChange={(value) =>
-                  handleContactChange("office_number", value)
-                }
-                placeholder="Enter Office Number"
-              />
-            </div>
 
-            <div className="flex flex-col gap-3">
-              <CustomInput
-                label="Company"
-                value={updateContactData?.company_name ?? ""}
-                onChange={(value) => handleContactChange("company_name", value)}
-                placeholder="Enter Company Name"
-              />
-              <CustomInput
-                label="GSTIN"
-                value={updateContactData?.gstin ?? ""}
-                onChange={(value) => handleContactChange("gstin", value)}
-                placeholder="Enter GSTIN"
-              />
-            </div>
-          </div>
+                const exists = contacts?.find(
+                  (contact) =>
+                    contact.personal_number === normalizedValue &&
+                    contact._id !== updateContactData._id
+                );
 
-          <div className="grid grid-cols-1 w-1/2 lg:w-full lg:grid-cols-3">
+                setError(exists ? "Contact already exists" : null);
+              }}
+              placeholder="Enter Personal Number"
+            />
+            <CustomInput
+              label="Email"
+              value={updateContactData?.email ?? ""}
+              onChange={(value) => handleContactChange("email", value)}
+              placeholder="Enter Email"
+            />
+
+            <CustomInput
+              label="Company"
+              value={updateContactData?.company_name ?? ""}
+              onChange={(value) => handleContactChange("company_name", value)}
+              placeholder="Enter Company Name"
+            />
+            <CustomInput
+              label="Office Number"
+              value={updateContactData?.office_number ?? ""}
+              onChange={(value) => handleContactChange("office_number", value)}
+              placeholder="Enter Office Number"
+            />
+
+            <CustomInput
+              label="GSTIN"
+              value={updateContactData?.gstin ?? ""}
+              onChange={(value) => handleContactChange("gstin", value)}
+              placeholder="Enter GSTIN"
+            />
             <div className="flex flex-col lg:col-span-2">
-              <div className="lg:w-2/3">
-                <CustomInput
-                  label="Address"
-                  multiline
-                  value={updateContactData?.address ?? ""}
-                  onChange={(value) => handleContactChange("address", value)}
-                  placeholder="Enter Address"
-                />
-              </div>
+              <CustomInput
+                label="Address"
+                multiline
+                value={updateContactData?.address ?? ""}
+                onChange={(value) => handleContactChange("address", value)}
+                placeholder="Enter Address"
+              />
 
-              <div className="lg:w-1/2">
-                <CustomInput
-                  label="Pincode"
-                  value={updateContactData?.pincode ?? ""}
-                  onChange={(value) => handleContactChange("pincode", value)}
-                  placeholder="Enter Pincode"
-                />
-              </div>
+              <CustomInput
+                label="Pincode"
+                value={updateContactData?.pincode ?? ""}
+                onChange={(value) => handleContactChange("pincode", value)}
+                placeholder="Enter Pincode"
+              />
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[auto_2fr] justify-center items-center sm:h-4/5 w-full gap-4">
-              <label className="pt-2 w-[4rem] line-clamp-2 break-words h-fit min-h-10">
-                Upload Proof
-              </label>
-              <div className="h-[12rem] w-[12rem] relative">
+            <div className="flex flex-col sm:h-4/5 w-full gap-1">
+              <label className="w-full line-clamp-2 break-words h-auto min-h-6">Upload Proof</label>
+              <div className="h-full min-h-[10rem] max-w-[12rem] w-full relative">
                 {addressProof === null ? (
                   <>
                     {updateContactData.address_proof ? (
@@ -198,13 +183,11 @@ const UpdateContactModal = ({
                           size={20}
                           color="red"
                           className="absolute top-2 right-2 cursor-pointer z-10"
-                          onClick={() =>
-                            handleContactChange("address_proof", "")
-                          }
+                          onClick={() => handleContactChange("address_proof", "")}
                         />
                         <img
                           src={updateContactData.address_proof}
-                          className="rounded-sm h-full w-full object-cover"
+                          className="rounded-sm h-full min-h-[10rem] max-w-[12rem] w-full object-cover"
                         />
                       </>
                     ) : (
@@ -221,9 +204,7 @@ const UpdateContactModal = ({
                           className="border rounded-sm flex flex-col items-center justify-center h-full w-full cursor-pointer"
                         >
                           <LuUpload />
-                          <p className="text-xs text-center px-2">
-                            Upload Proof
-                          </p>
+                          <p className="text-xs text-center px-2">Upload Proof</p>
                         </label>
                       </>
                     )}
@@ -245,6 +226,9 @@ const UpdateContactModal = ({
               </div>
             </div>
           </div>
+
+          {/* <div className="grid grid-cols-1 w-1/2 lg:w-full lg:grid-cols-3">
+            <div className="flex flex-col lg:col-span-2"></div> */}
         </div>
         <div className="flex w-full gap-3 justify-end">
           <CustomButton
@@ -257,7 +241,11 @@ const UpdateContactModal = ({
             variant="outlined"
             className="bg-white"
           />
-          <CustomButton onClick={handleUpdateContact} label="Update Contact" />
+          <CustomButton
+            onClick={handleUpdateContact}
+            disabled={error !== null || updateContactData.name === ""}
+            label="Update Contact"
+          />
         </div>
       </div>
     </Modal>

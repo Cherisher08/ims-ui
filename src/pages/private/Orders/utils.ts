@@ -11,7 +11,7 @@ import {
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Product, ProductType } from "../../../types/common";
-import { IdNamePair } from "../Inventory";
+import { IdNamePair } from "../Stocks";
 
 dayjs.extend(utc);
 
@@ -162,6 +162,7 @@ export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value])
   id: key,
   value,
 }));
+
 export const repaymentModeOptions = Object.entries(RepaymentMode).map(([key, value]) => ({
   id: key,
   value,

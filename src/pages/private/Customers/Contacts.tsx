@@ -175,7 +175,7 @@ const Contacts = () => {
 
   return (
     <div className="h-fit">
-      <div className="flex justify-between">
+      <div className="flex justify-between mb-3">
         <CustomButton
           onClick={() => setAddContactOpen(true)}
           label="Add Customer"

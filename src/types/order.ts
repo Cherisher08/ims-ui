@@ -1,5 +1,5 @@
 import { IdNamePair } from "../pages/private/Stocks";
-import { Product, ProductType, Unit } from "./common";
+import { DiscountType, Product, ProductType, Unit } from "./common";
 import { ContactInfoType } from "./contact";
 
 export enum BillingMode {
@@ -92,7 +92,7 @@ export type OrderInfo = {
   customer?: ContactInfoType;
   billing_mode: BillingMode;
   discount: number;
-  discount_amount: number;
+  discount_type: DiscountType;
   status: PaymentStatus;
   remarks: string;
   round_off: number;

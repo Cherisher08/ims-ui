@@ -19,7 +19,13 @@ import {
 } from "../../../types/order";
 import { ContactInfoType, initialContactType } from "../../../types/contact";
 import dayjs from "dayjs";
-import { EventNameType, Product, ProductType } from "../../../types/common";
+import {
+  DiscountType,
+  discountTypeValues,
+  EventNameType,
+  Product,
+  ProductType,
+} from "../../../types/common";
 import {
   useGetProductsQuery,
   useUpdateProductMutation,
@@ -87,7 +93,7 @@ const paymentStatusOptions = Object.entries(PaymentStatus).map(
 const initialRentalProduct: RentalOrderInfo = {
   order_id: "",
   discount: 0,
-  discount_amount: 0,
+  discount_type: DiscountType.RUPEES,
   gst: 0,
   remarks: "",
   type: ProductType.RENTAL,
@@ -222,10 +228,10 @@ const NewOrder = () => {
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
-    const discountAmount = calculateDiscountAmount(
-      orderInfo.discount || 0,
-      finalAmount
-    );
+    const discountAmount =
+      orderInfo.discount_type === DiscountType.PERCENT
+        ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
+        : orderInfo.discount || 0;
     const gstAmount = calculateDiscountAmount(
       orderInfo.gst || 0,
       finalAmount - discountAmount
@@ -236,6 +242,7 @@ const NewOrder = () => {
   }, [
     calculateTotalAmount,
     orderInfo.discount,
+    orderInfo.discount_type,
     orderInfo.gst,
     orderInfo.round_off,
   ]);
@@ -503,6 +510,7 @@ const NewOrder = () => {
       handleValueChange("status", PaymentStatus.PAID);
     } else {
       handleValueChange(type, value);
+      handleValueChange("status", PaymentStatus.PENDING);
     }
   };
 
@@ -1297,28 +1305,42 @@ const NewOrder = () => {
             />
           </div>
         </div>
-        <CustomInput
-          label="Discount Amount"
-          type="number"
-          wrapperClass="w-full"
-          placeholder="Enter Discount Amount"
-          value={orderInfo.discount_amount}
-          onChange={(val) => {
-            const value = val || "0";
-            const amount = parseFloat(value) || 0;
-            const total_amount = calculateTotalAmount;
-            const percent =
-              total_amount > 0
-                ? parseFloat(((amount * 100) / total_amount).toFixed(2))
-                : 0;
 
-            setOrderInfo((prev) => ({
-              ...prev,
-              discount: percent,
-              discount_amount: parseFloat(value),
-            }));
-          }}
-        />
+        <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
+          <CustomInput
+            label="Discount"
+            type="number"
+            wrapperClass="w-full"
+            placeholder="Enter Discount"
+            value={orderInfo.discount}
+            onChange={(val) => {
+              const value = val || "0";
+              const amount = parseFloat(value) || 0;
+              const total_amount = calculateTotalAmount;
+              const percent =
+                total_amount > 0 &&
+                orderInfo.discount_type === DiscountType.PERCENT
+                  ? parseFloat(((amount * 100) / total_amount).toFixed(2))
+                  : amount;
+
+              setOrderInfo((prev) => ({
+                ...prev,
+                discount: percent,
+              }));
+            }}
+          />
+          <CustomSelect
+            label=""
+            wrapperClass="mt-6"
+            options={discountTypeValues}
+            value={
+              discountTypeValues.find(
+                (discountType) => orderInfo.discount_type === discountType.id
+              )?.id ?? discountTypeValues[0].id
+            }
+            onChange={(value) => handleValueChange("discount_type", value)}
+          />
+        </div>
         <div className="flex gap-2 col-span-2">
           <CustomInput
             label="Balance Paid"
@@ -1418,45 +1440,17 @@ const NewOrder = () => {
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
                     <p>
                       ₹{" "}
-                      {depositData.reduce(
-                        (total, deposit) => total + deposit.amount,
-                        0
-                      )}
+                      {depositData
+                        .reduce((total, deposit) => total + deposit.amount, 0)
+                        .toFixed(2)}
                     </p>
-                    <p>₹ {calculateTotalAmount}</p>
+                    <p>₹ {calculateTotalAmount.toFixed(2)}</p>
 
-                    <div className="flex justify-end gap-1">
-                      <input
-                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                        type="number"
-                        max={100}
-                        min={0}
-                        value={orderInfo.discount}
-                        onChange={(e) => {
-                          if (
-                            orderInfo.type === ProductType.RENTAL &&
-                            orderInfo.product_details
-                          ) {
-                            let percent = parseFloat(
-                              parseFloat(e.target.value).toFixed(2)
-                            );
-                            if (percent >= 100) {
-                              percent = 100;
-                            }
-                            const total_amount = calculateTotalAmount;
-                            const discount_amount = parseFloat(
-                              (total_amount * percent * 0.01).toFixed(2)
-                            );
-                            setOrderInfo((prev) => ({
-                              ...prev,
-                              discount: percent,
-                              discount_amount: discount_amount,
-                            }));
-                          }
-                        }}
-                      />
-                      <span className="w-2">%</span>
-                    </div>
+                    <p>
+                      {orderInfo.discount_type === DiscountType.PERCENT
+                        ? `${orderInfo.discount}%`
+                        : `₹ ${orderInfo.discount.toFixed(2)}`}
+                    </p>
                     <div className="flex justify-end gap-1">
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
@@ -1486,7 +1480,8 @@ const NewOrder = () => {
                       />
                       <span className="w-2">%</span>
                     </div>
-                    <div>
+                    <div className="flex pr-3 justify-end">
+                      {"₹ "}
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
                         type="number"
@@ -1499,8 +1494,7 @@ const NewOrder = () => {
                             ),
                           }))
                         }
-                      />{" "}
-                      ₹
+                      />
                     </div>
                   </div>
                 </div>
@@ -1509,7 +1503,7 @@ const NewOrder = () => {
                     <p>Amount after Taxes</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
-                    <p>₹ {Math.abs(calculateFinalAmount())}</p>
+                    <p>₹ {Math.abs(calculateFinalAmount()).toFixed(2)}</p>
                   </div>
                 </div>
               </div>

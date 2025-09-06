@@ -15,7 +15,7 @@ import {
   RentalOrderInfo,
 } from "../types/order";
 import dayjs from "dayjs";
-import { ProductType } from "../types/common";
+import { DiscountType, ProductType } from "../types/common";
 import {
   calculateDiscountAmount,
   calculateProductRent,
@@ -165,11 +165,15 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     return 0;
   };
 
+  const discountAmount =
+    data.discount_type === DiscountType.PERCENT
+      ? calculateDiscountAmount(data.discount, calcFinalAmount())
+      : data.discount || 0;
+
   const calcTotal = () => {
     const finalAmount = calcFinalAmount();
     const roundOff = data.round_off || 0;
     const ewayBillAmount = data.eway_amount || 0;
-    const discountAmount = data.discount_amount || 0;
     const gstAmount = calculateDiscountAmount(
       data.gst || 0,
       finalAmount - discountAmount
@@ -220,7 +224,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   };
 
   const gstAmount = (
-    (calcFinalAmount() - data.discount_amount) *
+    (calcFinalAmount() - discountAmount) *
     data.gst *
     0.01
   ).toFixed(2);
@@ -904,8 +908,16 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   ...(data.discount
                     ? [
                         {
-                          label: `Discount - ${data.discount}%`,
-                          value: `Rs. ${data.discount_amount?.toFixed(2)}`,
+                          label: `Discount`,
+                          value: `${
+                            data.discount_type === DiscountType.RUPEES
+                              ? "Rs."
+                              : ""
+                          } ${data.discount?.toFixed(2)} ${
+                            data.discount_type === DiscountType.PERCENT
+                              ? "%"
+                              : ""
+                          }`,
                           bottom: true,
                         },
                       ]

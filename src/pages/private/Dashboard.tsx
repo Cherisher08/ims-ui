@@ -2,8 +2,13 @@ import { useEffect, useState } from "react";
 import CustomSelect from "../../styled/CustomSelect";
 import CustomCard from "../../styled/CustomCard";
 import CustomLineChart from "../../styled/CustomLineChart";
-import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from "../../types/order";
-import { ProductType } from "../../types/common";
+import {
+  BillingMode,
+  OrderInfoType,
+  PaymentStatus,
+  RentalOrderInfo,
+} from "../../types/order";
+import { DiscountType, ProductType } from "../../types/common";
 import { useGetRentalOrdersQuery } from "../../services/OrderService";
 import { calculateDiscountAmount } from "../../services/utility_functions";
 import dayjs from "dayjs";
@@ -116,7 +121,11 @@ const getValidGroupKeys = (filter: string): string[] => {
   return keys;
 };
 
-const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: ChartType) => {
+const getChartData = (
+  orders: RentalOrderInfo[],
+  filter: string,
+  chartType: ChartType
+) => {
   const groups: Record<string, number> = {};
 
   const validGroupKeys = getValidGroupKeys(filter); // from earlier
@@ -129,16 +138,21 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
 
     switch (chartType) {
       case "incoming_pending": {
-        const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+        const depositTotal =
+          order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
-        const discountAmount = order.discount_amount || 0;
+        const discountAmount =
+          order.discount_type === DiscountType.PERCENT
+            ? calculateDiscountAmount(order.discount || 0, finalAmount)
+            : order.discount || 0;
         const gstAmount =
           order.billing_mode === BillingMode.B2B
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount =
+          finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
         if (pendingAmount > 0) {
           groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
@@ -147,16 +161,21 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
       }
 
       case "repayment_pending": {
-        const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+        const depositTotal =
+          order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
-        const discountAmount = order.discount_amount || 0;
+        const discountAmount =
+          order.discount_type === DiscountType.PERCENT
+            ? calculateDiscountAmount(order.discount || 0, finalAmount)
+            : order.discount || 0;
         const gstAmount =
           order.billing_mode === BillingMode.B2B
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount =
+          finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
         if (pendingAmount < 0) {
           groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
@@ -169,7 +188,8 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
           if (p.in_date) {
             const productGroupKey = groupKeyFormatter(p.in_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+              groups[productGroupKey] =
+                (groups[productGroupKey] || 0) + p.order_quantity;
             }
           }
         });
@@ -181,7 +201,8 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
           if (p.out_date) {
             const productGroupKey = groupKeyFormatter(p.out_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+              groups[productGroupKey] =
+                (groups[productGroupKey] || 0) + p.order_quantity;
             }
           }
         });
@@ -205,7 +226,8 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
           if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
             const productGroupKey = groupKeyFormatter(p.in_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+              groups[productGroupKey] =
+                (groups[productGroupKey] || 0) + p.order_quantity;
             }
           }
         });
@@ -246,16 +268,21 @@ const getDetailsData = (
 
       // ignore if this group is outside the current date range
       if (!validGroupKeys.includes(groupKey)) return;
-      const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      const depositTotal =
+        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
       const finalAmount = calcFinalAmount(order);
       const roundOff = order.round_off || 0;
-      const discountAmount = order.discount_amount || 0;
+      const discountAmount =
+        order.discount_type === DiscountType.PERCENT
+          ? calculateDiscountAmount(order.discount || 0, finalAmount)
+          : order.discount || 0;
       const gstAmount =
         order.billing_mode === BillingMode.B2B
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+      const pendingAmount =
+        finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
       if (order.status === PaymentStatus.PENDING) {
         if (chartType === "incoming_pending" && pendingAmount > 0) {
@@ -351,7 +378,8 @@ const Dashboard = () => {
     useGetRentalOrdersQuery();
   const [filter, setFilter] = useState<string>("1");
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
-  const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
+  const [showPendingAmountsOnly, setShowPendingAmountsOnly] =
+    useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<ChartType>("incoming_pending");
   const detailsData = getDetailsData(orders, graphFilter, filter);
@@ -360,7 +388,9 @@ const Dashboard = () => {
     { id: "2", value: "weekly" },
     { id: "3", value: "monthly" },
   ];
-  const isPriceData = ["incoming_pending", "repayment_pending"].includes(graphFilter);
+  const isPriceData = ["incoming_pending", "repayment_pending"].includes(
+    graphFilter
+  );
 
   const [totalInfo, setTotalInfo] = useState({
     balanceAmount: 0,
@@ -391,17 +421,22 @@ const Dashboard = () => {
     let mcOut = 0;
 
     filteredOrders.forEach((order) => {
-      const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      const depositSum =
+        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
 
       const finalAmount = calcFinalAmount(order);
       const roundOff = order.round_off || 0;
-      const discountAmount = order.discount_amount || 0;
+      const discountAmount =
+        order.discount_type === DiscountType.PERCENT
+          ? calculateDiscountAmount(order.discount || 0, finalAmount)
+          : order.discount || 0;
       const gstAmount =
         order.billing_mode === BillingMode.B2B
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
+      const pendingAmount =
+        finalAmount - depositSum - discountAmount + gstAmount + roundOff;
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
@@ -491,15 +526,25 @@ const Dashboard = () => {
             className="grow"
             value={`₹${totalInfo.depositAmount.toFixed(2)}`}
           />
-          <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
-          <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />
+          <CustomCard
+            title="Machine Out"
+            className="grow"
+            value={`${totalInfo.mcOut}`}
+          />
+          <CustomCard
+            title="Machine In"
+            className="grow"
+            value={`${totalInfo.mcIn}`}
+          />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[75%_auto] w-full gap-3 pb-4">
           <div className="flex flex-col bg-gray-50 rounded-xl gap-1 px-3 max-h-[26rem] py-2 h-full">
             <ul className="flex flex-row text-sm gap-3">
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "incoming_pending" ? "text-black" : "text-gray-500"
+                  graphFilter == "incoming_pending"
+                    ? "text-black"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setGraphFilter("incoming_pending")}
               >
@@ -507,7 +552,9 @@ const Dashboard = () => {
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "repayment_pending" ? "text-black" : "text-gray-500"
+                  graphFilter == "repayment_pending"
+                    ? "text-black"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setGraphFilter("repayment_pending")}
               >
@@ -531,7 +578,9 @@ const Dashboard = () => {
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "machines_repair" ? "text-black" : "text-gray-500"
+                  graphFilter == "machines_repair"
+                    ? "text-black"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setGraphFilter("machines_repair")}
               >
@@ -539,21 +588,30 @@ const Dashboard = () => {
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "machines_overdue" ? "text-black" : "text-gray-500"
+                  graphFilter == "machines_overdue"
+                    ? "text-black"
+                    : "text-gray-500"
                 }`}
                 onClick={() => setGraphFilter("machines_overdue")}
               >
                 Machines Overdue
               </li>
             </ul>
-            <CustomLineChart chartData={chartData} title="" isYPrice={isPriceData} />
+            <CustomLineChart
+              chartData={chartData}
+              title=""
+              isYPrice={isPriceData}
+            />
           </div>
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Details</p>
             <ul className="flex flex-col gap-3 px-4 h-full overflow-y-auto">
               {"pending" in detailsData ? (
                 <>
-                  <li key={"table-header"} className="flex justify-between text-sm">
+                  <li
+                    key={"table-header"}
+                    className="flex justify-between text-sm"
+                  >
                     <span>Customer</span>
                     <span>Amount</span>
                   </li>
@@ -562,7 +620,10 @@ const Dashboard = () => {
                     <li className="text-gray-400 italic">No pending</li>
                   )}
                   {detailsData.pending.map((record, index) => (
-                    <li key={"pending-" + index} className="flex justify-between text-sm">
+                    <li
+                      key={"pending-" + index}
+                      className="flex justify-between text-sm"
+                    >
                       <span>{record.name}</span>
                       <span>{`₹${record.amount.toFixed(2)}`}</span>
                     </li>
@@ -573,7 +634,10 @@ const Dashboard = () => {
                     <li className="text-gray-400 italic">No paid</li>
                   )}
                   {detailsData.paid.map((record, index) => (
-                    <li key={"paid-" + index} className="flex justify-between text-sm">
+                    <li
+                      key={"paid-" + index}
+                      className="flex justify-between text-sm"
+                    >
                       <span>{record.name}</span>
                       <span>{`₹${record.amount.toFixed(2)}`}</span>
                     </li>
@@ -581,7 +645,10 @@ const Dashboard = () => {
                 </>
               ) : (
                 <>
-                  <li key={"table-header"} className="flex justify-between text-sm">
+                  <li
+                    key={"table-header"}
+                    className="flex justify-between text-sm"
+                  >
                     <span>Product</span>
                     <span>Nos</span>
                   </li>

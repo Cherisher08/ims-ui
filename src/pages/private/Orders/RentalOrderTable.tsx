@@ -23,7 +23,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
-import { PatchOperation, ProductType } from "../../../types/common";
+import {
+  DiscountType,
+  PatchOperation,
+  ProductType,
+} from "../../../types/common";
 import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { useGetContactsQuery } from "../../../services/ContactService";
@@ -95,10 +99,10 @@ const RentalOrderTable = ({
     const finalAmount = calculateTotalAmount(orderInfo);
     const roundOff = orderInfo.round_off || 0;
     const ewayBillAmount = orderInfo.eway_amount || 0;
-    const discountAmount = calculateDiscountAmount(
-      orderInfo.discount || 0,
-      finalAmount
-    );
+    const discountAmount =
+      orderInfo.discount_type === DiscountType.PERCENT
+        ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
+        : orderInfo.discount || 0;
     const gstAmount = calculateDiscountAmount(
       orderInfo.gst || 0,
       finalAmount - discountAmount
@@ -381,21 +385,7 @@ const RentalOrderTable = ({
     },
     {
       field: "discount",
-      headerName: "Discount(%)",
-      headerClass: "ag-header-wrap",
-      minWidth: 150,
-      maxWidth: 200,
-      filter: "agNumberColumnFilter",
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
-      cellEditorParams: {
-        step: 1,
-      },
-    },
-    {
-      field: "discount_amount",
-      headerName: "Discount Amount",
+      headerName: "Discount",
       headerClass: "ag-header-wrap",
       minWidth: 150,
       maxWidth: 200,
@@ -408,15 +398,28 @@ const RentalOrderTable = ({
       },
       valueFormatter: (params) => {
         const data = params.data;
-        if (data && data.type === ProductType.RENTAL && data.product_details) {
-          const percent = data.discount;
-          const total_amount = calculateTotalAmount(data);
-          const discount_amount = parseFloat(
-            (total_amount * percent * 0.01).toFixed(2)
-          );
-          return `₹${discount_amount.toFixed(2)}`;
+        if (
+          data &&
+          data.type === ProductType.RENTAL &&
+          data.product_details &&
+          data.discount_type === "percent"
+        ) {
+          return `${data.discount}%`;
         }
-        return "0";
+        return `₹${data?.discount.toFixed(2)}`;
+      },
+    },
+    {
+      field: "discount_type",
+      headerName: "Discount Type",
+      headerClass: "ag-header-wrap",
+      minWidth: 150,
+      filter: "agTextColumnFilter",
+      editable: true,
+      singleClickEdit: true,
+      cellEditor: SelectCellEditor,
+      cellEditorParams: {
+        options: ["percent", "rupees"],
       },
     },
     {
@@ -609,7 +612,7 @@ const RentalOrderTable = ({
 
   const handleCellEditingStopped = async (event: CellEditingStoppedEvent) => {
     const { data, colDef, oldValue, newValue } = event;
-    let field = colDef.field;
+    const field = colDef.field;
     if (!field || newValue === oldValue) return;
     try {
       let value = newValue;
@@ -642,13 +645,6 @@ const RentalOrderTable = ({
           value = "pending";
       }
 
-      if (field === "discount_amount") {
-        field = "discount";
-        if (calculateTotalAmount(data))
-          value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
-        else value = 0;
-      }
-
       const patchPayload: PatchOperation[] = [
         {
           op: "replace",
@@ -656,6 +652,14 @@ const RentalOrderTable = ({
           value,
         },
       ];
+
+      if (field === "discount_type") {
+        patchPayload.push({
+          op: "replace",
+          path: `/discount`,
+          value: 0,
+        });
+      }
 
       await patchRentalOrder({ id: data._id, payload: patchPayload }).unwrap();
 

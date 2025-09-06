@@ -29,6 +29,17 @@ export enum DiscountType {
   PERCENT = "percent",
 }
 
+export const discountTypeValues = [
+  {
+    id: "percent",
+    value: "%",
+  },
+  {
+    id: "rupees",
+    value: "₹",
+  },
+];
+
 export enum EventNameType {
   CONSTRUCTION_WORK = "Construction work",
   DEWATERING_WORK = "Dewatering Work",

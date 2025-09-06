@@ -14,7 +14,7 @@ import {
 } from "../../../types/order";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Product, ProductType } from "../../../types/common";
+import { DiscountType, Product, ProductType } from "../../../types/common";
 import { IdNamePair } from "../Stocks";
 
 dayjs.extend(utc);
@@ -89,7 +89,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     customer: undefined,
     deposits: [],
     discount: 0,
-    discount_amount: 0,
+    discount_type: DiscountType.RUPEES,
     event_address: "",
     rental_duration: 0,
     gst: 0,

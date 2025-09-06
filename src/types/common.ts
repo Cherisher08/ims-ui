@@ -29,6 +29,13 @@ export enum DiscountType {
   PERCENT = "percent",
 }
 
+export enum EventNameType {
+  CONSTRUCTION_WORK = "Construction work",
+  DEWATERING_WORK = "Dewatering Work",
+  CLEANING_WORK = "Cleaning Work",
+  GARDEN_WORK = "Garden Work",
+}
+
 export interface Product {
   _id?: string;
   name: string;

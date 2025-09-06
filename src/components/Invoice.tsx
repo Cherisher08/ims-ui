@@ -229,6 +229,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     tableContainer: {
       border: "1px solid black",
       flexDirection: "column",
+      fontSize: 8,
       gap: 0,
     },
     tableHeader: {
@@ -238,10 +239,11 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
     tableRow: {
       flexDirection: "row",
-      height: 24,
+      maxHeight: 30,
+      maxLines: 3,
     },
     tableColumn: {
-      fontSize: 10,
+      fontSize: 8,
       color: "#4f4f4f",
       textAlign: "center",
       display: "flex",
@@ -252,7 +254,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       paddingVertical: 2,
     },
     productColumn: {
-      fontSize: 10,
+      fontSize: 8,
       color: "black",
       display: "flex",
       justifyContent: "center",
@@ -418,7 +420,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
   });
 
-  const enoughProduct = (data.product_details?.length || 0) <= 7;
+  const enoughProduct = (data.product_details?.length || 0) <= 5;
 
   return (
     <Document>
@@ -633,7 +635,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 20,
+                    width: 15,
                   },
                 ]}
               >
@@ -643,7 +645,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 100,
+                    width: 89,
                   },
                 ]}
               >
@@ -653,7 +655,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 50,
+                    width: 40,
                   },
                 ]}
               >
@@ -663,7 +665,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 40,
+                    width: 25,
                   },
                 ]}
               >
@@ -673,7 +675,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 40,
+                    width: 30,
                   },
                 ]}
               >
@@ -683,7 +685,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 70,
+                    width: 60,
                   },
                 ]}
               >
@@ -693,7 +695,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 80,
+                    width: 70,
                   },
                 ]}
               >
@@ -703,7 +705,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 60,
+                    width: 55,
                   },
                 ]}
               >
@@ -713,7 +715,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 60,
+                    width: 40,
                   },
                 ]}
               >
@@ -723,8 +725,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 60,
-                    borderRight: "0px",
+                    width: 55,
                     alignContent: "center",
                     paddingVertical: 2,
                     alignItems: "center",
@@ -732,6 +733,20 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 ]}
               >
                 TOTAL AMT
+              </Text>
+              <Text
+                style={[
+                  styles.tableColumn,
+                  {
+                    width: 75,
+                    borderRight: "0px",
+                    alignContent: "center",
+                    paddingVertical: 2,
+                    alignItems: "center",
+                  },
+                ]}
+              >
+                REMARKS
               </Text>
             </View>
             {updatedProducts.map((product: ProductDetails, index: number) => (
@@ -742,13 +757,13 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
                 ]}
               >
-                <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>
+                <Text style={[styles.productColumn, { width: 15 }]}>{index + 1}</Text>
                 <View>
                   <Text
                     style={[
                       styles.productColumn,
                       {
-                        width: 99,
+                        width: 89,
                         maxWidth: "95.4px !important",
                       },
                     ]}
@@ -756,26 +771,29 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     {product.name}
                   </Text>
                 </View>
-                <Text style={[styles.productColumn, { width: 55 }]}>
+                <Text style={[styles.productColumn, { width: 40 }]}>
                   {product.product_code || ""}
                 </Text>
-                <Text style={[styles.productColumn, { width: 40 }]}>{product.order_quantity} </Text>
-                <Text style={[styles.productColumn, { width: 40 }]}>
+                <Text style={[styles.productColumn, { width: 25 }]}>{product.order_quantity} </Text>
+                <Text style={[styles.productColumn, { width: 30 }]}>
                   {product.product_unit.name || "Unit(s)"}
                 </Text>
-                <Text style={[styles.productColumn, { width: 70 }]}>
+                <Text style={[styles.productColumn, { width: 60 }]}>
                   Rs. {product.rent_per_unit}
                 </Text>
-                <Text style={[styles.productColumn, { width: 80 }]}>
+                <Text style={[styles.productColumn, { width: 70 }]}>
                   {calculateProductRent(product, true)}{" "}
                   {calculateProductRent(product, true) === 1 ? "day" : "days"}
                 </Text>
-                <Text style={[styles.productColumn, { width: 60 }]}>
+                <Text style={[styles.productColumn, { width: 55 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
-                <Text style={[styles.productColumn, { width: 60 }]}>{data.gst}</Text>
-                <Text style={[styles.productColumn, { width: 60, borderRight: "0px" }]}>
+                <Text style={[styles.productColumn, { width: 40 }]}>{data.gst}</Text>
+                <Text style={[styles.productColumn, { width: 55 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                </Text>
+                <Text style={[styles.productColumn, { maxWidth: 75, borderRight: "0px" }]}>
+                  {product.damage}
                 </Text>
               </View>
             ))}

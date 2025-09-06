@@ -452,7 +452,7 @@ const Dashboard = () => {
   return (
     <div className="h-auto w-full overflow-y-auto">
       {/* Header */}
-      <div className="w-full flex justify-between">
+      <div className="w-full flex justify-between mb-3">
         <p className="text-primary font-bold">Overview</p>
         <div className="flex gap-4">
           <CustomSelect

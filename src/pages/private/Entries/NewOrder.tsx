@@ -17,7 +17,7 @@ import {
 } from "../../../types/order";
 import { ContactInfoType, initialContactType } from "../../../types/contact";
 import dayjs from "dayjs";
-import { Product, ProductType } from "../../../types/common";
+import { EventNameType, Product, ProductType } from "../../../types/common";
 import { useGetProductsQuery, useUpdateProductMutation } from "../../../services/ApiService";
 import { useGetContactsQuery } from "../../../services/ContactService";
 import {
@@ -127,8 +127,8 @@ const NewOrder = () => {
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalProduct);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
+  const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
@@ -388,6 +388,38 @@ const NewOrder = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderInfo.gst, orderInfo.billing_mode]);
 
+  useEffect(() => {
+    const options: CustomSelectOptionProps[] = Object.values(EventNameType).map((val) => ({
+      id: val,
+      value: val,
+    }));
+    if (orderInfo.event_name && !options.find((val) => val.id === orderInfo.event_name)) {
+      console.log(1);
+      options.push({
+        id: orderInfo.event_name,
+        value: orderInfo.event_name,
+      });
+    }
+    setEventNameOptions(options);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderInfo.event_name]);
+
+  const addEventNameOption = (value: string) => {
+    if (!value) return;
+    const newOption = {
+      id: value,
+      value: value,
+    };
+    if (eventNameOptions.length === 3) {
+      setEventNameOptions((prev) => [...prev, newOption]);
+    } else {
+      const options = [...eventNameOptions];
+      options[3] = newOption;
+      setEventNameOptions(options);
+    }
+    handleValueChange("event_name", value);
+  };
+
   return (
     <div className="w-full flex flex-col ">
       {/* === Top Tabs and Add Button === */}
@@ -515,7 +547,10 @@ const NewOrder = () => {
             }
           />
         )}
-        <CustomInput
+        <CustomAutoComplete
+          options={eventNameOptions}
+          addNewValue={(val) => addEventNameOption(val)}
+          createOption={true}
           value={orderInfo?.event_name ?? ""}
           onChange={(value) => handleValueChange("event_name", value)}
           label="Event Name"
@@ -1196,7 +1231,8 @@ const NewOrder = () => {
               }
               onChange={(mode) => {
                 const currentMode =
-                  repaymentModeOptions.find((md) => md.id === mode)?.value ?? RepaymentMode.CASHLESS;
+                  repaymentModeOptions.find((md) => md.id === mode)?.value ??
+                  RepaymentMode.CASHLESS;
                 handleValueChange("payment_mode", currentMode);
               }}
             />

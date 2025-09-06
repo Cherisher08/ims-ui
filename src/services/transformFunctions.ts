@@ -1,25 +1,9 @@
 import dayjs from "dayjs";
 import { RentalOrderInfo } from "../types/order";
-import { ProductType } from "../types/common";
-import {
-  calculateDiscountAmount,
-  calculateProductRent,
-} from "./utility_functions";
 
 const formatLocalDateTime = (isoDateStr: string) => {
   if (!isoDateStr) return isoDateStr;
   return dayjs(isoDateStr).format("YYYY-MM-DDTHH:mm");
-};
-
-const calculateTotalAmount = (orderInfo: RentalOrderInfo) => {
-  if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-    const total = orderInfo.product_details.reduce((sum, prod) => {
-      return sum + calculateProductRent(prod);
-    }, 0);
-
-    return parseFloat(total.toFixed(2));
-  }
-  return 0;
 };
 
 export const transformRentalOrderResponse = (
@@ -42,10 +26,6 @@ export const transformRentalOrderResponse = (
         out_date: formatLocalDateTime(p.out_date),
         in_date: formatLocalDateTime(p.in_date),
       })) ?? [],
-    discount_amount: calculateDiscountAmount(
-      order.discount,
-      calculateTotalAmount(order)
-    ),
   };
 };
 

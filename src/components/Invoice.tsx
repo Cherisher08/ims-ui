@@ -1,8 +1,25 @@
-import { Document, Page, StyleSheet, Text, View, Image, Font } from "@react-pdf/renderer";
-import { BillingMode, DepositType, ProductDetails, RentalOrderInfo } from "../types/order";
+import {
+  Document,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Font,
+} from "@react-pdf/renderer";
+import {
+  BillingMode,
+  DepositType,
+  PaymentStatus,
+  ProductDetails,
+  RentalOrderInfo,
+} from "../types/order";
 import dayjs from "dayjs";
 import { ProductType } from "../types/common";
-import { calculateDiscountAmount, calculateProductRent } from "../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../services/utility_functions";
 import paidStamp from "/paid-icon.png";
 
 Font.register({
@@ -19,7 +36,18 @@ Font.register({
 function numberToWordsIndian(num: number) {
   if (typeof num !== "number" || isNaN(num)) return "Invalid number";
 
-  const singleDigits = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+  const singleDigits = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+  ];
 
   const doubleDigits = [
     "",
@@ -52,7 +80,10 @@ function numberToWordsIndian(num: number) {
   function getTwoDigitWords(n: number) {
     if (n < 10) return singleDigits[n];
     if (n < 20) return doubleDigits[n - 9];
-    return tensMultiple[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + singleDigits[n % 10] : "");
+    return (
+      tensMultiple[Math.floor(n / 10)] +
+      (n % 10 !== 0 ? " " + singleDigits[n % 10] : "")
+    );
   }
 
   // Convert to words
@@ -123,28 +154,6 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         }))
       : data.product_details;
 
-  const calcTotal = () => {
-    const finalAmount = calcFinalAmount();
-    const roundOff = data.round_off || 0;
-    const ewayBillAmount = data.eway_amount || 0;
-    const discountAmount = data.discount_amount || 0;
-    const balance_paid = data.balance_paid || 0;
-    const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount - discountAmount);
-    return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount - balance_paid).toFixed(
-        2
-      )
-    );
-  };
-
-  const depositTotal = () => {
-    return parseFloat(
-      data.deposits
-        .reduce((total: number, deposit: DepositType) => total + deposit.amount, 0)
-        .toFixed(2)
-    );
-  };
-
   const calcFinalAmount = () => {
     if (data.type === ProductType.RENTAL && updatedProducts.length > 0) {
       const total = updatedProducts.reduce((sum, prod) => {
@@ -156,7 +165,49 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     return 0;
   };
 
-  const gstAmount = ((calcFinalAmount() - data.discount_amount) * data.gst * 0.01).toFixed(2);
+  const calcTotal = () => {
+    const finalAmount = calcFinalAmount();
+    const roundOff = data.round_off || 0;
+    const ewayBillAmount = data.eway_amount || 0;
+    const discountAmount = data.discount_amount || 0;
+    const gstAmount = calculateDiscountAmount(
+      data.gst || 0,
+      finalAmount - discountAmount
+    );
+    return parseFloat(
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        ewayBillAmount
+      ).toFixed(2)
+    );
+  };
+
+  const paymentModeToDisplay =
+    calcTotal() -
+      data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
+    0
+      ? data.payment_mode.toUpperCase()
+      : data.balance_paid_mode.toUpperCase();
+
+  const depositTotal = () => {
+    return parseFloat(
+      data.deposits
+        .reduce(
+          (total: number, deposit: DepositType) => total + deposit.amount,
+          0
+        )
+        .toFixed(2)
+    );
+  };
+
+  const gstAmount = (
+    (calcFinalAmount() - data.discount_amount) *
+    data.gst *
+    0.01
+  ).toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -523,13 +574,24 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Text style={styles.fieldValue}>{data.event_address}</Text>
             </View>
           </View>
-          <View style={[styles.detailContainer, { justifyContent: "space-between" }]}>
+          <View
+            style={[
+              styles.detailContainer,
+              { justifyContent: "space-between" },
+            ]}
+          >
             <View>
               <View style={styles.ownerDetails}>
                 <Text style={styles.title}>MANI POWER TOOLS</Text>
-                <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
-                <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
-                <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
+                <Text style={styles.ownerAddress}>
+                  No. 1/290, Angalamman Koil Street, Padur,
+                </Text>
+                <Text style={styles.ownerAddress}>
+                  Chengalpattu, Chennai - 603103, Tamil Nadu
+                </Text>
+                <Text style={styles.ownerAddress}>
+                  Mobile No - 8428429153 , 9042439153
+                </Text>
                 <Text style={[styles.ownerAddress, { fontWeight: "bold" }]}>
                   manipowertools9153@gmail.com
                 </Text>
@@ -627,7 +689,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         </View>
 
         {/* <View style={styles.OrderSummaryContainer}> */}
-        <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>Order Summary</Text>
+        <Text style={{ fontSize: 15, fontWeight: "bold", paddingBottom: 5 }}>
+          Order Summary
+        </Text>
         <View style={styles.orderWrapper}>
           <View style={styles.tableContainer}>
             <View style={styles.tableHeader}>
@@ -754,10 +818,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 key={product._id}
                 style={[
                   styles.tableRow,
-                  updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
+                  updatedProducts.length - 1 === index
+                    ? {}
+                    : { borderBottom: "1px solid #000" },
                 ]}
               >
-                <Text style={[styles.productColumn, { width: 15 }]}>{index + 1}</Text>
+                <Text style={[styles.productColumn, { width: 15 }]}>
+                  {index + 1}
+                </Text>
                 <View>
                   <Text
                     style={[
@@ -774,7 +842,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 <Text style={[styles.productColumn, { width: 40 }]}>
                   {product.product_code || ""}
                 </Text>
-                <Text style={[styles.productColumn, { width: 25 }]}>{product.order_quantity} </Text>
+                <Text style={[styles.productColumn, { width: 25 }]}>
+                  {product.order_quantity}{" "}
+                </Text>
                 <Text style={[styles.productColumn, { width: 30 }]}>
                   {product.product_unit.name || "Unit(s)"}
                 </Text>
@@ -788,11 +858,18 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 <Text style={[styles.productColumn, { width: 55 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
-                <Text style={[styles.productColumn, { width: 40 }]}>{data.gst}</Text>
+                <Text style={[styles.productColumn, { width: 40 }]}>
+                  {data.gst}
+                </Text>
                 <Text style={[styles.productColumn, { width: 55 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
-                <Text style={[styles.productColumn, { maxWidth: 75, borderRight: "0px" }]}>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { maxWidth: 75, borderRight: "0px" },
+                  ]}
+                >
                   {product.damage}
                 </Text>
               </View>
@@ -834,10 +911,17 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 ].map((item, index) => (
                   <View
                     key={index}
-                    style={[styles.row, item.bottom ? { borderBottom: "1px solid black" } : {}]}
+                    style={[
+                      styles.row,
+                      item.bottom ? { borderBottom: "1px solid black" } : {},
+                    ]}
                   >
-                    <Text style={[styles.labelText, { fontWeight: "bold" }]}>{item.label}</Text>
-                    <Text style={[styles.valueText, { fontWeight: "bold" }]}>{item.value}</Text>
+                    <Text style={[styles.labelText, { fontWeight: "bold" }]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.valueText, { fontWeight: "bold" }]}>
+                      {item.value}
+                    </Text>
                   </View>
                 ))}
                 {data.eway_amount ? (
@@ -865,10 +949,21 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           gap: 4,
                         }}
                       >
-                        <Text style={[styles.selectSim, { paddingLeft: 50, paddingTop: 5 }]}>
-                          {"( Mode of Payment : " + data.eway_mode.toUpperCase() + ")"}
+                        <Text
+                          style={[
+                            styles.selectSim,
+                            { paddingLeft: 50, paddingTop: 5 },
+                          ]}
+                        >
+                          {"( Mode of Payment : " +
+                            data.eway_mode.toUpperCase() +
+                            ")"}
                         </Text>
-                        <Text style={[styles.labelText, { fontWeight: "bold" }]}>Transport</Text>
+                        <Text
+                          style={[styles.labelText, { fontWeight: "bold" }]}
+                        >
+                          Transport
+                        </Text>
                       </View>
                     </View>
                     <View
@@ -891,7 +986,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     borderBottom: "1px solid black",
                   }}
                 >
-                  <Text style={[styles.labelText, { fontWeight: "bold" }]}>Net Total</Text>
+                  <Text style={[styles.labelText, { fontWeight: "bold" }]}>
+                    Net Total
+                  </Text>
                   <Text style={[styles.valueText, { fontWeight: "bold" }]}>
                     {`Rs. ${Math.abs(calcTotal()).toFixed(2)}`}
                   </Text>
@@ -922,10 +1019,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     >
                       <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
                         {data.deposits.length
-                          ? "( Mode of Payment : " + data.deposits[0].mode.toUpperCase() + ")"
+                          ? "( Mode of Payment : " +
+                            data.deposits[0].mode.toUpperCase() +
+                            ")"
                           : ""}
                       </Text>
-                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>Deposit</Text>
+                      <Text style={[styles.labelText, { fontWeight: "bold" }]}>
+                        Deposit
+                      </Text>
                     </View>
                   </View>
                   <View
@@ -966,24 +1067,38 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         gap: 4,
                       }}
                     >
-                      <Text style={[styles.selectSim, { paddingLeft: 50 }]}>
-                        {"( Mode of Payment : " + data.payment_mode.toUpperCase() + ")"}
+                      <Text
+                        style={[
+                          styles.selectSim,
+                          { paddingLeft: 50, paddingTop: 5 },
+                        ]}
+                      >
+                        {paymentModeToDisplay !== "-" &&
+                          "Mode of Payment : " + paymentModeToDisplay + ")"}
                       </Text>
                       <Text
                         style={{
                           paddingRight: 5,
                           color:
                             calcTotal() -
-                              data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                            0
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) <
+                              0 && data.status !== PaymentStatus.PAID
                               ? "red"
                               : "black",
                           fontWeight: "bold",
                         }}
                       >
-                        {calcTotal() -
-                          data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                        0
+                        {data.status === PaymentStatus.PAID
+                          ? "Paid"
+                          : calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) <
+                            0
                           ? "Return Payment"
                           : "Balance"}
                       </Text>
@@ -1002,18 +1117,29 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       style={{
                         color:
                           calcTotal() -
-                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                          0
+                            data.deposits.reduce(
+                              (total, deposit) => total + deposit.amount,
+                              0
+                            ) <
+                            0 && data.status !== PaymentStatus.PAID
                             ? "red"
                             : "black",
                         fontWeight: "bold",
                       }}
                     >
                       Rs.{" "}
-                      {Math.abs(
-                        calcTotal() -
-                          data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-                      ).toFixed(2)}
+                      {data.status === PaymentStatus.PAID
+                        ? "0.00"
+                        : Math.abs(
+                            calcTotal() -
+                              data.deposits.reduce(
+                                (total, deposit) => total + deposit.amount,
+                                0
+                              ) -
+                              (data.balance_paid && data.balance_paid !== 0
+                                ? data.balance_paid
+                                : data.repay_amount)
+                          ).toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -1022,9 +1148,16 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
           </View>
           <View wrap={false} style={styles.footerRow}>
             <View style={styles.amountTextContainer}>
-              <Text style={{ fontSize: 12, marginBottom: 2 }}>Amount in words:</Text>
+              <Text style={{ fontSize: 12, marginBottom: 2 }}>
+                Amount in words:
+              </Text>
               <View
-                style={{ maxWidth: "100%", flexDirection: "row", alignItems: "center", gap: 5 }}
+                style={{
+                  maxWidth: "100%",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                }}
               >
                 <Text
                   style={{
@@ -1095,7 +1228,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 }}
               >
                 <Text style={styles.bankDetails}>Bank Information</Text>
-                <Text style={styles.selectSim}>Kindly make the payment in favour of</Text>
+                <Text style={styles.selectSim}>
+                  Kindly make the payment in favour of
+                </Text>
                 <View
                   style={{
                     width: "80%",
@@ -1159,7 +1294,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Image src="/qr.jpeg" style={{ width: 100, height: 100 }} />
             </View>
             <View style={{ marginTop: 8, width: "40%" }}>
-              <Text style={[styles.bankDetails, { marginBottom: 3 }]}>Terms & Conditions</Text>
+              <Text style={[styles.bankDetails, { marginBottom: 3 }]}>
+                Terms & Conditions
+              </Text>
               <Text
                 style={{
                   ...styles.thankYouText,
@@ -1169,7 +1306,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   lineHeight: 1.1,
                 }}
               >
-                Return products in good condition. Damages or loss will be charged.
+                Return products in good condition. Damages or loss will be
+                charged.
               </Text>
             </View>
           </View>
@@ -1183,7 +1321,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             <Text style={styles.thankYouText}>
               Thanks for choosing us - We look forward to serve you again
             </Text>
-            <Text style={styles.footerNoteText}>This is computer generated invoice</Text>
+            <Text style={styles.footerNoteText}>
+              This is computer generated invoice
+            </Text>
           </View>
         </View>
       </Page>

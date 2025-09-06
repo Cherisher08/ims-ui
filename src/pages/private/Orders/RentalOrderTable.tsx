@@ -11,7 +11,12 @@ import type { GridApi } from "ag-grid-community";
 import { FiEdit } from "react-icons/fi";
 import { IoPrintOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
-import { BillingMode, DepositType, RentalOrderType, RentalType } from "../../../types/order";
+import {
+  BillingMode,
+  DepositType,
+  RentalOrderType,
+  RentalType,
+} from "../../../types/order";
 import DeleteOrderModal from "../Customers/modals/DeleteOrderModal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -26,15 +31,25 @@ import { IdNamePair } from "../Stocks";
 import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
 import { AddressCellEditor } from "../../../components/AgGridCellEditors/AddressCellEditor";
 import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../../../services/utility_functions";
 import { currencyFormatter } from "./utils";
 import dayjs from "dayjs";
 
-const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
+const RentalOrderTable = ({
+  rentalOrders,
+}: {
+  rentalOrders: RentalOrderType[];
+}) => {
   const navigate = useNavigate();
-  const expiredOrders = useSelector((state: RootState) => state.rentalOrder.data);
+  const expiredOrders = useSelector(
+    (state: RootState) => state.rentalOrder.data
+  );
   const [patchRentalOrder] = usePatchRentalOrderMutation();
-  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
+  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
+    useGetContactsQuery();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
@@ -80,10 +95,22 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     const finalAmount = calculateTotalAmount(orderInfo);
     const roundOff = orderInfo.round_off || 0;
     const ewayBillAmount = orderInfo.eway_amount || 0;
-    const discountAmount = calculateDiscountAmount(orderInfo.discount || 0, finalAmount);
-    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+    const discountAmount = calculateDiscountAmount(
+      orderInfo.discount || 0,
+      finalAmount
+    );
+    const gstAmount = calculateDiscountAmount(
+      orderInfo.gst || 0,
+      finalAmount - discountAmount
+    );
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        ewayBillAmount
+      ).toFixed(2)
     );
   };
 
@@ -197,7 +224,10 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
               Math.min(
                 0,
                 calculateFinalAmount(data) -
-                  depositData.reduce((total, deposit) => total + deposit.amount, 0)
+                  depositData.reduce(
+                    (total, deposit) => total + deposit.amount,
+                    0
+                  )
               )
             ).toFixed(2)}
           </p>
@@ -220,7 +250,10 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
             {Math.max(
               0,
               calculateFinalAmount(data) -
-                depositData.reduce((total, deposit) => total + deposit.amount, 0)
+                depositData.reduce(
+                  (total, deposit) => total + deposit.amount,
+                  0
+                )
             ).toFixed(2)}
           </p>
         );
@@ -380,7 +413,9 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
         if (data && data.type === ProductType.RENTAL && data.product_details) {
           const percent = data.discount;
           const total_amount = calculateTotalAmount(data);
-          const discount_amount = parseFloat((total_amount * percent * 0.01).toFixed(2));
+          const discount_amount = parseFloat(
+            (total_amount * percent * 0.01).toFixed(2)
+          );
           return `₹${discount_amount.toFixed(2)}`;
         }
         return "0";
@@ -438,7 +473,10 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
         const depositData: DepositType[] = params.data.deposits ?? 0;
-        return depositData.reduce((total, deposit) => total + deposit.amount, 0);
+        return depositData.reduce(
+          (total, deposit) => total + deposit.amount,
+          0
+        );
       },
     },
     {
@@ -602,7 +640,8 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       }
 
       if (field === "status") {
-        if (typeof newValue === "string" && newValue.includes("pending")) value = "pending";
+        if (typeof newValue === "string" && newValue.includes("pending"))
+          value = "pending";
       }
 
       if (field === "discount_amount") {

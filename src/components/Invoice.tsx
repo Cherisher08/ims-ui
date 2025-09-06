@@ -197,11 +197,6 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       ? dayjs(dateStr).format("DD/MM/YYYY")
       : undefined;
 
-  console.log(
-    "getValidDate(data.balance_paid_date): ",
-    getValidDate(data.balance_paid_date),
-    data.balance_paid_date
-  );
   const balanceOrRepayDate =
     data.repay_amount &&
     data.repay_amount !== 0 &&
@@ -1163,7 +1158,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                               ) -
                               (data.balance_paid && data.balance_paid !== 0
                                 ? data.balance_paid
-                                : data.repay_amount)
+                                : -data.repay_amount)
                           ).toFixed(2)}
                     </Text>
                   </View>

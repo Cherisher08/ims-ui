@@ -192,6 +192,27 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       ? data.payment_mode.toUpperCase()
       : data.balance_paid_mode.toUpperCase();
 
+  const getValidDate = (dateStr: string | undefined) =>
+    dateStr && dayjs(dateStr).isValid()
+      ? dayjs(dateStr).format("DD/MM/YYYY")
+      : undefined;
+
+  console.log(
+    "getValidDate(data.balance_paid_date): ",
+    getValidDate(data.balance_paid_date),
+    data.balance_paid_date
+  );
+  const balanceOrRepayDate =
+    data.repay_amount &&
+    data.repay_amount !== 0 &&
+    getValidDate(data.repay_date)
+      ? getValidDate(data.repay_date)
+      : data.balance_paid &&
+        data.balance_paid !== 0 &&
+        getValidDate(data.balance_paid_date)
+      ? getValidDate(data.balance_paid_date)
+      : "";
+
   const depositTotal = () => {
     return parseFloat(
       data.deposits
@@ -1070,11 +1091,15 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       <Text
                         style={[
                           styles.selectSim,
-                          { paddingLeft: 50, paddingTop: 5 },
+                          {
+                            paddingLeft: 50,
+                            paddingTop: 5,
+                            color: "darkgreen",
+                          },
                         ]}
                       >
                         {paymentModeToDisplay !== "-" &&
-                          "Mode of Payment : " + paymentModeToDisplay + ")"}
+                          `(Last Mode of Payment : ${paymentModeToDisplay} | Date: ${balanceOrRepayDate})`}
                       </Text>
                       <Text
                         style={{

@@ -107,6 +107,8 @@ const initialRentalProduct: RentalOrderInfo = {
   balance_paid: 0,
   balance_paid_mode: PaymentMode.NULL,
   repay_amount: 0,
+  balance_paid_date: "",
+  repay_date: "",
   event_name: "",
   event_venue: "",
 };
@@ -1254,8 +1256,8 @@ const NewOrder = () => {
         </table>
       </div>
 
-      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-x-10 my-4">
-        <div className="flex gap-2">
+      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-x-10 my-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <CustomInput
             label="Transport"
             type="number"
@@ -1269,7 +1271,7 @@ const NewOrder = () => {
           <div className="flex items-end">
             <CustomSelect
               label=""
-              className="w-[8rem]"
+              className="w-full"
               options={paymentModeOptions}
               value={
                 paymentModeOptions.find(
@@ -1307,7 +1309,7 @@ const NewOrder = () => {
             }));
           }}
         />
-        <div className="flex gap-2">
+        <div className="flex gap-2 col-span-2">
           <CustomInput
             label="Balance Paid"
             placeholder="Enter Balance Paid"
@@ -1317,7 +1319,18 @@ const NewOrder = () => {
               handleValueChange("balance_paid", Number(val));
             }}
           />
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
+            <CustomDatePicker
+              label=""
+              value={
+                dayjs(orderInfo.balance_paid_date).format("DD-MMM-YYYY") || ""
+              }
+              className="w-[11rem]"
+              onChange={(val) => {
+                handleValueChange("balance_paid_date", val);
+              }}
+              format="DD/MM/YYYY"
+            />
             <CustomSelect
               label=""
               className="w-[8rem]"
@@ -1336,7 +1349,7 @@ const NewOrder = () => {
             />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 col-span-2">
           <CustomInput
             label="Repay Amount"
             wrapperClass="w-full"
@@ -1346,7 +1359,16 @@ const NewOrder = () => {
               handleValueChange("repay_amount", val);
             }}
           />
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
+            <CustomDatePicker
+              label=""
+              value={dayjs(orderInfo.repay_date).format("DD-MMM-YYYY") || ""}
+              className="w-[11rem]"
+              onChange={(val) => {
+                handleValueChange("repay_date", val);
+              }}
+              format="DD/MM/YYYY"
+            />
             <CustomSelect
               label=""
               className="w-[8rem]"

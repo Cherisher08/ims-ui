@@ -215,6 +215,13 @@ const NewOrder = () => {
 
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
+    const products = newOrderInfo.product_details;
+    const product = products.find((product) => product.order_quantity === 0);
+    if (product) {
+      // mes
+      toast.error(`${product.name} has 0 quantity`);
+      return;
+    }
     if (rentalId) {
       updateRentalOrder(newOrderInfo);
       if (existingRentalOrder) {

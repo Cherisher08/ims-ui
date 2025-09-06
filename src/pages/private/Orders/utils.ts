@@ -1,4 +1,8 @@
-import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from "ag-grid-community";
+import {
+  ValueFormatterParams,
+  ValueGetterParams,
+  ValueSetterParams,
+} from "ag-grid-community";
 import {
   BillingMode,
   OrderInfo,
@@ -40,7 +44,9 @@ export const gstAmountSetter = (params: ValueSetterParams): boolean => {
 
   if (isNaN(newGstAmount) || baseAmount === 0) return false;
 
-  const newGstPercent = parseFloat(((newGstAmount / baseAmount) * 100).toFixed(2));
+  const newGstPercent = parseFloat(
+    ((newGstAmount / baseAmount) * 100).toFixed(2)
+  );
 
   if (params.data.gst_percent !== newGstPercent) {
     params.data.gst_percent = newGstPercent;
@@ -103,6 +109,8 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     repay_amount: 0,
     event_name: "",
     event_venue: "",
+    balance_paid_date: "",
+    repay_date: "",
   };
 };
 
@@ -158,12 +166,16 @@ export const formatProducts = (products: Product[] | ProductDetails[]) => {
 //   value,
 // }));
 
-export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
-  id: key,
-  value,
-}));
+export const paymentModeOptions = Object.entries(PaymentMode).map(
+  ([key, value]) => ({
+    id: key,
+    value,
+  })
+);
 
-export const repaymentModeOptions = Object.entries(RepaymentMode).map(([key, value]) => ({
-  id: key,
-  value,
-}));
+export const repaymentModeOptions = Object.entries(RepaymentMode).map(
+  ([key, value]) => ({
+    id: key,
+    value,
+  })
+);

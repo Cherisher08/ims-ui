@@ -29,6 +29,8 @@ export const transformRentalOrderResponse = (
     ...order,
     in_date: formatLocalDateTime(order.in_date),
     out_date: formatLocalDateTime(order.out_date),
+    repay_date: formatLocalDateTime(order.repay_date),
+    balance_paid_date: formatLocalDateTime(order.balance_paid_date),
     deposits:
       order.deposits?.map((d) => ({
         ...d,
@@ -47,17 +49,19 @@ export const transformRentalOrderResponse = (
   };
 };
 
-function toUTCISOString(value: string | null | undefined) {
+const toUTCISOString = (value: string | null | undefined) => {
   if (!value) return null;
   const date = new Date(value);
   return date.toISOString();
-}
+};
 
 export const transformRentalOrderToUTC = (order: RentalOrderInfo) => {
   return {
     ...order,
     in_date: toUTCISOString(order.in_date),
     out_date: toUTCISOString(order.out_date),
+    repay_date: toUTCISOString(order.repay_date),
+    balance_paid_date: toUTCISOString(order.balance_paid_date),
     customer: order.customer
       ? {
           ...order.customer,

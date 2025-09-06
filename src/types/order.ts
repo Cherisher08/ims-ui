@@ -96,7 +96,6 @@ export type OrderInfo = {
   status: PaymentStatus;
   remarks: string;
   round_off: number;
-  repay_amount: number;
   payment_mode: RepaymentMode;
   gst: number;
 };
@@ -113,6 +112,9 @@ export type RentalOrderInfo = OrderInfo & {
   eway_mode: PaymentMode;
   balance_paid: number;
   balance_paid_mode: PaymentMode;
+  balance_paid_date: string;
+  repay_amount: number;
+  repay_date: string;
   event_name: string;
   event_venue: string;
 };

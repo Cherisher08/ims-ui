@@ -222,7 +222,6 @@ const NewOrder = () => {
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
-    const balancePaid = orderInfo.balance_paid || 0;
     const discountAmount = calculateDiscountAmount(
       orderInfo.discount || 0,
       finalAmount
@@ -232,20 +231,13 @@ const NewOrder = () => {
       finalAmount - discountAmount
     );
     return parseFloat(
-      (
-        finalAmount -
-        discountAmount +
-        gstAmount +
-        roundOff -
-        balancePaid
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff).toFixed(2)
     );
   }, [
     calculateTotalAmount,
     orderInfo.discount,
     orderInfo.gst,
     orderInfo.round_off,
-    orderInfo.balance_paid,
   ]);
 
   const removeOrderProduct = (id: string) => {
@@ -470,7 +462,6 @@ const NewOrder = () => {
       orderInfo.event_name &&
       !options.find((val) => val.id === orderInfo.event_name)
     ) {
-      console.log(1);
       options.push({
         id: orderInfo.event_name,
         value: orderInfo.event_name,
@@ -494,6 +485,25 @@ const NewOrder = () => {
       setEventNameOptions(options);
     }
     handleValueChange("event_name", value);
+  };
+
+  const handlePaymentStatus = (
+    type: "balance_paid" | "repay_amount",
+    value: number
+  ) => {
+    // Calculate the amount to be paid or received
+    const amountDue = Math.abs(
+      calculateFinalAmount() -
+        orderInfo.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+    );
+
+    // If paid/received amount equals the amount due, mark as Paid
+    if (value === amountDue) {
+      handleValueChange(type, value);
+      handleValueChange("status", PaymentStatus.PAID);
+    } else {
+      handleValueChange(type, value);
+    }
   };
 
   return (
@@ -1314,9 +1324,10 @@ const NewOrder = () => {
             label="Balance Paid"
             placeholder="Enter Balance Paid"
             wrapperClass="w-full"
+            type="number"
             value={orderInfo.balance_paid}
             onChange={(val) => {
-              handleValueChange("balance_paid", Number(val));
+              handlePaymentStatus("balance_paid", Number(val));
             }}
           />
           <div className="flex items-end gap-2">
@@ -1354,9 +1365,10 @@ const NewOrder = () => {
             label="Repay Amount"
             wrapperClass="w-full"
             placeholder="Enter Repay Amount"
+            type="number"
             value={orderInfo.repay_amount}
             onChange={(val) => {
-              handleValueChange("repay_amount", val);
+              handlePaymentStatus("repay_amount", Number(val));
             }}
           />
           <div className="flex items-end gap-2">

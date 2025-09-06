@@ -266,7 +266,6 @@ const RentalOrderTable = ({
       filter: "agDateColumnFilter",
       editable: true,
       singleClickEdit: true,
-      cellDataType: "dateTime",
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
         const date = new Date(params.value);
@@ -282,7 +281,6 @@ const RentalOrderTable = ({
       filter: "agDateColumnFilter",
       editable: true,
       singleClickEdit: true,
-      cellDataType: "dateTime",
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
         const date = params.value ? new Date(params.value) : "";

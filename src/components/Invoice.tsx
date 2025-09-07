@@ -763,7 +763,13 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 key={product._id}
                 style={[
                   styles.tableRow,
-                  updatedProducts.length - 1 === index ? {} : { borderBottom: "1px solid #000" },
+                  (
+                    data.product_details.length < 7
+                      ? index < 5
+                      : index !== data.product_details.length - 1
+                  )
+                    ? { borderBottom: "1px solid #000" }
+                    : {},
                 ]}
               >
                 <Text style={[styles.productColumn, { width: 20 }]}>{index + 1}</Text>

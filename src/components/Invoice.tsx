@@ -201,12 +201,11 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       ? dayjs(dateStr).format("DD/MM/YYYY")
       : undefined;
 
-  const balanceOrRepayDate =
-    data.repay_amount && getValidDate(data.repay_date)
-      ? getValidDate(data.repay_date)
-      : data.balance_paid && getValidDate(data.balance_paid_date)
-      ? getValidDate(data.balance_paid_date)
-      : "";
+  const balanceOrRepayDate = getValidDate(data.repay_date)
+    ? getValidDate(data.repay_date)
+    : getValidDate(data.balance_paid_date)
+    ? getValidDate(data.balance_paid_date)
+    : "";
 
   const depositTotal = () => {
     return parseFloat(

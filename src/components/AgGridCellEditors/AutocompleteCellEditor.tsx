@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { CustomCellEditorProps } from "ag-grid-react";
-import { IdNamePair } from "../../pages/private/Stocks";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+import { CustomCellEditorProps } from 'ag-grid-react';
+import { useEffect, useRef, useState } from 'react';
+import { IdNamePair } from '../../pages/private/Stocks';
 
 type AutocompleteCellEditorProps = CustomCellEditorProps & {
   customerOptions: IdNamePair[];
@@ -34,8 +34,6 @@ export const AutocompleteCellEditor = ({
     stopEditing();
   };
 
-  
-
   return (
     <Autocomplete
       options={customerOptions}
@@ -49,8 +47,8 @@ export const AutocompleteCellEditor = ({
           inputRef={ref}
           variant="outlined"
           sx={{
-            fontSize: "0.75rem", // Smaller font size
-            backgroundColor: "#fff",
+            fontSize: '0.75rem', // Smaller font size
+            backgroundColor: '#fff',
           }}
           size="small"
         />

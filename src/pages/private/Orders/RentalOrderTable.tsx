@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store/store";
-import { PatchOperation, ProductType } from "../../../types/common";
+import { EventNameType, PatchOperation, ProductType } from "../../../types/common";
 import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
 import { useGetContactsQuery } from "../../../services/ContactService";
@@ -29,6 +29,7 @@ import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCe
 import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
 import { currencyFormatter } from "./utils";
 import dayjs from "dayjs";
+import { EventNameCellEditor } from "../../../components/AgGridCellEditors/EventNameCellEditor";
 
 const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
   const navigate = useNavigate();
@@ -99,6 +100,11 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
   //     return rent;
   //   }
   // };
+
+  const eventOptions: IdNamePair[] = Object.values(EventNameType).map((val, index) => ({
+    id: `event-${index}`,
+    name: val,
+  }));
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
     {
@@ -280,7 +286,10 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       filter: "agTextColumnFilter",
       editable: true,
       singleClickEdit: true,
-      cellEditor: AddressCellEditor,
+      cellEditor: EventNameCellEditor,
+      cellEditorParams: {
+        customerOptions: eventOptions,
+      },
     },
     {
       field: "event_venue",
@@ -610,6 +619,10 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
         if (calculateTotalAmount(data))
           value = ((newValue / calculateTotalAmount(data)) * 100).toFixed(2);
         else value = 0;
+      }
+
+      if (field === "event_name") {
+        value = value.name;
       }
 
       const patchPayload: PatchOperation[] = [

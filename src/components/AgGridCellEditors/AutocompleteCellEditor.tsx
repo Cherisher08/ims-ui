@@ -24,6 +24,7 @@ export const AutocompleteCellEditor = ({
     setTimeout(() => ref.current?.focus(), 10);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (_: any, newValue: IdNamePair) => {
     setSelected(newValue);
     onValueChange(newValue);
@@ -32,6 +33,8 @@ export const AutocompleteCellEditor = ({
   const handleBlur = () => {
     stopEditing();
   };
+
+  
 
   return (
     <Autocomplete

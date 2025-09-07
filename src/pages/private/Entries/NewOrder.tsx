@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CustomButton from "../../../styled/CustomButton";
 import CustomInput from "../../../styled/CustomInput";
-import CustomSelect, { CustomSelectOptionProps } from "../../../styled/CustomSelect";
+import CustomSelect, {
+  CustomSelectOptionProps,
+} from "../../../styled/CustomSelect";
 import AntSwitch from "../../../styled/CustomSwitch";
 import CustomDatePicker from "../../../styled/CustomDatePicker";
 import {
@@ -24,7 +26,10 @@ import {
   Product,
   ProductType,
 } from "../../../types/common";
-import { useGetProductsQuery, useUpdateProductMutation } from "../../../services/ApiService";
+import {
+  useGetProductsQuery,
+  useUpdateProductMutation,
+} from "../../../services/ApiService";
 import { useGetContactsQuery } from "../../../services/ContactService";
 import {
   useCreateRentalOrderMutation,
@@ -36,7 +41,10 @@ import {
 import { toast } from "react-toastify";
 import { TOAST_IDS } from "../../../constants/constants";
 import { useNavigate, useParams } from "react-router-dom";
-import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
+import {
+  calculateDiscountAmount,
+  calculateProductRent,
+} from "../../../services/utility_functions";
 import { useDispatch } from "react-redux";
 import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
 import {
@@ -53,7 +61,9 @@ import CustomAutoComplete from "../../../styled/CustomAutoComplete";
 import { LuPlus } from "react-icons/lu";
 import AddContactModal from "../Customers/modals/AddContactModal";
 
-const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
+const formatContacts = (
+  contacts: ContactInfoType[]
+): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
     id: contact._id ?? "",
     value: contact.name,
@@ -73,10 +83,12 @@ const getCurrentFY = () => {
   return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
 };
 
-const paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
-  id: key,
-  value,
-}));
+const paymentStatusOptions = Object.entries(PaymentStatus).map(
+  ([key, value]) => ({
+    id: key,
+    value,
+  })
+);
 
 const initialRentalProduct: RentalOrderInfo = {
   order_id: "",
@@ -114,29 +126,44 @@ const NewOrder = () => {
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const isAllOrdersAllowed: boolean = false;
-  const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
-  const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
-  const { data: existingRentalOrder, isSuccess: isRentalOrderQueryByIdSuccess } =
-    useGetRentalOrderByIdQuery(rentalId!, {
-      skip: !rentalId,
-    });
-  const [updateProductData, { isSuccess: isUpdateProductSuccess }] = useUpdateProductMutation();
+  const { data: productsData, isSuccess: isProductsQuerySuccess } =
+    useGetProductsQuery();
+  const { data: contactsData, isSuccess: isContactsQuerySuccess } =
+    useGetContactsQuery();
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } =
+    useGetRentalOrdersQuery();
+  const {
+    data: existingRentalOrder,
+    isSuccess: isRentalOrderQueryByIdSuccess,
+  } = useGetRentalOrderByIdQuery(rentalId!, {
+    skip: !rentalId,
+  });
+  const [updateProductData, { isSuccess: isUpdateProductSuccess }] =
+    useUpdateProductMutation();
   const [
     createRentalOrder,
-    { isSuccess: isRentalOrderCreateSuccess, isError: isRentalOrderCreateError },
+    {
+      isSuccess: isRentalOrderCreateSuccess,
+      isError: isRentalOrderCreateError,
+    },
   ] = useCreateRentalOrderMutation();
   const [
     updateRentalOrder,
-    { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
+    {
+      isSuccess: isRentalOrderUpdateSuccess,
+      isError: isRentalOrderUpdateError,
+    },
   ] = useUpdateRentalOrderMutation();
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
-  const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalProduct);
+  const [orderInfo, setOrderInfo] =
+    useState<RentalOrderInfo>(initialRentalProduct);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
-  const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
+  const [eventNameOptions, setEventNameOptions] = useState<
+    CustomSelectOptionProps[]
+  >([]);
   const [removedProducts, setRemovedProducts] = useState<Product[]>([]);
 
   const [depositData, setDepositData] = useState<DepositType[]>([
@@ -192,7 +219,12 @@ const NewOrder = () => {
       return parseFloat(total.toFixed(2));
     }
     return 0;
-  }, [orderInfo.type, orderInfo.product_details, orderInfo.billing_mode, orderInfo.gst]);
+  }, [
+    orderInfo.type,
+    orderInfo.product_details,
+    orderInfo.billing_mode,
+    orderInfo.gst,
+  ]);
 
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
@@ -201,28 +233,46 @@ const NewOrder = () => {
       orderInfo.discount_type === DiscountType.PERCENT
         ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
         : orderInfo.discount || 0;
-    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
-    return parseFloat((finalAmount - discountAmount + gstAmount + roundOff).toFixed(2));
+    const gstAmount = calculateDiscountAmount(
+      orderInfo.gst || 0,
+      finalAmount - discountAmount
+    );
+    return parseFloat(
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        orderInfo.eway_amount
+      ).toFixed(2)
+    );
   }, [
     calculateTotalAmount,
     orderInfo.discount,
     orderInfo.discount_type,
+    orderInfo.eway_amount,
     orderInfo.gst,
     orderInfo.round_off,
   ]);
 
   const removeOrderProduct = (id: string) => {
     if (orderInfo.type === ProductType.RENTAL) {
-      const filteredProducts = (orderInfo.product_details || []).filter((prod) => prod._id !== id);
+      const filteredProducts = (orderInfo.product_details || []).filter(
+        (prod) => prod._id !== id
+      );
 
-      const removedProduct = orderInfo.product_details.find((prod) => prod._id === id);
+      const removedProduct = orderInfo.product_details.find(
+        (prod) => prod._id === id
+      );
 
       if (removedProduct) {
         const removedProductData = products.find((prod) => prod._id === id);
         if (removedProductData) {
           const updatedProductData = {
             ...removedProductData,
-            available_stock: removedProductData.available_stock + removedProduct.order_quantity,
+            available_stock:
+              removedProductData.available_stock +
+              removedProduct.order_quantity,
           };
 
           const updatedProducts = products.map((prod) =>
@@ -242,24 +292,30 @@ const NewOrder = () => {
   };
 
   const updateProductStock = (paymentStatus: PaymentStatus | undefined) => {
-    const updatedProducts = orderInfo.product_details.map((updatedProductDetail) => {
-      const currentProduct = {
-        ...products.find((product) => product._id === updatedProductDetail._id)!,
-      };
-      if (paymentStatus === "paid") {
-        currentProduct.available_stock += updatedProductDetail.order_quantity;
-      } else if (paymentStatus === "pending") {
-        currentProduct.available_stock -= updatedProductDetail.order_quantity;
+    const updatedProducts = orderInfo.product_details.map(
+      (updatedProductDetail) => {
+        const currentProduct = {
+          ...products.find(
+            (product) => product._id === updatedProductDetail._id
+          )!,
+        };
+        if (paymentStatus === "paid") {
+          currentProduct.available_stock += updatedProductDetail.order_quantity;
+        } else if (paymentStatus === "pending") {
+          currentProduct.available_stock -= updatedProductDetail.order_quantity;
+        }
+        return currentProduct;
       }
-      return currentProduct;
-    });
+    );
     setProducts(updatedProducts);
   };
 
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
     const productsInOrder = newOrderInfo.product_details;
-    const product = productsInOrder.find((product) => product.order_quantity === 0);
+    const product = productsInOrder.find(
+      (product) => product.order_quantity === 0
+    );
     if (product) {
       // mes
       toast.error(`${product.name} has 0 quantity`);
@@ -282,7 +338,9 @@ const NewOrder = () => {
           // find the product in inventory
 
           const currentProduct = {
-            ...products.find((product) => product._id === updatedProductDetail._id)!,
+            ...products.find(
+              (product) => product._id === updatedProductDetail._id
+            )!,
           };
 
           // apply the delta
@@ -304,7 +362,9 @@ const NewOrder = () => {
 
           // find the product in inventory
           const currentProduct = {
-            ...products.find((product) => product._id === updatedProductDetail._id)!,
+            ...products.find(
+              (product) => product._id === updatedProductDetail._id
+            )!,
           };
 
           // apply the delta
@@ -322,24 +382,32 @@ const NewOrder = () => {
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
           newOrderInfo.product_details.map((product_detail) => {
-            const currentProduct = products.find((product) => product._id === product_detail._id);
+            const currentProduct = products.find(
+              (product) => product._id === product_detail._id
+            );
 
             if (!currentProduct) {
-              console.warn(`⚠️ Product ${product_detail._id} not found, skipping`);
+              console.warn(
+                `⚠️ Product ${product_detail._id} not found, skipping`
+              );
               return Promise.resolve();
             }
 
             return updateProductData({
               ...currentProduct,
-              available_stock: currentProduct.available_stock - product_detail.order_quantity,
-              repair_count: currentProduct.repair_count + product_detail.order_repair_count,
+              available_stock:
+                currentProduct.available_stock - product_detail.order_quantity,
+              repair_count:
+                currentProduct.repair_count + product_detail.order_repair_count,
             }).unwrap();
           })
         );
 
         results.forEach((result, idx) => {
           if (result.status === "fulfilled") {
-            console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
+            console.log(
+              `✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`
+            );
           } else {
             console.error(
               `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
@@ -377,7 +445,12 @@ const NewOrder = () => {
       });
       navigate("/orders");
     }
-  }, [isRentalOrderCreateError, isRentalOrderCreateSuccess, isUpdateProductSuccess, navigate]);
+  }, [
+    isRentalOrderCreateError,
+    isRentalOrderCreateSuccess,
+    isUpdateProductSuccess,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (isRentalOrderUpdateSuccess) {
@@ -401,9 +474,12 @@ const NewOrder = () => {
       navigate("/orders");
     }
     if (isRentalOrderUpdateError) {
-      toast.error("Rental Order was not Updated Successfully. Please Try Again", {
-        toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
-      });
+      toast.error(
+        "Rental Order was not Updated Successfully. Please Try Again",
+        {
+          toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+        }
+      );
       navigate("/orders");
     }
   }, [
@@ -422,7 +498,12 @@ const NewOrder = () => {
     if (isContactsQuerySuccess) {
       setContacts(contactsData);
     }
-  }, [contactsData, isContactsQuerySuccess, isProductsQuerySuccess, productsData]);
+  }, [
+    contactsData,
+    isContactsQuerySuccess,
+    isProductsQuerySuccess,
+    productsData,
+  ]);
 
   useEffect(() => {
     if (rentalId) {
@@ -461,11 +542,16 @@ const NewOrder = () => {
   }, [orderInfo.gst, orderInfo.billing_mode]);
 
   useEffect(() => {
-    const options: CustomSelectOptionProps[] = Object.values(EventNameType).map((val) => ({
-      id: val,
-      value: val,
-    }));
-    if (orderInfo.event_name && !options.find((val) => val.id === orderInfo.event_name)) {
+    const options: CustomSelectOptionProps[] = Object.values(EventNameType).map(
+      (val) => ({
+        id: val,
+        value: val,
+      })
+    );
+    if (
+      orderInfo.event_name &&
+      !options.find((val) => val.id === orderInfo.event_name)
+    ) {
       options.push({
         id: orderInfo.event_name,
         value: orderInfo.event_name,
@@ -490,7 +576,10 @@ const NewOrder = () => {
     handleValueChange("event_name", value);
   };
 
-  const handlePaymentStatus = (type: "balance_paid" | "repay_amount", value: number) => {
+  const handlePaymentStatus = (
+    type: "balance_paid" | "repay_amount",
+    value: number
+  ) => {
     // Calculate the amount to be paid or received
     const amountDue = Math.abs(
       calculateFinalAmount() -
@@ -538,7 +627,9 @@ const NewOrder = () => {
             ))}
           </Tabs>
         ) : (
-          <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
+          <Box className="font-primary text-2xl font-bold w-full">
+            Rental Order
+          </Box>
         )}
 
         <div className="flex flex-col items-end">
@@ -549,8 +640,8 @@ const NewOrder = () => {
             icon={<LuPlus color="white" />}
           />
           <p className="text-sm text-primary whitespace-nowrap mt-3">
-            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
-            to proceed.
+            <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add
+            at least one product to proceed.
           </p>
         </div>
       </div>
@@ -592,8 +683,10 @@ const NewOrder = () => {
           placeholder=""
           createOption={false}
           value={
-            contacts.find((cont) => cont?.personal_number === orderInfo?.customer?.personal_number)
-              ?.personal_number || ""
+            contacts.find(
+              (cont) =>
+                cont?.personal_number === orderInfo?.customer?.personal_number
+            )?.personal_number || ""
           }
           label="Customer Mobile"
           onChange={(value) => {
@@ -615,8 +708,9 @@ const NewOrder = () => {
           label="Customer"
           options={formatContacts(contacts)}
           value={
-            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
-              ?.value ?? ""
+            formatContacts(contacts).find(
+              (option) => option.id === orderInfo.customer?._id
+            )?.value ?? ""
           }
           onChange={(name) => {
             handleValueChange(
@@ -630,11 +724,14 @@ const NewOrder = () => {
             label="Payment Status"
             options={paymentStatusOptions}
             value={
-              paymentStatusOptions.find((paymentStatus) => orderInfo.status === paymentStatus.value)
-                ?.id ?? ""
+              paymentStatusOptions.find(
+                (paymentStatus) => orderInfo.status === paymentStatus.value
+              )?.id ?? ""
             }
             onChange={(id) => {
-              const status = paymentStatusOptions.find((option) => option.id === id)?.value;
+              const status = paymentStatusOptions.find(
+                (option) => option.id === id
+              )?.value;
               if (status === "pending") {
                 handleValueChange("repay_date", "");
                 handleValueChange("payment_mode", RepaymentMode.NULL);
@@ -751,10 +848,14 @@ const NewOrder = () => {
           <CustomButton
             label="Add Product"
             disabled={
-              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
+              orderInfo.product_details?.filter((current) => current._id === "")
+                .length > 0 || false
             }
             onClick={() => {
-              const newProduct = getDefaultProduct(orderInfo?.out_date, orderInfo.in_date);
+              const newProduct = getDefaultProduct(
+                orderInfo?.out_date,
+                orderInfo.in_date
+              );
               setOrderInfo((prev) => ({
                 ...prev,
                 product_details: [...(prev.product_details || []), newProduct],
@@ -769,12 +870,16 @@ const NewOrder = () => {
               <tr className="bg-gray-200">
                 <th className="px-1 py-1 text-left w-[15rem]">Product</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Product Unit</th>
-                <th className="px-1 py-1 text-left w-[9rem]">Available Stock</th>
+                <th className="px-1 py-1 text-left w-[9rem]">
+                  Available Stock
+                </th>
                 <th className="px-1 py-1 text-left w-[6rem]">Order Quantity</th>
                 <th className="px-1 py-1 text-left w-[11rem]">Out Date</th>
                 <th className="px-1 py-1 text-left w-[11rem]">In Date</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Duration</th>
-                <th className="px-1 py-1 text-left w-[8rem]">Order Repair Quantity</th>
+                <th className="px-1 py-1 text-left w-[8rem]">
+                  Order Repair Quantity
+                </th>
                 <th className="px-1 py-1 text-left w-[10rem]">Rent Per Unit</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Final Amount</th>
                 <th className="px-1 py-1 text-left w-[20rem]">Damage</th>
@@ -795,14 +900,18 @@ const NewOrder = () => {
                           products.filter(
                             (prod) =>
                               !orderInfo.product_details?.find(
-                                (current) => current._id === prod._id && prod._id !== product._id
+                                (current) =>
+                                  current._id === prod._id &&
+                                  prod._id !== product._id
                               )
                           )
                         )}
                         className="w-[14rem]"
                         value={product.name}
                         onChange={(name) => {
-                          const data = products.find((prod) => prod.name === name);
+                          const data = products.find(
+                            (prod) => prod.name === name
+                          );
                           if (data) {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {
@@ -814,7 +923,11 @@ const NewOrder = () => {
                               rent_per_unit: data.rent_per_unit,
                               product_code: data.product_code,
                             };
-                            if (removedProducts.find((prod) => prod._id === data._id)) {
+                            if (
+                              removedProducts.find(
+                                (prod) => prod._id === data._id
+                              )
+                            ) {
                               setRemovedProducts((prev) =>
                                 prev.filter((prod) => prod._id !== data._id)
                               );
@@ -833,7 +946,10 @@ const NewOrder = () => {
                         placeholder=""
                         disabled
                         className="w-[7rem] p-2"
-                        value={orderInfo.product_details[index].product_unit.name || ""}
+                        value={
+                          orderInfo.product_details[index].product_unit.name ||
+                          ""
+                        }
                         onChange={() => {}}
                       />
                     </td>
@@ -874,7 +990,10 @@ const NewOrder = () => {
                     <td className="px-1 py-2 content-start">
                       <CustomInput
                         disabled
-                        value={products.find((p) => p._id === product._id)?.available_stock || 0}
+                        value={
+                          products.find((p) => p._id === product._id)
+                            ?.available_stock || 0
+                        }
                         type="number"
                         className="w-[8rem] p-2"
                         onChange={() => {}}
@@ -889,16 +1008,21 @@ const NewOrder = () => {
                         placeholder=""
                         disabled={orderInfo.status === PaymentStatus.PAID}
                         className="w-[5rem] p-2"
-                        value={orderInfo.product_details[index].order_quantity || 0}
+                        value={
+                          orderInfo.product_details[index].order_quantity || 0
+                        }
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
 
                           const newQuantity = Number(val);
-                          const currentProduct = products.find((p) => p._id === product._id);
+                          const currentProduct = products.find(
+                            (p) => p._id === product._id
+                          );
 
                           if (!currentProduct) return;
 
-                          const available_stock = currentProduct.available_stock;
+                          const available_stock =
+                            currentProduct.available_stock;
                           const prevQuantity = product.order_quantity;
 
                           // Calculate the difference
@@ -925,7 +1049,9 @@ const NewOrder = () => {
                           // Update products stock
                           setProducts((prev) =>
                             prev.map((p) =>
-                              p._id === product._id ? { ...p, available_stock: finalStock } : p
+                              p._id === product._id
+                                ? { ...p, available_stock: finalStock }
+                                : p
                             )
                           );
 
@@ -946,14 +1072,17 @@ const NewOrder = () => {
                       <CustomDatePicker
                         label=""
                         value={
-                          dayjs(orderInfo.product_details[index].out_date).format(
-                            "DD-MMM-YYYY hh:mm A"
-                          ) || ""
+                          dayjs(
+                            orderInfo.product_details[index].out_date
+                          ).format("DD-MMM-YYYY hh:mm A") || ""
                         }
                         className="w-[15rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(val, newProducts[index].in_date);
+                          const duration = getDuration(
+                            val,
+                            newProducts[index].in_date
+                          );
                           newProducts[index] = {
                             ...product,
                             out_date: val,
@@ -971,14 +1100,17 @@ const NewOrder = () => {
                       <CustomDatePicker
                         label=""
                         value={
-                          dayjs(orderInfo.product_details[index].in_date).format(
-                            "DD-MMM-YYYY hh:mm A"
-                          ) || ""
+                          dayjs(
+                            orderInfo.product_details[index].in_date
+                          ).format("DD-MMM-YYYY hh:mm A") || ""
                         }
                         className="w-[15rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(newProducts[index].out_date, val);
+                          const duration = getDuration(
+                            newProducts[index].out_date,
+                            val
+                          );
                           newProducts[index] = {
                             ...product,
                             in_date: val,
@@ -1018,7 +1150,10 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[8rem] p-2"
-                        value={orderInfo.product_details[index].order_repair_count || 0}
+                        value={
+                          orderInfo.product_details[index].order_repair_count ||
+                          0
+                        }
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
                           newProducts[index] = {
@@ -1062,7 +1197,11 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[8rem] p-2"
-                        value={product.rent_per_unit * product.order_quantity * product.duration}
+                        value={
+                          product.rent_per_unit *
+                          product.order_quantity *
+                          product.duration
+                        }
                         onChange={() => {}}
                       />
                     </td>
@@ -1171,14 +1310,17 @@ const NewOrder = () => {
                       label=""
                       value={
                         formatProducts(products).find((prod) =>
-                          deposit.product ? prod.id === deposit.product._id : false
+                          deposit.product
+                            ? prod.id === deposit.product._id
+                            : false
                         )?.id ?? ""
                       }
                       options={formatProducts(orderInfo.product_details || [])}
                       onChange={(id) =>
                         setDepositData((prev) => {
                           const newDeposits = [...prev];
-                          const product = products.find((prod) => prod._id === id) || null;
+                          const product =
+                            products.find((prod) => prod._id === id) || null;
                           newDeposits[index] = { ...deposit, product: product };
                           return newDeposits;
                         })
@@ -1191,12 +1333,14 @@ const NewOrder = () => {
                       options={paymentModeOptions}
                       className="w-[14rem]"
                       value={
-                        paymentModeOptions.find((mode) => deposit.mode === mode.value)?.id || ""
+                        paymentModeOptions.find(
+                          (mode) => deposit.mode === mode.value
+                        )?.id || ""
                       }
                       onChange={(mode) => {
                         const currentMode =
-                          paymentModeOptions.find((md) => md.id === mode)?.value ??
-                          PaymentMode.CASH;
+                          paymentModeOptions.find((md) => md.id === mode)
+                            ?.value ?? PaymentMode.CASH;
                         const newDeposits = [...depositData];
                         newDeposits[index] = {
                           ...deposit,
@@ -1211,7 +1355,9 @@ const NewOrder = () => {
                       label="Delete"
                       icon=""
                       onClick={() => {
-                        const newDeposits = depositData.filter((_, i) => i !== index);
+                        const newDeposits = depositData.filter(
+                          (_, i) => i !== index
+                        );
                         setDepositData(newDeposits);
                       }}
                     ></CustomButton>
@@ -1247,11 +1393,14 @@ const NewOrder = () => {
               className="w-full"
               options={paymentModeOptions}
               value={
-                paymentModeOptions.find((mode) => orderInfo.eway_mode === mode.value)?.id || ""
+                paymentModeOptions.find(
+                  (mode) => orderInfo.eway_mode === mode.value
+                )?.id || ""
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ??
+                  PaymentMode.CASH;
                 handleValueChange("eway_mode", currentMode);
               }}
             />
@@ -1280,8 +1429,9 @@ const NewOrder = () => {
             wrapperClass="mt-6"
             options={discountTypeValues}
             value={
-              discountTypeValues.find((discountType) => orderInfo.discount_type === discountType.id)
-                ?.id ?? discountTypeValues[0].id
+              discountTypeValues.find(
+                (discountType) => orderInfo.discount_type === discountType.id
+              )?.id ?? discountTypeValues[0].id
             }
             onChange={(value) => handleValueChange("discount_type", value)}
           />
@@ -1300,7 +1450,9 @@ const NewOrder = () => {
           <div className="flex items-end gap-2">
             <CustomDatePicker
               label=""
-              value={dayjs(orderInfo.balance_paid_date).format("DD-MMM-YYYY") || ""}
+              value={
+                dayjs(orderInfo.balance_paid_date).format("DD-MMM-YYYY") || ""
+              }
               className="w-[11rem]"
               onChange={(val) => {
                 handleValueChange("balance_paid_date", val);
@@ -1312,12 +1464,14 @@ const NewOrder = () => {
               className="w-[8rem]"
               options={paymentModeOptions}
               value={
-                paymentModeOptions.find((mode) => orderInfo.balance_paid_mode === mode.value)?.id ||
-                ""
+                paymentModeOptions.find(
+                  (mode) => orderInfo.balance_paid_mode === mode.value
+                )?.id || ""
               }
               onChange={(mode) => {
                 const currentMode =
-                  paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
+                  paymentModeOptions.find((md) => md.id === mode)?.value ??
+                  PaymentMode.CASH;
                 handleValueChange("balance_paid_mode", currentMode);
               }}
             />
@@ -1355,13 +1509,18 @@ const NewOrder = () => {
               className="w-[8rem]"
               options={repaymentModeOptions}
               value={
-                repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ""
+                repaymentModeOptions.find(
+                  (mode) => orderInfo.payment_mode === mode.value
+                )?.id || ""
               }
               onChange={(mode) => {
                 const currentMode =
                   repaymentModeOptions.find((md) => md.id === mode)?.value ??
                   RepaymentMode.CASHLESS;
-                if (currentMode === RepaymentMode.NULL && !orderInfo.repay_date) {
+                if (
+                  currentMode === RepaymentMode.NULL &&
+                  !orderInfo.repay_date
+                ) {
                   handleValueChange("status", PaymentStatus.PENDING);
                 } else {
                   handleValueChange("status", PaymentStatus.PAID);
@@ -1384,13 +1543,16 @@ const NewOrder = () => {
                     <p>Deposit</p>
                     <p>Amount before Taxes</p>
                     <p>Discount</p>
+                    <p>Transport</p>
                     <p>GST</p>
                     <p>Round Off</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
                     <p>
                       ₹{" "}
-                      {depositData.reduce((total, deposit) => total + deposit.amount, 0).toFixed(2)}
+                      {depositData
+                        .reduce((total, deposit) => total + deposit.amount, 0)
+                        .toFixed(2)}
                     </p>
                     <p>₹ {calculateTotalAmount.toFixed(2)}</p>
 
@@ -1399,6 +1561,7 @@ const NewOrder = () => {
                         ? `${orderInfo.discount}%`
                         : `₹ ${orderInfo.discount.toFixed(2)}`}
                     </p>
+                    <p>{`₹ ${orderInfo.eway_amount.toFixed(2)}`}</p>
                     <div className="flex justify-end gap-1">
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
@@ -1407,8 +1570,14 @@ const NewOrder = () => {
                         type="number"
                         value={orderInfo.gst}
                         onChange={(e) => {
-                          if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-                            let percent = parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
+                          if (
+                            orderInfo.type === ProductType.RENTAL &&
+                            orderInfo.product_details
+                          ) {
+                            let percent =
+                              parseFloat(
+                                parseFloat(e.target.value).toFixed(0)
+                              ) || 0;
                             if (percent >= 100) {
                               percent = 100;
                             }
@@ -1431,7 +1600,9 @@ const NewOrder = () => {
                         onChange={(e) =>
                           setOrderInfo((prev) => ({
                             ...prev,
-                            round_off: parseFloat(parseFloat(e.target.value).toFixed(2)),
+                            round_off: parseFloat(
+                              parseFloat(e.target.value).toFixed(2)
+                            ),
                           }))
                         }
                       />

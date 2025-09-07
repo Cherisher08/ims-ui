@@ -1121,13 +1121,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           },
                         ]}
                       >
-                        {(calcTotal() -
-                          data.deposits.reduce(
-                            (total, deposit) => total + deposit.amount,
-                            0
-                          ) <
-                          0 ||
-                          data.status === PaymentStatus.PAID) &&
+                        {data.status === PaymentStatus.PAID &&
                           paymentModeToDisplay !== "-" &&
                           `(Last Mode of Payment : ${paymentModeToDisplay} | Date: ${balanceOrRepayDate})`}
                       </Text>

@@ -35,7 +35,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
 
   const customOptions = [
     ...options.filter((option) => {
-      return option.value.toLowerCase().includes(inputValue.toLowerCase());
+      return option.value?.toLowerCase().includes(inputValue.toLowerCase());
     }),
   ];
 

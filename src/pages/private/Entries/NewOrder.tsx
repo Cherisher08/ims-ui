@@ -242,21 +242,17 @@ const NewOrder = () => {
   };
 
   const updateProductStock = (paymentStatus: PaymentStatus | undefined) => {
-    const updatedProducts = orderInfo.product_details.map(
-      (updatedProductDetail) => {
-        const currentProduct = {
-          ...products.find(
-            (product) => product._id === updatedProductDetail._id
-          )!,
-        };
-        if (paymentStatus === "paid") {
-          currentProduct.available_stock += updatedProductDetail.order_quantity;
-        } else if (paymentStatus === "pending") {
-          currentProduct.available_stock -= updatedProductDetail.order_quantity;
-        }
-        return currentProduct;
+    const updatedProducts = orderInfo.product_details.map((updatedProductDetail) => {
+      const currentProduct = {
+        ...products.find((product) => product._id === updatedProductDetail._id)!,
+      };
+      if (paymentStatus === "paid") {
+        currentProduct.available_stock += updatedProductDetail.order_quantity;
+      } else if (paymentStatus === "pending") {
+        currentProduct.available_stock -= updatedProductDetail.order_quantity;
       }
-    );
+      return currentProduct;
+    });
     setProducts(updatedProducts);
   };
 
@@ -511,6 +507,13 @@ const NewOrder = () => {
     }
   };
 
+  useEffect(() => {
+    if (orderInfo) {
+      updateProductStock(orderInfo.status);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderInfo.status]);
+
   return (
     <div className="w-full flex flex-col ">
       {/* === Top Tabs and Add Button === */}
@@ -631,13 +634,12 @@ const NewOrder = () => {
                 ?.id ?? ""
             }
             onChange={(id) => {
-              updateProductStock(
-                paymentStatusOptions.find((option) => option.id === id)?.value
-              );
-              handleValueChange(
-                "status",
-                paymentStatusOptions.find((option) => option.id === id)?.value
-              );
+              const status = paymentStatusOptions.find((option) => option.id === id)?.value;
+              if (status === "pending") {
+                handleValueChange("repay_date", "");
+                handleValueChange("payment_mode", RepaymentMode.NULL);
+              }
+              handleValueChange("status", status);
             }}
           />
         )}
@@ -885,6 +887,7 @@ const NewOrder = () => {
                         type="number"
                         label=""
                         placeholder=""
+                        disabled={orderInfo.status === PaymentStatus.PAID}
                         className="w-[5rem] p-2"
                         value={orderInfo.product_details[index].order_quantity || 0}
                         onChange={(val) => {

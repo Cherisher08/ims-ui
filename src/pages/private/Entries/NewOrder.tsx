@@ -241,6 +241,25 @@ const NewOrder = () => {
     }
   };
 
+  const updateProductStock = (paymentStatus: PaymentStatus | undefined) => {
+    const updatedProducts = orderInfo.product_details.map(
+      (updatedProductDetail) => {
+        const currentProduct = {
+          ...products.find(
+            (product) => product._id === updatedProductDetail._id
+          )!,
+        };
+        if (paymentStatus === "paid") {
+          currentProduct.available_stock += updatedProductDetail.order_quantity;
+        } else if (paymentStatus === "pending") {
+          currentProduct.available_stock -= updatedProductDetail.order_quantity;
+        }
+        return currentProduct;
+      }
+    );
+    setProducts(updatedProducts);
+  };
+
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
     const productsInOrder = newOrderInfo.product_details;
@@ -265,6 +284,7 @@ const NewOrder = () => {
           // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
 
           // find the product in inventory
+
           const currentProduct = {
             ...products.find((product) => product._id === updatedProductDetail._id)!,
           };
@@ -610,12 +630,15 @@ const NewOrder = () => {
               paymentStatusOptions.find((paymentStatus) => orderInfo.status === paymentStatus.value)
                 ?.id ?? ""
             }
-            onChange={(id) =>
+            onChange={(id) => {
+              updateProductStock(
+                paymentStatusOptions.find((option) => option.id === id)?.value
+              );
               handleValueChange(
                 "status",
                 paymentStatusOptions.find((option) => option.id === id)?.value
-              )
-            }
+              );
+            }}
           />
         )}
         <CustomAutoComplete

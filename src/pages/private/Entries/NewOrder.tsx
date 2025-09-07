@@ -262,8 +262,10 @@ const NewOrder = () => {
 
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
-    const products = newOrderInfo.product_details;
-    const product = products.find((product) => product.order_quantity === 0);
+    const productsInOrder = newOrderInfo.product_details;
+    const product = productsInOrder.find(
+      (product) => product.order_quantity === 0
+    );
     if (product) {
       // mes
       toast.error(`${product.name} has 0 quantity`);
@@ -285,7 +287,7 @@ const NewOrder = () => {
 
           // find the product in inventory
           const currentProduct = {
-            ...products.find(
+            ...productsInOrder.find(
               (product) => product._id === updatedProductDetail._id
             )!,
           };
@@ -306,7 +308,7 @@ const NewOrder = () => {
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
           newOrderInfo.product_details.map((product_detail) => {
-            const currentProduct = products.find(
+            const currentProduct = productsInOrder.find(
               (product) => product._id === product_detail._id
             );
 
@@ -978,17 +980,14 @@ const NewOrder = () => {
                         value={
                           dayjs(
                             orderInfo.product_details[index].out_date
-                          ).format("DD-MMM-YYYY") || ""
+                          ).format("DD-MMM-YYYY hh:mm A") || ""
                         }
-                        className="w-[11rem]"
+                        className="w-[15rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = calculateProductRent(
-                            {
-                              ...newProducts[index],
-                              out_date: val,
-                            },
-                            true
+                          const duration = getDuration(
+                            val,
+                            newProducts[index].in_date
                           );
                           newProducts[index] = {
                             ...product,
@@ -1000,7 +999,7 @@ const NewOrder = () => {
                             product_details: newProducts,
                           });
                         }}
-                        format="DD/MM/YYYY"
+                        // format="DD/MM/YYYY"
                       />
                     </td>
                     <td className="px-1 py-2 content-start">
@@ -1009,17 +1008,14 @@ const NewOrder = () => {
                         value={
                           dayjs(
                             orderInfo.product_details[index].in_date
-                          ).format("DD-MMM-YYYY") || ""
+                          ).format("DD-MMM-YYYY hh:mm A") || ""
                         }
-                        className="w-[11rem]"
+                        className="w-[15rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
-                          const duration = calculateProductRent(
-                            {
-                              ...newProducts[index],
-                              in_date: val,
-                            },
-                            true
+                          const duration = getDuration(
+                            newProducts[index].out_date,
+                            val
                           );
                           newProducts[index] = {
                             ...product,
@@ -1031,7 +1027,7 @@ const NewOrder = () => {
                             product_details: newProducts,
                           });
                         }}
-                        format="DD/MM/YYYY"
+                        // format="DD/MM/YYYY"
                       />
                     </td>
                     <td className="px-1 py-2 content-start">
@@ -1107,7 +1103,11 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[8rem] p-2"
-                        value={product.rent_per_unit * product.order_quantity}
+                        value={
+                          product.rent_per_unit *
+                          product.order_quantity *
+                          product.duration
+                        }
                         onChange={() => {}}
                       />
                     </td>
@@ -1323,16 +1323,10 @@ const NewOrder = () => {
             onChange={(val) => {
               const value = val || "0";
               const amount = parseFloat(value) || 0;
-              const total_amount = calculateTotalAmount;
-              const percent =
-                total_amount > 0 &&
-                orderInfo.discount_type === DiscountType.PERCENT
-                  ? parseFloat(((amount * 100) / total_amount).toFixed(2))
-                  : amount;
 
               setOrderInfo((prev) => ({
                 ...prev,
-                discount: percent,
+                discount: amount,
               }));
             }}
           />

@@ -719,7 +719,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 15,
+                    width: 20,
                   },
                 ]}
               >
@@ -729,7 +729,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 89,
+                    width: 100,
                   },
                 ]}
               >
@@ -739,7 +739,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 40,
+                    width: 50,
                   },
                 ]}
               >
@@ -749,7 +749,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 25,
+                    width: 40,
                   },
                 ]}
               >
@@ -759,7 +759,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 30,
+                    width: 40,
                   },
                 ]}
               >
@@ -769,7 +769,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 60,
+                    width: 70,
                   },
                 ]}
               >
@@ -779,7 +779,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 70,
+                    width: 80,
                   },
                 ]}
               >
@@ -789,7 +789,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 55,
+                    width: 60,
                   },
                 ]}
               >
@@ -799,7 +799,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 40,
+                    width: 60,
                   },
                 ]}
               >
@@ -809,20 +809,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 55,
-                    alignContent: "center",
-                    paddingVertical: 2,
-                    alignItems: "center",
-                  },
-                ]}
-              >
-                TOTAL AMT
-              </Text>
-              <Text
-                style={[
-                  styles.tableColumn,
-                  {
-                    width: 75,
+                    width: 60,
                     borderRight: "0px",
                     alignContent: "center",
                     paddingVertical: 2,
@@ -830,7 +817,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   },
                 ]}
               >
-                REMARKS
+                TOTAL AMT
               </Text>
             </View>
             {updatedProducts.map((product: ProductDetails, index: number) => (
@@ -843,7 +830,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     : { borderBottom: "1px solid #000" },
                 ]}
               >
-                <Text style={[styles.productColumn, { width: 15 }]}>
+                <Text style={[styles.productColumn, { width: 20 }]}>
                   {index + 1}
                 </Text>
                 <View>
@@ -851,7 +838,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     style={[
                       styles.productColumn,
                       {
-                        width: 89,
+                        width: 99,
                         maxWidth: "95.4px !important",
                       },
                     ]}
@@ -859,38 +846,35 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     {product.name}
                   </Text>
                 </View>
-                <Text style={[styles.productColumn, { width: 40 }]}>
+                <Text style={[styles.productColumn, { width: 55 }]}>
                   {product.product_code || ""}
                 </Text>
-                <Text style={[styles.productColumn, { width: 25 }]}>
+                <Text style={[styles.productColumn, { width: 40 }]}>
                   {product.order_quantity}{" "}
                 </Text>
-                <Text style={[styles.productColumn, { width: 30 }]}>
+                <Text style={[styles.productColumn, { width: 40 }]}>
                   {product.product_unit.name || "Unit(s)"}
                 </Text>
-                <Text style={[styles.productColumn, { width: 60 }]}>
+                <Text style={[styles.productColumn, { width: 70 }]}>
                   Rs. {product.rent_per_unit}
                 </Text>
-                <Text style={[styles.productColumn, { width: 70 }]}>
+                <Text style={[styles.productColumn, { width: 80 }]}>
                   {calculateProductRent(product, true)}{" "}
                   {calculateProductRent(product, true) === 1 ? "day" : "days"}
                 </Text>
-                <Text style={[styles.productColumn, { width: 55 }]}>
+                <Text style={[styles.productColumn, { width: 60 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
-                <Text style={[styles.productColumn, { width: 40 }]}>
+                <Text style={[styles.productColumn, { width: 60 }]}>
                   {data.gst}
-                </Text>
-                <Text style={[styles.productColumn, { width: 55 }]}>
-                  Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
                 <Text
                   style={[
                     styles.productColumn,
-                    { maxWidth: 75, borderRight: "0px" },
+                    { width: 60, borderRight: "0px" },
                   ]}
                 >
-                  {product.damage}
+                  Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
               </View>
             ))}
@@ -1101,7 +1085,17 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           {
                             paddingLeft: 50,
                             paddingTop: 5,
-                            color: "darkgreen",
+                            color:
+                              calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                ) <
+                              0
+                                ? "red"
+                                : data.status === PaymentStatus.PAID
+                                ? "green"
+                                : "black",
                           },
                         ]}
                       >
@@ -1117,21 +1111,23 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                                 (total, deposit) => total + deposit.amount,
                                 0
                               ) <
-                              0 && data.status !== PaymentStatus.PAID
+                            0
                               ? "red"
+                              : data.status === PaymentStatus.PAID
+                              ? "green"
                               : "black",
                           fontWeight: "bold",
                         }}
                       >
-                        {data.status === PaymentStatus.PAID
-                          ? "Paid"
-                          : calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              ) <
+                        {calcTotal() -
+                          data.deposits.reduce(
+                            (total, deposit) => total + deposit.amount,
                             0
+                          ) <
+                        0
                           ? "Return Payment"
+                          : data.status === PaymentStatus.PAID
+                          ? "Paid"
                           : "Balance"}
                       </Text>
                     </View>
@@ -1153,24 +1149,34 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                               (total, deposit) => total + deposit.amount,
                               0
                             ) <
-                            0 && data.status !== PaymentStatus.PAID
+                          0
                             ? "red"
+                            : data.status === PaymentStatus.PAID
+                            ? "green"
                             : "black",
                         fontWeight: "bold",
                       }}
                     >
                       Rs.{" "}
                       {data.status === PaymentStatus.PAID
-                        ? "0.00"
-                        : Math.abs(
+                        ? Math.abs(
                             calcTotal() -
                               data.deposits.reduce(
                                 (total, deposit) => total + deposit.amount,
                                 0
-                              ) -
-                              (data.balance_paid && data.balance_paid !== 0
-                                ? data.balance_paid
-                                : -data.repay_amount)
+                              )
+                          ).toFixed(2)
+                        : (
+                            Math.abs(
+                              calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                )
+                            ) -
+                            (data.balance_paid && data.balance_paid !== 0
+                              ? data.balance_paid
+                              : data.repay_amount)
                           ).toFixed(2)}
                     </Text>
                   </View>

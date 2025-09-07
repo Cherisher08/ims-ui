@@ -1121,7 +1121,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           },
                         ]}
                       >
-                        {paymentModeToDisplay !== "-" &&
+                        {(calcTotal() -
+                          data.deposits.reduce(
+                            (total, deposit) => total + deposit.amount,
+                            0
+                          ) <
+                          0 ||
+                          data.status === PaymentStatus.PAID) &&
+                          paymentModeToDisplay !== "-" &&
                           `(Last Mode of Payment : ${paymentModeToDisplay} | Date: ${balanceOrRepayDate})`}
                       </Text>
                       <Text
@@ -1181,13 +1188,20 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     >
                       Rs.{" "}
                       {data.status === PaymentStatus.PAID
-                        ? Math.abs(
-                            calcTotal() -
-                              data.deposits.reduce(
-                                (total, deposit) => total + deposit.amount,
-                                0
-                              )
-                          ).toFixed(2)
+                        ? calcTotal() -
+                            data.deposits.reduce(
+                              (total, deposit) => total + deposit.amount,
+                              0
+                            ) <
+                          0
+                          ? Math.abs(
+                              calcTotal() -
+                                data.deposits.reduce(
+                                  (total, deposit) => total + deposit.amount,
+                                  0
+                                )
+                            ).toFixed(2)
+                          : calcTotal().toFixed(2)
                         : (
                             Math.abs(
                               calcTotal() -

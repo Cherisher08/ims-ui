@@ -250,9 +250,9 @@ const CustomDetailRenderer = (
               singleClickEdit: true,
               cellDataType: "dateTime",
               cellEditor: InDateCellEditor,
-              cellEditorParams: {
-                format: "DD/MM/YYYY",
-              },
+              // cellEditorParams: {
+              // format: "DD/MM/YYYY",
+              // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
                 return dayjs(date).format("DD-MMM-YYYY");
@@ -266,9 +266,9 @@ const CustomDetailRenderer = (
               singleClickEdit: true,
               cellDataType: "dateTime",
               cellEditor: InDateCellEditor,
-              cellEditorParams: {
-                format: "DD/MM/YYYY",
-              },
+              // cellEditorParams: {
+              // format: "DD/MM/YYYY",
+              // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
                 return dayjs(date).format("DD-MMM-YYYY");

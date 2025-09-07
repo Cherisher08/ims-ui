@@ -11,10 +11,12 @@ import { ProductType } from "../../../types/common";
 import { useState } from "react";
 const OrderInvoice = () => {
   const { rentalId } = useParams();
-  const { data: existingRentalOrder, isLoading: isRentalOrderQueryByIdLoading } =
-    useGetRentalOrderByIdQuery(rentalId!, {
-      skip: !rentalId,
-    });
+  const {
+    data: existingRentalOrder,
+    isLoading: isRentalOrderQueryByIdLoading,
+  } = useGetRentalOrderByIdQuery(rentalId!, {
+    skip: !rentalId,
+  });
 
   const [invoiceId, setInvoiceId] = useState<string>("");
 
@@ -30,9 +32,18 @@ const OrderInvoice = () => {
   }
 
   if (isRentalOrdersQuerySuccess && rentalOrderData && invoiceId === "") {
-    // const newInvoiceId =
-    //   rentalOrderData.filter((order) => order.status === PaymentStatus.PAID).length + 1;
-    const newInvoiceId = rentalOrderData.filter((order) => order.in_date).length + 1;
+    const sortedOrders = rentalOrderData
+      .filter((order) => order.in_date)
+      .sort(
+        (a, b) => new Date(a.in_date).getTime() - new Date(b.in_date).getTime()
+      );
+
+    const position =
+      sortedOrders.findIndex((order) => order._id === existingRentalOrder._id) +
+      1;
+
+    const positionStr = position.toString().padStart(4, "0");
+
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
@@ -40,7 +51,7 @@ const OrderInvoice = () => {
     const endYear = startYear + 1;
     const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
 
-    setInvoiceId(`RO/${fy}/${newInvoiceId}`);
+    setInvoiceId(`INV/${fy}/${positionStr}`);
   }
 
   return (

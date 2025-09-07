@@ -1,5 +1,5 @@
 import { IdNamePair } from "../pages/private/Stocks";
-import { Product, ProductType, Unit } from "./common";
+import { DiscountType, Product, ProductType, Unit } from "./common";
 import { ContactInfoType } from "./contact";
 
 export enum BillingMode {
@@ -92,11 +92,10 @@ export type OrderInfo = {
   customer?: ContactInfoType;
   billing_mode: BillingMode;
   discount: number;
-  discount_amount: number;
+  discount_type: DiscountType;
   status: PaymentStatus;
   remarks: string;
   round_off: number;
-  repay_amount: number;
   payment_mode: RepaymentMode;
   gst: number;
 };
@@ -113,6 +112,9 @@ export type RentalOrderInfo = OrderInfo & {
   eway_mode: PaymentMode;
   balance_paid: number;
   balance_paid_mode: PaymentMode;
+  balance_paid_date: string;
+  repay_amount: number;
+  repay_date: string;
   event_name: string;
   event_venue: string;
 };

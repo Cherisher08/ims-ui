@@ -117,7 +117,11 @@ const NewOrder = () => {
   const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
+  const {
+    data: rentalOrders,
+    isSuccess: isRentalOrdersQuerySuccess,
+    refetch: getRefetchRentalOrders,
+  } = useGetRentalOrdersQuery();
   const { data: existingRentalOrder, isSuccess: isRentalOrderQueryByIdSuccess } =
     useGetRentalOrderByIdQuery(rentalId!, {
       skip: !rentalId,
@@ -325,7 +329,12 @@ const NewOrder = () => {
     } else {
       try {
         // 1️⃣ Create the rental order and wait for it to succeed
-        const orderResponse = await createRentalOrder(newOrderInfo).unwrap();
+        const latestOrders = await getRefetchRentalOrders();
+        const orderId = getNewOrderId(latestOrders.data || []);
+        const orderResponse = await createRentalOrder({
+          ...newOrderInfo,
+          order_id: orderId,
+        }).unwrap();
         console.log('✅ Order created successfully', orderResponse);
 
         // 2️⃣ Once order is created, update product stocks
@@ -440,7 +449,7 @@ const NewOrder = () => {
         setDepositData(existingRentalOrder.deposits);
       }
     } else if (isRentalOrdersQuerySuccess) {
-      const orderId = getNewOrderId(rentalOrders);
+      const orderId = '-';
       handleValueChange('order_id', orderId);
     } else {
       handleValueChange('order_id', `RO/${getCurrentFY()}/0001`);

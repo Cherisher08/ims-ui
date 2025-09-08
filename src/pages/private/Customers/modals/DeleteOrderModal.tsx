@@ -1,11 +1,11 @@
-import { useEffect } from "react";
-import { Modal } from "@mui/material";
-import { MdClose } from "react-icons/md";
-import { PiWarningFill } from "react-icons/pi";
-import CustomButton from "../../../../styled/CustomButton";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../../../constants/constants";
-import { useDeleteRentalOrderMutation } from "../../../../services/OrderService";
+import { useEffect } from 'react';
+import { Modal } from '@mui/material';
+import { MdClose } from 'react-icons/md';
+import { PiWarningFill } from 'react-icons/pi';
+import CustomButton from '../../../../styled/CustomButton';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../../constants/constants';
+import { useDeleteRentalOrderMutation } from '../../../../services/OrderService';
 
 export type DeleteOrderType = {
   deleteOrderOpen: boolean;
@@ -20,17 +20,16 @@ const DeleteOrderModal = ({
   deleteOrderId,
   setDeleteOrderId,
 }: DeleteOrderType) => {
-  const [deleteOrder, { isSuccess: isDeleteOrderSuccess, reset }] =
-    useDeleteRentalOrderMutation();
+  const [deleteOrder, { isSuccess: isDeleteOrderSuccess, reset }] = useDeleteRentalOrderMutation();
 
   const handleDeleteOrder = () => {
     deleteOrder(deleteOrderId);
-    setDeleteOrderId("");
+    setDeleteOrderId('');
   };
 
   useEffect(() => {
     if (isDeleteOrderSuccess) {
-      toast.success("Deleted Order Successfully", {
+      toast.success('Deleted Order Successfully', {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_DELETE,
       });
       reset();
@@ -42,21 +41,19 @@ const DeleteOrderModal = ({
     <Modal
       open={deleteOrderOpen}
       onClose={() => {
-        setDeleteOrderId("");
+        setDeleteOrderId('');
         setDeleteOrderOpen(false);
       }}
       className="w-screen h-screen flex justify-center items-center"
     >
       <div className="flex flex-col gap-4 justify-center items-center w-2/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full">
-          <p className="text-primary text-xl font-semibold w-full text-start">
-            Delete Order
-          </p>
+          <p className="text-primary text-xl font-semibold w-full text-start">Delete Order</p>
           <MdClose
             size={25}
             className="cursor-pointer"
             onClick={() => {
-              setDeleteOrderId("");
+              setDeleteOrderId('');
               setDeleteOrderOpen(false);
             }}
           />
@@ -72,7 +69,7 @@ const DeleteOrderModal = ({
         <div className="flex w-full gap-3 justify-end">
           <CustomButton
             onClick={() => {
-              setDeleteOrderId("");
+              setDeleteOrderId('');
               setDeleteOrderOpen(false);
             }}
             label="Cancel"

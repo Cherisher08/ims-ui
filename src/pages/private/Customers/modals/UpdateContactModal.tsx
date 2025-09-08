@@ -1,15 +1,15 @@
-import { Modal } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { MdClose } from "react-icons/md";
-import CustomInput from "../../../../styled/CustomInput";
-import { FaTimesCircle } from "react-icons/fa";
-import { LuUpload } from "react-icons/lu";
-import CustomButton from "../../../../styled/CustomButton";
-import { ContactInfoType, ContactWithFile, initialContactType } from "../../../../types/contact";
-import type { Dispatch, SetStateAction } from "react";
-import { useGetContactsQuery, useUpdateContactMutation } from "../../../../services/ContactService";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../../../constants/constants";
+import { Modal } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { MdClose } from 'react-icons/md';
+import CustomInput from '../../../../styled/CustomInput';
+import { FaTimesCircle } from 'react-icons/fa';
+import { LuUpload } from 'react-icons/lu';
+import CustomButton from '../../../../styled/CustomButton';
+import { ContactInfoType, ContactWithFile, initialContactType } from '../../../../types/contact';
+import type { Dispatch, SetStateAction } from 'react';
+import { useGetContactsQuery, useUpdateContactMutation } from '../../../../services/ContactService';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../../constants/constants';
 
 export type UpdateContactModalType = {
   updateContactOpen: boolean;
@@ -60,14 +60,14 @@ const UpdateContactModal = ({
 
   useEffect(() => {
     if (isUpdateContactSuccess) {
-      toast.success("Contact updated successfully", {
+      toast.success('Contact updated successfully', {
         toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
       });
       setUpdateContactOpen(false);
       reset();
     }
     if (IsUpdateContactError) {
-      toast.error("Error in creating contact", {
+      toast.error('Error in creating contact', {
         toastId: TOAST_IDS.ERROR_CONTACT_CREATE,
       });
       setUpdateContactOpen(false);
@@ -103,18 +103,18 @@ const UpdateContactModal = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 ">
             <CustomInput
               label="Name"
-              value={updateContactData?.name ?? ""}
-              onChange={(value) => handleContactChange("name", value)}
+              value={updateContactData?.name ?? ''}
+              onChange={(value) => handleContactChange('name', value)}
               placeholder="Enter Name"
             />
             <CustomInput
               label="Personal Number"
-              error={error !== null && updateContactData.personal_number !== ""}
-              helperText={error || ""}
-              value={updateContactData?.personal_number ?? ""}
+              error={error !== null && updateContactData.personal_number !== ''}
+              helperText={error || ''}
+              value={updateContactData?.personal_number ?? ''}
               onChange={(value) => {
                 const normalizedValue = value.trim();
-                handleContactChange("personal_number", normalizedValue);
+                handleContactChange('personal_number', normalizedValue);
                 if (!normalizedValue) {
                   setError(null);
                   return;
@@ -126,49 +126,49 @@ const UpdateContactModal = ({
                     contact._id !== updateContactData._id
                 );
 
-                setError(exists ? "Contact already exists" : null);
+                setError(exists ? 'Contact already exists' : null);
               }}
               placeholder="Enter Personal Number"
             />
             <CustomInput
               label="Email"
-              value={updateContactData?.email ?? ""}
-              onChange={(value) => handleContactChange("email", value)}
+              value={updateContactData?.email ?? ''}
+              onChange={(value) => handleContactChange('email', value)}
               placeholder="Enter Email"
             />
 
             <CustomInput
               label="Company"
-              value={updateContactData?.company_name ?? ""}
-              onChange={(value) => handleContactChange("company_name", value)}
+              value={updateContactData?.company_name ?? ''}
+              onChange={(value) => handleContactChange('company_name', value)}
               placeholder="Enter Company Name"
             />
             <CustomInput
               label="Office Number"
-              value={updateContactData?.office_number ?? ""}
-              onChange={(value) => handleContactChange("office_number", value)}
+              value={updateContactData?.office_number ?? ''}
+              onChange={(value) => handleContactChange('office_number', value)}
               placeholder="Enter Office Number"
             />
 
             <CustomInput
               label="GSTIN"
-              value={updateContactData?.gstin ?? ""}
-              onChange={(value) => handleContactChange("gstin", value)}
+              value={updateContactData?.gstin ?? ''}
+              onChange={(value) => handleContactChange('gstin', value)}
               placeholder="Enter GSTIN"
             />
             <div className="flex flex-col lg:col-span-2">
               <CustomInput
                 label="Address"
                 multiline
-                value={updateContactData?.address ?? ""}
-                onChange={(value) => handleContactChange("address", value)}
+                value={updateContactData?.address ?? ''}
+                onChange={(value) => handleContactChange('address', value)}
                 placeholder="Enter Address"
               />
 
               <CustomInput
                 label="Pincode"
-                value={updateContactData?.pincode ?? ""}
-                onChange={(value) => handleContactChange("pincode", value)}
+                value={updateContactData?.pincode ?? ''}
+                onChange={(value) => handleContactChange('pincode', value)}
                 placeholder="Enter Pincode"
               />
             </div>
@@ -183,7 +183,7 @@ const UpdateContactModal = ({
                           size={20}
                           color="red"
                           className="absolute top-2 right-2 cursor-pointer z-10"
-                          onClick={() => handleContactChange("address_proof", "")}
+                          onClick={() => handleContactChange('address_proof', '')}
                         />
                         <img
                           src={updateContactData.address_proof}
@@ -243,7 +243,11 @@ const UpdateContactModal = ({
           />
           <CustomButton
             onClick={handleUpdateContact}
-            disabled={error !== null || updateContactData.name === "" || updateContactData.personal_number === ""}
+            disabled={
+              error !== null ||
+              updateContactData.name === '' ||
+              updateContactData.personal_number === ''
+            }
             label="Update Contact"
           />
         </div>

@@ -1,14 +1,14 @@
-import { Modal } from "@mui/material";
-import { ProductDetails } from "../../../../types/order";
-import { MdClose } from "react-icons/md";
-import CustomButton from "../../../../styled/CustomButton";
-import { useEffect, useState } from "react";
-import { Product } from "../../../../types/common";
-import CustomSelect from "../../../../styled/CustomSelect";
-import dayjs from "dayjs";
-import CustomInput from "../../../../styled/CustomInput";
-import CustomDatePicker from "../../../../styled/CustomDatePicker";
-import { getDuration } from "../../Orders/utils";
+import { Modal } from '@mui/material';
+import { ProductDetails } from '../../../../types/order';
+import { MdClose } from 'react-icons/md';
+import CustomButton from '../../../../styled/CustomButton';
+import { useEffect, useState } from 'react';
+import { Product } from '../../../../types/common';
+import CustomSelect from '../../../../styled/CustomSelect';
+import dayjs from 'dayjs';
+import CustomInput from '../../../../styled/CustomInput';
+import CustomDatePicker from '../../../../styled/CustomDatePicker';
+import { getDuration } from '../../Orders/utils';
 
 type AddProductModalOpen = {
   addProductOpen: boolean;
@@ -23,27 +23,27 @@ type AddProductModalOpen = {
 // }));
 
 const initialProductState: ProductDetails = {
-  _id: "",
-  name: "",
-  category: "",
+  _id: '',
+  name: '',
+  category: '',
   // billing_unit: BillingUnit.DAYS,
   product_unit: {
-    _id: "",
-    name: "",
+    _id: '',
+    name: '',
   },
-  in_date: "",
+  in_date: '',
   order_quantity: 0,
   order_repair_count: 0,
-  out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  out_date: dayjs().format('YYYY-MM-DDTHH:mm'),
   duration: 1,
-  damage: "",
+  damage: '',
   rent_per_unit: 0,
-  product_code: "",
+  product_code: '',
 };
 
 const formatProducts = (products: Product[]) => {
   return products.map((product) => ({
-    id: product._id || "",
+    id: product._id || '',
     value: product.name,
   }));
 };
@@ -73,7 +73,7 @@ const AddProductModal = ({
 
   useEffect(() => {
     const duration = getDuration(newProduct.out_date, newProduct.in_date);
-    handleValueChange("duration", duration);
+    handleValueChange('duration', duration);
   }, [newProduct.in_date, newProduct.out_date]);
 
   return (
@@ -103,15 +103,15 @@ const AddProductModal = ({
               label="Product"
               labelClass="w-[8rem]"
               options={formatProducts(products)}
-              value={formatProducts(products).find((val) => val.id === newProduct?._id)?.id ?? ""}
+              value={formatProducts(products).find((val) => val.id === newProduct?._id)?.id ?? ''}
               onChange={(id) => {
                 const data = products.find((prod) => prod._id === id);
                 if (data) {
-                  handleValueChange("_id", data._id);
-                  handleValueChange("name", data.name);
-                  handleValueChange("category", data.category.name);
-                  handleValueChange("product_unit", data.unit);
-                  handleValueChange("rent_per_unit", data.rent_per_unit);
+                  handleValueChange('_id', data._id);
+                  handleValueChange('name', data.name);
+                  handleValueChange('category', data.category.name);
+                  handleValueChange('product_unit', data.unit);
+                  handleValueChange('rent_per_unit', data.rent_per_unit);
                   setCurrentAvailableStock(data.available_stock);
                 }
               }}
@@ -120,10 +120,10 @@ const AddProductModal = ({
               label="Product Unit"
               className=""
               labelClass="w-[8rem]"
-              value={newProduct.product_unit.name || ""}
+              value={newProduct.product_unit.name || ''}
               disabled={true}
               onChange={() => {}}
-              placeholder={""}
+              placeholder={''}
             />
             {/* <CustomSelect
               label="Billing Unit"
@@ -151,14 +151,14 @@ const AddProductModal = ({
               value={newProduct.order_quantity}
               error={(currentAvailableStock ?? 0) < newProduct.order_quantity}
               helperText="Quantity cannot be greater than Available Stock"
-              onChange={(value) => handleValueChange("order_quantity", parseInt(value))}
+              onChange={(value) => handleValueChange('order_quantity', parseInt(value))}
             />
             <CustomDatePicker
               value={newProduct.out_date}
               labelClass="w-[8rem]"
               className=""
               label="Out Date"
-              onChange={(value) => handleValueChange("out_date", value)}
+              onChange={(value) => handleValueChange('out_date', value)}
             />
             <CustomDatePicker
               value={newProduct.in_date}
@@ -166,7 +166,7 @@ const AddProductModal = ({
               label="In Date"
               wrapperClass="w-full"
               className="max-w-full"
-              onChange={(value) => handleValueChange("in_date", value)}
+              onChange={(value) => handleValueChange('in_date', value)}
             />
             <CustomInput
               label="Order Repair Count"
@@ -174,7 +174,7 @@ const AddProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Repair Count"
               value={newProduct.order_repair_count}
-              onChange={(value) => handleValueChange("order_repair_count", parseInt(value))}
+              onChange={(value) => handleValueChange('order_repair_count', parseInt(value))}
               error={newProduct.order_quantity < newProduct.order_repair_count}
               helperText="Repair Count cannot be higher than Order Quantity"
             />
@@ -184,7 +184,7 @@ const AddProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Duration"
               value={newProduct.duration}
-              onChange={(value) => handleValueChange("duration", parseInt(value))}
+              onChange={(value) => handleValueChange('duration', parseInt(value))}
             />
             <CustomInput
               label="Available Stock"

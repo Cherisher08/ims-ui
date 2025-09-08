@@ -1,13 +1,13 @@
-import { Modal } from "@mui/material";
-import { ProductDetails } from "../../../../types/order";
-import { MdClose } from "react-icons/md";
-import CustomButton from "../../../../styled/CustomButton";
-import { Product } from "../../../../types/common";
-import CustomSelect from "../../../../styled/CustomSelect";
-import CustomInput from "../../../../styled/CustomInput";
-import CustomDatePicker from "../../../../styled/CustomDatePicker";
-import { getDuration } from "../../Orders/utils";
-import { useEffect } from "react";
+import { Modal } from '@mui/material';
+import { ProductDetails } from '../../../../types/order';
+import { MdClose } from 'react-icons/md';
+import CustomButton from '../../../../styled/CustomButton';
+import { Product } from '../../../../types/common';
+import CustomSelect from '../../../../styled/CustomSelect';
+import CustomInput from '../../../../styled/CustomInput';
+import CustomDatePicker from '../../../../styled/CustomDatePicker';
+import { getDuration } from '../../Orders/utils';
+import { useEffect } from 'react';
 
 type UpdateProductModalOpen = {
   updateProductOpen: boolean;
@@ -25,7 +25,7 @@ type UpdateProductModalOpen = {
 
 const formatProducts = (products: Product[]) => {
   return products.map((product) => ({
-    id: product._id || "",
+    id: product._id || '',
     value: product.name,
   }));
 };
@@ -59,7 +59,7 @@ const UpdateProductModal = ({
       updateProduct.in_date
       // updateProduct.billing_unit
     );
-    handleValueChange("duration", duration);
+    handleValueChange('duration', duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateProduct.in_date, updateProduct.out_date]);
 
@@ -89,16 +89,16 @@ const UpdateProductModal = ({
               labelClass="w-[8rem]"
               options={formatProducts(products)}
               value={
-                formatProducts(products).find((val) => val.id === updateProduct?._id)?.id ?? ""
+                formatProducts(products).find((val) => val.id === updateProduct?._id)?.id ?? ''
               }
               onChange={(id) => {
                 const data = products.find((prod) => prod._id === id);
                 if (data) {
-                  handleValueChange("_id", data._id);
-                  handleValueChange("name", data.name);
-                  handleValueChange("category", data.category.name);
-                  handleValueChange("product_unit", data.unit);
-                  handleValueChange("rent_per_unit", data.rent_per_unit);
+                  handleValueChange('_id', data._id);
+                  handleValueChange('name', data.name);
+                  handleValueChange('category', data.category.name);
+                  handleValueChange('product_unit', data.unit);
+                  handleValueChange('rent_per_unit', data.rent_per_unit);
                 }
               }}
             />
@@ -106,9 +106,9 @@ const UpdateProductModal = ({
               label="Product Unit"
               labelClass="w-[8rem]"
               disabled={true}
-              value={updateProduct.product_unit.name || ""}
+              value={updateProduct.product_unit.name || ''}
               onChange={() => {}}
-              placeholder={""}
+              placeholder={''}
             />
             {/* <CustomSelect
               label="Billing Unit"
@@ -134,19 +134,19 @@ const UpdateProductModal = ({
               value={updateProduct.order_quantity}
               error={(currentAvailableStock ?? 0) < updateProduct.order_quantity}
               helperText="Quantity greater than Available Stock"
-              onChange={(value) => handleValueChange("order_quantity", parseInt(value))}
+              onChange={(value) => handleValueChange('order_quantity', parseInt(value))}
             />
             <CustomDatePicker
               value={updateProduct.out_date}
               labelClass="w-[8rem]"
               label="Out Date"
-              onChange={(value) => handleValueChange("out_date", value)}
+              onChange={(value) => handleValueChange('out_date', value)}
             />
             <CustomDatePicker
               value={updateProduct.in_date}
               labelClass="w-[8rem]"
               label="In Date"
-              onChange={(value) => handleValueChange("in_date", value)}
+              onChange={(value) => handleValueChange('in_date', value)}
             />
             <CustomInput
               label="Order Repair Count"
@@ -154,7 +154,7 @@ const UpdateProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Repair Count"
               value={updateProduct.order_repair_count}
-              onChange={(value) => handleValueChange("order_repair_count", parseInt(value))}
+              onChange={(value) => handleValueChange('order_repair_count', parseInt(value))}
               error={updateProduct.order_quantity < updateProduct.order_repair_count}
               helperText="Repair Count higher than Order Quantity"
             />
@@ -164,7 +164,7 @@ const UpdateProductModal = ({
               labelClass="w-[8rem]"
               placeholder="Enter Duration"
               value={updateProduct.duration}
-              onChange={(value) => handleValueChange("duration", parseInt(value))}
+              onChange={(value) => handleValueChange('duration', parseInt(value))}
             />
             <CustomInput
               label="Available Stock"

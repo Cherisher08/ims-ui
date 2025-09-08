@@ -1,5 +1,5 @@
-import { Modal } from "@mui/material";
-import { MdClose } from "react-icons/md";
+import { Modal } from '@mui/material';
+import { MdClose } from 'react-icons/md';
 
 export type DeleteContactType = {
   imageUrl: string | null;

@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
-import CustomButton from "../../../../styled/CustomButton";
-import { FaTimesCircle } from "react-icons/fa";
-import { LuUpload } from "react-icons/lu";
-import CustomInput from "../../../../styled/CustomInput";
-import { Modal } from "@mui/material";
+import React, { useEffect, useState } from 'react';
+import CustomButton from '../../../../styled/CustomButton';
+import { FaTimesCircle } from 'react-icons/fa';
+import { LuUpload } from 'react-icons/lu';
+import CustomInput from '../../../../styled/CustomInput';
+import { Modal } from '@mui/material';
 import {
   ContactWithFile,
   initialContactType,
   type ContactInfoType,
-} from "../../../../types/contact";
-import { MdClose } from "react-icons/md";
-import { useCreateContactMutation, useGetContactsQuery } from "../../../../services/ContactService";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../../../constants/constants";
+} from '../../../../types/contact';
+import { MdClose } from 'react-icons/md';
+import { useCreateContactMutation, useGetContactsQuery } from '../../../../services/ContactService';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../../constants/constants';
 
 export type AddContactModalType = {
   addContactOpen: boolean;
@@ -58,14 +58,14 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
 
   useEffect(() => {
     if (isCreateContactSuccess) {
-      toast.success("Contact created successfully", {
+      toast.success('Contact created successfully', {
         toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
       });
       reset();
       setAddContactOpen(false);
     }
     if (isCreateContactError) {
-      toast.error("Error in creating contact", {
+      toast.error('Error in creating contact', {
         toastId: TOAST_IDS.ERROR_CONTACT_CREATE,
       });
       reset();
@@ -100,51 +100,51 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full gap-x-5 gap-y-2">
             <CustomInput
               label="Name"
-              value={newContactData?.name ?? ""}
-              onChange={(value) => handleContactChange("name", value)}
+              value={newContactData?.name ?? ''}
+              onChange={(value) => handleContactChange('name', value)}
               placeholder="Enter Name"
             />
             <CustomInput
               type="number"
               label="Personal Number"
-              error={error !== null && newContactData.personal_number !== ""}
-              helperText={error || ""}
-              value={newContactData?.personal_number ?? ""}
+              error={error !== null && newContactData.personal_number !== ''}
+              helperText={error || ''}
+              value={newContactData?.personal_number ?? ''}
               onChange={(value) => {
                 const exists = contacts?.find((contact) => contact.personal_number === value);
-                if (!exists || value === "") {
+                if (!exists || value === '') {
                   setError(null);
                 } else {
-                  setError("Contact already exists");
+                  setError('Contact already exists');
                 }
-                handleContactChange("personal_number", value);
+                handleContactChange('personal_number', value);
               }}
               placeholder="Enter Personal Number"
             />
             <CustomInput
               label="Email"
-              value={newContactData?.email ?? ""}
-              onChange={(value) => handleContactChange("email", value)}
+              value={newContactData?.email ?? ''}
+              onChange={(value) => handleContactChange('email', value)}
               placeholder="Enter Email"
             />
             <CustomInput
               label="Company"
-              value={newContactData?.company_name ?? ""}
-              onChange={(value) => handleContactChange("company_name", value)}
+              value={newContactData?.company_name ?? ''}
+              onChange={(value) => handleContactChange('company_name', value)}
               placeholder="Enter Company Name"
             />
             <CustomInput
               type="number"
               label="Office Number"
-              value={newContactData?.office_number ?? ""}
-              onChange={(value) => handleContactChange("office_number", value)}
+              value={newContactData?.office_number ?? ''}
+              onChange={(value) => handleContactChange('office_number', value)}
               placeholder="Enter Office Number"
             />
 
             <CustomInput
               label="GSTIN"
-              value={newContactData?.gstin ?? ""}
-              onChange={(value) => handleContactChange("gstin", value)}
+              value={newContactData?.gstin ?? ''}
+              onChange={(value) => handleContactChange('gstin', value)}
               placeholder="Enter GSTIN"
             />
             <div className="flex flex-col lg:col-span-2">
@@ -152,8 +152,8 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
                 <CustomInput
                   label="Address"
                   multiline
-                  value={newContactData?.address ?? ""}
-                  onChange={(value) => handleContactChange("address", value)}
+                  value={newContactData?.address ?? ''}
+                  onChange={(value) => handleContactChange('address', value)}
                   placeholder="Enter Address"
                 />
               </div>
@@ -161,8 +161,8 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
               <div className="">
                 <CustomInput
                   label="Pincode"
-                  value={newContactData?.pincode ?? ""}
-                  onChange={(value) => handleContactChange("pincode", value)}
+                  value={newContactData?.pincode ?? ''}
+                  onChange={(value) => handleContactChange('pincode', value)}
                   placeholder="Enter Pincode"
                 />
               </div>
@@ -221,7 +221,7 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
           <CustomButton
             onClick={handleAddContact}
             disabled={
-              error !== null || newContactData.name === "" || newContactData.personal_number === ""
+              error !== null || newContactData.name === '' || newContactData.personal_number === ''
             }
             label="Add Contact"
           />

@@ -1,32 +1,27 @@
-import { useEffect, useState } from "react";
-import CustomButton from "../../../styled/CustomButton";
-import { LuPlus } from "react-icons/lu";
-import { FaWhatsapp } from "react-icons/fa";
-import { MdOutlineMail } from "react-icons/md";
-import { Box, Tab, Tabs } from "@mui/material";
-import RentalOrderTable from "./RentalOrderTable";
-import { useGetRentalOrdersQuery } from "../../../services/OrderService";
-import { RentalOrderInfo, RentalOrderType } from "../../../types/order";
-import AddContactModal from "../Customers/modals/AddContactModal";
-import {
-  useGetProductCategoriesQuery,
-  useGetUnitsQuery,
-} from "../../../services/ApiService";
-import { CustomOptionProps } from "../../../styled/CustomAutoComplete";
-import NewProductModal from "../../../components/NewProductModal.";
-import { useNavigate } from "react-router-dom";
-import { transformIdNamePair } from "../utils";
+import { useEffect, useState } from 'react';
+import CustomButton from '../../../styled/CustomButton';
+import { LuPlus } from 'react-icons/lu';
+import { FaWhatsapp } from 'react-icons/fa';
+import { MdOutlineMail } from 'react-icons/md';
+import { Box, Tab, Tabs } from '@mui/material';
+import RentalOrderTable from './RentalOrderTable';
+import { useGetRentalOrdersQuery } from '../../../services/OrderService';
+import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
+import AddContactModal from '../Customers/modals/AddContactModal';
+import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
+import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
+import NewProductModal from '../../../components/NewProductModal.';
+import { useNavigate } from 'react-router-dom';
+import { transformIdNamePair } from '../utils';
 
-const transformRentalOrderData = (
-  rentalOrders: RentalOrderInfo[]
-): RentalOrderType[] => {
+const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
   return rentalOrders.map((rentalOrder) => {
     if (!rentalOrder.customer) {
       return {
         ...rentalOrder,
         customer: {
-          _id: "",
-          name: "",
+          _id: '',
+          name: '',
         },
       };
     }
@@ -46,17 +41,13 @@ const Orders = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
-  const {
-    data: productCategoryData,
-    isSuccess: isProductCategoryQuerySuccess,
-  } = useGetProductCategoriesQuery();
+  const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
+    useGetProductCategoriesQuery();
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
 
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
-  const [productCategories, setProductCategories] = useState<
-    CustomOptionProps[]
-  >([]);
+  const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
 
   const isCommunicationsFeatureDone: boolean = false;
 
@@ -106,7 +97,7 @@ const Orders = () => {
       {/* Header */}
       <div className="flex justify-between">
         <CustomButton
-          onClick={() => navigate("/orders/rentals")}
+          onClick={() => navigate('/orders/rentals')}
           label="New Order"
           icon={<LuPlus color="white" />}
         />
@@ -114,12 +105,12 @@ const Orders = () => {
           {isCommunicationsFeatureDone && (
             <>
               <CustomButton
-                onClick={() => console.log("whatsapp")}
+                onClick={() => console.log('whatsapp')}
                 label="Whatsapp"
                 icon={<FaWhatsapp color="white" />}
               />
               <CustomButton
-                onClick={() => console.log("email")}
+                onClick={() => console.log('email')}
                 label="Email"
                 icon={<MdOutlineMail color="white" />}
               />
@@ -139,7 +130,7 @@ const Orders = () => {
       </div>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs
           value={activeTab}
           onChange={(_, value) => setActiveTab(value)}

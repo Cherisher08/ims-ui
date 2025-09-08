@@ -1,11 +1,11 @@
-import { useEffect } from "react";
-import { Modal } from "@mui/material";
-import { MdClose } from "react-icons/md";
-import { PiWarningFill } from "react-icons/pi";
-import CustomButton from "../../../../styled/CustomButton";
-import { useDeleteContactMutation } from "../../../../services/ContactService";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../../../constants/constants";
+import { useEffect } from 'react';
+import { Modal } from '@mui/material';
+import { MdClose } from 'react-icons/md';
+import { PiWarningFill } from 'react-icons/pi';
+import CustomButton from '../../../../styled/CustomButton';
+import { useDeleteContactMutation } from '../../../../services/ContactService';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../../constants/constants';
 
 export type DeleteContactType = {
   deleteContactOpen: boolean;
@@ -20,17 +20,16 @@ const DeleteContactModal = ({
   deleteContactId,
   setDeleteContactId,
 }: DeleteContactType) => {
-  const [deleteContact, { isSuccess: isDeleteContactSuccess, reset }] =
-    useDeleteContactMutation();
+  const [deleteContact, { isSuccess: isDeleteContactSuccess, reset }] = useDeleteContactMutation();
 
   const handleDeleteContact = () => {
     deleteContact(deleteContactId);
-    setDeleteContactId("");
+    setDeleteContactId('');
   };
 
   useEffect(() => {
     if (isDeleteContactSuccess) {
-      toast.success("Deleted Contact Successfully", {
+      toast.success('Deleted Contact Successfully', {
         toastId: TOAST_IDS.SUCCESS_CONTACT_DELETE,
       });
       reset();
@@ -42,21 +41,19 @@ const DeleteContactModal = ({
     <Modal
       open={deleteContactOpen}
       onClose={() => {
-        setDeleteContactId("");
+        setDeleteContactId('');
         setDeleteContactOpen(false);
       }}
       className="w-screen h-screen flex justify-center items-center"
     >
       <div className="flex flex-col gap-4 justify-center items-center w-2/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full">
-          <p className="text-primary text-xl font-semibold w-full text-start">
-            Delete Contact
-          </p>
+          <p className="text-primary text-xl font-semibold w-full text-start">Delete Contact</p>
           <MdClose
             size={25}
             className="cursor-pointer"
             onClick={() => {
-              setDeleteContactId("");
+              setDeleteContactId('');
               setDeleteContactOpen(false);
             }}
           />
@@ -72,7 +69,7 @@ const DeleteContactModal = ({
         <div className="flex w-full gap-3 justify-end">
           <CustomButton
             onClick={() => {
-              setDeleteContactId("");
+              setDeleteContactId('');
               setDeleteContactOpen(false);
             }}
             label="Cancel"

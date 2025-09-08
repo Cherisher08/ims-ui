@@ -1,8 +1,4 @@
-import {
-  ValueFormatterParams,
-  ValueGetterParams,
-  ValueSetterParams,
-} from "ag-grid-community";
+import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from 'ag-grid-community';
 import {
   BillingMode,
   OrderInfo,
@@ -11,11 +7,11 @@ import {
   ProductDetails,
   RentalOrderInfo,
   RepaymentMode,
-} from "../../../types/order";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import { DiscountType, Product, ProductType } from "../../../types/common";
-import { IdNamePair } from "../Stocks";
+} from '../../../types/order';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { DiscountType, Product, ProductType } from '../../../types/common';
+import { IdNamePair } from '../Stocks';
 
 dayjs.extend(utc);
 
@@ -44,9 +40,7 @@ export const gstAmountSetter = (params: ValueSetterParams): boolean => {
 
   if (isNaN(newGstAmount) || baseAmount === 0) return false;
 
-  const newGstPercent = parseFloat(
-    ((newGstAmount / baseAmount) * 100).toFixed(2)
-  );
+  const newGstPercent = parseFloat(((newGstAmount / baseAmount) * 100).toFixed(2));
 
   if (params.data.gst_percent !== newGstPercent) {
     params.data.gst_percent = newGstPercent;
@@ -58,7 +52,7 @@ export const gstAmountSetter = (params: ValueSetterParams): boolean => {
 
 export const currencyFormatter = (params: ValueFormatterParams) => {
   const value = parseFloat(params.value ?? 0);
-  if (isNaN(value)) return "";
+  if (isNaN(value)) return '';
   return `₹${value.toFixed(2)}`;
 };
 
@@ -78,7 +72,7 @@ export const getNewOrderId = (orders: OrderInfo[]) => {
     .filter((num) => num > 0);
 
   const maxSuffix = suffixes.length > 0 ? Math.max(...suffixes) : 0;
-  const nextSuffix = (maxSuffix + 1).toString().padStart(4, "0");
+  const nextSuffix = (maxSuffix + 1).toString().padStart(4, '0');
 
   return `RO/${fy}/${nextSuffix}`;
 };
@@ -90,15 +84,15 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     deposits: [],
     discount: 0,
     discount_type: DiscountType.RUPEES,
-    event_address: "",
+    event_address: '',
     rental_duration: 0,
     gst: 0,
-    in_date: "",
+    in_date: '',
     order_id: orderId,
     out_date: utcString(),
     payment_mode: RepaymentMode.NULL,
     product_details: [],
-    remarks: "",
+    remarks: '',
     round_off: 0,
     status: PaymentStatus.PENDING,
     type: ProductType.RENTAL,
@@ -107,10 +101,10 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     balance_paid: 0,
     balance_paid_mode: PaymentMode.NULL,
     repay_amount: 0,
-    event_name: "",
-    event_venue: "",
-    balance_paid_date: "",
-    repay_date: "",
+    event_name: '',
+    event_venue: '',
+    balance_paid_date: '',
+    repay_date: '',
   };
 };
 
@@ -124,9 +118,9 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
 };
 
 export const getDuration = (out_date: string, in_date: string) => {
-  const start = dayjs(out_date).startOf("day");
-  const end = dayjs(in_date).endOf("day");
-  const duration = end.diff(start, "day") + 1;
+  const start = dayjs(out_date).startOf('day');
+  const end = dayjs(in_date).endOf('day');
+  const duration = end.diff(start, 'day') + 1;
   return duration;
 };
 
@@ -135,13 +129,13 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
   const outDate = out_date || utcString();
   const duration = getDuration(outDate, inDate);
   return {
-    _id: "",
-    name: "",
-    category: "",
+    _id: '',
+    name: '',
+    category: '',
     // billing_unit: BillingUnit.DAYS,
     product_unit: {
-      _id: "",
-      name: "",
+      _id: '',
+      name: '',
     },
     in_date: inDate,
     order_quantity: 0,
@@ -149,14 +143,14 @@ export const getDefaultProduct = (out_date: string, in_date: string) => {
     out_date: outDate,
     duration: duration,
     rent_per_unit: 0,
-    product_code: "",
-    damage: "",
+    product_code: '',
+    damage: '',
   };
 };
 
 export const formatProducts = (products: Product[] | ProductDetails[]) => {
   return products.map((product) => ({
-    id: product._id || "",
+    id: product._id || '',
     value: product.name,
   }));
 };
@@ -166,16 +160,12 @@ export const formatProducts = (products: Product[] | ProductDetails[]) => {
 //   value,
 // }));
 
-export const paymentModeOptions = Object.entries(PaymentMode).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
+export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
+  id: key,
+  value,
+}));
 
-export const repaymentModeOptions = Object.entries(RepaymentMode).map(
-  ([key, value]) => ({
-    id: key,
-    value,
-  })
-);
+export const repaymentModeOptions = Object.entries(RepaymentMode).map(([key, value]) => ({
+  id: key,
+  value,
+}));

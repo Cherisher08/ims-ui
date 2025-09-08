@@ -1,6 +1,6 @@
-import React from "react";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import dayjs, { Dayjs } from "dayjs";
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import dayjs, { Dayjs } from 'dayjs';
+import React from 'react';
 
 interface CustomDatePickerProps {
   label: string;
@@ -20,26 +20,22 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   value,
   onChange,
   error = false,
-  helperText = "",
-  placeholder = "",
-  className = "",
-  wrapperClass = "",
-  labelClass = "",
-  format = "DD/MM/YYYY hh:mm A",
+  helperText = '',
+  placeholder = '',
+  className = '',
+  wrapperClass = '',
+  labelClass = '',
+  format = 'DD/MM/YYYY hh:mm A',
 }) => {
-  const dateFormat = format || "DD/MM/YYYY hh:mm A";
+  const dateFormat = format || 'DD/MM/YYYY hh:mm A';
 
   const handleChange = (newValue: string | Dayjs | null) => {
-    onChange(newValue?.toString() || "");
+    onChange(newValue?.toString() || '');
   };
 
   return (
     <div className={`flex flex-col  ${wrapperClass} `}>
-      <label
-        className={`min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}
-      >
-        {label}
-      </label>
+      <label className={`min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}>{label}</label>
       <div className="flex flex-col gap-2 w-full">
         <DateTimePicker
           value={value ? dayjs(value) : null}
@@ -47,17 +43,17 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           slotProps={{
             textField: {
               error,
-              helperText: error ? helperText : "",
+              helperText: error ? helperText : '',
               placeholder,
               className,
               fullWidth: true,
               sx: {
-                "& .MuiPickersSectionList-root": {
-                  padding: "0.6rem",
-                  height: "2.5rem",
+                '& .MuiPickersSectionList-root': {
+                  padding: '0.6rem',
+                  height: '2.5rem',
                 },
-                "& .MuiFormHelperText-root": {
-                  margin: "0",
+                '& .MuiFormHelperText-root': {
+                  margin: '0',
                 },
               },
             },

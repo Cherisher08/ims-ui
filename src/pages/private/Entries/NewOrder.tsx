@@ -1,29 +1,13 @@
-import { Box, Tab, Tabs } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import CustomButton from '../../../styled/CustomButton';
-import CustomInput from '../../../styled/CustomInput';
-import CustomSelect, { CustomSelectOptionProps } from '../../../styled/CustomSelect';
-import AntSwitch from '../../../styled/CustomSwitch';
-import CustomDatePicker from '../../../styled/CustomDatePicker';
-import {
-  BillingMode,
-  // BillingUnit,
-  DepositType,
-  PaymentMode,
-  PaymentStatus,
-  RentalOrderInfo,
-  RepaymentMode,
-} from '../../../types/order';
-import { ContactInfoType, initialContactType } from '../../../types/contact';
+import { Box, Tab, Tabs } from '@mui/material';
 import dayjs from 'dayjs';
-import {
-  DiscountType,
-  discountTypeValues,
-  EventNameType,
-  Product,
-  ProductType,
-} from '../../../types/common';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LuPlus } from 'react-icons/lu';
+import { useDispatch } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import Loader from '../../../components/Loader';
+import { TOAST_IDS } from '../../../constants/constants';
 import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
 import { useGetContactsQuery } from '../../../services/ContactService';
 import {
@@ -33,12 +17,32 @@ import {
   useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
 } from '../../../services/OrderService';
-import { toast } from 'react-toastify';
-import { TOAST_IDS } from '../../../constants/constants';
-import { useNavigate, useParams } from 'react-router-dom';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
-import { useDispatch } from 'react-redux';
 import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
+import CustomAutoComplete from '../../../styled/CustomAutoComplete';
+import CustomButton from '../../../styled/CustomButton';
+import CustomDatePicker from '../../../styled/CustomDatePicker';
+import CustomInput from '../../../styled/CustomInput';
+import CustomSelect, { CustomSelectOptionProps } from '../../../styled/CustomSelect';
+import AntSwitch from '../../../styled/CustomSwitch';
+import {
+  DiscountType,
+  discountTypeValues,
+  EventNameType,
+  Product,
+  ProductType,
+} from '../../../types/common';
+import { ContactInfoType, initialContactType } from '../../../types/contact';
+import {
+  BillingMode,
+  // BillingUnit,
+  DepositType,
+  PaymentMode,
+  PaymentStatus,
+  RentalOrderInfo,
+  RepaymentMode,
+} from '../../../types/order';
+import AddContactModal from '../Customers/modals/AddContactModal';
 import {
   // billingUnitOptions,
   formatProducts,
@@ -49,9 +53,6 @@ import {
   paymentModeOptions,
   repaymentModeOptions,
 } from '../Orders/utils';
-import CustomAutoComplete from '../../../styled/CustomAutoComplete';
-import { LuPlus } from 'react-icons/lu';
-import AddContactModal from '../Customers/modals/AddContactModal';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -256,7 +257,12 @@ const NewOrder = () => {
       }
       return currentProduct;
     });
-    setProducts(updatedProducts);
+    const newProducts = products.map((prod) =>
+      updatedProducts.find((p) => p._id === prod._id)
+        ? updatedProducts.find((p) => p._id === prod._id)
+        : prod
+    );
+    setProducts(newProducts);
   };
 
   const createNewOrder = async () => {
@@ -516,6 +522,10 @@ const NewOrder = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderInfo.status]);
+
+  if (!isProductsQuerySuccess) {
+    return <Loader />;
+  }
 
   return (
     <div className="w-full flex flex-col ">
@@ -927,9 +937,11 @@ const NewOrder = () => {
 
                           // Update products stock
                           setProducts((prev) =>
-                            prev.map((p) =>
-                              p._id === product._id ? { ...p, available_stock: finalStock } : p
-                            )
+                            prev
+                              .map((p) =>
+                                p._id === product._id ? { ...p, available_stock: finalStock } : p
+                              )
+                              .filter((p): p is Product => p !== undefined)
                           );
 
                           // Update order info

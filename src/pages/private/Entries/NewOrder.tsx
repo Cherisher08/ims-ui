@@ -1172,7 +1172,7 @@ const NewOrder = () => {
                     <CustomDatePicker
                       label=""
                       placeholder=""
-                      className="w-[14rem] p-2"
+                      className=" p-2"
                       value={deposit.date}
                       onChange={(val) => {
                         const newDeposits = [...depositData];

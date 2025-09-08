@@ -1,24 +1,22 @@
-import { PDFViewer } from "@react-pdf/renderer";
-import Invoice from "../../../components/Invoice";
+import { PDFViewer } from '@react-pdf/renderer';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import ErrorPage from '../../../components/ErrorPage/ErrorPage';
+import Invoice from '../../../components/Invoice';
+import Loader from '../../../components/Loader';
 import {
   useGetRentalOrderByIdQuery,
   useGetRentalOrdersQuery,
-} from "../../../services/OrderService";
-import ErrorPage from "../../../components/ErrorPage/ErrorPage";
-import Loader from "../../../components/Loader";
-import { useParams } from "react-router-dom";
-import { ProductType } from "../../../types/common";
-import { useState } from "react";
+} from '../../../services/OrderService';
+import { ProductType } from '../../../types/common';
 const OrderInvoice = () => {
   const { rentalId } = useParams();
-  const {
-    data: existingRentalOrder,
-    isLoading: isRentalOrderQueryByIdLoading,
-  } = useGetRentalOrderByIdQuery(rentalId!, {
-    skip: !rentalId,
-  });
+  const { data: existingRentalOrder, isLoading: isRentalOrderQueryByIdLoading } =
+    useGetRentalOrderByIdQuery(rentalId!, {
+      skip: !rentalId,
+    });
 
-  const [invoiceId, setInvoiceId] = useState<string>("");
+  const [invoiceId, setInvoiceId] = useState<string>('');
 
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
@@ -31,18 +29,14 @@ const OrderInvoice = () => {
     return <Loader />;
   }
 
-  if (isRentalOrdersQuerySuccess && rentalOrderData && invoiceId === "") {
+  if (isRentalOrdersQuerySuccess && rentalOrderData && invoiceId === '') {
     const sortedOrders = rentalOrderData
       .filter((order) => order.in_date)
-      .sort(
-        (a, b) => new Date(a.in_date).getTime() - new Date(b.in_date).getTime()
-      );
+      .sort((a, b) => new Date(a.in_date).getTime() - new Date(b.in_date).getTime());
 
-    const position =
-      sortedOrders.findIndex((order) => order._id === existingRentalOrder._id) +
-      1;
+    const position = sortedOrders.findIndex((order) => order._id === existingRentalOrder._id) + 1;
 
-    const positionStr = position.toString().padStart(4, "0");
+    const positionStr = position.toString().padStart(4, '0');
 
     const now = new Date();
     const year = now.getFullYear();

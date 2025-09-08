@@ -1,21 +1,16 @@
-import { useEffect, useState } from "react";
-import CustomSelect from "../../styled/CustomSelect";
-import CustomCard from "../../styled/CustomCard";
-import CustomLineChart from "../../styled/CustomLineChart";
-import {
-  BillingMode,
-  OrderInfoType,
-  PaymentStatus,
-  RentalOrderInfo,
-} from "../../types/order";
-import { DiscountType, ProductType } from "../../types/common";
-import { useGetRentalOrdersQuery } from "../../services/OrderService";
-import { calculateDiscountAmount } from "../../services/utility_functions";
-import dayjs from "dayjs";
-import weekOfYear from "dayjs/plugin/weekOfYear";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import AntSwitch from "../../styled/CustomSwitch";
-import { getDuration } from "./Orders/utils";
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import { useEffect, useState } from 'react';
+import { useGetRentalOrdersQuery } from '../../services/OrderService';
+import { calculateDiscountAmount } from '../../services/utility_functions';
+import CustomCard from '../../styled/CustomCard';
+import CustomLineChart from '../../styled/CustomLineChart';
+import CustomSelect from '../../styled/CustomSelect';
+import AntSwitch from '../../styled/CustomSwitch';
+import { DiscountType, ProductType } from '../../types/common';
+import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from '../../types/order';
+import { getDuration } from './Orders/utils';
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
@@ -23,12 +18,12 @@ dayjs.extend(weekOfYear);
 type PendingAmount = { x: string; y: number };
 
 type ChartType =
-  | "incoming_pending"
-  | "repayment_pending"
-  | "machines_in"
-  | "machines_out"
-  | "machines_repair"
-  | "machines_overdue";
+  | 'incoming_pending'
+  | 'repayment_pending'
+  | 'machines_in'
+  | 'machines_out'
+  | 'machines_repair'
+  | 'machines_overdue';
 
 // const getRentalDuration = (outDate: string, inDate: string, unit: BillingUnit): number => {
 //   const out = new Date(outDate);
@@ -74,14 +69,14 @@ const calcFinalAmount = (order: OrderInfoType): number => {
 const groupKeyFormatter = (dateStr: string, filter: string) => {
   const date = dayjs(dateStr);
   switch (filter) {
-    case "1":
-      return date.format("YYYY-MM-DD");
-    case "2":
+    case '1':
+      return date.format('YYYY-MM-DD');
+    case '2':
       return `${date.year()}-W${date.week()}`;
-    case "3":
-      return date.format("YYYY-MM");
+    case '3':
+      return date.format('YYYY-MM');
     default:
-      return date.format("YYYY-MM-DD");
+      return date.format('YYYY-MM-DD');
   }
 };
 
@@ -89,43 +84,39 @@ const getValidGroupKeys = (filter: string): string[] => {
   const today = dayjs();
   const keys: string[] = [];
 
-  if (filter === "1") {
+  if (filter === '1') {
     // daily: current month, from 1st to today
-    const start = today.startOf("month");
+    const start = today.startOf('month');
     const end = today;
     let cursor = start.clone();
     while (cursor.isSameOrBefore(end)) {
-      keys.push(groupKeyFormatter(cursor.format("YYYY-MM-DD"), filter));
-      cursor = cursor.add(1, "day");
+      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+      cursor = cursor.add(1, 'day');
     }
-  } else if (filter === "2") {
+  } else if (filter === '2') {
     // weekly: last 5 weeks + current week (total 6 weeks ending this week)
-    const start = today.startOf("week").subtract(5, "weeks");
-    const end = today.startOf("week");
+    const start = today.startOf('week').subtract(5, 'weeks');
+    const end = today.startOf('week');
     let cursor = start.clone();
     while (cursor.isSameOrBefore(end)) {
-      keys.push(groupKeyFormatter(cursor.format("YYYY-MM-DD"), filter));
-      cursor = cursor.add(1, "week");
+      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+      cursor = cursor.add(1, 'week');
     }
-  } else if (filter === "3") {
+  } else if (filter === '3') {
     // monthly: last 5 months + current month (total 6 months ending this month)
-    const start = today.startOf("month").subtract(5, "months");
-    const end = today.startOf("month");
+    const start = today.startOf('month').subtract(5, 'months');
+    const end = today.startOf('month');
     let cursor = start.clone();
     while (cursor.isSameOrBefore(end)) {
-      keys.push(groupKeyFormatter(cursor.format("YYYY-MM-DD"), filter));
-      cursor = cursor.add(1, "month");
+      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+      cursor = cursor.add(1, 'month');
     }
   }
 
   return keys;
 };
 
-const getChartData = (
-  orders: RentalOrderInfo[],
-  filter: string,
-  chartType: ChartType
-) => {
+const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: ChartType) => {
   const groups: Record<string, number> = {};
 
   const validGroupKeys = getValidGroupKeys(filter); // from earlier
@@ -137,9 +128,8 @@ const getChartData = (
     if (!validGroupKeys.includes(groupKey)) return;
 
     switch (chartType) {
-      case "incoming_pending": {
-        const depositTotal =
-          order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      case 'incoming_pending': {
+        const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
         const discountAmount =
@@ -151,8 +141,7 @@ const getChartData = (
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount =
-          finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
         if (pendingAmount > 0) {
           groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
@@ -160,9 +149,8 @@ const getChartData = (
         break;
       }
 
-      case "repayment_pending": {
-        const depositTotal =
-          order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      case 'repayment_pending': {
+        const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
         const discountAmount =
@@ -174,8 +162,7 @@ const getChartData = (
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount =
-          finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
         if (pendingAmount < 0) {
           groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
@@ -183,33 +170,31 @@ const getChartData = (
         break;
       }
 
-      case "machines_in": {
+      case 'machines_in': {
         order.product_details.forEach((p) => {
           if (p.in_date) {
             const productGroupKey = groupKeyFormatter(p.in_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] =
-                (groups[productGroupKey] || 0) + p.order_quantity;
+              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
             }
           }
         });
         break;
       }
 
-      case "machines_out": {
+      case 'machines_out': {
         order.product_details.forEach((p) => {
           if (p.out_date) {
             const productGroupKey = groupKeyFormatter(p.out_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] =
-                (groups[productGroupKey] || 0) + p.order_quantity;
+              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
             }
           }
         });
         break;
       }
 
-      case "machines_repair": {
+      case 'machines_repair': {
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
           if (repairCount > 0) {
@@ -221,13 +206,12 @@ const getChartData = (
         break;
       }
 
-      case "machines_overdue": {
+      case 'machines_overdue': {
         order.product_details.forEach((p) => {
           if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
             const productGroupKey = groupKeyFormatter(p.in_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] =
-                (groups[productGroupKey] || 0) + p.order_quantity;
+              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
             }
           }
         });
@@ -259,7 +243,7 @@ const getDetailsData = (
     }
   | { name: string; amount: number }[] => {
   const validGroupKeys = getValidGroupKeys(filter);
-  if (chartType === "incoming_pending" || chartType === "repayment_pending") {
+  if (chartType === 'incoming_pending' || chartType === 'repayment_pending') {
     const pending: { name: string; amount: number }[] = [];
     const paid: { name: string; amount: number }[] = [];
 
@@ -268,8 +252,7 @@ const getDetailsData = (
 
       // ignore if this group is outside the current date range
       if (!validGroupKeys.includes(groupKey)) return;
-      const depositTotal =
-        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
       const finalAmount = calcFinalAmount(order);
       const roundOff = order.round_off || 0;
       const discountAmount =
@@ -281,31 +264,30 @@ const getDetailsData = (
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount =
-        finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+      const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
 
       if (order.status === PaymentStatus.PENDING) {
-        if (chartType === "incoming_pending" && pendingAmount > 0) {
+        if (chartType === 'incoming_pending' && pendingAmount > 0) {
           pending.push({
-            name: order.customer ? order.customer.name : "",
+            name: order.customer ? order.customer.name : '',
             amount: Math.abs(pendingAmount),
           });
-        } else if (chartType === "repayment_pending" && pendingAmount < 0) {
+        } else if (chartType === 'repayment_pending' && pendingAmount < 0) {
           pending.push({
-            name: order.customer ? order.customer.name : "",
+            name: order.customer ? order.customer.name : '',
             amount: Math.abs(pendingAmount),
           });
         }
       } else {
         // paid section
-        if (chartType === "incoming_pending" && pendingAmount > 0) {
+        if (chartType === 'incoming_pending' && pendingAmount > 0) {
           paid.push({
-            name: order.customer ? order.customer.name : "",
+            name: order.customer ? order.customer.name : '',
             amount: Math.abs(pendingAmount),
           });
-        } else if (chartType === "repayment_pending" && pendingAmount < 0) {
+        } else if (chartType === 'repayment_pending' && pendingAmount < 0) {
           paid.push({
-            name: order.customer ? order.customer.name : "",
+            name: order.customer ? order.customer.name : '',
             amount: Math.abs(pendingAmount),
           });
         }
@@ -320,7 +302,7 @@ const getDetailsData = (
 
   orders.forEach((order) => {
     switch (chartType) {
-      case "machines_in": {
+      case 'machines_in': {
         order.product_details.forEach((p) => {
           if (p.in_date) {
             data.push({
@@ -331,7 +313,7 @@ const getDetailsData = (
         });
         break;
       }
-      case "machines_out": {
+      case 'machines_out': {
         order.product_details.forEach((p) => {
           if (p.out_date) {
             data.push({
@@ -342,7 +324,7 @@ const getDetailsData = (
         });
         break;
       }
-      case "machines_repair": {
+      case 'machines_repair': {
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
           if (repairCount > 0) {
@@ -354,7 +336,7 @@ const getDetailsData = (
         });
         break;
       }
-      case "machines_overdue": {
+      case 'machines_overdue': {
         order.product_details.forEach((p) => {
           if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
             data.push({
@@ -376,21 +358,18 @@ const getDetailsData = (
 const Dashboard = () => {
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
-  const [filter, setFilter] = useState<string>("1");
+  const [filter, setFilter] = useState<string>('1');
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
-  const [showPendingAmountsOnly, setShowPendingAmountsOnly] =
-    useState<boolean>(false);
+  const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);
-  const [graphFilter, setGraphFilter] = useState<ChartType>("incoming_pending");
+  const [graphFilter, setGraphFilter] = useState<ChartType>('incoming_pending');
   const detailsData = getDetailsData(orders, graphFilter, filter);
   const filterOptions = [
-    { id: "1", value: "daily" },
-    { id: "2", value: "weekly" },
-    { id: "3", value: "monthly" },
+    { id: '1', value: 'daily' },
+    { id: '2', value: 'weekly' },
+    { id: '3', value: 'monthly' },
   ];
-  const isPriceData = ["incoming_pending", "repayment_pending"].includes(
-    graphFilter
-  );
+  const isPriceData = ['incoming_pending', 'repayment_pending'].includes(graphFilter);
 
   const [totalInfo, setTotalInfo] = useState({
     balanceAmount: 0,
@@ -421,8 +400,7 @@ const Dashboard = () => {
     let mcOut = 0;
 
     filteredOrders.forEach((order) => {
-      const depositSum =
-        order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+      const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
 
       const finalAmount = calcFinalAmount(order);
       const roundOff = order.round_off || 0;
@@ -435,8 +413,7 @@ const Dashboard = () => {
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount =
-        finalAmount - depositSum - discountAmount + gstAmount + roundOff;
+      const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
@@ -526,92 +503,69 @@ const Dashboard = () => {
             className="grow"
             value={`₹${totalInfo.depositAmount.toFixed(2)}`}
           />
-          <CustomCard
-            title="Machine Out"
-            className="grow"
-            value={`${totalInfo.mcOut}`}
-          />
-          <CustomCard
-            title="Machine In"
-            className="grow"
-            value={`${totalInfo.mcIn}`}
-          />
+          <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
+          <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[75%_auto] w-full gap-3 pb-4">
           <div className="flex flex-col bg-gray-50 rounded-xl gap-1 px-3 max-h-[26rem] py-2 h-full">
             <ul className="flex flex-row text-sm gap-3">
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "incoming_pending"
-                    ? "text-black"
-                    : "text-gray-500"
+                  graphFilter == 'incoming_pending' ? 'text-black' : 'text-gray-500'
                 }`}
-                onClick={() => setGraphFilter("incoming_pending")}
+                onClick={() => setGraphFilter('incoming_pending')}
               >
                 Balance Pending
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "repayment_pending"
-                    ? "text-black"
-                    : "text-gray-500"
+                  graphFilter == 'repayment_pending' ? 'text-black' : 'text-gray-500'
                 }`}
-                onClick={() => setGraphFilter("repayment_pending")}
+                onClick={() => setGraphFilter('repayment_pending')}
               >
                 Return Pending
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "machines_in" ? "text-black" : "text-gray-500"
+                  graphFilter == 'machines_in' ? 'text-black' : 'text-gray-500'
                 }`}
-                onClick={() => setGraphFilter("machines_in")}
+                onClick={() => setGraphFilter('machines_in')}
               >
                 Machines In
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "machines_out" ? "text-black" : "text-gray-500"
+                  graphFilter == 'machines_out' ? 'text-black' : 'text-gray-500'
                 }`}
-                onClick={() => setGraphFilter("machines_out")}
+                onClick={() => setGraphFilter('machines_out')}
               >
                 Machines Out
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "machines_repair"
-                    ? "text-black"
-                    : "text-gray-500"
+                  graphFilter == 'machines_repair' ? 'text-black' : 'text-gray-500'
                 }`}
-                onClick={() => setGraphFilter("machines_repair")}
+                onClick={() => setGraphFilter('machines_repair')}
               >
                 Machines Repair
               </li>
               <li
                 className={`cursor-pointer ${
-                  graphFilter == "machines_overdue"
-                    ? "text-black"
-                    : "text-gray-500"
+                  graphFilter == 'machines_overdue' ? 'text-black' : 'text-gray-500'
                 }`}
-                onClick={() => setGraphFilter("machines_overdue")}
+                onClick={() => setGraphFilter('machines_overdue')}
               >
                 Machines Overdue
               </li>
             </ul>
-            <CustomLineChart
-              chartData={chartData}
-              title=""
-              isYPrice={isPriceData}
-            />
+            <CustomLineChart chartData={chartData} title="" isYPrice={isPriceData} />
           </div>
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Details</p>
             <ul className="flex flex-col gap-3 px-4 h-full overflow-y-auto">
-              {"pending" in detailsData ? (
+              {'pending' in detailsData ? (
                 <>
-                  <li
-                    key={"table-header"}
-                    className="flex justify-between text-sm"
-                  >
+                  <li key={'table-header'} className="flex justify-between text-sm">
                     <span>Customer</span>
                     <span>Amount</span>
                   </li>
@@ -620,10 +574,7 @@ const Dashboard = () => {
                     <li className="text-gray-400 italic">No pending</li>
                   )}
                   {detailsData.pending.map((record, index) => (
-                    <li
-                      key={"pending-" + index}
-                      className="flex justify-between text-sm"
-                    >
+                    <li key={'pending-' + index} className="flex justify-between text-sm">
                       <span>{record.name}</span>
                       <span>{`₹${record.amount.toFixed(2)}`}</span>
                     </li>
@@ -634,10 +585,7 @@ const Dashboard = () => {
                     <li className="text-gray-400 italic">No paid</li>
                   )}
                   {detailsData.paid.map((record, index) => (
-                    <li
-                      key={"paid-" + index}
-                      className="flex justify-between text-sm"
-                    >
+                    <li key={'paid-' + index} className="flex justify-between text-sm">
                       <span>{record.name}</span>
                       <span>{`₹${record.amount.toFixed(2)}`}</span>
                     </li>
@@ -645,10 +593,7 @@ const Dashboard = () => {
                 </>
               ) : (
                 <>
-                  <li
-                    key={"table-header"}
-                    className="flex justify-between text-sm"
-                  >
+                  <li key={'table-header'} className="flex justify-between text-sm">
                     <span>Product</span>
                     <span>Nos</span>
                   </li>

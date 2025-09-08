@@ -1,13 +1,13 @@
-import { Modal } from "@mui/material";
-import React from "react";
-import { DepositType, PaymentMode, ProductDetails } from "../../../types/order";
-import { MdClose } from "react-icons/md";
-import CustomButton from "../../../styled/CustomButton";
-import CustomInput from "../../../styled/CustomInput";
-import CustomDatePicker from "../../../styled/CustomDatePicker";
-import CustomSelect from "../../../styled/CustomSelect";
-import dayjs from "dayjs";
-import { IdNamePair } from "../Stocks";
+import { Modal } from '@mui/material';
+import dayjs from 'dayjs';
+import React from 'react';
+import { MdClose } from 'react-icons/md';
+import CustomButton from '../../../styled/CustomButton';
+import CustomDatePicker from '../../../styled/CustomDatePicker';
+import CustomInput from '../../../styled/CustomInput';
+import CustomSelect from '../../../styled/CustomSelect';
+import { DepositType, PaymentMode, ProductDetails } from '../../../types/order';
+import { IdNamePair } from '../Stocks';
 
 type DepositModalType = {
   depositOpen: boolean;
@@ -24,7 +24,7 @@ const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
 
 const formatProducts = (products: IdNamePair[]) => {
   return products.map((product) => ({
-    id: product._id || "",
+    id: product._id || '',
     value: product.name,
   }));
 };
@@ -47,13 +47,14 @@ const DepositModal = ({
       ...depositData,
       {
         amount: 0,
-        date: dayjs().format("YYYY-MM-DDTHH:mm"),
+        date: dayjs().format('YYYY-MM-DDTHH:mm'),
         mode: PaymentMode.CASH,
         product: products[0],
       },
     ]);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDepositChange = (field: string, value: any, index: number) => {
     const data = depositData.map((deposit, idx) =>
       index === idx
@@ -98,13 +99,13 @@ const DepositModal = ({
                 value={deposit.amount}
                 type="number"
                 placeholder="Enter Amount"
-                onChange={(value) => handleDepositChange("amount", parseFloat(value), index)}
+                onChange={(value) => handleDepositChange('amount', parseFloat(value), index)}
               />
               <CustomDatePicker
                 label="Date"
                 labelClass="!min-w-[3rem] w-[3rem]"
                 value={deposit.date}
-                onChange={(value) => handleDepositChange("date", value, index)}
+                onChange={(value) => handleDepositChange('date', value, index)}
               />
               <CustomSelect
                 label="Product"
@@ -112,12 +113,12 @@ const DepositModal = ({
                 value={
                   formatProducts(products).find((prod) =>
                     deposit.product ? prod.id === deposit.product._id : false
-                  )?.id ?? ""
+                  )?.id ?? ''
                 }
                 options={formatProducts(products)}
                 onChange={(id) =>
                   handleDepositChange(
-                    "product",
+                    'product',
                     products.find((prod) => prod._id === id),
                     index
                   )
@@ -128,10 +129,10 @@ const DepositModal = ({
                 className="w-[10rem]"
                 labelClass="w-fit"
                 options={paymentModeOptions}
-                value={paymentModeOptions.find((opt) => opt.value === deposit?.mode)?.id ?? ""}
+                value={paymentModeOptions.find((opt) => opt.value === deposit?.mode)?.id ?? ''}
                 onChange={(id) =>
                   handleDepositChange(
-                    "mode",
+                    'mode',
                     paymentModeOptions.find((opt) => opt.id === id)?.value as PaymentMode,
                     index
                   )

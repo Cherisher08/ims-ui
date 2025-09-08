@@ -1,11 +1,37 @@
-import { Box, Tab, Tabs } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CustomButton from "../../../styled/CustomButton";
-import CustomInput from "../../../styled/CustomInput";
-import CustomSelect, { CustomSelectOptionProps } from "../../../styled/CustomSelect";
-import AntSwitch from "../../../styled/CustomSwitch";
-import CustomDatePicker from "../../../styled/CustomDatePicker";
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Box, Tab, Tabs } from '@mui/material';
+import dayjs from 'dayjs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LuPlus } from 'react-icons/lu';
+import { useDispatch } from 'react-redux';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../constants/constants';
+import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
+import { useGetContactsQuery } from '../../../services/ContactService';
+import {
+  useCreateRentalOrderMutation,
+  useGetRentalOrderByIdQuery,
+  useGetRentalOrdersQuery,
+  useLazyGetExpiredRentalOrdersQuery,
+  useUpdateRentalOrderMutation,
+} from '../../../services/OrderService';
+import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
+import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
+import CustomAutoComplete from '../../../styled/CustomAutoComplete';
+import CustomButton from '../../../styled/CustomButton';
+import CustomDatePicker from '../../../styled/CustomDatePicker';
+import CustomInput from '../../../styled/CustomInput';
+import CustomSelect, { CustomSelectOptionProps } from '../../../styled/CustomSelect';
+import AntSwitch from '../../../styled/CustomSwitch';
+import {
+  DiscountType,
+  discountTypeValues,
+  EventNameType,
+  Product,
+  ProductType,
+} from '../../../types/common';
+import { ContactInfoType, initialContactType } from '../../../types/contact';
 import {
   BillingMode,
   // BillingUnit,
@@ -14,31 +40,8 @@ import {
   PaymentStatus,
   RentalOrderInfo,
   RepaymentMode,
-} from "../../../types/order";
-import { ContactInfoType, initialContactType } from "../../../types/contact";
-import dayjs from "dayjs";
-import {
-  DiscountType,
-  discountTypeValues,
-  EventNameType,
-  Product,
-  ProductType,
-} from "../../../types/common";
-import { useGetProductsQuery, useUpdateProductMutation } from "../../../services/ApiService";
-import { useGetContactsQuery } from "../../../services/ContactService";
-import {
-  useCreateRentalOrderMutation,
-  useGetRentalOrderByIdQuery,
-  useGetRentalOrdersQuery,
-  useLazyGetExpiredRentalOrdersQuery,
-  useUpdateRentalOrderMutation,
-} from "../../../services/OrderService";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../../constants/constants";
-import { useNavigate, useParams } from "react-router-dom";
-import { calculateDiscountAmount, calculateProductRent } from "../../../services/utility_functions";
-import { useDispatch } from "react-redux";
-import { setExpiredRentalOrders } from "../../../store/OrdersSlice";
+} from '../../../types/order';
+import AddContactModal from '../Customers/modals/AddContactModal';
 import {
   // billingUnitOptions,
   formatProducts,
@@ -48,14 +51,11 @@ import {
   getNewOrderId,
   paymentModeOptions,
   repaymentModeOptions,
-} from "../Orders/utils";
-import CustomAutoComplete from "../../../styled/CustomAutoComplete";
-import { LuPlus } from "react-icons/lu";
-import AddContactModal from "../Customers/modals/AddContactModal";
+} from '../Orders/utils';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
-    id: contact._id ?? "",
+    id: contact._id ?? '',
     value: contact.name,
   }));
 
@@ -79,21 +79,21 @@ const paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) =>
 }));
 
 const initialRentalProduct: RentalOrderInfo = {
-  order_id: "",
+  order_id: '',
   discount: 0,
   discount_type: DiscountType.RUPEES,
   gst: 0,
-  remarks: "",
+  remarks: '',
   type: ProductType.RENTAL,
   billing_mode: BillingMode.B2C,
   status: PaymentStatus.PENDING,
   payment_mode: RepaymentMode.NULL,
-  out_date: dayjs().format("YYYY-MM-DDTHH:mm"),
+  out_date: dayjs().format('YYYY-MM-DDTHH:mm'),
   rental_duration: 0,
-  in_date: "",
+  in_date: '',
   round_off: 0,
   customer: initialContactType,
-  event_address: "",
+  event_address: '',
   product_details: [],
   deposits: [],
   eway_amount: 0,
@@ -101,10 +101,10 @@ const initialRentalProduct: RentalOrderInfo = {
   balance_paid: 0,
   balance_paid_mode: PaymentMode.NULL,
   repay_amount: 0,
-  balance_paid_date: "",
-  repay_date: "",
-  event_name: "",
-  event_venue: "",
+  balance_paid_date: '',
+  repay_date: '',
+  event_name: '',
+  event_venue: '',
 };
 
 const NewOrder = () => {
@@ -142,7 +142,7 @@ const NewOrder = () => {
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
       amount: 0,
-      date: dayjs().format("YYYY-MM-DDTHH:mm"),
+      date: dayjs().format('YYYY-MM-DDTHH:mm'),
       product: null,
       mode: PaymentMode.CASH,
     },
@@ -249,9 +249,9 @@ const NewOrder = () => {
       const currentProduct = {
         ...products.find((product) => product._id === updatedProductDetail._id)!,
       };
-      if (paymentStatus === "paid") {
+      if (paymentStatus === 'paid') {
         currentProduct.available_stock += updatedProductDetail.order_quantity;
-      } else if (paymentStatus === "pending") {
+      } else if (paymentStatus === 'pending') {
         currentProduct.available_stock -= updatedProductDetail.order_quantity;
       }
       return currentProduct;
@@ -320,7 +320,7 @@ const NewOrder = () => {
       try {
         // 1️⃣ Create the rental order and wait for it to succeed
         const orderResponse = await createRentalOrder(newOrderInfo).unwrap();
-        console.log("✅ Order created successfully", orderResponse);
+        console.log('✅ Order created successfully', orderResponse);
 
         // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
@@ -341,7 +341,7 @@ const NewOrder = () => {
         );
 
         results.forEach((result, idx) => {
-          if (result.status === "fulfilled") {
+          if (result.status === 'fulfilled') {
             console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
           } else {
             console.error(
@@ -354,7 +354,7 @@ const NewOrder = () => {
         // 3️⃣ Finally, reset your form or order state
         setOrderInfo(initialRentalProduct);
       } catch (error) {
-        console.error("❌ Failed to create rental order:", error);
+        console.error('❌ Failed to create rental order:', error);
         // optionally show user a toast or message
       }
     }
@@ -369,45 +369,45 @@ const NewOrder = () => {
 
   useEffect(() => {
     if (isRentalOrderCreateSuccess) {
-      toast.success("Rental Order Created Successfully", {
+      toast.success('Rental Order Created Successfully', {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
       });
-      navigate("/orders");
+      navigate('/orders');
     }
     if (isRentalOrderCreateError) {
-      toast.error("Rental Order was not Created Successfully", {
+      toast.error('Rental Order was not Created Successfully', {
         toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
       });
-      navigate("/orders");
+      navigate('/orders');
     }
   }, [isRentalOrderCreateError, isRentalOrderCreateSuccess, isUpdateProductSuccess, navigate]);
 
   useEffect(() => {
     if (isRentalOrderUpdateSuccess) {
-      toast.success("Rental Order Updated Successfully", {
+      toast.success('Rental Order Updated Successfully', {
         toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
       });
       const fetchExpiredOrders = async () => {
         const result = await triggerGetRentalOrder();
-        if ("error" in result && result.error) {
+        if ('error' in result && result.error) {
           const error = result.error;
 
-          if ("status" in error && error.status === 404) {
+          if ('status' in error && error.status === 404) {
             dispatch(setExpiredRentalOrders([]));
           }
-        } else if ("data" in result && result.data) {
+        } else if ('data' in result && result.data) {
           dispatch(setExpiredRentalOrders(result.data));
         }
       };
 
       fetchExpiredOrders();
-      navigate("/orders");
+      navigate('/orders');
     }
     if (isRentalOrderUpdateError) {
-      toast.error("Rental Order was not Updated Successfully. Please Try Again", {
+      toast.error('Rental Order was not Updated Successfully. Please Try Again', {
         toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
       });
-      navigate("/orders");
+      navigate('/orders');
     }
   }, [
     dispatch,
@@ -435,9 +435,9 @@ const NewOrder = () => {
       }
     } else if (isRentalOrdersQuerySuccess) {
       const orderId = getNewOrderId(rentalOrders);
-      handleValueChange("order_id", orderId);
+      handleValueChange('order_id', orderId);
     } else {
-      handleValueChange("order_id", `INV/${getCurrentFY()}/0001`);
+      handleValueChange('order_id', `INV/${getCurrentFY()}/0001`);
     }
   }, [
     existingRentalOrder,
@@ -490,10 +490,10 @@ const NewOrder = () => {
       options[3] = newOption;
       setEventNameOptions(options);
     }
-    handleValueChange("event_name", value);
+    handleValueChange('event_name', value);
   };
 
-  const handlePaymentStatus = (type: "balance_paid" | "repay_amount", value: number) => {
+  const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
     // Calculate the amount to be paid or received
     const amountDue = Math.abs(
       calculateFinalAmount() -
@@ -503,10 +503,10 @@ const NewOrder = () => {
     // If paid/received amount equals the amount due, mark as Paid
     if (value === amountDue) {
       handleValueChange(type, value);
-      handleValueChange("status", PaymentStatus.PAID);
+      handleValueChange('status', PaymentStatus.PAID);
     } else {
       handleValueChange(type, value);
-      handleValueChange("status", PaymentStatus.PENDING);
+      handleValueChange('status', PaymentStatus.PENDING);
     }
   };
 
@@ -524,8 +524,8 @@ const NewOrder = () => {
         {isAllOrdersAllowed ? (
           <Tabs
             value={orderInfo.type}
-            onChange={(_, value) => handleValueChange("type", value)}
-            sx={{ "& .MuiTabs-indicator": { display: "none" } }}
+            onChange={(_, value) => handleValueChange('type', value)}
+            sx={{ '& .MuiTabs-indicator': { display: 'none' } }}
           >
             {Object.values(ProductType).map((type) => (
               <Tab
@@ -533,9 +533,9 @@ const NewOrder = () => {
                 label={type.charAt(0) + type.slice(1).toLowerCase()}
                 value={type}
                 sx={{
-                  backgroundColor: orderInfo.type === type ? "#002f53" : "",
-                  color: orderInfo.type === type ? "#ffffff !important" : "",
-                  fontWeight: orderInfo.type === type ? "bold" : "normal",
+                  backgroundColor: orderInfo.type === type ? '#002f53' : '',
+                  color: orderInfo.type === type ? '#ffffff !important' : '',
+                  fontWeight: orderInfo.type === type ? 'bold' : 'normal',
                 }}
               />
             ))}
@@ -565,10 +565,10 @@ const NewOrder = () => {
             checked={orderInfo.billing_mode === BillingMode.B2B}
             onChange={(e) => {
               handleValueChange(
-                "billing_mode",
+                'billing_mode',
                 e.target.checked ? BillingMode.B2B : BillingMode.B2C
               );
-              handleValueChange("gst", e.target.checked ? 0 : orderInfo.gst);
+              handleValueChange('gst', e.target.checked ? 0 : orderInfo.gst);
             }}
           />
           <p>B2B</p>
@@ -582,7 +582,7 @@ const NewOrder = () => {
             onChange={() => {}}
             label="Order Id"
             placeholder="Enter Order Id"
-            value={orderInfo?.order_id ?? ""}
+            value={orderInfo?.order_id ?? ''}
             disabled
           />
         )}
@@ -596,15 +596,15 @@ const NewOrder = () => {
           createOption={false}
           value={
             contacts.find((cont) => cont?.personal_number === orderInfo?.customer?.personal_number)
-              ?.personal_number || ""
+              ?.personal_number || ''
           }
           label="Customer Mobile"
           onChange={(value) => {
             const contact = contacts.find((c) => c.personal_number === value);
             if (contact) {
-              handleValueChange("customer", contact);
+              handleValueChange('customer', contact);
             } else {
-              handleValueChange("customer", {
+              handleValueChange('customer', {
                 ...initialContactType,
                 personal_number: value,
               });
@@ -619,11 +619,11 @@ const NewOrder = () => {
           options={formatContacts(contacts)}
           value={
             formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
-              ?.value ?? ""
+              ?.value ?? ''
           }
           onChange={(name) => {
             handleValueChange(
-              "customer",
+              'customer',
               contacts.find((option) => option.name === name)
             );
           }}
@@ -634,15 +634,15 @@ const NewOrder = () => {
             options={paymentStatusOptions}
             value={
               paymentStatusOptions.find((paymentStatus) => orderInfo.status === paymentStatus.value)
-                ?.id ?? ""
+                ?.id ?? ''
             }
             onChange={(id) => {
               const status = paymentStatusOptions.find((option) => option.id === id)?.value;
-              if (status === "pending") {
-                handleValueChange("repay_date", "");
-                handleValueChange("payment_mode", RepaymentMode.NULL);
+              if (status === 'pending') {
+                handleValueChange('repay_date', '');
+                handleValueChange('payment_mode', RepaymentMode.NULL);
               }
-              handleValueChange("status", status);
+              handleValueChange('status', status);
             }}
           />
         )}
@@ -650,8 +650,8 @@ const NewOrder = () => {
           options={eventNameOptions}
           addNewValue={(val) => addEventNameOption(val)}
           createOption={true}
-          value={orderInfo?.event_name ?? ""}
-          onChange={(value) => handleValueChange("event_name", value)}
+          value={orderInfo?.event_name ?? ''}
+          onChange={(value) => handleValueChange('event_name', value)}
           label="Event Name"
           placeholder="Enter Event Name"
         />
@@ -660,12 +660,12 @@ const NewOrder = () => {
           <>
             <CustomDatePicker
               label="Event Start Date/Entry Date"
-              value={orderInfo.out_date ?? ""}
+              value={orderInfo.out_date ?? ''}
               onChange={(value) => {
-                handleValueChange("out_date", value);
+                handleValueChange('out_date', value);
                 if (orderInfo.in_date) {
                   const duration = getDuration(value, orderInfo.in_date);
-                  handleValueChange("rental_duration", duration);
+                  handleValueChange('rental_duration', duration);
                 }
               }}
               placeholder="Enter Out Date"
@@ -673,7 +673,7 @@ const NewOrder = () => {
 
             <CustomDatePicker
               label="Bill Date/End Date"
-              value={orderInfo.in_date ?? ""}
+              value={orderInfo.in_date ?? ''}
               error={errors.inDate}
               helperText="In Date must be after Out Date"
               onChange={(value) => {
@@ -689,8 +689,8 @@ const NewOrder = () => {
                   }));
                 }
                 const duration = getDuration(orderInfo.out_date, value);
-                handleValueChange("rental_duration", duration);
-                handleValueChange("in_date", value);
+                handleValueChange('rental_duration', duration);
+                handleValueChange('in_date', value);
               }}
               placeholder="Enter In Date"
             />
@@ -698,9 +698,9 @@ const NewOrder = () => {
         )}
 
         <CustomInput
-          value={orderInfo?.rental_duration ?? ""}
+          value={orderInfo?.rental_duration ?? ''}
           onChange={(value) => {
-            handleValueChange("rental_duration", value);
+            handleValueChange('rental_duration', value);
           }}
           label="Event Expected Days"
           type="number"
@@ -708,16 +708,16 @@ const NewOrder = () => {
         />
 
         <CustomInput
-          value={orderInfo?.event_venue ?? ""}
-          onChange={(value) => handleValueChange("event_venue", value)}
+          value={orderInfo?.event_venue ?? ''}
+          onChange={(value) => handleValueChange('event_venue', value)}
           label="Event Venue"
           placeholder="Enter Event Venue"
           multiline
           minRows={5}
         />
         <CustomInput
-          value={orderInfo?.event_address ?? ""}
-          onChange={(value) => handleValueChange("event_address", value)}
+          value={orderInfo?.event_address ?? ''}
+          onChange={(value) => handleValueChange('event_address', value)}
           label="Event Address"
           placeholder="Enter Event Address"
           multiline
@@ -729,9 +729,9 @@ const NewOrder = () => {
               ...(orderInfo.customer || {}),
               address: value,
             };
-            handleValueChange("customer", contact);
+            handleValueChange('customer', contact);
           }}
-          value={orderInfo.customer?.address || ""}
+          value={orderInfo.customer?.address || ''}
           label="Customer Address"
           placeholder="Customer Address"
           multiline
@@ -754,7 +754,7 @@ const NewOrder = () => {
           <CustomButton
             label="Add Product"
             disabled={
-              orderInfo.product_details?.filter((current) => current._id === "").length > 0 || false
+              orderInfo.product_details?.filter((current) => current._id === '').length > 0 || false
             }
             onClick={() => {
               const newProduct = getDefaultProduct(orderInfo?.out_date, orderInfo.in_date);
@@ -810,7 +810,7 @@ const NewOrder = () => {
                             const newProducts = [...orderInfo.product_details];
                             newProducts[index] = {
                               ...product,
-                              _id: data._id || "",
+                              _id: data._id || '',
                               name: data?.name,
                               category: data?.category.name,
                               product_unit: data.unit,
@@ -836,7 +836,7 @@ const NewOrder = () => {
                         placeholder=""
                         disabled
                         className="w-[7rem] p-2"
-                        value={orderInfo.product_details[index].product_unit.name || ""}
+                        value={orderInfo.product_details[index].product_unit.name || ''}
                         onChange={() => {}}
                       />
                     </td>
@@ -950,8 +950,8 @@ const NewOrder = () => {
                         label=""
                         value={
                           dayjs(orderInfo.product_details[index].out_date).format(
-                            "DD-MMM-YYYY hh:mm A"
-                          ) || ""
+                            'DD-MMM-YYYY hh:mm A'
+                          ) || ''
                         }
                         className="w-[15rem]"
                         onChange={(val) => {
@@ -975,8 +975,8 @@ const NewOrder = () => {
                         label=""
                         value={
                           dayjs(orderInfo.product_details[index].in_date).format(
-                            "DD-MMM-YYYY hh:mm A"
-                          ) || ""
+                            'DD-MMM-YYYY hh:mm A'
+                          ) || ''
                         }
                         className="w-[15rem]"
                         onChange={(val) => {
@@ -1077,7 +1077,7 @@ const NewOrder = () => {
                         className="w-[20rem]"
                         multiline
                         minRows={1}
-                        value={orderInfo.product_details[index].damage || ""}
+                        value={orderInfo.product_details[index].damage || ''}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
                           newProducts[index] = { ...product, damage: val };
@@ -1175,7 +1175,7 @@ const NewOrder = () => {
                       value={
                         formatProducts(products).find((prod) =>
                           deposit.product ? prod.id === deposit.product._id : false
-                        )?.id ?? ""
+                        )?.id ?? ''
                       }
                       options={formatProducts(orderInfo.product_details || [])}
                       onChange={(id) =>
@@ -1194,7 +1194,7 @@ const NewOrder = () => {
                       options={paymentModeOptions}
                       className="w-[14rem]"
                       value={
-                        paymentModeOptions.find((mode) => deposit.mode === mode.value)?.id || ""
+                        paymentModeOptions.find((mode) => deposit.mode === mode.value)?.id || ''
                       }
                       onChange={(mode) => {
                         const currentMode =
@@ -1241,7 +1241,8 @@ const NewOrder = () => {
             placeholder="Enter Transport"
             value={orderInfo.eway_amount}
             onChange={(val) => {
-              handleValueChange("eway_amount", val);
+              console.log(val);
+              handleValueChange('eway_amount', parseInt(val));
             }}
           />
           <div className="flex items-end">
@@ -1250,12 +1251,12 @@ const NewOrder = () => {
               className="w-full"
               options={paymentModeOptions}
               value={
-                paymentModeOptions.find((mode) => orderInfo.eway_mode === mode.value)?.id || ""
+                paymentModeOptions.find((mode) => orderInfo.eway_mode === mode.value)?.id || ''
               }
               onChange={(mode) => {
                 const currentMode =
                   paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
-                handleValueChange("eway_mode", currentMode);
+                handleValueChange('eway_mode', currentMode);
               }}
             />
           </div>
@@ -1269,7 +1270,7 @@ const NewOrder = () => {
             placeholder="Enter Discount"
             value={orderInfo.discount}
             onChange={(val) => {
-              const value = val || "0";
+              const value = val || '0';
               const amount = parseFloat(value) || 0;
 
               setOrderInfo((prev) => ({
@@ -1286,7 +1287,7 @@ const NewOrder = () => {
               discountTypeValues.find((discountType) => orderInfo.discount_type === discountType.id)
                 ?.id ?? discountTypeValues[0].id
             }
-            onChange={(value) => handleValueChange("discount_type", value)}
+            onChange={(value) => handleValueChange('discount_type', value)}
           />
         </div>
         <div className="flex gap-2 col-span-2">
@@ -1297,16 +1298,16 @@ const NewOrder = () => {
             type="number"
             value={orderInfo.balance_paid}
             onChange={(val) => {
-              handlePaymentStatus("balance_paid", Number(val));
+              handlePaymentStatus('balance_paid', Number(val));
             }}
           />
           <div className="flex items-end gap-2">
             <CustomDatePicker
               label=""
-              value={dayjs(orderInfo.balance_paid_date).format("DD-MMM-YYYY") || ""}
+              value={dayjs(orderInfo.balance_paid_date).format('DD-MMM-YYYY') || ''}
               className="w-[11rem]"
               onChange={(val) => {
-                handleValueChange("balance_paid_date", val);
+                handleValueChange('balance_paid_date', val);
               }}
               format="DD/MM/YYYY"
             />
@@ -1316,12 +1317,12 @@ const NewOrder = () => {
               options={paymentModeOptions}
               value={
                 paymentModeOptions.find((mode) => orderInfo.balance_paid_mode === mode.value)?.id ||
-                ""
+                ''
               }
               onChange={(mode) => {
                 const currentMode =
                   paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
-                handleValueChange("balance_paid_mode", currentMode);
+                handleValueChange('balance_paid_mode', currentMode);
               }}
             />
           </div>
@@ -1339,16 +1340,16 @@ const NewOrder = () => {
           /> */}
           <CustomDatePicker
             label="Repayment Details"
-            value={dayjs(orderInfo.repay_date).format("DD-MMM-YYYY") || ""}
+            value={dayjs(orderInfo.repay_date).format('DD-MMM-YYYY') || ''}
             // className="w-[11rem]"
             onChange={(val) => {
               if (!val && orderInfo.payment_mode === RepaymentMode.NULL) {
                 console.log(`first`);
-                handleValueChange("status", PaymentStatus.PENDING);
+                handleValueChange('status', PaymentStatus.PENDING);
               } else {
-                handleValueChange("status", PaymentStatus.PAID);
+                handleValueChange('status', PaymentStatus.PAID);
               }
-              handleValueChange("repay_date", val);
+              handleValueChange('repay_date', val);
             }}
             format="DD/MM/YYYY"
           />
@@ -1358,18 +1359,18 @@ const NewOrder = () => {
               className="w-[8rem]"
               options={repaymentModeOptions}
               value={
-                repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ""
+                repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ''
               }
               onChange={(mode) => {
                 const currentMode =
                   repaymentModeOptions.find((md) => md.id === mode)?.value ??
                   RepaymentMode.CASHLESS;
                 if (currentMode === RepaymentMode.NULL && !orderInfo.repay_date) {
-                  handleValueChange("status", PaymentStatus.PENDING);
+                  handleValueChange('status', PaymentStatus.PENDING);
                 } else {
-                  handleValueChange("status", PaymentStatus.PAID);
+                  handleValueChange('status', PaymentStatus.PAID);
                 }
-                handleValueChange("payment_mode", currentMode);
+                handleValueChange('payment_mode', currentMode);
               }}
             />
           </div>
@@ -1393,7 +1394,7 @@ const NewOrder = () => {
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
                     <p>
-                      ₹{" "}
+                      ₹{' '}
                       {depositData.reduce((total, deposit) => total + deposit.amount, 0).toFixed(2)}
                     </p>
                     <p>₹ {calculateTotalAmount.toFixed(2)}</p>
@@ -1403,7 +1404,7 @@ const NewOrder = () => {
                         ? `${orderInfo.discount}%`
                         : `₹ ${orderInfo.discount.toFixed(2)}`}
                     </p>
-                    <p>{`₹ ${orderInfo.eway_amount.toFixed(2)}`}</p>
+                    <p>{`₹ ${Number(orderInfo.eway_amount)?.toFixed(2)}`}</p>
                     <div className="flex justify-end gap-1">
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
@@ -1428,7 +1429,7 @@ const NewOrder = () => {
                       <span className="w-2">%</span>
                     </div>
                     <div className="flex pr-3 justify-end">
-                      {"₹ "}
+                      {'₹ '}
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
                         type="number"
@@ -1458,7 +1459,7 @@ const NewOrder = () => {
                 label="Cancel"
                 onClick={() => {
                   if (rentalId) {
-                    navigate("/orders");
+                    navigate('/orders');
                   } else {
                     setDepositData([]);
                     setOrderInfo(initialRentalProduct);
@@ -1467,7 +1468,7 @@ const NewOrder = () => {
                 variant="outlined"
               />
               <CustomButton
-                label={rentalId ? "Update Order" : "Create Order"}
+                label={rentalId ? 'Update Order' : 'Create Order'}
                 disabled={createOrderDisabled}
                 onClick={createNewOrder}
               />

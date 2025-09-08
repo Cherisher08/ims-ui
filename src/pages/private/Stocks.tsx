@@ -1,21 +1,15 @@
-import CustomButton from "../../styled/CustomButton";
-import { LuPlus } from "react-icons/lu";
-import CustomInput from "../../styled/CustomInput";
-import { useEffect, useMemo, useState } from "react";
-import { BsSearch } from "react-icons/bs";
-import { Modal } from "@mui/material";
-import CustomSelect from "../../styled/CustomSelect";
-import CustomAutoComplete, {
-  CustomOptionProps,
-} from "../../styled/CustomAutoComplete";
-import CustomTable from "../../styled/CustomTable";
-import type { ColDef } from "ag-grid-community";
-import { FiEdit } from "react-icons/fi";
-import { AiOutlineDelete } from "react-icons/ai";
-import { MdClose } from "react-icons/md";
-import type { ICellRendererParams } from "ag-grid-community";
-import { PiWarningFill } from "react-icons/pi";
-import CustomDatePicker from "../../styled/CustomDatePicker";
+import { Modal } from '@mui/material';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { useEffect, useMemo, useState } from 'react';
+import { AiOutlineDelete } from 'react-icons/ai';
+import { BsSearch } from 'react-icons/bs';
+import { FiEdit } from 'react-icons/fi';
+import { LuPlus } from 'react-icons/lu';
+import { MdClose } from 'react-icons/md';
+import { PiWarningFill } from 'react-icons/pi';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../constants/constants';
 import {
   useCreateProductCategoryMutation,
   useCreateProductMutation,
@@ -25,17 +19,16 @@ import {
   useGetProductsQuery,
   useGetUnitsQuery,
   useUpdateProductMutation,
-} from "../../services/ApiService";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../constants/constants";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { DiscountType, discountTypeValues, Product } from "../../types/common";
-import {
-  initialProductData,
-  transformIdNamePair,
-  transformIdValuePair,
-} from "./utils";
+} from '../../services/ApiService';
+import { RootState } from '../../store/store';
+import CustomAutoComplete, { CustomOptionProps } from '../../styled/CustomAutoComplete';
+import CustomButton from '../../styled/CustomButton';
+import CustomDatePicker from '../../styled/CustomDatePicker';
+import CustomInput from '../../styled/CustomInput';
+import CustomSelect from '../../styled/CustomSelect';
+import CustomTable from '../../styled/CustomTable';
+import { DiscountType, discountTypeValues, Product } from '../../types/common';
+import { initialProductData, transformIdNamePair, transformIdValuePair } from './utils';
 
 interface OneProduct {
   _id: string;
@@ -54,33 +47,22 @@ export interface IdNamePair {
 
 const Inventory = () => {
   const userEmail = useSelector((state: RootState) => state.user.email);
-  const { data: productData, isLoading: isProductsLoading } =
-    useGetProductsQuery();
-  const {
-    data: productCategoryData,
-    isSuccess: isProductCategoryQuerySuccess,
-  } = useGetProductCategoriesQuery();
+  const { data: productData, isLoading: isProductsLoading } = useGetProductsQuery();
+  const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
+    useGetProductCategoriesQuery();
   const [createProductCategory, { isSuccess: isProductCategoryCreateSuccess }] =
     useCreateProductCategoryMutation();
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
-  const [createUnit, { isSuccess: isUnitCreateSuccess }] =
-    useCreateUnitMutation();
-  const [
-    createProduct,
-    { isSuccess: isProductCreated, isError: isProductCreateError },
-  ] = useCreateProductMutation();
-  const [
-    updateProduct,
-    { isSuccess: isProductUpdated, isError: isProductUpdateError },
-  ] = useUpdateProductMutation();
-  const [
-    deleteProduct,
-    { isSuccess: isProductDeleted, isError: isProductDeleteError },
-  ] = useDeleteProductMutation();
+  const [createUnit, { isSuccess: isUnitCreateSuccess }] = useCreateUnitMutation();
+  const [createProduct, { isSuccess: isProductCreated, isError: isProductCreateError }] =
+    useCreateProductMutation();
+  const [updateProduct, { isSuccess: isProductUpdated, isError: isProductUpdateError }] =
+    useUpdateProductMutation();
+  const [deleteProduct, { isSuccess: isProductDeleted, isError: isProductDeleteError }] =
+    useDeleteProductMutation();
 
-  const [search, setSearch] = useState<string>("");
-  const [newProductData, setNewProductData] =
-    useState<Product>(initialProductData);
+  const [search, setSearch] = useState<string>('');
+  const [newProductData, setNewProductData] = useState<Product>(initialProductData);
   const [deleteData, setDeleteData] = useState<OneProduct | null>(null);
   const [updateData, setUpdateData] = useState<Product | null>(null);
 
@@ -88,16 +70,14 @@ const Inventory = () => {
   const [deleteProductOpen, setDeleteProductOpen] = useState<boolean>(false);
   const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
 
-  const [productCategories, setProductCategories] = useState<
-    CustomOptionProps[]
-  >([]);
+  const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
 
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
 
   const productTypes = [
-    { id: "rental", value: "RENTAL" },
-    { id: "sales", value: "SALES" },
-    { id: "service", value: "SERVICE" },
+    { id: 'rental', value: 'RENTAL' },
+    { id: 'sales', value: 'SALES' },
+    { id: 'service', value: 'SERVICE' },
   ];
 
   const rowData = useMemo<OneProduct[]>(() => {
@@ -118,38 +98,38 @@ const Inventory = () => {
   const colDefs = useMemo<ColDef<OneProduct>[]>(
     () => [
       {
-        field: "name",
-        headerName: "Product Name",
+        field: 'name',
+        headerName: 'Product Name',
         flex: 1,
-        headerClass: "ag-header-wrap",
+        headerClass: 'ag-header-wrap',
         minWidth: 200,
-        filter: "agTextColumnFilter",
+        filter: 'agTextColumnFilter',
       },
       {
-        field: "product_code",
-        headerName: "HSN Code",
+        field: 'product_code',
+        headerName: 'HSN Code',
         flex: 1,
-        headerClass: "ag-header-wrap",
+        headerClass: 'ag-header-wrap',
         minWidth: 100,
-        filter: "agTextColumnFilter",
+        filter: 'agTextColumnFilter',
       },
-      { field: "category", headerName: "Category", flex: 1, minWidth: 300 },
+      { field: 'category', headerName: 'Category', flex: 1, minWidth: 300 },
       {
-        field: "available_stock",
-        headerName: "Available Stock",
+        field: 'available_stock',
+        headerName: 'Available Stock',
         flex: 1,
         minWidth: 100,
-        headerClass: "ag-header-wrap",
-        filter: "agNumberColumnFilter",
+        headerClass: 'ag-header-wrap',
+        filter: 'agNumberColumnFilter',
       },
-      { field: "type", headerName: "Type", flex: 1, minWidth: 100 },
+      { field: 'type', headerName: 'Type', flex: 1, minWidth: 100 },
       {
-        field: "actions",
-        headerName: "Actions",
+        field: 'actions',
+        headerName: 'Actions',
         flex: 1,
         minWidth: 100,
         maxWidth: 120,
-        pinned: "right",
+        pinned: 'right',
         cellRenderer: (params: ICellRendererParams<OneProduct>) => {
           const rowData = params.data!;
 
@@ -160,9 +140,7 @@ const Inventory = () => {
                 className="cursor-pointer"
                 onClick={() => {
                   const currentRowData =
-                    productData?.find(
-                      (product) => product._id === rowData._id
-                    ) ?? productData![0];
+                    productData?.find((product) => product._id === rowData._id) ?? productData![0];
                   setUpdateData({
                     ...currentRowData,
                     purchase_date: new Date(currentRowData.purchase_date)
@@ -217,9 +195,7 @@ const Inventory = () => {
         const totalPrice = newProductData.price * newProductData.quantity;
         if (newProductData.discount === 0 || isNaN(newProductData.discount))
           return `₹${totalPrice}`;
-        const value =
-          totalPrice -
-          +((newProductData.discount / 100) * totalPrice).toFixed(2);
+        const value = totalPrice - +((newProductData.discount / 100) * totalPrice).toFixed(2);
         return `₹${value}`;
       }
       if (
@@ -227,9 +203,7 @@ const Inventory = () => {
         newProductData.price &&
         newProductData.quantity
       ) {
-        const value =
-          newProductData.price * newProductData.quantity -
-          newProductData.discount;
+        const value = newProductData.price * newProductData.quantity - newProductData.discount;
         return `₹${value}`;
       }
     }
@@ -240,10 +214,8 @@ const Inventory = () => {
         updateData.quantity
       ) {
         const totalPrice = updateData.price * updateData.quantity;
-        if (updateData.discount === 0 || isNaN(updateData.discount))
-          return `₹${totalPrice}`;
-        const value =
-          totalPrice - +((updateData.discount / 100) * totalPrice).toFixed(2);
+        if (updateData.discount === 0 || isNaN(updateData.discount)) return `₹${totalPrice}`;
+        const value = totalPrice - +((updateData.discount / 100) * totalPrice).toFixed(2);
         return `₹${value}`;
       }
       if (
@@ -251,8 +223,7 @@ const Inventory = () => {
         updateData.price &&
         updateData.quantity
       ) {
-        const value =
-          updateData.price * updateData.quantity - updateData.discount;
+        const value = updateData.price * updateData.quantity - updateData.discount;
         return `₹${value}`;
       }
     }
@@ -270,17 +241,11 @@ const Inventory = () => {
     updateModalOpen,
   ]);
 
-  const handleProductChange = (
-    key: string,
-    value: string | number | IdNamePair | undefined
-  ) => {
+  const handleProductChange = (key: string, value: string | number | IdNamePair | undefined) => {
     setNewProductData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleUpdateProduct = (
-    key: string,
-    value: string | number | IdNamePair | undefined
-  ) => {
+  const handleUpdateProduct = (key: string, value: string | number | IdNamePair | undefined) => {
     setUpdateData((prev) => ({ ...prev!, [key]: value }));
   };
 
@@ -291,14 +256,10 @@ const Inventory = () => {
       });
     }
     if (isProductCategoryCreateSuccess)
-      toast.success("Product Category created successfully", {
+      toast.success('Product Category created successfully', {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_CATEGORY_CREATE,
       });
-  }, [
-    isProductCategoryCreateSuccess,
-    isProductCategoryQuerySuccess,
-    productCategoryData,
-  ]);
+  }, [isProductCategoryCreateSuccess, isProductCategoryQuerySuccess, productCategoryData]);
 
   useEffect(() => {
     if (isUnitQuerySuccess)
@@ -306,7 +267,7 @@ const Inventory = () => {
         return transformIdNamePair(unitData);
       });
     if (isUnitCreateSuccess)
-      toast.success("Product Unit created successfully", {
+      toast.success('Product Unit created successfully', {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_UNIT_CREATE,
       });
   }, [isUnitCreateSuccess, isUnitQuerySuccess, unitData]);
@@ -333,32 +294,32 @@ const Inventory = () => {
 
   useEffect(() => {
     if (isProductCreated) {
-      toast.success("Product Created Successfully", {
+      toast.success('Product Created Successfully', {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_CREATE,
       });
     }
     if (isProductUpdated) {
-      toast.success("Product Updated Successfully", {
+      toast.success('Product Updated Successfully', {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_UPDATE,
       });
     }
     if (isProductDeleted) {
-      toast.success("Product Deleted Successfully", {
+      toast.success('Product Deleted Successfully', {
         toastId: TOAST_IDS.SUCCESS_PRODUCT_DELETE,
       });
     }
     if (isProductCreateError) {
-      toast.error("Error in Creating Product", {
+      toast.error('Error in Creating Product', {
         toastId: TOAST_IDS.ERROR_PRODUCT_CREATE,
       });
     }
     if (isProductUpdateError) {
-      toast.error("Error in Updating Product", {
+      toast.error('Error in Updating Product', {
         toastId: TOAST_IDS.ERROR_PRODUCT_UPDATE,
       });
     }
     if (isProductDeleteError) {
-      toast.error("Error in Deleting Product", {
+      toast.error('Error in Deleting Product', {
         toastId: TOAST_IDS.ERROR_PRODUCT_DELETE,
       });
     }
@@ -405,9 +366,7 @@ const Inventory = () => {
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
           <div className="flex justify-between w-full pb-4">
-            <p className="text-primary text-2xl font-semibold w-full text-start">
-              New Product
-            </p>
+            <p className="text-primary text-2xl font-semibold w-full text-start">New Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -419,7 +378,7 @@ const Inventory = () => {
               <CustomInput
                 label="Product Name"
                 value={newProductData.name}
-                onChange={(value) => handleProductChange("name", value)}
+                onChange={(value) => handleProductChange('name', value)}
                 placeholder="Enter Product Name"
               />
               <CustomAutoComplete
@@ -427,27 +386,24 @@ const Inventory = () => {
                 error={false}
                 placeholder="Select Unit"
                 helperText="Please Select The Unit"
-                value={newProductData.unit?.name ?? ""}
+                value={newProductData.unit?.name ?? ''}
                 options={productUnits}
                 className=""
                 addNewValue={(value) => {
                   const exists =
                     productUnits.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createUnit({
                       name: value,
                     });
                     handleProductChange(
-                      "unit",
+                      'unit',
                       transformIdValuePair(
                         value
-                          ? productUnits.find(
-                              (productUnit) => productUnit.value === value
-                            ) ?? productUnits[0]
+                          ? productUnits.find((productUnit) => productUnit.value === value) ??
+                              productUnits[0]
                           : productUnits[0]
                       )
                     );
@@ -455,12 +411,11 @@ const Inventory = () => {
                 }}
                 onChange={(value) =>
                   handleProductChange(
-                    "unit",
+                    'unit',
                     transformIdValuePair(
                       value
-                        ? productUnits.find(
-                            (productUnit) => productUnit.value === value
-                          ) ?? productUnits[0]
+                        ? productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0]
                         : productUnits[0]
                     )
                   )
@@ -470,11 +425,10 @@ const Inventory = () => {
                 label="Type"
                 options={productTypes}
                 value={
-                  productTypes.find(
-                    (productType) => newProductData.type === productType.id
-                  )?.id ?? productTypes[0].id
+                  productTypes.find((productType) => newProductData.type === productType.id)?.id ??
+                  productTypes[0].id
                 }
-                onChange={(value) => handleProductChange("type", value)}
+                onChange={(value) => handleProductChange('type', value)}
               />
               <CustomInput
                 label="Available Stock"
@@ -489,15 +443,13 @@ const Inventory = () => {
               <CustomInput
                 label="HSN Code"
                 value={newProductData.product_code}
-                onChange={(value) => handleProductChange("product_code", value)}
+                onChange={(value) => handleProductChange('product_code', value)}
                 placeholder="Enter HSN Code"
               />
               <CustomDatePicker
                 label="Purchase Date"
                 value={newProductData.purchase_date}
-                onChange={(value) =>
-                  handleProductChange("purchase_date", value)
-                }
+                onChange={(value) => handleProductChange('purchase_date', value)}
                 placeholder="Enter Purchase Date"
               />
               <CustomAutoComplete
@@ -505,26 +457,24 @@ const Inventory = () => {
                 error={false}
                 placeholder="Select Category"
                 helperText="Please Select The Category"
-                value={newProductData.category?.name ?? ""}
+                value={newProductData.category?.name ?? ''}
                 options={productCategories}
                 className=""
                 addNewValue={(value) => {
                   const exists =
                     productCategories.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createProductCategory({
                       name: value,
                     });
-                    handleProductChange("category", value);
+                    handleProductChange('category', value);
                   }
                 }}
                 onChange={(value) =>
                   handleProductChange(
-                    "category",
+                    'category',
                     transformIdValuePair(
                       value
                         ? productCategories.find(
@@ -538,9 +488,7 @@ const Inventory = () => {
               <CustomInput
                 label="Rental Price"
                 value={newProductData.rent_per_unit}
-                onChange={(value) =>
-                  handleProductChange("rent_per_unit", value)
-                }
+                onChange={(value) => handleProductChange('rent_per_unit', value)}
                 placeholder="Enter Rental Price"
               />
             </div>
@@ -551,11 +499,8 @@ const Inventory = () => {
                 type="number"
                 value={newProductData.quantity}
                 onChange={(value) => {
-                  handleProductChange("quantity", value ? parseInt(value) : "");
-                  handleProductChange(
-                    "available_stock",
-                    value ? parseInt(value) : ""
-                  );
+                  handleProductChange('quantity', value ? parseInt(value) : '');
+                  handleProductChange('available_stock', value ? parseInt(value) : '');
                 }}
                 placeholder="Enter Product Quantity"
               />
@@ -564,9 +509,7 @@ const Inventory = () => {
                 label="Price"
                 value={newProductData.price}
                 type="number"
-                onChange={(value) =>
-                  handleProductChange("price", value ? parseInt(value) : "")
-                }
+                onChange={(value) => handleProductChange('price', value ? parseInt(value) : '')}
                 placeholder="Enter Product Price"
               />
 
@@ -577,10 +520,7 @@ const Inventory = () => {
                   value={newProductData.discount}
                   type="number"
                   onChange={(value) =>
-                    handleProductChange(
-                      "discount",
-                      value ? parseInt(value) : ""
-                    )
+                    handleProductChange('discount', value ? parseInt(value) : '')
                   }
                 />
                 <CustomSelect
@@ -589,13 +529,10 @@ const Inventory = () => {
                   options={discountTypeValues}
                   value={
                     discountTypeValues.find(
-                      (discountType) =>
-                        newProductData.discount_type === discountType.id
+                      (discountType) => newProductData.discount_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
-                  onChange={(value) =>
-                    handleProductChange("discount_type", value)
-                  }
+                  onChange={(value) => handleProductChange('discount_type', value)}
                 />
               </div>
 
@@ -634,9 +571,7 @@ const Inventory = () => {
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Update Product
-            </p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Update Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -650,8 +585,8 @@ const Inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="Product Name"
-                value={updateData?.name ?? ""}
-                onChange={(value) => handleUpdateProduct("product_name", value)}
+                value={updateData?.name ?? ''}
+                onChange={(value) => handleUpdateProduct('product_name', value)}
                 placeholder="Enter Product Name"
               />
               <CustomAutoComplete
@@ -659,31 +594,28 @@ const Inventory = () => {
                 error={false}
                 placeholder="Select Unit"
                 helperText="Please Select The Unit"
-                value={updateData?.unit?.name ?? ""}
+                value={updateData?.unit?.name ?? ''}
                 options={productUnits}
                 className=""
                 addNewValue={(value) => {
                   const exists =
                     productUnits.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createUnit({
                       name: value,
                     });
-                    handleUpdateProduct("unit", value);
+                    handleUpdateProduct('unit', value);
                   }
                 }}
                 onChange={(value) =>
                   handleUpdateProduct(
-                    "unit",
+                    'unit',
                     transformIdValuePair(
                       value
-                        ? productUnits.find(
-                            (productUnit) => productUnit.value === value
-                          ) ?? productUnits[0]
+                        ? productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0]
                         : productUnits[0]
                     )
                   )
@@ -693,12 +625,11 @@ const Inventory = () => {
                 label="Type"
                 options={productTypes}
                 value={
-                  productTypes.find(
-                    (productType) => newProductData.type === productType.id
-                  )?.id ?? productTypes[0].id
+                  productTypes.find((productType) => newProductData.type === productType.id)?.id ??
+                  productTypes[0].id
                 }
                 onChange={(value) => {
-                  handleUpdateProduct("type", value);
+                  handleUpdateProduct('type', value);
                 }}
               />
               <CustomInput
@@ -713,7 +644,7 @@ const Inventory = () => {
             <div className="flex flex-col gap-3">
               <CustomInput
                 label="HSN Code"
-                value={updateData?.product_code ?? ""}
+                value={updateData?.product_code ?? ''}
                 onChange={(value) =>
                   setUpdateData((prev) => {
                     if (prev)
@@ -728,7 +659,7 @@ const Inventory = () => {
               />
               <CustomDatePicker
                 label="Purchase Date"
-                value={updateData?.purchase_date ?? ""}
+                value={updateData?.purchase_date ?? ''}
                 onChange={(value) =>
                   setUpdateData((prev) => {
                     if (prev)
@@ -746,26 +677,24 @@ const Inventory = () => {
                 error={false}
                 placeholder="Select Category"
                 helperText="Please Select The Category"
-                value={updateData?.category.name ?? ""}
+                value={updateData?.category.name ?? ''}
                 options={productCategories}
                 className=""
                 addNewValue={(value) => {
                   const exists =
                     productCategories.filter(
-                      (option) =>
-                        option.value.toLocaleLowerCase() ===
-                        value.toLocaleLowerCase()
+                      (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                     ).length > 0;
                   if (!exists && value.length > 0) {
                     createProductCategory({
                       name: value,
                     });
-                    handleUpdateProduct("category", value);
+                    handleUpdateProduct('category', value);
                   }
                 }}
                 onChange={(value) =>
                   handleUpdateProduct(
-                    "category",
+                    'category',
                     transformIdValuePair(
                       value
                         ? productCategories.find(
@@ -802,16 +731,14 @@ const Inventory = () => {
                   setUpdateData((prev) => {
                     if (prev) {
                       const quantityDelta =
-                        (productData?.find(
-                          (product) => product._id === updateData?._id
-                        )?.quantity || 0) - parseInt(value);
+                        (productData?.find((product) => product._id === updateData?._id)
+                          ?.quantity || 0) - parseInt(value);
                       return {
                         ...prev,
                         quantity: parseInt(value),
                         available_stock:
-                          (productData?.find(
-                            (product) => product._id === updateData?._id
-                          )?.available_stock || 0) - quantityDelta,
+                          (productData?.find((product) => product._id === updateData?._id)
+                            ?.available_stock || 0) - quantityDelta,
                       };
                     }
                     return prev;
@@ -861,13 +788,10 @@ const Inventory = () => {
                   defaultValue="%"
                   value={
                     discountTypeValues.find(
-                      (discountType) =>
-                        newProductData.discount_type === discountType.id
+                      (discountType) => newProductData.discount_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
-                  onChange={(value) =>
-                    handleUpdateProduct("discount_type", value)
-                  }
+                  onChange={(value) => handleUpdateProduct('discount_type', value)}
                 />
               </div>
 
@@ -902,9 +826,7 @@ const Inventory = () => {
       >
         <div className="flex flex-col gap-4 justify-center items-center max-w-2/5 max-h-4/5 bg-white rounded-lg p-4">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Delete Product
-            </p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Delete Product</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -921,8 +843,8 @@ const Inventory = () => {
               <span className="text-xl">Warning!</span>
             </div>
             <p>
-              Deleting this product will make this stock quantity to zero and
-              can negatively impact in the balance sheet
+              Deleting this product will make this stock quantity to zero and can negatively impact
+              in the balance sheet
             </p>
           </div>
           <div className="flex w-full gap-3 justify-end">

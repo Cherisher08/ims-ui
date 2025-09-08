@@ -1,7 +1,4 @@
-import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
-import dayjs from 'dayjs';
-import { calculateDiscountAmount, calculateProductRent } from '../services/utility_functions';
-import { DiscountType, ProductType } from '../types/common';
+import { Document, Page, StyleSheet, Text, View, Image, Font } from '@react-pdf/renderer';
 import {
   BillingMode,
   DepositType,
@@ -9,6 +6,9 @@ import {
   ProductDetails,
   RentalOrderInfo,
 } from '../types/order';
+import dayjs from 'dayjs';
+import { DiscountType, ProductType } from '../types/common';
+import { calculateDiscountAmount, calculateProductRent } from '../services/utility_functions';
 import paidStamp from '/paid-icon.png';
 
 Font.register({
@@ -843,7 +843,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   ...(data.discount
                     ? [
                         {
-                          label: `Discount`,
+                          label: 'Discount',
                           value: `${
                             data.discount_type === DiscountType.RUPEES ? 'Rs.' : ''
                           } ${data.discount?.toFixed(2)} ${

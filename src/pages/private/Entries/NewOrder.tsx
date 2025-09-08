@@ -1,37 +1,11 @@
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { Box, Tab, Tabs } from '@mui/material';
-import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LuPlus } from 'react-icons/lu';
-import { useDispatch } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { TOAST_IDS } from '../../../constants/constants';
-import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
-import { useGetContactsQuery } from '../../../services/ContactService';
-import {
-  useCreateRentalOrderMutation,
-  useGetRentalOrderByIdQuery,
-  useGetRentalOrdersQuery,
-  useLazyGetExpiredRentalOrdersQuery,
-  useUpdateRentalOrderMutation,
-} from '../../../services/OrderService';
-import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
-import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
-import CustomAutoComplete from '../../../styled/CustomAutoComplete';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CustomButton from '../../../styled/CustomButton';
-import CustomDatePicker from '../../../styled/CustomDatePicker';
 import CustomInput from '../../../styled/CustomInput';
 import CustomSelect, { CustomSelectOptionProps } from '../../../styled/CustomSelect';
 import AntSwitch from '../../../styled/CustomSwitch';
-import {
-  DiscountType,
-  discountTypeValues,
-  EventNameType,
-  Product,
-  ProductType,
-} from '../../../types/common';
-import { ContactInfoType, initialContactType } from '../../../types/contact';
+import CustomDatePicker from '../../../styled/CustomDatePicker';
 import {
   BillingMode,
   // BillingUnit,
@@ -41,7 +15,30 @@ import {
   RentalOrderInfo,
   RepaymentMode,
 } from '../../../types/order';
-import AddContactModal from '../Customers/modals/AddContactModal';
+import { ContactInfoType, initialContactType } from '../../../types/contact';
+import dayjs from 'dayjs';
+import {
+  DiscountType,
+  discountTypeValues,
+  EventNameType,
+  Product,
+  ProductType,
+} from '../../../types/common';
+import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
+import { useGetContactsQuery } from '../../../services/ContactService';
+import {
+  useCreateRentalOrderMutation,
+  useGetRentalOrderByIdQuery,
+  useGetRentalOrdersQuery,
+  useLazyGetExpiredRentalOrdersQuery,
+  useUpdateRentalOrderMutation,
+} from '../../../services/OrderService';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../constants/constants';
+import { useNavigate, useParams } from 'react-router-dom';
+import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
+import { useDispatch } from 'react-redux';
+import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
 import {
   // billingUnitOptions,
   formatProducts,
@@ -52,6 +49,9 @@ import {
   paymentModeOptions,
   repaymentModeOptions,
 } from '../Orders/utils';
+import CustomAutoComplete from '../../../styled/CustomAutoComplete';
+import { LuPlus } from 'react-icons/lu';
+import AddContactModal from '../Customers/modals/AddContactModal';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -437,7 +437,7 @@ const NewOrder = () => {
       const orderId = getNewOrderId(rentalOrders);
       handleValueChange('order_id', orderId);
     } else {
-      handleValueChange('order_id', `INV/${getCurrentFY()}/0001`);
+      handleValueChange('order_id', `RO/${getCurrentFY()}/0001`);
     }
   }, [
     existingRentalOrder,
@@ -1241,8 +1241,7 @@ const NewOrder = () => {
             placeholder="Enter Transport"
             value={orderInfo.eway_amount}
             onChange={(val) => {
-              console.log(val);
-              handleValueChange('eway_amount', parseInt(val));
+              handleValueChange('eway_amount', Number(val));
             }}
           />
           <div className="flex items-end">
@@ -1270,9 +1269,7 @@ const NewOrder = () => {
             placeholder="Enter Discount"
             value={orderInfo.discount}
             onChange={(val) => {
-              const value = val || '0';
-              const amount = parseFloat(value) || 0;
-
+              const amount = val === '' ? 0 : parseFloat(val);
               setOrderInfo((prev) => ({
                 ...prev,
                 discount: amount,
@@ -1344,7 +1341,6 @@ const NewOrder = () => {
             // className="w-[11rem]"
             onChange={(val) => {
               if (!val && orderInfo.payment_mode === RepaymentMode.NULL) {
-                console.log(`first`);
                 handleValueChange('status', PaymentStatus.PENDING);
               } else {
                 handleValueChange('status', PaymentStatus.PAID);

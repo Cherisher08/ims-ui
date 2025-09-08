@@ -1,4 +1,4 @@
-import CustomTable from "../../../styled/CustomTable";
+import CustomTable from '../../../styled/CustomTable';
 import type {
   CellEditingStoppedEvent,
   ColDef,
@@ -6,56 +6,39 @@ import type {
   RowHeightParams,
   ValueFormatterParams,
   ValueGetterParams,
-} from "ag-grid-community";
-import type { GridApi } from "ag-grid-community";
-import { FiEdit } from "react-icons/fi";
-import { IoPrintOutline } from "react-icons/io5";
-import { AiOutlineDelete } from "react-icons/ai";
-import {
-  BillingMode,
-  DepositType,
-  RentalOrderType,
-  RentalType,
-} from "../../../types/order";
-import DeleteOrderModal from "../Customers/modals/DeleteOrderModal";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+} from 'ag-grid-community';
+import type { GridApi } from 'ag-grid-community';
+import { FiEdit } from 'react-icons/fi';
+import { IoPrintOutline } from 'react-icons/io5';
+import { AiOutlineDelete } from 'react-icons/ai';
+import { BillingMode, DepositType, RentalOrderType, RentalType } from '../../../types/order';
+import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store/store";
-import {
-  DiscountType,
-  EventNameType,
-  PatchOperation,
-  ProductType,
-} from "../../../types/common";
-import { usePatchRentalOrderMutation } from "../../../services/OrderService";
-import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
-import { useGetContactsQuery } from "../../../services/ContactService";
-import { IdNamePair } from "../Stocks";
-import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
-import { AddressCellEditor } from "../../../components/AgGridCellEditors/AddressCellEditor";
-import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import {
-  calculateDiscountAmount,
-  calculateProductRent,
-} from "../../../services/utility_functions";
-import { currencyFormatter } from "./utils";
-import dayjs from "dayjs";
-import { EventNameCellEditor } from "../../../components/AgGridCellEditors/EventNameCellEditor";
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
+import { DiscountType, EventNameType, PatchOperation, ProductType } from '../../../types/common';
+import { usePatchRentalOrderMutation } from '../../../services/OrderService';
+import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCellEditor';
+import { useGetContactsQuery } from '../../../services/ContactService';
+import { IdNamePair } from '../Stocks';
+import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
+import { AddressCellEditor } from '../../../components/AgGridCellEditors/AddressCellEditor';
+import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
+import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
+import { currencyFormatter } from './utils';
+import dayjs from 'dayjs';
+import { EventNameCellEditor } from '../../../components/AgGridCellEditors/EventNameCellEditor';
+import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 
-const RentalOrderTable = ({
-  rentalOrders,
-}: {
-  rentalOrders: RentalOrderType[];
-}) => {
+const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
   const navigate = useNavigate();
-  const expiredOrders = useSelector(
-    (state: RootState) => state.rentalOrder.data
-  );
+  const dispatch = useDispatch();
+  const expiredOrders = useSelector((state: RootState) => state.rentalOrder.data);
+  const storedPage = useSelector((state: RootState) => state.rentalOrder.tablePage);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
-  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } =
-    useGetContactsQuery();
+  const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
@@ -72,10 +55,13 @@ const RentalOrderTable = ({
   // Child passes grid API up
   const onGridReady = (api: GridApi) => {
     gridApiRef.current = api;
+    if (typeof storedPage === 'number') {
+      api.paginationGoToPage(storedPage);
+    }
   };
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
-  const [deleteOrderId, setDeleteOrderId] = useState<string>("");
+  const [deleteOrderId, setDeleteOrderId] = useState<string>('');
 
   const calculateTotalAmount = (orderInfo: RentalOrderType) => {
     if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
@@ -105,18 +91,9 @@ const RentalOrderTable = ({
       orderInfo.discount_type === DiscountType.PERCENT
         ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
         : orderInfo.discount || 0;
-    const gstAmount = calculateDiscountAmount(
-      orderInfo.gst || 0,
-      finalAmount - discountAmount
-    );
+    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
     return parseFloat(
-      (
-        finalAmount -
-        discountAmount +
-        gstAmount +
-        roundOff +
-        ewayBillAmount
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
     );
   };
 
@@ -133,34 +110,32 @@ const RentalOrderTable = ({
   //   }
   // };
 
-  const eventOptions: IdNamePair[] = Object.values(EventNameType).map(
-    (val, index) => ({
-      id: `event-${index}`,
-      name: val,
-    })
-  );
+  const eventOptions: IdNamePair[] = Object.values(EventNameType).map((val, index) => ({
+    id: `event-${index}`,
+    name: val,
+  }));
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
     {
-      field: "order_id",
-      headerName: "Order Id",
-      headerClass: "ag-header-wrap",
+      field: 'order_id',
+      headerName: 'Order Id',
+      headerClass: 'ag-header-wrap',
       minWidth: 100,
-      pinned: "left",
-      filter: "agTextColumnFilter",
-      cellRenderer: "agGroupCellRenderer",
-      sort: "desc",
+      pinned: 'left',
+      filter: 'agTextColumnFilter',
+      cellRenderer: 'agGroupCellRenderer',
+      sort: 'desc',
     },
     {
-      field: "customer",
-      headerName: "Customer",
+      field: 'customer',
+      headerName: 'Customer',
       flex: 1,
-      headerClass: "ag-header-wrap",
+      headerClass: 'ag-header-wrap',
       minWidth: 200,
       editable: true,
       singleClickEdit: true,
-      filter: "agTextColumnFilter",
-      pinned: "left",
+      filter: 'agTextColumnFilter',
+      pinned: 'left',
       cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
         customerOptions: customerList.current,
@@ -169,18 +144,18 @@ const RentalOrderTable = ({
         return params.newValue;
       },
       valueFormatter: (params) => {
-        return params.value.name ?? "";
+        return params.value.name ?? '';
       },
       filterValueGetter: (params: ValueGetterParams) => {
         return params.data.customer.name;
       },
     },
     {
-      headerName: "Amount (After Taxes)",
+      headerName: 'Amount (After Taxes)',
       flex: 1,
       minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
+      headerClass: 'ag-header-wrap',
+      filter: 'agNumberColumnFilter',
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
         const value = calculateFinalAmount(params.data);
@@ -221,26 +196,23 @@ const RentalOrderTable = ({
     //   },
     // },
     {
-      field: "repay_amount",
-      headerName: "Repayment Amount",
+      field: 'repay_amount',
+      headerName: 'Repayment Amount',
       flex: 1,
       minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
+      headerClass: 'ag-header-wrap',
+      filter: 'agNumberColumnFilter',
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
         const depositData: DepositType[] = params.data.deposits ?? 0;
         return (
           <p>
-            ₹{" "}
+            ₹{' '}
             {Math.abs(
               Math.min(
                 0,
                 calculateFinalAmount(data) -
-                  depositData.reduce(
-                    (total, deposit) => total + deposit.amount,
-                    0
-                  )
+                  depositData.reduce((total, deposit) => total + deposit.amount, 0)
               )
             ).toFixed(2)}
           </p>
@@ -248,80 +220,77 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "balance_paid",
-      headerName: "Balance Amount",
+      field: 'balance_paid',
+      headerName: 'Balance Amount',
       flex: 1,
       minWidth: 200,
-      headerClass: "ag-header-wrap",
-      filter: "agNumberColumnFilter",
+      headerClass: 'ag-header-wrap',
+      filter: 'agNumberColumnFilter',
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
         const depositData: DepositType[] = params.data.deposits ?? 0;
         return (
           <p>
-            ₹{" "}
+            ₹{' '}
             {Math.max(
               0,
               calculateFinalAmount(data) -
-                depositData.reduce(
-                  (total, deposit) => total + deposit.amount,
-                  0
-                )
+                depositData.reduce((total, deposit) => total + deposit.amount, 0)
             ).toFixed(2)}
           </p>
         );
       },
     },
     {
-      field: "out_date",
-      headerName: "Order Out Date",
+      field: 'out_date',
+      headerName: 'Order Out Date',
       minWidth: 100,
-      filter: "agDateColumnFilter",
+      filter: 'agDateColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
         const date = new Date(params.value);
-        return dayjs(date).format("DD-MMM-YYYY hh:mm A");
+        return dayjs(date).format('DD-MMM-YYYY hh:mm A');
       },
     },
     {
-      field: "in_date",
-      headerName: "Order In Date",
+      field: 'in_date',
+      headerName: 'Order In Date',
       flex: 1,
       minWidth: 150,
-      headerClass: "ag-header-wrap",
-      filter: "agDateColumnFilter",
+      headerClass: 'ag-header-wrap',
+      filter: 'agDateColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: InDateCellEditor,
       valueFormatter: (params) => {
-        const date = params.value ? new Date(params.value) : "";
-        if (date) return dayjs(date).format("DD-MMM-YYYY hh:mm A");
-        return "";
+        const date = params.value ? new Date(params.value) : '';
+        if (date) return dayjs(date).format('DD-MMM-YYYY hh:mm A');
+        return '';
       },
     },
     {
-      field: "rental_duration",
-      headerName: "Rental Duration (Days)",
-      headerClass: "ag-header-wrap",
+      field: 'rental_duration',
+      headerName: 'Rental Duration (Days)',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agNumberColumnFilter",
+      filter: 'agNumberColumnFilter',
       editable: true,
       singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
+      cellEditor: 'agNumberCellEditor',
       cellEditorParams: {
         step: 1,
       },
     },
     {
-      field: "event_name",
-      headerName: "Event Name",
+      field: 'event_name',
+      headerName: 'Event Name',
       flex: 1,
-      headerClass: "ag-header-wrap",
+      headerClass: 'ag-header-wrap',
       minWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: EventNameCellEditor,
@@ -330,63 +299,63 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "event_venue",
-      headerName: "Event Venue",
+      field: 'event_venue',
+      headerName: 'Event Venue',
       flex: 1,
-      headerClass: "ag-header-wrap",
+      headerClass: 'ag-header-wrap',
       minWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: AddressCellEditor,
     },
     {
-      field: "event_address",
-      headerName: "Event Address",
+      field: 'event_address',
+      headerName: 'Event Address',
       flex: 1,
-      headerClass: "ag-header-wrap",
+      headerClass: 'ag-header-wrap',
       minWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: AddressCellEditor,
       valueFormatter: (params) => {
-        return params.value?.replace(/\n/g, " ") ?? "";
+        return params.value?.replace(/\n/g, ' ') ?? '';
       },
     },
     {
-      field: "billing_mode",
-      headerName: "GST Mode",
-      headerClass: "ag-header-wrap",
+      field: 'billing_mode',
+      headerName: 'GST Mode',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["B2C", "B2B"],
+        options: ['B2C', 'B2B'],
       },
     },
     {
-      field: "gst",
-      headerName: "GST(%)",
-      headerClass: "ag-header-wrap",
+      field: 'gst',
+      headerName: 'GST(%)',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agNumberColumnFilter",
+      filter: 'agNumberColumnFilter',
       editable: true,
       singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
+      cellEditor: 'agNumberCellEditor',
       cellEditorParams: {
         step: 1,
       },
     },
     {
-      headerName: "GST Amount",
-      headerClass: "ag-header-wrap",
+      headerName: 'GST Amount',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
         const gstPercent = parseFloat(params.data.gst ?? 0);
@@ -396,15 +365,15 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "discount",
-      headerName: "Discount",
-      headerClass: "ag-header-wrap",
+      field: 'discount',
+      headerName: 'Discount',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agNumberColumnFilter",
+      filter: 'agNumberColumnFilter',
       editable: true,
       singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
+      cellEditor: 'agNumberCellEditor',
       cellEditorParams: {
         step: 1,
       },
@@ -414,7 +383,7 @@ const RentalOrderTable = ({
           data &&
           data.type === ProductType.RENTAL &&
           data.product_details &&
-          data.discount_type === "percent"
+          data.discount_type === 'percent'
         ) {
           return `${data.discount}%`;
         }
@@ -422,129 +391,126 @@ const RentalOrderTable = ({
       },
     },
     {
-      field: "discount_type",
-      headerName: "Discount Type",
-      headerClass: "ag-header-wrap",
+      field: 'discount_type',
+      headerName: 'Discount Type',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["percent", "rupees"],
+        options: ['percent', 'rupees'],
       },
     },
     {
-      field: "round_off",
-      headerName: "Round Off",
-      headerClass: "ag-header-wrap",
+      field: 'round_off',
+      headerName: 'Round Off',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       valueFormatter: currencyFormatter,
       singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
+      cellEditor: 'agNumberCellEditor',
       cellEditorParams: {
         step: 1,
       },
     },
     {
-      field: "eway_amount",
-      headerName: "Transport Amount",
-      headerClass: "ag-header-wrap",
+      field: 'eway_amount',
+      headerName: 'Transport Amount',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       valueFormatter: currencyFormatter,
       singleClickEdit: true,
-      cellEditor: "agNumberCellEditor",
+      cellEditor: 'agNumberCellEditor',
       cellEditorParams: {
         step: 1,
       },
     },
     {
-      field: "eway_mode",
-      headerName: "Transport Payment Mode",
-      headerClass: "ag-header-wrap",
+      field: 'eway_mode',
+      headerName: 'Transport Payment Mode',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["cash", "account", "upi"],
+        options: ['cash', 'account', 'upi'],
       },
     },
     {
-      headerName: "Deposit Amount",
-      headerClass: "ag-header-wrap",
+      headerName: 'Deposit Amount',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
       maxWidth: 200,
-      filter: "agNumberColumnFilter",
+      filter: 'agNumberColumnFilter',
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
         const depositData: DepositType[] = params.data.deposits ?? 0;
-        return depositData.reduce(
-          (total, deposit) => total + deposit.amount,
-          0
-        );
+        return depositData.reduce((total, deposit) => total + deposit.amount, 0);
       },
     },
     {
-      field: "remarks",
-      headerName: "Remarks",
+      field: 'remarks',
+      headerName: 'Remarks',
       flex: 1,
-      headerClass: "ag-header-wrap",
+      headerClass: 'ag-header-wrap',
       minWidth: 200,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: AddressCellEditor,
       valueFormatter: (params) => {
-        return params.value?.replace(/\n/g, " ") ?? "";
+        return params.value?.replace(/\n/g, ' ') ?? '';
       },
     },
     {
-      field: "payment_mode",
-      headerName: "Repayment Mode",
-      headerClass: "ag-header-wrap",
+      field: 'payment_mode',
+      headerName: 'Repayment Mode',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["cash less", "account less", "kvb less"],
+        options: ['cash less', 'account less', 'kvb less'],
       },
     },
     {
-      field: "balance_paid_mode",
-      headerName: "Balance Payment Mode",
-      headerClass: "ag-header-wrap",
+      field: 'balance_paid_mode',
+      headerName: 'Balance Payment Mode',
+      headerClass: 'ag-header-wrap',
       minWidth: 150,
-      filter: "agTextColumnFilter",
+      filter: 'agTextColumnFilter',
       editable: true,
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["cash", "account", "upi"],
+        options: ['cash', 'account', 'upi'],
       },
     },
     {
-      field: "status",
-      headerName: "Payment Status",
-      headerClass: "ag-header-wrap",
+      field: 'status',
+      headerName: 'Payment Status',
+      headerClass: 'ag-header-wrap',
       maxWidth: 170,
-      filter: "agTextColumnFilter",
-      pinned: "right",
+      filter: 'agTextColumnFilter',
+      pinned: 'right',
       editable: true,
       singleClickEdit: true,
       valueFormatter: (params: ValueFormatterParams) => {
         const status = params.data.status;
-        if (status === "paid") return "paid";
-        if (status === "pending") {
+        if (status === 'paid') return 'paid';
+        if (status === 'pending') {
           const data = params.data;
           const depositData: DepositType[] = params.data.deposits ?? 0;
 
@@ -552,13 +518,13 @@ const RentalOrderTable = ({
             calculateFinalAmount(data) -
             depositData.reduce((total, deposit) => total + deposit.amount, 0);
 
-          return total >= 0 ? "pending (customer)" : "pending (us)";
+          return total >= 0 ? 'pending (customer)' : 'pending (us)';
         }
         return status;
       },
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ["paid", "pending"],
+        options: ['paid', 'pending'],
       },
       cellStyle: (params) => {
         const data = params.data;
@@ -571,26 +537,26 @@ const RentalOrderTable = ({
 
           const status = data.status;
 
-          if (status === "paid") {
-            return { backgroundColor: "#bbf7d0", color: "#166534" }; // green
+          if (status === 'paid') {
+            return { backgroundColor: '#bbf7d0', color: '#166534' }; // green
           }
 
-          if (status === "pending") {
+          if (status === 'pending') {
             if (total >= 0) {
-              return { backgroundColor: "#fca5a5", color: "#7f1d1d" }; // red for us
+              return { backgroundColor: '#fca5a5', color: '#7f1d1d' }; // red for us
             } else {
-              return { backgroundColor: "#fde68a", color: "#78350f" }; // yellow for customer
+              return { backgroundColor: '#fde68a', color: '#78350f' }; // yellow for customer
             }
           }
         }
 
-        return { backgroundColor: "#bfdbfe", color: "#1e3a8a" }; // default blue or fallback
+        return { backgroundColor: '#bfdbfe', color: '#1e3a8a' }; // default blue or fallback
       },
     },
     {
-      field: "actions",
-      headerName: "Actions",
-      pinned: "right",
+      field: 'actions',
+      headerName: 'Actions',
+      pinned: 'right',
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {
         const rowData = params.data;
@@ -600,6 +566,10 @@ const RentalOrderTable = ({
               size={19}
               className="cursor-pointer"
               onClick={() => {
+                if (gridApiRef.current) {
+                  const currentPage = gridApiRef.current.paginationGetCurrentPage();
+                  dispatch(setRentalOrderTablePage(currentPage));
+                }
                 navigate(`/orders/rentals/${rowData?._id}`);
               }}
             />
@@ -608,7 +578,7 @@ const RentalOrderTable = ({
               className="cursor-pointer"
               onClick={() => {
                 setDeleteOrderOpen(true);
-                setDeleteOrderId(rowData?._id || "");
+                setDeleteOrderId(rowData?._id || '');
               }}
             />
             <IoPrintOutline
@@ -639,40 +609,39 @@ const RentalOrderTable = ({
       setExpandedRowIds(expanded);
 
       // Special case for customer field
-      if (field === "customer") {
+      if (field === 'customer') {
         if (!isGetContactsSuccess) {
-          console.error("Customer query not retrieved yet");
+          console.error('Customer query not retrieved yet');
           return;
         }
         const customer = contactsQueryData.find((c) => c._id === newValue._id);
         if (!customer) {
-          console.error("Customer not found for ID:", newValue);
+          console.error('Customer not found for ID:', newValue);
           return;
         }
         value = { ...customer };
       }
 
-      if (field === "status") {
-        if (typeof newValue === "string" && newValue.includes("pending"))
-          value = "pending";
+      if (field === 'status') {
+        if (typeof newValue === 'string' && newValue.includes('pending')) value = 'pending';
       }
 
-      if (field === "event_name") {
+      if (field === 'event_name') {
         value = value.name;
       }
 
       const patchPayload: PatchOperation[] = [
         {
-          op: "replace",
+          op: 'replace',
           path: `/${field}`,
           value,
         },
       ];
 
-      if (field === "discount_type") {
+      if (field === 'discount_type') {
         patchPayload.push({
-          op: "replace",
-          path: `/discount`,
+          op: 'replace',
+          path: '/discount',
           value: 0,
         });
       }
@@ -681,7 +650,7 @@ const RentalOrderTable = ({
 
       console.log(`Successfully patched ${field} for order ${data._id}`);
     } catch (err) {
-      console.error("Failed to patch rental order:", err);
+      console.error('Failed to patch rental order:', err);
       // Optional: revert or notify
     }
   };
@@ -743,11 +712,11 @@ const RentalOrderTable = ({
           const orderId = params.data?.order_id;
           if (orderId && expiredOrderIds.has(orderId)) {
             return {
-              backgroundColor: "#D1D1D1",
+              backgroundColor: '#D1D1D1',
             };
           }
           return {
-            backgroundColor: "white",
+            backgroundColor: 'white',
           };
         }}
         onRowGroupOpened={onRowGroupOpened}

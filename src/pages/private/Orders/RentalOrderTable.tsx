@@ -1,36 +1,36 @@
-import CustomTable from '../../../styled/CustomTable';
 import type {
   CellEditingStoppedEvent,
   ColDef,
+  GridApi,
   ICellRendererParams,
   RowHeightParams,
   ValueFormatterParams,
   ValueGetterParams,
 } from 'ag-grid-community';
-import type { GridApi } from 'ag-grid-community';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
-import { AiOutlineDelete } from 'react-icons/ai';
+import CustomTable from '../../../styled/CustomTable';
 import { BillingMode, DepositType, RentalOrderType, RentalType } from '../../../types/order';
 import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { AddressCellEditor } from '../../../components/AgGridCellEditors/AddressCellEditor';
+import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
+import { EventNameCellEditor } from '../../../components/AgGridCellEditors/EventNameCellEditor';
+import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCellEditor';
+import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
+import { useGetContactsQuery } from '../../../services/ContactService';
+import { usePatchRentalOrderMutation } from '../../../services/OrderService';
+import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
+import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 import { RootState } from '../../../store/store';
 import { DiscountType, EventNameType, PatchOperation, ProductType } from '../../../types/common';
-import { usePatchRentalOrderMutation } from '../../../services/OrderService';
-import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCellEditor';
-import { useGetContactsQuery } from '../../../services/ContactService';
 import { IdNamePair } from '../Stocks';
-import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
-import { AddressCellEditor } from '../../../components/AgGridCellEditors/AddressCellEditor';
-import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
-import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { currencyFormatter } from './utils';
-import dayjs from 'dayjs';
-import { EventNameCellEditor } from '../../../components/AgGridCellEditors/EventNameCellEditor';
-import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 
 const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
   const navigate = useNavigate();
@@ -458,20 +458,20 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
         return depositData.reduce((total, deposit) => total + deposit.amount, 0);
       },
     },
-    {
-      field: 'remarks',
-      headerName: 'Remarks',
-      flex: 1,
-      headerClass: 'ag-header-wrap',
-      minWidth: 200,
-      filter: 'agTextColumnFilter',
-      editable: true,
-      singleClickEdit: true,
-      cellEditor: AddressCellEditor,
-      valueFormatter: (params) => {
-        return params.value?.replace(/\n/g, ' ') ?? '';
-      },
-    },
+    // {
+    //   field: 'remarks',
+    //   headerName: 'Remarks',
+    //   flex: 1,
+    //   headerClass: 'ag-header-wrap',
+    //   minWidth: 200,
+    //   filter: 'agTextColumnFilter',
+    //   editable: true,
+    //   singleClickEdit: true,
+    //   cellEditor: AddressCellEditor,
+    //   valueFormatter: (params) => {
+    //     return params.value?.replace(/\n/g, ' ') ?? '';
+    //   },
+    // },
     {
       field: 'payment_mode',
       headerName: 'Repayment Mode',

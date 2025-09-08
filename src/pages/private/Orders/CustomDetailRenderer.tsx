@@ -239,7 +239,8 @@ const CustomDetailRenderer = (
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                options: ['shift', 'days', 'weeks', 'months'],
+                // options: ['shift', 'days', 'weeks', 'months'],
+                options: ['days'],
               },
             },
             {
@@ -255,7 +256,7 @@ const CustomDetailRenderer = (
               // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format('DD-MMM-YYYY');
+                return dayjs(date).format('DD-MMM-YYYY hh:mm A');
               },
             },
             {
@@ -271,7 +272,7 @@ const CustomDetailRenderer = (
               // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format('DD-MMM-YYYY');
+                return dayjs(date).format('DD-MMM-YYYY hh:mm A');
               },
             },
             {

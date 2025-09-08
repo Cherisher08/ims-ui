@@ -509,7 +509,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       valueFormatter: (params: ValueFormatterParams) => {
         const status = params.data.status;
-        if (status === 'paid') return 'paid';
+        if (status === 'paid') return 'Paid';
         if (status === 'pending') {
           const data = params.data;
           const depositData: DepositType[] = params.data.deposits ?? 0;

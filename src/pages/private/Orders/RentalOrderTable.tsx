@@ -518,7 +518,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
             calculateFinalAmount(data) -
             depositData.reduce((total, deposit) => total + deposit.amount, 0);
 
-          return total >= 0 ? 'pending (customer)' : 'pending (us)';
+          return total >= 0 ? 'Machine and Balance Pending' : 'Machine and Repayment Pending';
         }
         return status;
       },

@@ -64,6 +64,7 @@ const UpdateContactModal = ({
         toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
       });
       setUpdateContactOpen(false);
+      setAddressProof(null);
       reset();
     }
     if (IsUpdateContactError) {
@@ -71,6 +72,7 @@ const UpdateContactModal = ({
         toastId: TOAST_IDS.ERROR_CONTACT_CREATE,
       });
       setUpdateContactOpen(false);
+      setAddressProof(null);
       reset();
     }
   }, [IsUpdateContactError, isUpdateContactSuccess, reset, setUpdateContactOpen]);

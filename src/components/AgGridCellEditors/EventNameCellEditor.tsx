@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { CustomCellEditorProps } from "ag-grid-react";
-import { IdNamePair } from "../../pages/private/Stocks";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+import { CustomCellEditorProps } from 'ag-grid-react';
+import { useEffect, useRef, useState } from 'react';
+import { IdNamePair } from '../../pages/private/Stocks';
 
 type EventNameCellEditorProps = CustomCellEditorProps & {
   customerOptions?: IdNamePair[];
@@ -20,7 +20,7 @@ export const EventNameCellEditor = ({
     customerOptions.find((option) => option.name === value)
   );
 
-  const [inputValue, setInputValue] = useState<string>(value ?? "");
+  const [inputValue, setInputValue] = useState<string>(value ?? '');
 
   useEffect(() => {
     setTimeout(() => ref.current?.focus(), 10);
@@ -34,7 +34,7 @@ export const EventNameCellEditor = ({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (_: any, newValue: IdNamePair | string | null) => {
-    if (typeof newValue === "string") {
+    if (typeof newValue === 'string') {
       commitValue({ _id: newValue, name: newValue });
     } else if (newValue) {
       commitValue(newValue);
@@ -58,7 +58,7 @@ export const EventNameCellEditor = ({
     <Autocomplete
       freeSolo
       options={customerOptions}
-      getOptionLabel={(option) => (typeof option === "string" ? option : option.name)}
+      getOptionLabel={(option) => (typeof option === 'string' ? option : option.name)}
       value={selected}
       inputValue={inputValue}
       onInputChange={handleInputChange}
@@ -75,8 +75,8 @@ export const EventNameCellEditor = ({
             variant="outlined"
             size="small"
             sx={{
-              fontSize: "0.75rem",
-              backgroundColor: "#fff",
+              fontSize: '0.75rem',
+              backgroundColor: '#fff',
             }}
             inputProps={{
               ...inputProps,
@@ -84,13 +84,13 @@ export const EventNameCellEditor = ({
                 // ✅ Call MUI's handler first so Autocomplete works
                 if (onKeyDown) onKeyDown(e);
 
-                if (e.key === "Enter") {
+                if (e.key === 'Enter') {
                   e.preventDefault();
                   e.stopPropagation();
                   commitValue({ _id: inputValue, name: inputValue });
                 }
 
-                if (e.key === "Escape") {
+                if (e.key === 'Escape') {
                   e.preventDefault();
                   e.stopPropagation();
                   stopEditing();

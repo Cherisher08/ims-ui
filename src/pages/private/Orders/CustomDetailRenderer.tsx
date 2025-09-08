@@ -3,23 +3,23 @@ import {
   ICellRendererParams,
   IDetailCellRendererParams,
   ValueGetterParams,
-} from "ag-grid-community";
-import { AgGridReact } from "ag-grid-react";
-import { InDateCellEditor } from "../../../components/AgGridCellEditors/InDateCellEditor";
-import { SelectCellEditor } from "../../../components/AgGridCellEditors/SelectCellEditor";
-import { RentalType } from "../../../types/order";
-import { FaPlus } from "react-icons/fa";
-import CustomButton from "../../../styled/CustomButton";
-import { PatchOperation, Product } from "../../../types/common";
-import { usePatchRentalOrderMutation } from "../../../services/OrderService";
-import { AutocompleteCellEditor } from "../../../components/AgGridCellEditors/AutocompleteCellEditor";
-import { currencyFormatter, getDefaultDeposit, getDefaultProduct } from "./utils";
-import { useGetProductsQuery } from "../../../services/ApiService";
-import { useEffect, useRef, useState } from "react";
-import { IdNamePair } from "../Stocks";
-import { AiOutlineDelete } from "react-icons/ai";
-import dayjs from "dayjs";
-import { calculateProductRent } from "../../../services/utility_functions";
+} from 'ag-grid-community';
+import { AgGridReact } from 'ag-grid-react';
+import dayjs from 'dayjs';
+import { useEffect, useRef, useState } from 'react';
+import { AiOutlineDelete } from 'react-icons/ai';
+import { FaPlus } from 'react-icons/fa';
+import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
+import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCellEditor';
+import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
+import { useGetProductsQuery } from '../../../services/ApiService';
+import { usePatchRentalOrderMutation } from '../../../services/OrderService';
+import { calculateProductRent } from '../../../services/utility_functions';
+import CustomButton from '../../../styled/CustomButton';
+import { PatchOperation, Product } from '../../../types/common';
+import { RentalType } from '../../../types/order';
+import { IdNamePair } from '../Stocks';
+import { currencyFormatter, getDefaultDeposit, getDefaultProduct } from './utils';
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
 const CustomDetailRenderer = (
@@ -53,36 +53,36 @@ const CustomDetailRenderer = (
     try {
       let value = newValue;
       const patchPayload: PatchOperation[] = [];
-      if (field === "name") {
+      if (field === 'name') {
         const newProduct = productList.current.find((product) => product._id === newValue._id);
         value = newValue.name;
         patchPayload.push({
-          op: "replace",
+          op: 'replace',
           path: `/product_details/${rowIndex}/_id`,
           value: newValue._id,
         });
         patchPayload.push({
-          op: "replace",
+          op: 'replace',
           path: `/product_details/${rowIndex}/rent_per_unit`,
           value: newProduct?.rent_per_unit,
         });
         patchPayload.push({
-          op: "replace",
+          op: 'replace',
           path: `/product_details/${rowIndex}/product_unit`,
           value: newProduct?.unit,
         });
         patchPayload.push({
-          op: "replace",
+          op: 'replace',
           path: `/product_details/${rowIndex}/product_code`,
           value: newProduct?.product_code,
         });
       }
-      if (field === "billing_unit" || field === "out_date" || field === "in_date") {
+      if (field === 'billing_unit' || field === 'out_date' || field === 'in_date') {
         if (rowIndex !== null && !isNaN(rowIndex)) {
           const currentProduct = productDetails[rowIndex];
           const duration = calculateProductRent(currentProduct, true);
           patchPayload.push({
-            op: "replace",
+            op: 'replace',
             path: `/product_details/${rowIndex}/duration`,
             value: duration,
           });
@@ -90,7 +90,7 @@ const CustomDetailRenderer = (
       }
 
       patchPayload.push({
-        op: "replace",
+        op: 'replace',
         path: `/product_details/${rowIndex}/${field}`,
         value,
       });
@@ -100,7 +100,7 @@ const CustomDetailRenderer = (
       }).unwrap();
       console.log(`Successfully patched ${field} for order ${orderData._id}`);
     } catch (err) {
-      console.error("Failed to patch rental order:", err);
+      console.error('Failed to patch rental order:', err);
       // Optional: revert or notify
     }
   };
@@ -114,7 +114,7 @@ const CustomDetailRenderer = (
       const value = newValue;
       const patchPayload: PatchOperation[] = [
         {
-          op: "replace",
+          op: 'replace',
           path: `/deposits/${rowIndex}/${field}`,
           value,
         },
@@ -126,20 +126,20 @@ const CustomDetailRenderer = (
       }).unwrap();
       console.log(`Successfully patched ${field} for order ${orderData._id}`);
     } catch (err) {
-      console.error("Failed to patch rental order:", err);
+      console.error('Failed to patch rental order:', err);
       // Optional: revert or notify
     }
   };
 
   const handleNewProduct = async () => {
-    const outDate = new Date(orderData.out_date || "");
+    const outDate = new Date(orderData.out_date || '');
     const expectedDate = new Date(outDate);
     expectedDate.setDate(outDate.getDate() + (orderData.rental_duration ?? 0));
-    const product = getDefaultProduct(orderData.out_date || "", expectedDate.toISOString());
+    const product = getDefaultProduct(orderData.out_date || '', expectedDate.toISOString());
     const patchPayload: PatchOperation[] = [
       {
-        op: "add",
-        path: `/product_details`,
+        op: 'add',
+        path: '/product_details',
         value: product,
       },
     ];
@@ -150,7 +150,7 @@ const CustomDetailRenderer = (
       }).unwrap();
       console.log(`Successfully patched for order ${orderData._id}`);
     } catch (err) {
-      console.error("Failed to patch rental order:", err);
+      console.error('Failed to patch rental order:', err);
       // Optional: revert or notify
     }
   };
@@ -159,7 +159,7 @@ const CustomDetailRenderer = (
     if (rowId !== null) {
       const patchPayload: PatchOperation[] = [
         {
-          op: "remove",
+          op: 'remove',
           path: `/${target}/${rowId}`,
         },
       ];
@@ -170,7 +170,7 @@ const CustomDetailRenderer = (
         }).unwrap();
         console.log(`Successfully patched for order ${orderData._id}`);
       } catch (err) {
-        console.error("Failed to patch rental order:", err);
+        console.error('Failed to patch rental order:', err);
         // Optional: revert or notify
       }
     }
@@ -180,8 +180,8 @@ const CustomDetailRenderer = (
     const deposit = getDefaultDeposit(productPairs);
     const patchPayload: PatchOperation[] = [
       {
-        op: "add",
-        path: `/deposits`,
+        op: 'add',
+        path: '/deposits',
         value: deposit,
       },
     ];
@@ -192,7 +192,7 @@ const CustomDetailRenderer = (
       }).unwrap();
       console.log(`Successfully patched ${deposit} for order ${orderData._id}`);
     } catch (err) {
-      console.error("Failed to patch rental order:", err);
+      console.error('Failed to patch rental order:', err);
     }
   };
 
@@ -220,8 +220,8 @@ const CustomDetailRenderer = (
           onCellEditingStopped={handleProductCellEditing}
           columnDefs={[
             {
-              field: "name",
-              headerName: "Name",
+              field: 'name',
+              headerName: 'Name',
               minWidth: 150,
               editable: true,
               singleClickEdit: true,
@@ -231,58 +231,58 @@ const CustomDetailRenderer = (
               },
             },
             {
-              field: "billing_unit",
-              headerName: "Billing Unit",
+              field: 'billing_unit',
+              headerName: 'Billing Unit',
               flex: 1,
               minWidth: 150,
               editable: true,
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                options: ["shift", "days", "weeks", "months"],
+                options: ['shift', 'days', 'weeks', 'months'],
               },
             },
             {
-              field: "out_date",
-              headerName: "Out Date",
+              field: 'out_date',
+              headerName: 'Out Date',
               minWidth: 100,
               editable: true,
               singleClickEdit: true,
-              cellDataType: "dateTime",
+              cellDataType: 'dateTime',
               cellEditor: InDateCellEditor,
               // cellEditorParams: {
               // format: "DD/MM/YYYY",
               // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format("DD-MMM-YYYY");
+                return dayjs(date).format('DD-MMM-YYYY');
               },
             },
             {
-              field: "in_date",
-              headerName: "In Date",
+              field: 'in_date',
+              headerName: 'In Date',
               editable: true,
               minWidth: 100,
               singleClickEdit: true,
-              cellDataType: "dateTime",
+              cellDataType: 'dateTime',
               cellEditor: InDateCellEditor,
               // cellEditorParams: {
               // format: "DD/MM/YYYY",
               // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format("DD-MMM-YYYY");
+                return dayjs(date).format('DD-MMM-YYYY');
               },
             },
             {
-              field: "duration",
-              headerName: "Total Duration",
+              field: 'duration',
+              headerName: 'Total Duration',
               minWidth: 100,
               editable: true,
               singleClickEdit: true,
             },
             {
-              headerName: "Available Quantity",
+              headerName: 'Available Quantity',
               flex: 1,
               minWidth: 150,
               valueGetter: (params: ValueGetterParams) => {
@@ -291,42 +291,42 @@ const CustomDetailRenderer = (
               },
             },
             {
-              field: "order_quantity",
-              headerName: "Order Quantity",
+              field: 'order_quantity',
+              headerName: 'Order Quantity',
               flex: 1,
               minWidth: 180,
               editable: true,
               singleClickEdit: true,
-              cellEditor: "agTextCellEditor",
+              cellEditor: 'agTextCellEditor',
               cellEditorParams: {
                 step: 1,
               },
             },
             {
-              field: "order_repair_count",
-              headerName: "Order Repair Count",
+              field: 'order_repair_count',
+              headerName: 'Order Repair Count',
               flex: 1,
               minWidth: 150,
               editable: true,
               singleClickEdit: true,
-              cellEditor: "agTextCellEditor",
+              cellEditor: 'agTextCellEditor',
               cellEditorParams: {
                 step: 1,
               },
             },
             {
-              field: "rent_per_unit",
-              headerName: "Rent Per Unit",
+              field: 'rent_per_unit',
+              headerName: 'Rent Per Unit',
               flex: 1,
               minWidth: 150,
               editable: true,
               singleClickEdit: true,
-              cellEditor: "agTextCellEditor",
+              cellEditor: 'agTextCellEditor',
               valueFormatter: currencyFormatter,
             },
             {
-              headerName: "Actions",
-              pinned: "right",
+              headerName: 'Actions',
+              pinned: 'right',
               maxWidth: 120,
               cellRenderer: (params: ICellRendererParams<RentalType>) => {
                 const rowNode = params.node;
@@ -336,7 +336,7 @@ const CustomDetailRenderer = (
                       size={20}
                       className="cursor-pointer"
                       onClick={() => {
-                        deleteSubItem(rowNode.rowIndex, "product_details");
+                        deleteSubItem(rowNode.rowIndex, 'product_details');
                       }}
                     />
                   </div>
@@ -357,35 +357,35 @@ const CustomDetailRenderer = (
           suppressMenuHide={false}
           columnDefs={[
             {
-              field: "amount",
-              headerName: "Amount",
+              field: 'amount',
+              headerName: 'Amount',
               flex: 1,
               editable: true,
               singleClickEdit: true,
-              cellEditor: "agTextCellEditor",
+              cellEditor: 'agTextCellEditor',
               cellEditorParams: {
                 step: 1,
               },
             },
             {
-              field: "date",
-              headerName: "Date",
+              field: 'date',
+              headerName: 'Date',
               flex: 1,
               editable: true,
               singleClickEdit: true,
-              cellDataType: "dateTime",
+              cellDataType: 'dateTime',
               cellEditor: InDateCellEditor,
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format("DD-MMM-YYYY hh:mm A");
+                return dayjs(date).format('DD-MMM-YYYY hh:mm A');
               },
             },
             {
-              field: "product",
-              headerName: "Product",
+              field: 'product',
+              headerName: 'Product',
               valueFormatter: (params) => {
                 const product = params.value || {};
-                return product.name || " ";
+                return product.name || ' ';
               },
               flex: 1,
               editable: true,
@@ -396,19 +396,19 @@ const CustomDetailRenderer = (
               },
             },
             {
-              field: "mode",
-              headerName: "Mode",
+              field: 'mode',
+              headerName: 'Mode',
               flex: 1,
               editable: true,
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                options: ["cash", "account", "upi"],
+                options: ['cash', 'account', 'upi'],
               },
             },
             {
-              headerName: "Actions",
-              pinned: "right",
+              headerName: 'Actions',
+              pinned: 'right',
               maxWidth: 120,
               cellRenderer: (params: ICellRendererParams<RentalType>) => {
                 const rowNode = params.node;
@@ -418,7 +418,7 @@ const CustomDetailRenderer = (
                       size={20}
                       className="cursor-pointer"
                       onClick={() => {
-                        deleteSubItem(rowNode.rowIndex, "deposits");
+                        deleteSubItem(rowNode.rowIndex, 'deposits');
                       }}
                     />
                   </div>

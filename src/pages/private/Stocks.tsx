@@ -37,6 +37,9 @@ interface OneProduct {
   category: string;
   available_stock: number;
   type: string;
+  rent_per_unit: number;
+  quantity: number;
+  price: number;
   actions?: string;
 }
 
@@ -89,6 +92,9 @@ const Inventory = () => {
           category: product.category.name,
           available_stock: product.available_stock,
           type: product.type,
+          rent_per_unit: product.rent_per_unit,
+          quantity: product.quantity,
+          price: product.price,
         }))
       : [];
   }, [productData]);
@@ -115,12 +121,35 @@ const Inventory = () => {
       },
       { field: 'category', headerName: 'Category', flex: 1, minWidth: 300 },
       {
+        field: 'quantity',
+        headerName: 'Purchased Quantity',
+        flex: 1,
+        minWidth: 100,
+        headerClass: 'ag-header-wrap',
+        filter: 'agNumberColumnFilter',
+      },
+      {
         field: 'available_stock',
         headerName: 'Available Stock',
         flex: 1,
         minWidth: 100,
         headerClass: 'ag-header-wrap',
         filter: 'agNumberColumnFilter',
+      },
+      {
+        field: 'rent_per_unit',
+        headerName: 'Price (per unit)',
+        flex: 1,
+        minWidth: 100,
+        headerClass: 'ag-header-wrap',
+        filter: 'agNumberColumnFilter',
+        cellRenderer: (params: ICellRendererParams<OneProduct>) => {
+          const rowData = params.data!;
+          if (rowData.type === 'sales') {
+            return `₹${rowData.price}.00`;
+          }
+          return `₹${rowData.rent_per_unit}.00`;
+        },
       },
       { field: 'type', headerName: 'Type', flex: 1, minWidth: 100 },
       {
@@ -227,7 +256,7 @@ const Inventory = () => {
         return `₹${value}`;
       }
     }
-    return `₹0`;
+    return '₹0';
   }, [
     addProductOpen,
     newProductData.discount,
@@ -785,10 +814,9 @@ const Inventory = () => {
                   label=""
                   wrapperClass="mt-6"
                   options={discountTypeValues}
-                  defaultValue="%"
                   value={
                     discountTypeValues.find(
-                      (discountType) => newProductData.discount_type === discountType.id
+                      (discountType) => updateData?.discount_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
                   onChange={(value) => handleUpdateProduct('discount_type', value)}

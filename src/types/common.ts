@@ -19,32 +19,32 @@ export interface Unit {
 }
 
 export enum ProductType {
-  RENTAL = "rental",
-  SALES = "sales",
-  SERVICE = "service",
+  RENTAL = 'rental',
+  SALES = 'sales',
+  SERVICE = 'service',
 }
 
 export enum DiscountType {
-  RUPEES = "rupees",
-  PERCENT = "percent",
+  RUPEES = 'rupees',
+  PERCENT = 'percent',
 }
 
 export const discountTypeValues = [
   {
-    id: "percent",
-    value: "%",
+    id: 'percent',
+    value: '%',
   },
   {
-    id: "rupees",
-    value: "₹",
+    id: 'rupees',
+    value: '₹',
   },
 ];
 
 export enum EventNameType {
-  CONSTRUCTION_WORK = "Construction work",
-  DEWATERING_WORK = "Dewatering Work",
-  CLEANING_WORK = "Cleaning Work",
-  GARDEN_WORK = "Garden Work",
+  CONSTRUCTION_WORK = 'Construction work',
+  DEWATERING_WORK = 'Dewatering Work',
+  CLEANING_WORK = 'Cleaning Work',
+  GARDEN_WORK = 'Garden Work',
 }
 
 export interface Product {
@@ -67,7 +67,7 @@ export interface Product {
 }
 
 export interface PatchOperation {
-  op: "add" | "remove" | "replace";
+  op: 'add' | 'remove' | 'replace';
   path: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value?: any;

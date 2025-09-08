@@ -262,7 +262,7 @@ const NewOrder = () => {
         ? updatedProducts.find((p) => p._id === prod._id)
         : prod
     );
-    setProducts(newProducts);
+    setProducts(newProducts.filter((product): product is Product => product !== undefined));
   };
 
   const createNewOrder = async () => {

@@ -481,7 +481,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['-', 'cash less', 'account less', 'kvb less'],
+        options: ['-', 'cash less', 'upi less', 'kvb less'],
       },
     },
     {

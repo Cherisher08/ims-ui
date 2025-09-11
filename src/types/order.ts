@@ -1,10 +1,10 @@
-import { IdNamePair } from "../pages/private/Stocks";
-import { DiscountType, Product, ProductType, Unit } from "./common";
-import { ContactInfoType } from "./contact";
+import { IdNamePair } from '../pages/private/Stocks';
+import { DiscountType, Product, ProductType, Unit } from './common';
+import { ContactInfoType } from './contact';
 
 export enum BillingMode {
-  B2B = "B2B",
-  B2C = "B2C",
+  B2B = 'B2B',
+  B2C = 'B2C',
 }
 
 // export enum BillingUnit {
@@ -15,21 +15,21 @@ export enum BillingMode {
 // }
 
 export enum PaymentStatus {
-  PENDING = "pending",
-  PAID = "paid",
+  PENDING = 'pending',
+  PAID = 'paid',
 }
 
 export enum PaymentMode {
-  NULL = "-",
-  CASH = "cash",
-  UPI = "upi",
-  ACCOUNT = "account",
+  NULL = '-',
+  CASH = 'cash',
+  UPI = 'upi',
+  ACCOUNT = 'account',
 }
 export enum RepaymentMode {
-  NULL = "-",
-  CASHLESS = "cash less",
-  UPILESS = "upi less",
-  KVBLESS = "kvb less",
+  NULL = '-',
+  CASHLESS = 'cash less',
+  UPILESS = 'upi less',
+  KVBLESS = 'kvb less',
 }
 
 // --------------------------------------------------------------------------------------------
@@ -66,11 +66,11 @@ export type DepositType = {
 // --------------------------------------------------------------------------------------------
 // Types for Frontend
 
-export type RentalOrderType = Omit<RentalOrderInfo, "customer"> & {
+export type RentalOrderType = Omit<RentalOrderInfo, 'customer'> & {
   customer: IdNamePair;
 };
 
-export type RentalType = Omit<RentalOrderInfo, "customer"> & {
+export type RentalType = Omit<RentalOrderInfo, 'customer'> & {
   customer: IdNamePair;
   actions?: string;
 };

@@ -18,6 +18,7 @@ import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
 import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { AddressCellEditor } from '../../../components/AgGridCellEditors/AddressCellEditor';
 import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
 import { EventNameCellEditor } from '../../../components/AgGridCellEditors/EventNameCellEditor';
@@ -195,30 +196,30 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     //     );
     //   },
     // },
-    {
-      field: 'repay_amount',
-      headerName: 'Repayment Amount',
-      flex: 1,
-      minWidth: 200,
-      headerClass: 'ag-header-wrap',
-      filter: 'agNumberColumnFilter',
-      cellRenderer: (params: ICellRendererParams) => {
-        const data = params.data;
-        const depositData: DepositType[] = params.data.deposits ?? 0;
-        return (
-          <p>
-            ₹{' '}
-            {Math.abs(
-              Math.min(
-                0,
-                calculateFinalAmount(data) -
-                  depositData.reduce((total, deposit) => total + deposit.amount, 0)
-              )
-            ).toFixed(2)}
-          </p>
-        );
-      },
-    },
+    // {
+    //   field: 'repay_amount',
+    //   headerName: 'Repayment Amount',
+    //   flex: 1,
+    //   minWidth: 200,
+    //   headerClass: 'ag-header-wrap',
+    //   filter: 'agNumberColumnFilter',
+    //   cellRenderer: (params: ICellRendererParams) => {
+    //     const data = params.data;
+    //     const depositData: DepositType[] = params.data.deposits ?? 0;
+    //     return (
+    //       <p>
+    //         ₹{' '}
+    //         {Math.abs(
+    //           Math.min(
+    //             0,
+    //             calculateFinalAmount(data) -
+    //               depositData.reduce((total, deposit) => total + deposit.amount, 0)
+    //           )
+    //         ).toFixed(2)}
+    //       </p>
+    //     );
+    //   },
+    // },
     {
       field: 'balance_paid',
       headerName: 'Balance Amount',
@@ -244,7 +245,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     {
       field: 'out_date',
       headerName: 'Order Out Date',
-      minWidth: 100,
+      minWidth: 160,
       filter: 'agDateColumnFilter',
       editable: true,
       singleClickEdit: true,
@@ -257,9 +258,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     {
       field: 'in_date',
       headerName: 'Order In Date',
-      flex: 1,
-      minWidth: 150,
-      headerClass: 'ag-header-wrap',
+      minWidth: 160,
       filter: 'agDateColumnFilter',
       editable: true,
       singleClickEdit: true,
@@ -443,7 +442,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['cash', 'account', 'upi'],
+        options: ['-', 'cash', 'account', 'upi'],
       },
     },
     {
@@ -482,7 +481,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['cash less', 'account less', 'kvb less'],
+        options: ['-', 'cash less', 'account less', 'kvb less'],
       },
     },
     {
@@ -495,7 +494,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['cash', 'account', 'upi'],
+        options: ['-', 'cash', 'account', 'upi'],
       },
     },
     {
@@ -622,12 +621,14 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
         value = { ...customer };
       }
 
-      if (field === 'status') {
-        if (typeof newValue === 'string' && newValue.includes('pending')) value = 'pending';
-      }
-
       if (field === 'event_name') {
         value = value.name;
+      }
+
+      if (field === 'in_date') {
+        if (dayjs(value).diff(data.out_date) < 0) {
+          value = data.out_date;
+        }
       }
 
       const patchPayload: PatchOperation[] = [
@@ -637,6 +638,30 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
           value,
         },
       ];
+
+      if (field === 'status') {
+        if (value === 'paid' && !data.in_date) {
+          toast.warning('Bill Date/End Date is empty');
+          return;
+        }
+
+        if (typeof newValue === 'string' && newValue.includes('pending')) value = 'pending';
+
+        if (value === 'pending') {
+          // patchPayload.push({
+          //   op: 'replace',
+          //   path: '/repay_date',
+          //   value: '',
+          // });
+          patchPayload.push({
+            op: 'replace',
+            path: '/payment_mode',
+            value: '-',
+          });
+        }
+      }
+
+      console.log(field, value);
 
       if (field === 'discount_type') {
         patchPayload.push({

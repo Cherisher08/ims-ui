@@ -4,20 +4,15 @@ import {
   fetchBaseQuery,
   FetchBaseQueryError,
   FetchBaseQueryMeta,
-} from "@reduxjs/toolkit/query/react";
+} from '@reduxjs/toolkit/query/react';
+import { Product, ProductCategory, Unit, VerifyOtpRequest } from '../types/common';
 import type {
-  UserRequest,
   AuthorizeUserResponse,
-  User,
   GeneralResponse,
   UpdateUserPasswordRequest,
-} from "../types/user";
-import {
-  Product,
-  ProductCategory,
-  Unit,
-  VerifyOtpRequest,
-} from "../types/common";
+  User,
+  UserRequest,
+} from '../types/user';
 
 const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
 // const apiUrl = "https://ims-mpt-backend.onrender.com/";
@@ -25,9 +20,9 @@ const apiUrl = import.meta.env.VITE_BACKEND_ENDPOINT;
 const baseQuery = fetchBaseQuery({
   baseUrl: apiUrl,
   prepareHeaders: (headers) => {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem('access_token');
     if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
+      headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;
   },
@@ -53,28 +48,28 @@ const baseQueryWith401Handler: BaseQueryFn<
 
 // Define a service using a base URL and expected endpoints
 export const rootApi = createApi({
-  reducerPath: "rootApi",
+  reducerPath: 'rootApi',
   baseQuery: baseQueryWith401Handler,
   tagTypes: [
-    "Product",
-    "Product-Category",
-    "Unit",
-    "Contact",
-    "Rental",
-    "Sales",
-    "Service",
-    "Expired",
+    'Product',
+    'Product-Category',
+    'Unit',
+    'Contact',
+    'Rental',
+    'Sales',
+    'Service',
+    'Expired',
   ],
   endpoints: (build) => ({
     getUser: build.query<User, void>({
-      query: () => `auth/users/me`,
+      query: () => 'auth/users/me',
     }),
     authorizeUser: build.mutation<AuthorizeUserResponse, UserRequest>({
       query: ({ email, password }) => ({
-        url: `auth/users/tokens`,
-        method: "POST",
+        url: 'auth/users/tokens',
+        method: 'POST',
         body: new URLSearchParams({
-          grant_type: "password",
+          grant_type: 'password',
           username: email,
           password,
         }),
@@ -83,15 +78,15 @@ export const rootApi = createApi({
     registerUser: build.mutation<User, User>({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       query: ({ _id, ...user }) => ({
-        url: `auth/users/`,
-        method: "POST",
+        url: 'auth/users/',
+        method: 'POST',
         body: user,
       }),
     }),
     resetPassword: build.mutation<GeneralResponse, string>({
       query: (email) => ({
-        url: `auth/users/reset`,
-        method: "POST",
+        url: 'auth/users/reset',
+        method: 'POST',
         body: {
           email: email,
         },
@@ -99,29 +94,29 @@ export const rootApi = createApi({
     }),
     verifyOtp: build.mutation<GeneralResponse, VerifyOtpRequest>({
       query: (body) => ({
-        url: "auth/users/otp",
-        method: "POST",
+        url: 'auth/users/otp',
+        method: 'POST',
         body: body,
       }),
     }),
     updateUserPassword: build.mutation<User, UpdateUserPasswordRequest>({
       query: (body) => ({
-        url: `auth/users/update`,
-        method: "POST",
+        url: 'auth/users/update',
+        method: 'POST',
         body: body,
       }),
     }),
     getProducts: build.query<Product[], void>({
-      query: () => `products`,
-      providesTags: ["Product"],
+      query: () => 'products',
+      providesTags: ['Product'],
     }),
     createProduct: build.mutation<Product, Product>({
       query: (body) => ({
-        url: `products`,
-        method: "POST",
+        url: 'products',
+        method: 'POST',
         body: body,
       }),
-      invalidatesTags: ["Product"],
+      invalidatesTags: ['Product'],
     }),
     getProductById: build.query<Product, string>({
       query: (id) => `products/${id}`,
@@ -129,44 +124,44 @@ export const rootApi = createApi({
     updateProduct: build.mutation<Product, Product>({
       query: ({ _id, ...product }) => ({
         url: `products/${_id}`,
-        method: "PUT",
+        method: 'PUT',
         body: product,
       }),
-      invalidatesTags: ["Product"],
+      invalidatesTags: ['Product'],
     }),
     deleteProduct: build.mutation<void, string>({
       query: (id) => ({
         url: `products/${id}`,
-        method: "DELETE",
+        method: 'DELETE',
       }),
-      invalidatesTags: ["Product"],
+      invalidatesTags: ['Product'],
     }),
     getProductCategories: build.query<ProductCategory[], void>({
-      query: () => `product-category`,
-      providesTags: ["Product-Category"],
+      query: () => 'product-category',
+      providesTags: ['Product-Category'],
     }),
     createProductCategory: build.mutation<ProductCategory, ProductCategory>({
       query: (body) => ({
-        url: `product-category`,
-        method: "POST",
+        url: 'product-category',
+        method: 'POST',
         body: body,
       }),
-      invalidatesTags: ["Product-Category"],
+      invalidatesTags: ['Product-Category'],
     }),
     getProductCategoryById: build.query<ProductCategory, string>({
       query: (id) => `product-category/${id}`,
     }),
     getUnits: build.query<Unit[], void>({
-      query: () => `unit`,
-      providesTags: ["Unit"],
+      query: () => 'unit',
+      providesTags: ['Unit'],
     }),
     createUnit: build.mutation<Unit, Unit>({
       query: (body) => ({
-        url: `unit`,
-        method: "POST",
+        url: 'unit',
+        method: 'POST',
         body: body,
       }),
-      invalidatesTags: ["Unit"],
+      invalidatesTags: ['Unit'],
     }),
     getUnitById: build.query<Unit, string>({
       query: (id) => `unit/${id}`,

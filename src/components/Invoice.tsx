@@ -1,4 +1,7 @@
-import { Document, Page, StyleSheet, Text, View, Image, Font } from '@react-pdf/renderer';
+import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import dayjs from 'dayjs';
+import { calculateDiscountAmount, calculateProductRent } from '../services/utility_functions';
+import { DiscountType, ProductType } from '../types/common';
 import {
   BillingMode,
   DepositType,
@@ -6,9 +9,6 @@ import {
   ProductDetails,
   RentalOrderInfo,
 } from '../types/order';
-import dayjs from 'dayjs';
-import { DiscountType, ProductType } from '../types/common';
-import { calculateDiscountAmount, calculateProductRent } from '../services/utility_functions';
 import paidStamp from '/paid-icon.png';
 
 Font.register({
@@ -768,7 +768,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 key={product._id}
                 style={[
                   styles.tableRow,
-                  (data.product_details.length > 7 -emptySpaces && index === data.product_details.length - 1) ||
+                  (data.product_details.length > 7 - emptySpaces &&
+                    index === data.product_details.length - 1) ||
                   (maxProducts === 1 && index === data.product_details.length - 1)
                     ? {}
                     : { borderBottom: '1px solid #000' },
@@ -1244,7 +1245,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Text style={[styles.bankDetails, { marginBottom: 3 }]}>Terms & Conditions</Text>
               <Text
                 style={{
-                  ...styles.thankYouText,
+                  fontSize: 10,
                   textAlign: 'left',
                   marginLeft: 0,
                   marginBottom: 0,
@@ -1253,6 +1254,12 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               >
                 Return products in good condition. Damages or loss will be charged.
               </Text>
+              {data.remarks && (
+                <View style={{ marginTop: 4 }}>
+                  <Text style={{ fontSize: 13, fontWeight: 600 }}>Remarks:</Text>
+                  <Text>{data.remarks}</Text>
+                </View>
+              )}
             </View>
           </View>
           <View

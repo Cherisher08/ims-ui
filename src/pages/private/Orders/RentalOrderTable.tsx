@@ -508,7 +508,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       valueFormatter: (params: ValueFormatterParams) => {
         const status = params.data.status;
-        if (status === 'paid') return 'paid';
+        if (status === 'paid') return 'Paid';
         if (status === 'pending') {
           const data = params.data;
           const depositData: DepositType[] = params.data.deposits ?? 0;
@@ -517,7 +517,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
             calculateFinalAmount(data) -
             depositData.reduce((total, deposit) => total + deposit.amount, 0);
 
-          return total >= 0 ? 'pending (customer)' : 'pending (us)';
+          return total >= 0 ? 'Machine and Balance Pending' : 'Machine and Repayment Pending';
         }
         return status;
       },

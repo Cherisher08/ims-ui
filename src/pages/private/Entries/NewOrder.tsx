@@ -648,6 +648,10 @@ const NewOrder = () => {
             }
             onChange={(id) => {
               const status = paymentStatusOptions.find((option) => option.id === id)?.value;
+              if (status === 'paid' && !orderInfo.in_date) {
+                toast.warning('Bill Date/End Date is empty');
+                return;
+              }
               if (status === 'pending') {
                 handleValueChange('repay_date', '');
                 handleValueChange('payment_mode', RepaymentMode.NULL);
@@ -747,14 +751,14 @@ const NewOrder = () => {
           multiline
           minRows={5}
         />
-        {/* <CustomInput
-          value={orderInfo?.remarks ?? ""}
-          onChange={(value) => handleValueChange("remarks", value)}
+        <CustomInput
+          value={orderInfo?.remarks ?? ''}
+          onChange={(value) => handleValueChange('remarks', value)}
           label="Event Remarks"
           placeholder="Enter Remarks"
           multiline
           minRows={5}
-        /> */}
+        />
       </div>
 
       {/* Products */}
@@ -992,6 +996,9 @@ const NewOrder = () => {
                         }
                         className="w-[15rem]"
                         onChange={(val) => {
+                          if (dayjs(val).diff(product.out_date) < 0) {
+                            val = product.out_date;
+                          }
                           const newProducts = [...orderInfo.product_details];
                           const duration = getDuration(newProducts[index].out_date, val);
                           newProducts[index] = {

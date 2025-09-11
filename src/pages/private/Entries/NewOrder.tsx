@@ -232,7 +232,6 @@ const NewOrder = () => {
           const updatedProducts = products.map((prod) =>
             prod._id === id ? updatedProductData : prod
           );
-          console.log(updatedProductData);
           setProducts(updatedProducts);
           setRemovedProducts((prev) => [...prev, updatedProductData]);
         }

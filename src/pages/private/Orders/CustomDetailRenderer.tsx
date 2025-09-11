@@ -9,15 +9,16 @@ import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { FaPlus } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
 import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCellEditor';
 import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
-import { useGetProductsQuery } from '../../../services/ApiService';
+import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
 import { usePatchRentalOrderMutation } from '../../../services/OrderService';
 import { calculateProductRent } from '../../../services/utility_functions';
 import CustomButton from '../../../styled/CustomButton';
 import { PatchOperation, Product } from '../../../types/common';
-import { RentalType } from '../../../types/order';
+import { ProductDetails, RentalType } from '../../../types/order';
 import { IdNamePair } from '../Stocks';
 import { currencyFormatter, getDefaultDeposit, getDefaultProduct } from './utils';
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
@@ -29,6 +30,7 @@ const CustomDetailRenderer = (
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const productList = useRef<Product[]>([]);
   const [productListPairs, setProductListPairs] = useState<IdNamePair[]>([]);
+  const [updateProductData] = useUpdateProductMutation();
   const [patchRentalOrder] = usePatchRentalOrderMutation();
   const orderData = { ...props.data };
   const productDetails =
@@ -80,6 +82,11 @@ const CustomDetailRenderer = (
       if (field === 'billing_unit' || field === 'out_date' || field === 'in_date') {
         if (rowIndex !== null && !isNaN(rowIndex)) {
           const currentProduct = productDetails[rowIndex];
+          if (field === 'in_date') {
+            if (dayjs(value).diff(currentProduct.out_date) < 0) {
+              value = currentProduct.out_date;
+            }
+          }
           const duration = calculateProductRent(currentProduct, true);
           patchPayload.push({
             op: 'replace',
@@ -89,11 +96,38 @@ const CustomDetailRenderer = (
         }
       }
 
+      if (field === 'order_quantity') {
+        const newQuantity = Number(value);
+        if (rowIndex !== null) {
+          const currentProduct: ProductDetails = productDetails[rowIndex];
+          const originalProduct: Product | null =
+            productList.current.find((val) => val._id === currentProduct._id) || null;
+          if (!currentProduct || !originalProduct) {
+            return;
+          }
+          const totalStock = originalProduct.available_stock + oldValue;
+
+          const newQuantityClamped = Math.max(0, Math.min(newQuantity, totalStock));
+
+          const finalQuantity = newQuantityClamped;
+          const finalStock = totalStock - finalQuantity;
+
+
+          const updatedProduct = {
+            ...originalProduct,
+            available_stock: finalStock,
+          };
+          updateProductData(updatedProduct);
+          value = finalQuantity;
+        }
+      }
+
       patchPayload.push({
         op: 'replace',
         path: `/product_details/${rowIndex}/${field}`,
         value,
       });
+
       await patchRentalOrder({
         id: orderData._id!,
         payload: patchPayload,
@@ -296,9 +330,15 @@ const CustomDetailRenderer = (
               headerName: 'Order Quantity',
               flex: 1,
               minWidth: 180,
-              editable: true,
+              editable: orderData.status === 'pending',
               singleClickEdit: true,
               cellEditor: 'agTextCellEditor',
+              onCellClicked: () => {
+                if (orderData.status === 'paid')
+                  toast.warning(
+                    'Please change the payment status to pending to change the quantity'
+                  );
+              },
               cellEditorParams: {
                 step: 1,
               },

@@ -14,13 +14,13 @@ import type {
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 // import "ag-grid-community/styles/ag-grid.css";
+import 'ag-grid-community/styles/ag-theme-quartz.css';
 import {
   AllCommunityModule,
   ClientSideRowModelModule,
   ModuleRegistry,
   RowApiModule,
 } from 'ag-grid-community';
-import 'ag-grid-community/styles/ag-theme-quartz.css';
 import {
   ColumnMenuModule,
   ColumnsToolPanelModule,
@@ -58,6 +58,7 @@ type CustomTableProps<T> = {
   getRowHeight?: (params: RowHeightParams) => number | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRowGroupOpened?: (params: any) => void;
+  onFilterChanged?: () => void;
 };
 
 const CustomTable = <T,>({
@@ -80,6 +81,7 @@ const CustomTable = <T,>({
   },
   getRowHeight = () => null,
   onRowGroupOpened = () => null,
+  onFilterChanged = () => {},
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy
@@ -130,6 +132,9 @@ const CustomTable = <T,>({
         onGridReady={handleGridReady}
         autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
+        onFilterChanged={() => {
+          onFilterChanged();
+        }}
       />
     </div>
   );

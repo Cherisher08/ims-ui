@@ -350,3 +350,24 @@ export const transportOptions = Object.entries(TransportType).map(([key, value])
   id: key,
   value,
 }));
+
+export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
+  return rentalOrders.map((rentalOrder) => {
+    if (!rentalOrder.customer) {
+      return {
+        ...rentalOrder,
+        customer: {
+          _id: '',
+          name: '',
+        },
+      };
+    }
+    return {
+      ...rentalOrder,
+      customer: {
+        _id: rentalOrder.customer._id,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
+      },
+    };
+  });
+};

@@ -1,22 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import CustomButton from '../../../styled/CustomButton';
-import { LuPlus } from 'react-icons/lu';
 import { FaWhatsapp } from 'react-icons/fa';
 import { LuPlus } from 'react-icons/lu';
 import { MdOutlineMail } from 'react-icons/md';
-import { RiFileExcel2Line, Typography } from 'react-icons/ri';
+import { RiFileExcel2Line } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 import NewProductModal from '../../../components/NewProductModal.';
 import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
-import CustomButton from '../../../styled/CustomButton';
 import { RentalOrderType } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
 import RentalOrderTable from './RentalOrderTable';
 import { exportOrderToExcel } from './utils';
 import { calculateFinalAmount, transformRentalOrderData } from './utils';
+import CustomButton from '../../../styled/CustomButton';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 

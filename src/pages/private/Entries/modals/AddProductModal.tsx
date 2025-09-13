@@ -3,7 +3,7 @@ import { ProductDetails } from '../../../../types/order';
 import { MdClose } from 'react-icons/md';
 import CustomButton from '../../../../styled/CustomButton';
 import { useEffect, useState } from 'react';
-import { Product } from '../../../../types/common';
+import { Product, ProductType } from '../../../../types/common';
 import CustomSelect from '../../../../styled/CustomSelect';
 import dayjs from 'dayjs';
 import CustomInput from '../../../../styled/CustomInput';
@@ -39,6 +39,7 @@ const initialProductState: ProductDetails = {
   damage: '',
   rent_per_unit: 0,
   product_code: '',
+  type: ProductType.RENTAL,
 };
 
 const formatProducts = (products: Product[]) => {

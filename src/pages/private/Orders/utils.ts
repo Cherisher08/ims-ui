@@ -7,11 +7,13 @@ import {
   ProductDetails,
   RentalOrderInfo,
   RepaymentMode,
+  RentalOrderType, // <-- Add this line
 } from '../../../types/order';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import { DiscountType, Product, ProductType } from '../../../types/common';
 import { IdNamePair } from '../Stocks';
+import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 
 dayjs.extend(utc);
 
@@ -169,3 +171,58 @@ export const repaymentModeOptions = Object.entries(RepaymentMode).map(([key, val
   id: key,
   value,
 }));
+
+export const calculateTotalAmount = (orderInfo: RentalOrderType) => {
+  if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
+    let total = 0;
+    if (orderInfo.billing_mode === BillingMode.B2C) {
+      total = orderInfo.product_details.reduce((sum, prod) => {
+        const rent_per_unit = calculateProductRent(prod);
+        const exclusiveAmount = rent_per_unit / (1 + orderInfo.gst / 100);
+        return sum + exclusiveAmount;
+      }, 0);
+    } else {
+      total = orderInfo.product_details.reduce((sum, prod) => {
+        return sum + calculateProductRent(prod);
+      }, 0);
+    }
+
+    return parseFloat(total.toFixed(2));
+  }
+  return 0;
+};
+
+export const calculateFinalAmount = (orderInfo: RentalOrderType) => {
+  const finalAmount = calculateTotalAmount(orderInfo);
+  const roundOff = orderInfo.round_off || 0;
+  const ewayBillAmount = orderInfo.eway_amount || 0;
+  const discountAmount =
+    orderInfo.discount_type === DiscountType.PERCENT
+      ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
+      : orderInfo.discount || 0;
+  const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+  return parseFloat(
+    (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+  );
+};
+
+export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
+  return rentalOrders.map((rentalOrder) => {
+    if (!rentalOrder.customer) {
+      return {
+        ...rentalOrder,
+        customer: {
+          _id: '',
+          name: '',
+        },
+      };
+    }
+    return {
+      ...rentalOrder,
+      customer: {
+        _id: rentalOrder.customer._id,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
+      },
+    };
+  });
+};

@@ -11,24 +11,24 @@ import type {
   RowHeightParams,
   GridReadyEvent,
   GridApi,
-} from "ag-grid-community";
-import { AgGridReact } from "ag-grid-react";
+} from 'ag-grid-community';
+import { AgGridReact } from 'ag-grid-react';
 // import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-quartz.css";
+import 'ag-grid-community/styles/ag-theme-quartz.css';
 import {
   ModuleRegistry,
   AllCommunityModule,
   ClientSideRowModelModule,
   RowApiModule,
-} from "ag-grid-community";
+} from 'ag-grid-community';
 import {
   ColumnMenuModule,
   ColumnsToolPanelModule,
   ContextMenuModule,
   MasterDetailModule,
-} from "ag-grid-enterprise";
-import { useCallback, useMemo } from "react";
-import CustomDetailRenderer from "../pages/private/Orders/CustomDetailRenderer";
+} from 'ag-grid-enterprise';
+import { useCallback, useMemo } from 'react';
+import CustomDetailRenderer from '../pages/private/Orders/CustomDetailRenderer';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -56,6 +56,7 @@ type CustomTableProps<T> = {
   onGetRowId?: (params: GetRowIdParams) => string;
   getRowHeight?: (params: RowHeightParams) => number | null;
   onRowGroupOpened?: (params: any) => void;
+  onFilterChanged?: () => void;
 };
 
 const CustomTable = <T,>({
@@ -64,7 +65,7 @@ const CustomTable = <T,>({
   isLoading,
   rowHeight = 40,
   masterDetail = false,
-  rowModelType = "clientSide",
+  rowModelType = 'clientSide',
   pagination = true,
   onRowDataUpdated = () => {},
   onGridReady = (api: { sizeColumnsToFit: () => void }) => {
@@ -78,6 +79,7 @@ const CustomTable = <T,>({
   },
   getRowHeight = () => null,
   onRowGroupOpened = () => null,
+  onFilterChanged = () => {},
 }: CustomTableProps<T>) => {
   const autoSizeStrategy = useMemo<
     | SizeColumnsToFitGridStrategy
@@ -85,7 +87,7 @@ const CustomTable = <T,>({
     | SizeColumnsToContentStrategy
   >(() => {
     return {
-      type: "fitCellContents",
+      type: 'fitCellContents',
       defaultMinWidth: 150,
     };
   }, []);
@@ -100,7 +102,7 @@ const CustomTable = <T,>({
   return (
     <div
       className="ag-theme-quartz"
-      style={{ height: "fit-content ", width: "100%", overflowY: "auto" }}
+      style={{ height: 'fit-content ', width: '100%', overflowY: 'auto' }}
     >
       <AgGridReact<T>
         rowData={rowData}
@@ -123,11 +125,14 @@ const CustomTable = <T,>({
         }}
         detailCellRenderer="customDetailRenderer"
         domLayout="autoHeight"
-        localeText={{ noRowsToShow: "No data Found..." }}
+        localeText={{ noRowsToShow: 'No data Found...' }}
         loading={isLoading}
         onGridReady={handleGridReady}
         autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
+        onFilterChanged={() => {
+          onFilterChanged();
+        }}
       />
     </div>
   );

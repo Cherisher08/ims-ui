@@ -1,43 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import CustomButton from '../../../styled/CustomButton';
 import { LuPlus } from 'react-icons/lu';
 import { FaWhatsapp } from 'react-icons/fa';
 import { MdOutlineMail } from 'react-icons/md';
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 import RentalOrderTable from './RentalOrderTable';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
-import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
+import { RentalOrderType } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
 import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
 import NewProductModal from '../../../components/NewProductModal.';
 import { useNavigate } from 'react-router-dom';
 import { transformIdNamePair } from '../utils';
-
-const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
-  return rentalOrders.map((rentalOrder) => {
-    if (!rentalOrder.customer) {
-      return {
-        ...rentalOrder,
-        customer: {
-          _id: '',
-          name: '',
-        },
-      };
-    }
-    return {
-      ...rentalOrder,
-      customer: {
-        _id: rentalOrder.customer._id,
-        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
-      },
-    };
-  });
-};
+import { calculateFinalAmount, transformRentalOrderData } from './utils';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
 
 const Orders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
+  const [customerId, setCustomerId] = useState<string>('');
+  console.log('customerId: ', customerId);
+  const [customerOutstanding, setCustomerOutstanding] = useState(0);
+  const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
@@ -50,6 +36,22 @@ const Orders = () => {
   const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
 
   const isCommunicationsFeatureDone: boolean = false;
+
+  const getCustomerOrderAmount = useCallback(
+    (cusId: string) => {
+      const customerOrders = transformRentalOrderData(
+        expiredRentalOrders.filter((order) => order.customer && order.customer._id === cusId)
+      );
+
+      const amounts = customerOrders.map((order) => calculateFinalAmount(order));
+      const totalAmount = amounts.reduce((sum, amt) => sum + amt, 0);
+      return {
+        customerOrders,
+        totalAmount,
+      };
+    },
+    [expiredRentalOrders]
+  );
 
   const [rentalOrders, setRentalOrders] = useState<RentalOrderType[]>([]);
 
@@ -70,6 +72,15 @@ const Orders = () => {
   //     }
   //   }
   // };
+
+  useEffect(() => {
+    if (customerId) {
+      const { totalAmount } = getCustomerOrderAmount(customerId);
+      setCustomerOutstanding(totalAmount);
+    } else {
+      setCustomerOutstanding(0);
+    }
+  }, [customerId, expiredRentalOrders, getCustomerOrderAmount]);
 
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
@@ -130,7 +141,15 @@ const Orders = () => {
       </div>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Tabs
           value={activeTab}
           onChange={(_, value) => setActiveTab(value)}
@@ -140,9 +159,20 @@ const Orders = () => {
           {/* <Tab label="Sales" value={2} />
           <Tab label="Service" value={3} /> */}
         </Tabs>
+        <Typography variant="body2" className="text-red-700 text-lg" sx={{ mt: 1, mb: 1, ml: 4 }}>
+          {customerId &&
+            (() => {
+              return `Customer Outstanding Amount: ₹${customerOutstanding.toFixed(2)}`;
+            })()}
+        </Typography>
       </Box>
       <div role="tabpanel" hidden={activeTab !== 1}>
-        <RentalOrderTable rentalOrders={rentalOrders} />
+        <RentalOrderTable
+          rentalOrders={rentalOrders}
+          setSelectedCustomerId={(selectedId) => {
+            setCustomerId(selectedId);
+          }}
+        />
       </div>
       {/* <div role="tabpanel" hidden={activeTab !== 2}>
         <SalesOrderTable rentalOrders={rentalOrders} />

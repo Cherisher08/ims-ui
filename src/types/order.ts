@@ -32,12 +32,20 @@ export enum RepaymentMode {
   KVBLESS = 'kvb less',
 }
 
+export enum TransportType {
+  NULL = '-',
+  UP = 'Up',
+  DOWN = 'Down',
+  BOTH = 'Both',
+}
+
 // --------------------------------------------------------------------------------------------
 // Nested Structures
 
 export type ProductDetails = {
   _id: string;
   name: string;
+  type: ProductType;
   category: string;
   // billing_unit: BillingUnit;
   product_unit: Unit;
@@ -110,6 +118,7 @@ export type RentalOrderInfo = OrderInfo & {
   event_address: string;
   eway_amount: number;
   eway_mode: PaymentMode;
+  eway_type: TransportType;
   balance_paid: number;
   balance_paid_mode: PaymentMode;
   balance_paid_date: string;

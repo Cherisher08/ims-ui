@@ -1,19 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import CustomButton from '../../../styled/CustomButton';
-import { LuPlus } from 'react-icons/lu';
 import { FaWhatsapp } from 'react-icons/fa';
+import { LuPlus } from 'react-icons/lu';
 import { MdOutlineMail } from 'react-icons/md';
+import { RiFileExcel2Line } from 'react-icons/ri';
+import { useNavigate } from 'react-router-dom';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import RentalOrderTable from './RentalOrderTable';
+import NewProductModal from '../../../components/NewProductModal.';
+import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
+import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
 import { RentalOrderType } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
-import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
-import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
-import NewProductModal from '../../../components/NewProductModal.';
-import { useNavigate } from 'react-router-dom';
 import { transformIdNamePair } from '../utils';
+import RentalOrderTable from './RentalOrderTable';
+import { exportOrderToExcel } from './utils';
 import { calculateFinalAmount, transformRentalOrderData } from './utils';
+import CustomButton from '../../../styled/CustomButton';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 
@@ -21,7 +23,6 @@ const Orders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
   const [customerId, setCustomerId] = useState<string>('');
-  console.log('customerId: ', customerId);
   const [customerOutstanding, setCustomerOutstanding] = useState(0);
   const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
@@ -136,6 +137,13 @@ const Orders = () => {
             onClick={() => setAddContactOpen(true)}
             label="Add Customer"
             icon={<LuPlus color="white" />}
+          />
+          <CustomButton
+            onClick={() => {
+              if (rentalOrderData) exportOrderToExcel(rentalOrderData as RentalOrderType[]);
+            }}
+            label="Export Orders"
+            icon={<RiFileExcel2Line color="white" />}
           />
         </div>
       </div>

@@ -7,15 +7,13 @@ import type {
   ValueFormatterParams,
   ValueGetterParams,
 } from 'ag-grid-community';
+import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
-import CustomTable from '../../../styled/CustomTable';
-import { DepositType, RentalOrderType, RentalType } from '../../../types/order';
-import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
+import { RiFileExcel2Line } from 'react-icons/ri';
 
-import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -28,9 +26,17 @@ import { useGetContactsQuery } from '../../../services/ContactService';
 import { usePatchRentalOrderMutation } from '../../../services/OrderService';
 import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 import { RootState } from '../../../store/store';
+import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
+import { DepositType, RentalOrderType, RentalType } from '../../../types/order';
+import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
 import { IdNamePair } from '../Stocks';
-import { currencyFormatter, calculateFinalAmount, calculateTotalAmount } from './utils';
+import {
+  calculateFinalAmount,
+  calculateTotalAmount,
+  currencyFormatter,
+  exportOrderToExcel,
+} from './utils';
 
 type RentalOrderTableProps = {
   rentalOrders: RentalOrderType[];
@@ -68,6 +74,14 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     if (typeof storedPage === 'number') {
       api.paginationGoToPage(storedPage);
     }
+    if (customer) {
+      api.setFilterModel({
+        customer: {
+          type: 'contains',
+          filter: customer,
+        },
+      });
+    }
   };
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
@@ -92,6 +106,12 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   }));
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
+    // {
+    //   headerCheckboxSelection: true,
+    //   checkboxSelection: true,
+    //   width: 50,
+    //   pinned: 'left',
+    // },
     {
       field: 'order_id',
       headerName: 'Order Id',
@@ -552,6 +572,15 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
               onClick={() => {
                 setDeleteOrderOpen(true);
                 setDeleteOrderId(rowData?._id || '');
+              }}
+            />
+            <RiFileExcel2Line
+              size={20}
+              className="cursor-pointer"
+              onClick={() => {
+                if (params.data) {
+                  exportOrderToExcel([params.data]);
+                }
               }}
             />
             <IoPrintOutline

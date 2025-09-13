@@ -13,6 +13,7 @@ interface CustomDatePickerProps {
   wrapperClass?: string;
   labelClass?: string;
   format?: string;
+  disabled?: boolean;
 }
 
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
@@ -26,6 +27,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   wrapperClass = '',
   labelClass = '',
   format = 'DD/MM/YYYY hh:mm A',
+  disabled = false,
 }) => {
   const dateFormat = format || 'DD/MM/YYYY hh:mm A';
 
@@ -40,6 +42,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         <DateTimePicker
           value={value ? dayjs(value) : null}
           onChange={handleChange}
+          disabled={disabled}
           slotProps={{
             textField: {
               error,

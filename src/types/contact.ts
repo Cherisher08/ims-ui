@@ -18,14 +18,14 @@ export interface ContactWithFile extends ContactInfoType {
 export type ContactInfoWithActions = ContactInfoType & { actions?: string };
 
 export const initialContactType: ContactInfoType = {
-  _id: "",
-  name: "",
-  personal_number: "",
-  office_number: "",
-  gstin: "",
-  email: "",
-  address: "",
-  pincode: "",
-  company_name: "",
-  address_proof: "",
+  _id: '',
+  name: '',
+  personal_number: '',
+  office_number: '',
+  gstin: '',
+  email: '',
+  address: '',
+  pincode: '',
+  company_name: '',
+  address_proof: '',
 };

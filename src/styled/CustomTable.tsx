@@ -2,23 +2,23 @@ import type {
   CellEditingStoppedEvent,
   ColDef,
   GetRowIdParams,
+  GridApi,
+  GridReadyEvent,
   RowClassParams,
-  RowStyle,
+  RowHeightParams,
   RowModelType,
+  RowStyle,
   SizeColumnsToContentStrategy,
   SizeColumnsToFitGridStrategy,
   SizeColumnsToFitProvidedWidthStrategy,
-  RowHeightParams,
-  GridReadyEvent,
-  GridApi,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 // import "ag-grid-community/styles/ag-grid.css";
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import {
-  ModuleRegistry,
   AllCommunityModule,
   ClientSideRowModelModule,
+  ModuleRegistry,
   RowApiModule,
 } from 'ag-grid-community';
 import {
@@ -48,6 +48,7 @@ type CustomTableProps<T> = {
   rowHeight?: number;
   masterDetail?: boolean;
   rowModelType?: RowModelType;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onGridReady?: (api: GridApi<any>) => void;
   onRowDataUpdated?: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +56,7 @@ type CustomTableProps<T> = {
   handleCellEditingStopped?: (params: CellEditingStoppedEvent) => void;
   onGetRowId?: (params: GetRowIdParams) => string;
   getRowHeight?: (params: RowHeightParams) => number | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRowGroupOpened?: (params: any) => void;
   onFilterChanged?: () => void;
 };

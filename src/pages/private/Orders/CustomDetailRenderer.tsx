@@ -17,7 +17,7 @@ import { useGetProductsQuery, useUpdateProductMutation } from '../../../services
 import { usePatchRentalOrderMutation } from '../../../services/OrderService';
 import { calculateProductRent } from '../../../services/utility_functions';
 import CustomButton from '../../../styled/CustomButton';
-import { PatchOperation, Product } from '../../../types/common';
+import { PatchOperation, Product, ProductType } from '../../../types/common';
 import { ProductDetails, RentalType } from '../../../types/order';
 import { IdNamePair } from '../Stocks';
 import { currencyFormatter, getDefaultDeposit, getDefaultProduct } from './utils';
@@ -111,7 +111,6 @@ const CustomDetailRenderer = (
 
           const finalQuantity = newQuantityClamped;
           const finalStock = totalStock - finalQuantity;
-
 
           const updatedProduct = {
             ...originalProduct,
@@ -281,7 +280,14 @@ const CustomDetailRenderer = (
               field: 'out_date',
               headerName: 'Out Date',
               minWidth: 100,
-              editable: true,
+              editable: (params) => {
+                const data = params.data;
+                if (data?.type && data.type === ProductType.SALES) {
+                  return false;
+                } else {
+                  return true;
+                }
+              },
               singleClickEdit: true,
               cellDataType: 'dateTime',
               cellEditor: InDateCellEditor,
@@ -296,7 +302,14 @@ const CustomDetailRenderer = (
             {
               field: 'in_date',
               headerName: 'In Date',
-              editable: true,
+              editable: (params) => {
+                const data = params.data;
+                if (data?.type && data.type === ProductType.SALES) {
+                  return false;
+                } else {
+                  return true;
+                }
+              },
               minWidth: 100,
               singleClickEdit: true,
               cellDataType: 'dateTime',
@@ -313,7 +326,14 @@ const CustomDetailRenderer = (
               field: 'duration',
               headerName: 'Total Duration',
               minWidth: 100,
-              editable: true,
+              editable: (params) => {
+                const data = params.data;
+                if (data?.type && data.type === ProductType.SALES) {
+                  return false;
+                } else {
+                  return true;
+                }
+              },
               singleClickEdit: true,
             },
             {
@@ -357,13 +377,23 @@ const CustomDetailRenderer = (
             },
             {
               field: 'rent_per_unit',
-              headerName: 'Rent Per Unit',
+              headerName: 'Amount Per Unit',
               flex: 1,
               minWidth: 150,
               editable: true,
               singleClickEdit: true,
               cellEditor: 'agTextCellEditor',
               valueFormatter: currencyFormatter,
+            },
+            {
+              headerName: 'Final Amount',
+              flex: 1,
+              minWidth: 150,
+              valueFormatter: currencyFormatter,
+              valueGetter: (params: ValueGetterParams) => {
+                const product = params.data;
+                return product.rent_per_unit * product.order_quantity * product.duration;
+              },
             },
             {
               headerName: 'Actions',

@@ -7,17 +7,14 @@ import type {
   ValueFormatterParams,
   ValueGetterParams,
 } from 'ag-grid-community';
+import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
-import CustomTable from '../../../styled/CustomTable';
-import { BillingMode, DepositType, RentalOrderType, RentalType } from '../../../types/order';
-import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
-
-import dayjs from 'dayjs';
+import { RiFileExcel2Line } from 'react-icons/ri';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AddressCellEditor } from '../../../components/AgGridCellEditors/AddressCellEditor';
 import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
@@ -26,16 +23,25 @@ import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCe
 import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
 import { useGetContactsQuery } from '../../../services/ContactService';
 import { usePatchRentalOrderMutation } from '../../../services/OrderService';
-import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 import { RootState } from '../../../store/store';
-import { DiscountType, EventNameType, PatchOperation, ProductType } from '../../../types/common';
+import CustomTable from '../../../styled/CustomTable';
+import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
+import { DepositType, RentalOrderType, RentalType } from '../../../types/order';
+import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
 import { IdNamePair } from '../Stocks';
-import { currencyFormatter } from './utils';
+import {
+  calculateFinalAmount,
+  calculateTotalAmount,
+  currencyFormatter,
+  exportOrderToExcel,
+} from './utils';
 
 const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const customer = searchParams.get('customer');
   const expiredOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const storedPage = useSelector((state: RootState) => state.rentalOrder.tablePage);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
@@ -59,44 +65,18 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     if (typeof storedPage === 'number') {
       api.paginationGoToPage(storedPage);
     }
+    if (customer) {
+      api.setFilterModel({
+        customer: {
+          type: 'contains',
+          filter: customer,
+        },
+      });
+    }
   };
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
   const [deleteOrderId, setDeleteOrderId] = useState<string>('');
-
-  const calculateTotalAmount = (orderInfo: RentalOrderType) => {
-    if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-      let total = 0;
-      if (orderInfo.billing_mode === BillingMode.B2C) {
-        total = orderInfo.product_details.reduce((sum, prod) => {
-          const rent_per_unit = calculateProductRent(prod);
-          const exclusiveAmount = rent_per_unit / (1 + orderInfo.gst / 100);
-          return sum + exclusiveAmount;
-        }, 0);
-      } else {
-        total = orderInfo.product_details.reduce((sum, prod) => {
-          return sum + calculateProductRent(prod);
-        }, 0);
-      }
-
-      return parseFloat(total.toFixed(2));
-    }
-    return 0;
-  };
-
-  const calculateFinalAmount = (orderInfo: RentalOrderType) => {
-    const finalAmount = calculateTotalAmount(orderInfo);
-    const roundOff = orderInfo.round_off || 0;
-    const ewayBillAmount = orderInfo.eway_amount || 0;
-    const discountAmount =
-      orderInfo.discount_type === DiscountType.PERCENT
-        ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
-        : orderInfo.discount || 0;
-    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
-    return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
-    );
-  };
 
   // const calculateRentAfterGST = (
   //   rent: number,
@@ -117,6 +97,12 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
   }));
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
+    // {
+    //   headerCheckboxSelection: true,
+    //   checkboxSelection: true,
+    //   width: 50,
+    //   pinned: 'left',
+    // },
     {
       field: 'order_id',
       headerName: 'Order Id',
@@ -578,6 +564,15 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
               onClick={() => {
                 setDeleteOrderOpen(true);
                 setDeleteOrderId(rowData?._id || '');
+              }}
+            />
+            <RiFileExcel2Line
+              size={20}
+              className="cursor-pointer"
+              onClick={() => {
+                if (params.data) {
+                  exportOrderToExcel([params.data]);
+                }
               }}
             />
             <IoPrintOutline

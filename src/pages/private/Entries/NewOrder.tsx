@@ -39,8 +39,10 @@ import {
   DepositType,
   PaymentMode,
   PaymentStatus,
+  ProductDetails,
   RentalOrderInfo,
   RepaymentMode,
+  TransportType,
 } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import {
@@ -52,6 +54,7 @@ import {
   getNewOrderId,
   paymentModeOptions,
   repaymentModeOptions,
+  transportOptions,
 } from '../Orders/utils';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
@@ -99,6 +102,7 @@ const initialRentalProduct: RentalOrderInfo = {
   deposits: [],
   eway_amount: 0,
   eway_mode: PaymentMode.CASH,
+  eway_type: TransportType.NULL,
   balance_paid: 0,
   balance_paid_mode: PaymentMode.NULL,
   repay_amount: 0,
@@ -219,14 +223,14 @@ const NewOrder = () => {
     orderInfo.round_off,
   ]);
 
-  const removeOrderProduct = (id: string) => {
+  const removeOrderProduct = (id: string, index: number) => {
     if (orderInfo.type === ProductType.RENTAL) {
-      const filteredProducts = (orderInfo.product_details || []).filter((prod) => prod._id !== id);
+      const filteredProducts = (orderInfo.product_details || []).filter((_, idx) => idx !== index);
 
-      const removedProduct = orderInfo.product_details.find((prod) => prod._id === id);
+      const removedProduct = orderInfo.product_details.find((_, idx) => idx === index);
 
       if (removedProduct) {
-        const removedProductData = products.find((prod) => prod._id === id);
+        const removedProductData = products.find((_, idx) => idx === index);
         if (removedProductData) {
           const updatedProductData = {
             ...removedProductData,
@@ -800,7 +804,7 @@ const NewOrder = () => {
                 <th className="px-1 py-1 text-left w-[11rem]">In Date</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Duration</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Order Repair Quantity</th>
-                <th className="px-1 py-1 text-left w-[10rem]">Rent Per Unit</th>
+                <th className="px-1 py-1 text-left w-[10rem]">Amount Per Unit</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Final Amount</th>
                 <th className="px-1 py-1 text-left w-[20rem]">Damage</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Options</th>
@@ -808,7 +812,7 @@ const NewOrder = () => {
             </thead>
             <tbody>
               {orderInfo.product_details.length > 0 ? (
-                orderInfo.product_details?.map((product, index) => (
+                orderInfo.product_details?.map((product: ProductDetails, index: number) => (
                   <tr key={product._id} className="border-b border-gray-200">
                     <td className="px-1 py-2 content-start">
                       <CustomAutoComplete
@@ -833,10 +837,12 @@ const NewOrder = () => {
                             newProducts[index] = {
                               ...product,
                               _id: data._id || '',
-                              name: data?.name,
+                              name: data.name,
+                              type: data.type,
                               category: data?.category.name,
                               product_unit: data.unit,
-                              rent_per_unit: data.rent_per_unit,
+                              rent_per_unit:
+                                data.type === ProductType.RENTAL ? data.rent_per_unit : data.price,
                               product_code: data.product_code,
                             };
                             if (removedProducts.find((prod) => prod._id === data._id)) {
@@ -977,6 +983,7 @@ const NewOrder = () => {
                             'DD-MMM-YYYY hh:mm A'
                           ) || ''
                         }
+                        disabled={product.type !== ProductType.RENTAL}
                         className="w-[15rem]"
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
@@ -1002,6 +1009,7 @@ const NewOrder = () => {
                             'DD-MMM-YYYY hh:mm A'
                           ) || ''
                         }
+                        disabled={product.type !== ProductType.RENTAL}
                         className="w-[15rem]"
                         onChange={(val) => {
                           if (dayjs(val).diff(product.out_date) < 0) {
@@ -1028,6 +1036,7 @@ const NewOrder = () => {
                         label=""
                         placeholder=""
                         className="w-[5rem] p-2"
+                        disabled={product.type !== ProductType.RENTAL}
                         value={orderInfo.product_details[index].duration || 0}
                         onChange={(val) => {
                           const newProducts = [...orderInfo.product_details];
@@ -1119,7 +1128,7 @@ const NewOrder = () => {
                       <div className="flex gap-2">
                         <CustomButton
                           label="Remove"
-                          onClick={() => removeOrderProduct(product._id)}
+                          onClick={() => removeOrderProduct(product._id, index)}
                         />
                       </div>
                     </td>
@@ -1259,8 +1268,8 @@ const NewOrder = () => {
         </table>
       </div>
 
-      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-x-10 my-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1  lg:grid-cols-2 gap-x-10 my-4">
+        <div className="grid grid-cols-[3fr_1fr] gap-2">
           <CustomInput
             label="Transport"
             type="number"
@@ -1271,10 +1280,10 @@ const NewOrder = () => {
               handleValueChange('eway_amount', Number(val));
             }}
           />
-          <div className="flex items-end">
+          <div className="flex items-end gap-2">
             <CustomSelect
               label=""
-              className="w-full"
+              className="w-full min-w-[10rem]"
               options={paymentModeOptions}
               value={
                 paymentModeOptions.find((mode) => orderInfo.eway_mode === mode.value)?.id || ''
@@ -1283,6 +1292,17 @@ const NewOrder = () => {
                 const currentMode =
                   paymentModeOptions.find((md) => md.id === mode)?.value ?? PaymentMode.CASH;
                 handleValueChange('eway_mode', currentMode);
+              }}
+            />
+            <CustomSelect
+              label=""
+              className="w-full min-w-[10rem]"
+              options={transportOptions}
+              value={transportOptions.find((mode) => orderInfo.eway_type === mode.value)?.id || ''}
+              onChange={(mode) => {
+                const currentMode =
+                  transportOptions.find((md) => md.id === mode)?.value ?? TransportType.NULL;
+                handleValueChange('eway_type', currentMode);
               }}
             />
           </div>
@@ -1306,6 +1326,7 @@ const NewOrder = () => {
           <CustomSelect
             label=""
             wrapperClass="mt-6"
+            className="w-full min-w-[10rem]"
             options={discountTypeValues}
             value={
               discountTypeValues.find((discountType) => orderInfo.discount_type === discountType.id)
@@ -1314,7 +1335,7 @@ const NewOrder = () => {
             onChange={(value) => handleValueChange('discount_type', value)}
           />
         </div>
-        <div className="flex gap-2 col-span-2">
+        <div className="flex flex-row gap-2">
           <CustomInput
             label="Balance Paid"
             placeholder="Enter Balance Paid"
@@ -1337,7 +1358,7 @@ const NewOrder = () => {
             />
             <CustomSelect
               label=""
-              className="w-[8rem]"
+              className="w-full min-w-[10rem]"
               options={paymentModeOptions}
               value={
                 paymentModeOptions.find((mode) => orderInfo.balance_paid_mode === mode.value)?.id ||
@@ -1351,7 +1372,7 @@ const NewOrder = () => {
             />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 col-span-2">
+        <div className="grid grid-cols-[3fr_1fr] gap-2">
           {/* <CustomInput
             label="Repay Amount"
             wrapperClass="w-full"
@@ -1379,7 +1400,7 @@ const NewOrder = () => {
           <div className="flex items-end gap-2">
             <CustomSelect
               label=""
-              className="w-[8rem]"
+              // className="w-[8rem]"
               options={repaymentModeOptions}
               value={
                 repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ''
@@ -1468,11 +1489,26 @@ const NewOrder = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 border-t border-t-gray-200">
-                  <div className="flex flex-col gap-1 font-semibold pb-2">
+                  <div className="flex flex-col gap-1 font-semibold">
                     <p>Amount after Taxes</p>
                   </div>
-                  <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
+                  <div className="flex flex-col gap-1 text-gray-500 items-end text-end">
                     <p>₹ {Math.abs(calculateFinalAmount()).toFixed(2)}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2">
+                  <div className="flex flex-col gap-1 font-semibold pb-2">
+                    <p>Balance Amount</p>
+                  </div>
+                  <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
+                    <p>
+                      ₹{' '}
+                      {Math.max(
+                        0,
+                        calculateFinalAmount() -
+                          depositData.reduce((total, deposit) => total + deposit.amount, 0)
+                      ).toFixed(2)}
+                    </p>
                   </div>
                 </div>
               </div>

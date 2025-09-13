@@ -23,7 +23,6 @@ const Orders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
   const [customerId, setCustomerId] = useState<string>('');
-  console.log('customerId: ', customerId);
   const [customerOutstanding, setCustomerOutstanding] = useState(0);
   const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);

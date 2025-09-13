@@ -240,6 +240,13 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
           calculateFinalAmount(order) -
             order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
         ).toFixed(2),
+        'Repayment Amount': Math.max(
+          0,
+          Math.abs(
+            calculateFinalAmount(order) -
+              order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+          )
+        ).toFixed(2),
         'Amount (After Taxes)': calculateFinalAmount(order).toString(),
         Status: order.status,
       },

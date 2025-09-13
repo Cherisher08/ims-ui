@@ -1,15 +1,12 @@
-import { useNavigate } from "react-router-dom";
-import CustomButton from "../../styled/CustomButton";
+import { useNavigate } from 'react-router-dom';
+import CustomButton from '../../styled/CustomButton';
 
 type ErrorPageProps = {
   message?: string;
   retry?: () => void;
 };
 
-const ErrorPage: React.FC<ErrorPageProps> = ({
-  message = "Something went wrong.",
-  retry,
-}) => {
+const ErrorPage: React.FC<ErrorPageProps> = ({ message = 'Something went wrong.', retry }) => {
   const navigate = useNavigate();
 
   return (
@@ -18,14 +15,10 @@ const ErrorPage: React.FC<ErrorPageProps> = ({
       <p className="text-gray-700 mb-6">{message}</p>
       <div className="flex gap-2">
         {retry && (
-          <CustomButton
-            label={"Try Again"}
-            onClick={retry}
-            className="bg-red-600 text-white"
-          />
+          <CustomButton label={'Try Again'} onClick={retry} className="bg-red-600 text-white" />
         )}
         <CustomButton
-          onClick={() => navigate("/")}
+          onClick={() => navigate('/')}
           className="bg-gray-600 text-white"
           label="Go Home"
         />

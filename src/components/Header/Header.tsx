@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { FaUserPlus } from "react-icons/fa";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import { IoMdMore } from "react-icons/io";
-import { PiSignOut } from "react-icons/pi";
-import { IoMenu } from "react-icons/io5";
-import CustomMenu, { type CustomMenuItemProps } from "../../styled/CustomMenu";
+import { useEffect, useRef, useState } from 'react';
+import { FaUserPlus } from 'react-icons/fa';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import { IoMdMore } from 'react-icons/io';
+import { PiSignOut } from 'react-icons/pi';
+import { IoMenu } from 'react-icons/io5';
+import CustomMenu, { type CustomMenuItemProps } from '../../styled/CustomMenu';
 import {
   Avatar,
   Badge,
@@ -15,22 +15,22 @@ import {
   IconButton,
   Modal,
   Typography,
-} from "@mui/material";
-import CustomInput from "../../styled/CustomInput";
-import CustomButton from "../../styled/CustomButton";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import { User, UserRole } from "../../types/user";
-import { useLocation, useNavigate } from "react-router-dom";
-import { rootApi, useRegisterUserMutation } from "../../services/ApiService";
-import { clearUser } from "../../store/UserSlice";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../constants/constants";
-import { useLazyGetExpiredRentalOrdersQuery } from "../../services/OrderService";
-import { setExpiredRentalOrders } from "../../store/OrdersSlice";
-import Logo from "../../assets/logo.svg";
-import { MenuItems } from "../../constants/MenuItems";
-import { useMenu } from "../../contexts/MenuContext";
+} from '@mui/material';
+import CustomInput from '../../styled/CustomInput';
+import CustomButton from '../../styled/CustomButton';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { User, UserRole } from '../../types/user';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { rootApi, useRegisterUserMutation } from '../../services/ApiService';
+import { clearUser } from '../../store/UserSlice';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../constants/constants';
+import { useLazyGetExpiredRentalOrdersQuery } from '../../services/OrderService';
+import { setExpiredRentalOrders } from '../../store/OrdersSlice';
+import Logo from '../../assets/logo.svg';
+import { MenuItems } from '../../constants/MenuItems';
+import { useMenu } from '../../contexts/MenuContext';
 
 type NewUserErrorType = {
   name: boolean;
@@ -45,9 +45,7 @@ type HeaderType = {
 
 const Header = ({ open, setOpen }: HeaderType) => {
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
-  const expiredRentalOrders = useSelector(
-    (state: RootState) => state.rentalOrder.data
-  );
+  const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const expiredOrdersCount = expiredRentalOrders.length;
 
   const navigate = useNavigate();
@@ -55,10 +53,8 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const location = useLocation();
   const { pathname } = location;
   const dispatch = useDispatch();
-  const [
-    registerUser,
-    { isLoading: isRegisteringUser, isSuccess: isUserRegisterSuccess },
-  ] = useRegisterUserMutation();
+  const [registerUser, { isLoading: isRegisteringUser, isSuccess: isUserRegisterSuccess }] =
+    useRegisterUserMutation();
 
   const userData = useSelector((state: RootState) => state.user);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
@@ -70,9 +66,9 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [addUserModelOpen, setAddUserModelOpen] = useState<boolean>(false);
   const [newUserData, setNewUserData] = useState<User>({
-    name: "",
-    email: "",
-    password: "",
+    name: '',
+    email: '',
+    password: '',
     role: UserRole.User,
   });
   const [errors] = useState<NewUserErrorType>({
@@ -89,25 +85,25 @@ const Header = ({ open, setOpen }: HeaderType) => {
   }, [pathname, setActive]);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
+    localStorage.removeItem('access_token');
     dispatch(clearUser());
     dispatch(rootApi.util.resetApiState());
-    navigate("/auth/login");
+    navigate('/auth/login');
   };
 
   const menuItems: CustomMenuItemProps[] = [
     {
-      label: "Add User",
+      label: 'Add User',
       icon: <FaUserPlus />,
       handleItem: () => handleAddUserModal(true),
-      key: "add-user",
+      key: 'add-user',
       disabled: userData.role !== UserRole.Admin,
     },
     {
-      label: "Sign Out",
+      label: 'Sign Out',
       icon: <PiSignOut />,
       handleItem: () => handleLogout(),
-      key: "sign-out",
+      key: 'sign-out',
     },
   ];
 
@@ -124,20 +120,18 @@ const Header = ({ open, setOpen }: HeaderType) => {
     handleAddUserModal(false);
   };
 
-  const strippedUserName = userData.name
-    ? (userData.name[0] + userData.name[1]).toUpperCase()
-    : "";
+  const strippedUserName = userData.name ? (userData.name[0] + userData.name[1]).toUpperCase() : '';
 
   useEffect(() => {
     const fetchExpiredOrders = async () => {
       const result = await triggerGetRentalOrder();
-      if ("error" in result && result.error) {
+      if ('error' in result && result.error) {
         const error = result.error;
 
-        if ("status" in error && error.status === 404) {
+        if ('status' in error && error.status === 404) {
           dispatch(setExpiredRentalOrders([]));
         }
-      } else if ("data" in result && result.data) {
+      } else if ('data' in result && result.data) {
         dispatch(setExpiredRentalOrders(result.data));
       }
     };
@@ -155,19 +149,14 @@ const Header = ({ open, setOpen }: HeaderType) => {
 
   useEffect(() => {
     if (!isRegisteringUser && isUserRegisterSuccess) {
-      toast("User Created Successfully", {
+      toast('User Created Successfully', {
         toastId: TOAST_IDS.SUCCESS_REGISTER_USER,
       });
     }
   }, [isRegisteringUser, isUserRegisterSuccess]);
 
   const DrawerList = (
-    <Box
-      sx={{ width: 300 }}
-      className="p-2"
-      role="presentation"
-      onClick={toggleDrawer(false)}
-    >
+    <Box sx={{ width: 300 }} className="p-2" role="presentation" onClick={toggleDrawer(false)}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         Expired Rental Orders
       </Typography>
@@ -180,33 +169,31 @@ const Header = ({ open, setOpen }: HeaderType) => {
 
       <Box
         sx={{
-          maxHeight: "85vh",
-          overflowY: "auto",
+          maxHeight: '85vh',
+          overflowY: 'auto',
           pr: 1,
         }}
       >
         {expiredRentalOrders.map((order) => {
           const outDate = new Date(order.out_date);
           const expectedDate = new Date(outDate);
-          expectedDate.setDate(
-            outDate.getDate() + (order.rental_duration ?? 0)
-          );
+          expectedDate.setDate(outDate.getDate() + (order.rental_duration ?? 0));
 
           return (
             <Card
               key={order.order_id}
               variant="outlined"
-              sx={{ mb: 2, backgroundColor: "#f9f9f9" }}
+              sx={{ mb: 2, backgroundColor: '#f9f9f9' }}
             >
               <CardContent>
                 <Typography variant="subtitle1" fontWeight="bold">
                   Order ID: {order.order_id}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Expected Date:{" "}
+                  Expected Date:{' '}
                   {expectedDate.toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
                   })}
                 </Typography>
                 <CustomButton
@@ -215,7 +202,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
                     navigate(`/orders/rentals/${order._id}`);
                   }}
                   className="mt-1"
-                  label={"View Order"}
+                  label={'View Order'}
                 />
               </CardContent>
             </Card>
@@ -230,11 +217,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
       <div className="w-full px-6 h-18 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <div className="rounded-full max-md:hidden overflow-hidden min-w-12 h-12 aspect-square content-center bg-white">
-            <img
-              src={Logo}
-              className="w-12 h-12"
-              onClick={() => setOpen(!open)}
-            />
+            <img src={Logo} className="w-12 h-12" onClick={() => setOpen(!open)} />
           </div>
           <IoMenu
             size={30}
@@ -242,9 +225,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
             color="white"
             onClick={() => setOpen(!open)}
           />
-          <span className="text-white text-2xl hidden md:block">
-            Mani Power Tools
-          </span>
+          <span className="text-white text-2xl hidden md:block">Mani Power Tools</span>
         </div>
         <ul className="px-2 gap-4 h-fit max-md:hidden flex">
           {MenuItems.map((item) => {
@@ -253,7 +234,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={`text-lg font-semibold relative cursor-pointer flex flex-col items-center w-fit pl-3 py-2 ${
-                  active === item.id ? "text-[#0091ff]" : "text-white"
+                  active === item.id ? 'text-[#0091ff]' : 'text-white'
                 } hover:rounded-md rounded-r-md hover:menu-active hover:text-[#0091ff]`}
               >
                 {item.title}
@@ -266,7 +247,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
             onClick={toggleDrawer(true)}
             sx={{
               padding: 0,
-              backgroundColor: "transparent",
+              backgroundColor: 'transparent',
             }}
           >
             <Badge
@@ -274,15 +255,10 @@ const Header = ({ open, setOpen }: HeaderType) => {
               badgeContent={expiredOrdersCount > 0 ? expiredOrdersCount : null}
               overlap="circular"
             >
-              <NotificationsNoneIcon
-                className="text-white"
-                sx={{ fontSize: 28 }}
-              />
+              <NotificationsNoneIcon className="text-white" sx={{ fontSize: 28 }} />
             </Badge>
           </IconButton>
-          <Avatar className="min-w-12 h-12 rounded-full">
-            {strippedUserName}
-          </Avatar>
+          <Avatar className="min-w-12 h-12 rounded-full">{strippedUserName}</Avatar>
           <div ref={ref} onClick={() => handleMenu(true)}>
             <IoMdMore size={28} className="text-white cursor-pointer" />
           </div>
@@ -293,16 +269,12 @@ const Header = ({ open, setOpen }: HeaderType) => {
             className="mt-4"
             menuItems={menuItems}
             transformPosition={{
-              vertical: "top",
-              horizontal: "right",
+              vertical: 'top',
+              horizontal: 'right',
             }}
           />
         </div>
-        <Drawer
-          open={drawerOpen}
-          anchor={"right"}
-          onClose={toggleDrawer(false)}
-        >
+        <Drawer open={drawerOpen} anchor={'right'} onClose={toggleDrawer(false)}>
           {DrawerList}
         </Drawer>
 
@@ -313,18 +285,14 @@ const Header = ({ open, setOpen }: HeaderType) => {
           className="w-screen h-screen flex justify-center items-center"
         >
           <div className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg p-4">
-            <p className="text-primary text-xl font-semibold w-full text-start">
-              Add User
-            </p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Add User</p>
             <div className="flex flex-col w-[30rem] px-10 gap-y-2 justify-center items-start">
               <CustomInput
                 label="User Name"
                 error={errors.name}
                 placeholder="Enter User Name"
                 value={newUserData.name}
-                onChange={(name) =>
-                  setNewUserData((prev) => ({ ...prev, name: name }))
-                }
+                onChange={(name) => setNewUserData((prev) => ({ ...prev, name: name }))}
                 className="w-60 rounded-lg"
                 helperText="Enter User Name"
               />
@@ -334,9 +302,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 error={errors.email}
                 placeholder="Enter Email"
                 value={newUserData.email}
-                onChange={(email) =>
-                  setNewUserData((prev) => ({ ...prev, email: email }))
-                }
+                onChange={(email) => setNewUserData((prev) => ({ ...prev, email: email }))}
                 className="w-60 rounded-lg"
                 helperText="Enter Valid Email"
               />
@@ -345,9 +311,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 error={errors.password}
                 placeholder="Enter Password"
                 value={newUserData.password}
-                onChange={(password) =>
-                  setNewUserData((prev) => ({ ...prev, password: password }))
-                }
+                onChange={(password) => setNewUserData((prev) => ({ ...prev, password: password }))}
                 className="w-60 rounded-lg"
                 helperText="Enter password"
               />

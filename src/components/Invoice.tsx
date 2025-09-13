@@ -800,8 +800,11 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   Rs. {product.rent_per_unit}
                 </Text>
                 <Text style={[styles.productColumn, { width: 80 }]}>
-                  {calculateProductRent(product, true)}{' '}
-                  {calculateProductRent(product, true) === 1 ? 'day' : 'days'}
+                  {product.type && product.type === ProductType.SALES
+                    ? '-'
+                    : calculateProductRent(product, true) +
+                      ' ' +
+                      (calculateProductRent(product, true) === 1 ? 'day' : 'days')}
                 </Text>
                 <Text style={[styles.productColumn, { width: 60 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}

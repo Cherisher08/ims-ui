@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 export type CustomOptionProps = {
   id: string;
   value: string;
+  description?: string;
 };
 
 export type LabelNavigation = {
@@ -129,8 +130,13 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
                 + Create New
               </li>
             ) : (
-              <li {...props} key={option.value}>
-                {option.value}
+              <li {...props} key={option.value} className="px-4 py-2 flex justify-between">
+                {option.value}{' '}
+                {option.description && (
+                  <Box component="span" className="text-orange-600">
+                    [{option.description}]
+                  </Box>
+                )}
               </li>
             )
           }

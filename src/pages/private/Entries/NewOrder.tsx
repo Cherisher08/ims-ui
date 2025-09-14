@@ -232,10 +232,12 @@ const NewOrder = () => {
       expiredRentalOrders.filter((order) => order.customer && order.customer._id === customerId)
     );
 
-    const amounts = customerOrders.map((order) => calculateOrderAmount(order));
+    const amounts = customerOrders.map(
+      (order) =>
+        calculateOrderAmount(order) - order.deposits.reduce((sum, dep) => sum + dep.amount, 0)
+    );
     const totalAmount = amounts.reduce((sum, amt) => sum + amt, 0);
-
-    const hasPositiveAmount = amounts.some((amt) => amt > 0);
+    const hasPositiveAmount = totalAmount > 0;
 
     return {
       customerOrders,
@@ -678,7 +680,7 @@ const NewOrder = () => {
           helperText={`Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`}
           createOption={false}
           labelNavigation={{
-            label: 'Customer Name',
+            label: 'View Past Bills',
             link: `/orders?customerId=${selectedCustomerId}`,
           }}
         />

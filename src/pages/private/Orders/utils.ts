@@ -161,6 +161,8 @@ export const formatProducts = (products: Product[] | ProductDetails[]) => {
   return products.map((product) => ({
     id: product._id || '',
     value: product.name,
+    description:
+      'available_stock' in product ? `${(product as Product).available_stock}` || '0' : '',
   }));
 };
 

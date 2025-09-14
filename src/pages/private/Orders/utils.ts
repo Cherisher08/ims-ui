@@ -132,7 +132,7 @@ export const getDuration = (out_date: string, in_date: string) => {
   return duration;
 };
 
-export const getDefaultProduct = (out_date: string, in_date: string) => {
+export const getDefaultProduct = (out_date: string, in_date?: string) => {
   const inDate = in_date || utcString();
   const outDate = out_date || utcString();
   const duration = getDuration(outDate, inDate);

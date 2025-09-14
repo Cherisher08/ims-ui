@@ -1,9 +1,15 @@
-import { Autocomplete, TextField } from "@mui/material";
-import { useMemo, useState } from "react";
+import { Autocomplete, Box, Link, TextField } from '@mui/material';
+import { useMemo, useState } from 'react';
 
 export type CustomOptionProps = {
   id: string;
   value: string;
+  description?: string;
+};
+
+export type LabelNavigation = {
+  label: string;
+  link: string;
 };
 
 type CustomAutoCompleteProps = {
@@ -17,6 +23,7 @@ type CustomAutoCompleteProps = {
   error?: boolean;
   helperText?: string;
   className?: string;
+  labelNavigation?: LabelNavigation;
 };
 
 const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
@@ -27,9 +34,10 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   addNewValue,
   placeholder,
   error = false,
-  helperText = "",
-  className = "",
+  helperText = '',
+  className = '',
   createOption = true,
+  labelNavigation = { label: '', link: '' },
 }) => {
   const [inputValue, setInputValue] = useState(value);
 
@@ -49,7 +57,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
     );
     return createOption
       ? [
-          { id: "0", value: "add-new" },
+          { id: '0', value: 'add-new' },
           ...filteredOptions.sort((a, b) => a.value.localeCompare(b.value)),
         ]
       : [...filteredOptions.sort((a, b) => a.value.localeCompare(b.value))];
@@ -58,15 +66,30 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   const currentValue = useMemo(() => {
     return (
       options.find((option) => option.value === value) ?? {
-        id: "",
-        value: "",
+        id: '',
+        value: '',
       }
     );
   }, [options, value]);
 
   return (
     <div className="flex flex-col w-full">
-      <label className="line-clamp-2 break-words h-fit">{label}</label>
+      <Box className="flex justify-between mb-1">
+        <label className="line-clamp-2 break-words h-fit" htmlFor={`custom-autocomplete-${label}`}>
+          {label}
+        </label>
+        {labelNavigation.link && (
+          <Link
+            variant="caption"
+            href={labelNavigation.link}
+            target="_blank"
+            rel="noopener"
+            className=" relative top-0.5"
+          >
+            {labelNavigation.label}
+          </Link>
+        )}
+      </Box>
       <div className="flex flex-col gap-2 w-auto">
         <Autocomplete
           autoHighlight
@@ -74,9 +97,9 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
           options={createOption ? customOptions : options}
           filterOptions={customFilterOptions}
           getOptionLabel={(option) => {
-            if (typeof option === "string") return option;
-            if (option?.value === "add-new") return "+ Create New";
-            return option?.value || "";
+            if (typeof option === 'string') return option;
+            if (option?.value === 'add-new') return '+ Create New';
+            return option?.value || '';
           }}
           classes={{ root: `  ${className}` }}
           renderInput={(params) => (
@@ -85,16 +108,17 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
                 {...params}
                 placeholder={placeholder}
                 variant="outlined"
+                id={`custom-autocomplete-${label}`}
                 InputProps={{
                   ...params.InputProps,
-                  className: "h-[2.5rem] px-2",
+                  className: `h-[2.5rem] px-2 ${error ? 'border border-red-700 text-red-700' : ''}`,
                 }}
               />
               {error && <span className="text-red-700 text-[12px] ml-4">{helperText}</span>}
             </div>
           )}
           renderOption={(props, option) =>
-            option.value === "add-new" ? (
+            option.value === 'add-new' ? (
               <li
                 {...props}
                 key="create-option"
@@ -106,8 +130,13 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
                 + Create New
               </li>
             ) : (
-              <li {...props} key={option.value}>
-                {option.value}
+              <li {...props} key={option.value} className="px-4 py-2 flex justify-between">
+                {option.value}{' '}
+                {option.description && (
+                  <Box component="span" className="text-orange-600">
+                    [{option.description}]
+                  </Box>
+                )}
               </li>
             )
           }

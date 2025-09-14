@@ -13,6 +13,7 @@ import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
 import { RiFileExcel2Line } from 'react-icons/ri';
+
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -37,20 +38,28 @@ import {
   exportOrderToExcel,
 } from './utils';
 
-const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] }) => {
+type RentalOrderTableProps = {
+  rentalOrders: RentalOrderType[];
+  setSelectedCustomerId: (id: string) => void;
+};
+
+const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
+  rentalOrders,
+  setSelectedCustomerId,
+}) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
-  const customer = searchParams.get('customer');
   const expiredOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const storedPage = useSelector((state: RootState) => state.rentalOrder.tablePage);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const customer = searchParams.get('customerId') || '';
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
 
   const gridApiRef = useRef<GridApi | null>(null);
   const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
 
-  const customerList = useRef<IdNamePair[]>([]);
+  const [customerList, setCustomerList] = useState<IdNamePair[]>([]);
 
   const expiredOrderIds = useMemo(
     () => new Set(expiredOrders.map((order) => order.order_id)),
@@ -125,7 +134,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       pinned: 'left',
       cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
-        customerOptions: customerList.current,
+        customerOptions: customerList,
       },
       valueParser: (params) => {
         return params.newValue;
@@ -159,7 +168,6 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     //   minWidth: 200,
     //   headerClass: "ag-header-wrap",
     //   filter: "agNumberColumnFilter",
-    //   pinned: "left",
     //   valueGetter: (params: ValueGetterParams) => {
     //     const depositData: DepositType[] = params.data.deposits ?? 0;
     //     const value =
@@ -182,30 +190,30 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     //     );
     //   },
     // },
-    // {
-    //   field: 'repay_amount',
-    //   headerName: 'Repayment Amount',
-    //   flex: 1,
-    //   minWidth: 200,
-    //   headerClass: 'ag-header-wrap',
-    //   filter: 'agNumberColumnFilter',
-    //   cellRenderer: (params: ICellRendererParams) => {
-    //     const data = params.data;
-    //     const depositData: DepositType[] = params.data.deposits ?? 0;
-    //     return (
-    //       <p>
-    //         ₹{' '}
-    //         {Math.abs(
-    //           Math.min(
-    //             0,
-    //             calculateFinalAmount(data) -
-    //               depositData.reduce((total, deposit) => total + deposit.amount, 0)
-    //           )
-    //         ).toFixed(2)}
-    //       </p>
-    //     );
-    //   },
-    // },
+    {
+      field: 'repay_amount',
+      headerName: 'Repayment Amount',
+      flex: 1,
+      minWidth: 200,
+      headerClass: 'ag-header-wrap',
+      filter: 'agNumberColumnFilter',
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return (
+          <p>
+            ₹{' '}
+            {Math.abs(
+              Math.min(
+                0,
+                calculateFinalAmount(data) -
+                  depositData.reduce((total, deposit) => total + deposit.amount, 0)
+              )
+            ).toFixed(2)}
+          </p>
+        );
+      },
+    },
     {
       field: 'balance_paid',
       headerName: 'Balance Amount',
@@ -467,7 +475,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['-', 'cash less', 'account less', 'kvb less'],
+        options: ['-', 'cash less', 'upi less', 'kvb less'],
       },
     },
     {
@@ -692,14 +700,37 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
     });
   }, [expandedRowIds]);
 
+  const initialFilterApplied = useRef(false);
+
+  const handleFilterChanged = () => {
+    if (!gridApiRef.current) return;
+    const filterModel = gridApiRef.current.getFilterModel();
+
+    // Skip the first filter change (initial setup)
+    if (!initialFilterApplied.current) {
+      initialFilterApplied.current = true;
+      return;
+    }
+
+    // If the customer filter is removed or changed, reset selected customer
+    if (
+      !filterModel ||
+      !filterModel.customer ||
+      (customerList.length > 0 &&
+        filterModel.customer.filter !== customerList.find((c) => c._id === customer)?.name)
+    ) {
+      setSelectedCustomerId('');
+    }
+  };
+
   useEffect(() => {
     if (isGetContactsSuccess) {
-      customerList.current = contactsQueryData.map((contact) => {
-        return {
+      setCustomerList(
+        contactsQueryData.map((contact) => ({
           _id: contact._id,
           name: `${contact.name}-${contact.personal_number}`,
-        };
-      });
+        }))
+      );
     }
   }, [contactsQueryData, isGetContactsSuccess]);
 
@@ -720,6 +751,24 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
       }
     });
   };
+
+  useEffect(() => {
+    if (!gridApiRef.current) return;
+    if (customer && customerList.length > 0) {
+      const selectedCustomer = customerList.find((c) => c._id === customer)?.name;
+      if (!selectedCustomer) return;
+      gridApiRef.current.setFilterModel({
+        customer: {
+          type: 'contains',
+          filter: selectedCustomer,
+        },
+      });
+      setSelectedCustomerId(customer);
+
+      searchParams.delete('customerId');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [customer, customerList, searchParams, setSearchParams, setSelectedCustomerId]);
 
   return (
     <>
@@ -744,6 +793,7 @@ const RentalOrderTable = ({ rentalOrders }: { rentalOrders: RentalOrderType[] })
         handleCellEditingStopped={handleCellEditingStopped}
         getRowHeight={handleRowHeight}
         onRowDataUpdated={onRowDataUpdated}
+        onFilterChanged={handleFilterChanged}
       />
       <DeleteOrderModal
         deleteOrderOpen={deleteOrderOpen}

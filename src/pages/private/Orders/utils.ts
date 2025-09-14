@@ -161,6 +161,8 @@ export const formatProducts = (products: Product[] | ProductDetails[]) => {
   return products.map((product) => ({
     id: product._id || '',
     value: product.name,
+    description:
+      'available_stock' in product ? `${(product as Product).available_stock}` || '0' : '',
   }));
 };
 
@@ -239,6 +241,13 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
           0,
           calculateFinalAmount(order) -
             order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+        ).toFixed(2),
+        'Repayment Amount': Math.max(
+          0,
+          Math.abs(
+            calculateFinalAmount(order) -
+              order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+          )
         ).toFixed(2),
         'Amount (After Taxes)': calculateFinalAmount(order).toString(),
         Status: order.status,
@@ -350,3 +359,24 @@ export const transportOptions = Object.entries(TransportType).map(([key, value])
   id: key,
   value,
 }));
+
+export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): RentalOrderType[] => {
+  return rentalOrders.map((rentalOrder) => {
+    if (!rentalOrder.customer) {
+      return {
+        ...rentalOrder,
+        customer: {
+          _id: '',
+          name: '',
+        },
+      };
+    }
+    return {
+      ...rentalOrder,
+      customer: {
+        _id: rentalOrder.customer._id,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
+      },
+    };
+  });
+};

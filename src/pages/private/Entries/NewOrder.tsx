@@ -3,7 +3,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
@@ -17,6 +17,7 @@ import {
   useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
 } from '../../../services/OrderService';
+import { calculateFinalAmount as calculateOrderAmount } from '../Orders/utils';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
 import CustomAutoComplete from '../../../styled/CustomAutoComplete';
@@ -55,7 +56,9 @@ import {
   paymentModeOptions,
   repaymentModeOptions,
   transportOptions,
+  transformRentalOrderData,
 } from '../Orders/utils';
+import { RootState } from '../../../store/store';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -118,6 +121,7 @@ const NewOrder = () => {
   const dispatch = useDispatch();
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
+  const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
@@ -223,6 +227,30 @@ const NewOrder = () => {
     orderInfo.gst,
     orderInfo.round_off,
   ]);
+
+  const getCustomerOrdersAndError = (customerId: string) => {
+    const customerOrders = transformRentalOrderData(
+      expiredRentalOrders.filter((order) => order.customer && order.customer._id === customerId)
+    );
+
+    const amounts = customerOrders.map(
+      (order) =>
+        calculateOrderAmount(order) - order.deposits.reduce((sum, dep) => sum + dep.amount, 0)
+    );
+    const totalAmount = amounts.reduce((sum, amt) => sum + amt, 0);
+    const hasPositiveAmount = totalAmount > 0;
+
+    return {
+      customerOrders,
+      error: hasPositiveAmount,
+      totalAmount,
+    };
+  };
+
+  // Usage in your CustomAutoComplete for Customer
+  const selectedCustomerId = orderInfo.customer?._id || '';
+  const { error: customerHasPositiveAmount, totalAmount: customerTotalBalanceAmount } =
+    getCustomerOrdersAndError(selectedCustomerId);
 
   const removeOrderProduct = (id: string, index: number) => {
     if (orderInfo.type === ProductType.RENTAL) {
@@ -637,7 +665,6 @@ const NewOrder = () => {
         <CustomAutoComplete
           addNewValue={() => setAddContactOpen(true)}
           placeholder=""
-          createOption={true}
           label="Customer"
           options={formatContacts(contacts)}
           value={
@@ -649,6 +676,13 @@ const NewOrder = () => {
               'customer',
               contacts.find((option) => option.name === name)
             );
+          }}
+          error={customerHasPositiveAmount}
+          helperText={`Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`}
+          createOption={false}
+          labelNavigation={{
+            label: 'View Past Bills',
+            link: `/orders?customerId=${selectedCustomerId}`,
           }}
         />
         {orderInfo.type === ProductType.RENTAL && (

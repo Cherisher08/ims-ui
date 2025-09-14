@@ -165,13 +165,14 @@ const NewOrder = () => {
   useEffect(() => {
     const hasErrors = Object.values(errors).find((error) => error === true);
     if (
-      (orderInfo.customer && !orderInfo.customer._id) ||
-      orderInfo.product_details.length == 0 ||
-      hasErrors
+      orderInfo.customer &&
+      orderInfo.customer?._id &&
+      (orderInfo.eway_amount || orderInfo.product_details.length > 0) &&
+      !hasErrors
     ) {
-      setCreateOrderDisabled(true);
-    } else {
       setCreateOrderDisabled(false);
+    } else {
+      setCreateOrderDisabled(true);
     }
   }, [errors, orderInfo]);
 

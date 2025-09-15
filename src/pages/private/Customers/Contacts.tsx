@@ -1,23 +1,24 @@
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { useEffect, useState } from 'react';
+import { AiOutlineDelete } from 'react-icons/ai';
+import { BsSearch } from 'react-icons/bs';
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FiEdit } from 'react-icons/fi';
+import { IoEyeOutline } from 'react-icons/io5';
+import { LuPlus, LuReceiptIndianRupee } from 'react-icons/lu';
+import { useNavigate } from 'react-router-dom';
+import { useGetContactsQuery } from '../../../services/ContactService';
 import CustomButton from '../../../styled/CustomButton';
 import CustomInput from '../../../styled/CustomInput';
-import { LuPlus } from 'react-icons/lu';
-import { BsSearch } from 'react-icons/bs';
 import CustomTable from '../../../styled/CustomTable';
-import { FiEdit } from 'react-icons/fi';
-import type { ColDef, ICellRendererParams } from 'ag-grid-community';
-import { AiOutlineDelete } from 'react-icons/ai';
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import AddContactModal from './modals/AddContactModal';
 import {
   initialContactType,
   type ContactInfoType,
   type ContactInfoWithActions,
 } from '../../../types/contact';
-import UpdateContactModal from './modals/UpdateContactModal';
+import AddContactModal from './modals/AddContactModal';
 import DeleteContactModal from './modals/DeleteContactModal';
-import { useGetContactsQuery } from '../../../services/ContactService';
-import { IoEyeOutline } from 'react-icons/io5';
+import UpdateContactModal from './modals/UpdateContactModal';
 import ViewImageModal from './modals/ViewImageModal';
 
 const renderIcon = (params: { data: ContactInfoType }) => {
@@ -32,6 +33,7 @@ const renderIcon = (params: { data: ContactInfoType }) => {
 
 const Contacts = () => {
   const [search, setSearch] = useState<string>('');
+  const navigate = useNavigate();
   const {
     data: contactsQueryData,
     isLoading: isGetContactsLoading,
@@ -133,6 +135,11 @@ const Contacts = () => {
                 setUpdateContactData(rowData);
                 setUpdateContactOpen(true);
               }}
+            />
+            <LuReceiptIndianRupee
+              size={20}
+              className="cursor-pointer"
+              onClick={() => navigate(`/contacts/${rowData._id}`)}
             />
             <AiOutlineDelete
               size={20}

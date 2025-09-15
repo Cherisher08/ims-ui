@@ -53,7 +53,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   const storedPage = useSelector((state: RootState) => state.rentalOrder.tablePage);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const customer = searchParams.get('customerId') || '';
+  // const customer = searchParams.get('customerId') || '';
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
 
   const gridApiRef = useRef<GridApi | null>(null);
@@ -74,14 +74,14 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     if (typeof storedPage === 'number') {
       api.paginationGoToPage(storedPage);
     }
-    if (customer) {
-      api.setFilterModel({
-        customer: {
-          type: 'contains',
-          filter: customer,
-        },
-      });
-    }
+    // if (customer) {
+    //   api.setFilterModel({
+    //     customer: {
+    //       type: 'contains',
+    //       filter: customer,
+    //     },
+    //   });
+    // }
   };
 
   const [deleteOrderOpen, setDeleteOrderOpen] = useState<boolean>(false);
@@ -704,7 +704,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 
   const handleFilterChanged = () => {
     if (!gridApiRef.current) return;
-    const filterModel = gridApiRef.current.getFilterModel();
+    // const filterModel = gridApiRef.current.getFilterModel();
 
     // Skip the first filter change (initial setup)
     if (!initialFilterApplied.current) {
@@ -713,14 +713,14 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     }
 
     // If the customer filter is removed or changed, reset selected customer
-    if (
-      !filterModel ||
-      !filterModel.customer ||
-      (customerList.length > 0 &&
-        filterModel.customer.filter !== customerList.find((c) => c._id === customer)?.name)
-    ) {
-      setSelectedCustomerId('');
-    }
+    // if (
+    //   !filterModel ||
+    //   !filterModel.customer ||
+    //   (customerList.length > 0 &&
+    //     filterModel.customer.filter !== customerList.find((c) => c._id === customer)?.name)
+    // ) {
+    //   setSelectedCustomerId('');
+    // }
   };
 
   useEffect(() => {
@@ -754,21 +754,21 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 
   useEffect(() => {
     if (!gridApiRef.current) return;
-    if (customer && customerList.length > 0) {
-      const selectedCustomer = customerList.find((c) => c._id === customer)?.name;
-      if (!selectedCustomer) return;
-      gridApiRef.current.setFilterModel({
-        customer: {
-          type: 'contains',
-          filter: selectedCustomer,
-        },
-      });
-      setSelectedCustomerId(customer);
+    // if (customer && customerList.length > 0) {
+    //   const selectedCustomer = customerList.find((c) => c._id === customer)?.name;
+    //   if (!selectedCustomer) return;
+    //   gridApiRef.current.setFilterModel({
+    //     customer: {
+    //       type: 'contains',
+    //       filter: selectedCustomer,
+    //     },
+    //   });
+    //   setSelectedCustomerId(customer);
 
-      searchParams.delete('customerId');
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [customer, customerList, searchParams, setSearchParams, setSelectedCustomerId]);
+    //   searchParams.delete('customerId');
+    //   setSearchParams(searchParams, { replace: true });
+    // }
+  }, [customerList, searchParams, setSearchParams, setSelectedCustomerId]);
 
   return (
     <>

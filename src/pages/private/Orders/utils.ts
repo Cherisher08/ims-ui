@@ -4,7 +4,6 @@ import utc from 'dayjs/plugin/utc';
 import { DiscountType, Product, ProductType } from '../../../types/common';
 import {
   BillingMode,
-  DepositType,
   OrderInfo,
   PaymentMode,
   PaymentStatus,
@@ -16,7 +15,8 @@ import {
 } from '../../../types/order';
 import { IdNamePair } from '../Stocks';
 
-import * as XLSX from 'xlsx';
+// import * as XLSX from 'xlsx';
+import XLSX from 'xlsx-js-style';
 
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 
@@ -203,137 +203,137 @@ export const calculateFinalAmount = (orderInfo: RentalOrderType) => {
 export const exportOrderToExcel = (orders: RentalOrderType[]) => {
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  let currentRow = 0;
+  const data = orders.map((order) => {
+    const products = order.product_details.map((p) => p.name).join('\n');
+    const productAmounts = order.product_details
+      .map((p) => (p.rent_per_unit * p.order_quantity * p.duration).toString())
+      .join('\n');
+    const orderQuantities = order.product_details
+      .map((p) => p.order_quantity.toString())
+      .join('\n');
+    const depositAmounts = order.deposits.map((d) => d.amount.toString()).join('\n');
+    const depositModes = order.deposits.map((d) => d.mode.toString()).join('\n');
 
-  orders.forEach((order) => {
-    const mainDetails = [
-      {
-        Order_ID: order.order_id,
-        Customer: order.customer?.name,
-        Out_Date: dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') || '',
-        In_Date:
-          order.in_date && dayjs(order.in_date).isValid()
-            ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
-            : '',
-        Rental_Duration: order.rental_duration.toString() || '',
-        Event_Name: order.event_name,
-        Event_Address: order.event_address,
-        Event_Venue: order.event_venue,
-        Billing_Mode: order.billing_mode,
-        GST: `${order.gst} %`,
-        Discount: order.discount.toString() || '',
-        Discount_Type: order.discount_type,
-        Transport_Payment_Mode: order.eway_mode,
-        Transport_Type: order.eway_type,
-        Repayment_Mode: order.payment_mode,
-        Balance_Paid_Date:
-          order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
-            ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
-            : '',
-        Balance_Paid_Mode: order.balance_paid_mode,
-        Remarks: order.remarks,
-        Deposit_Amount:
-          order.deposits.reduce((total, deposit) => total + deposit.amount, 0).toString() || '',
-        'Amount (Before Taxes)': calculateTotalAmount(order).toString(),
-        Transport_Amount: order.eway_amount.toString() || '',
-        Round_Off: order.round_off.toString() || '',
-        'Balance Amount': Math.max(
-          0,
-          calculateFinalAmount(order) -
-            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-        ).toFixed(2),
-        'Repayment Amount': Math.max(
+    return {
+      'Order ID': order.order_id,
+      Customer: order.customer?.name,
+      Products: products,
+      'Product Amounts': productAmounts,
+      'Order Quantity': orderQuantities,
+      'Amount (Before Taxes)': calculateTotalAmount(order).toString(),
+      'Amount (After Taxes)': calculateFinalAmount(order).toString(),
+      'Balance Amount': Math.max(
+        0,
+        calculateFinalAmount(order) -
+          order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+      ).toFixed(2),
+      'Repayment Amount': Math.abs(
+        Math.min(
           0,
           Math.abs(
             calculateFinalAmount(order) -
               order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
           )
-        ).toFixed(2),
-        'Amount (After Taxes)': calculateFinalAmount(order).toString(),
-        Status: order.status,
-      },
-    ];
-
-    XLSX.utils.sheet_add_json(ws, mainDetails, { origin: currentRow });
-    currentRow += mainDetails.length;
-
-    currentRow++;
-    ws['!cols'] = [
-      { wch: 20 }, //Order_ID
-      { wch: 20 }, // Customer
-      { wch: 20 }, //Out_Date
-      { wch: 20 }, //In_Date
-      { wch: 15 }, //Rental_Duration
-      { wch: 20 }, //Event_Name
-      { wch: 20 }, //Event_Address
-      { wch: 20 }, //Event_Venue
-      { wch: 15 }, //Billing_Mode
-      { wch: 15 }, //GST
-      { wch: 10 }, //Discount
-      { wch: 15 }, //Discount_Type
-      { wch: 25 }, //Transport_Payment_Mode
-      { wch: 15 }, //Transport_Type
-      { wch: 18 }, //Repayment_Mode
-      { wch: 20 }, //Balance_Paid_Date
-      { wch: 20 }, //Balance_Paid_Mode
-      { wch: 20 }, //Remarks
-      { wch: 15 }, //Deposit_Amount
-      { wch: 20 }, //Amount (Before Taxes)
-      { wch: 20 }, //Transport_Amount
-      { wch: 10 }, //Round_Off
-      { wch: 25 }, //Total Amount (After Taxes)
-      { wch: 20 }, //Balance_Amount
-      { wch: 15 }, //Status
-    ];
-
-    currentRow++;
-    XLSX.utils.sheet_add_aoa(ws, [['Product Details']], { origin: currentRow });
-    currentRow++;
-
-    XLSX.utils.sheet_add_json(
-      ws,
-      order.product_details.map((p: ProductDetails) => ({
-        // Product_Code: p.product_code,
-        Product_Name: p.name,
-        Billing_Unit: 'days',
-        Out_Date: dayjs(p.out_date).format('DD-MMM-YYYY hh:mm A'),
-        In_Date:
-          p.in_date && dayjs(p.in_date).isValid()
-            ? dayjs(p.in_date).format('DD-MMM-YYYY hh:mm A')
-            : '',
-        Duration: p.duration.toString(),
-        Quantity: p.order_quantity.toString(),
-        Order_Repair_Count: p.order_repair_count.toString(),
-        Rent_Per_Unit: p.rent_per_unit.toString(),
-        Final_Amount: (p.rent_per_unit * p.order_quantity * p.duration).toString(),
-        Damage: p.damage || '-',
-      })),
-      { origin: currentRow }
-    );
-
-    currentRow += order.product_details.length;
-
-    if (order.deposits.length > 0) {
-      currentRow += 2;
-      XLSX.utils.sheet_add_aoa(ws, [['Deposit Details']], { origin: currentRow });
-      currentRow++;
-      XLSX.utils.sheet_add_json(
-        ws,
-        order.deposits.map((d: DepositType) => ({
-          Amount: d.amount.toString(),
-          Date: dayjs(d.date).format('DD-MMM-YYYY hh:mm A'),
-          Product: d.product?.name,
-          Mode: d.mode,
-        })),
-        { origin: currentRow }
-      );
-      currentRow += order.deposits.length;
-    } else {
-      currentRow++;
-    }
-
-    currentRow += 2;
+        )
+      ).toFixed(2),
+      'Order Out Date': order.out_date ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') : '',
+      'Order In Date':
+        order.in_date && dayjs(order.in_date).isValid()
+          ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
+          : '',
+      'Rental Duration': order.rental_duration?.toString() || '',
+      'Event Name': order.event_name,
+      'Event Venue': order.event_venue,
+      'Event Address': order.event_address,
+      'Billing Mode': order.billing_mode,
+      GST: `${order.gst} %`,
+      Discount: order.discount?.toString() || '',
+      'Discount Type': order.discount_type,
+      'Transport Amount': order.eway_amount?.toString() || '',
+      'Transport Payment Mode': order.eway_mode,
+      'Transport Type': order.eway_type,
+      'Deposit Amount': depositAmounts,
+      'Deposit Mode': depositModes,
+      'Repayment Mode': order.payment_mode,
+      'Balance Paid Date':
+        order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
+          ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
+          : '',
+      'Balance Paid Mode': order.balance_paid_mode,
+      'Round Off': order.round_off?.toString() || '',
+      Status: order.status,
+      Remarks: order.remarks,
+    };
   });
+
+  XLSX.utils.sheet_add_json(ws, data, { origin: 0 });
+
+  ws['!cols'] = [
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 30 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 30 },
+  ];
+
+  const range = XLSX.utils.decode_range(ws['!ref'] || '');
+  for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+    const productCellRef = XLSX.utils.encode_cell({ r: R, c: 2 });
+    const amountCellRef = XLSX.utils.encode_cell({ r: R, c: 3 });
+    const quantityCellRef = XLSX.utils.encode_cell({ r: R, c: 4 });
+    const depositAmountCellRef = XLSX.utils.encode_cell({ r: R, c: 22 });
+    const depositModeCellRef = XLSX.utils.encode_cell({ r: R, c: 23 });
+
+    if (ws[productCellRef]) {
+      ws[productCellRef].s = {
+        alignment: { wrapText: true, vertical: 'top' },
+      };
+    }
+    if (ws[amountCellRef]) {
+      ws[amountCellRef].s = {
+        alignment: { wrapText: true, vertical: 'top' },
+      };
+    }
+    if (ws[quantityCellRef]) {
+      ws[quantityCellRef].s = {
+        alignment: { wrapText: true, vertical: 'top' },
+      };
+    }
+    if (ws[depositAmountCellRef]) {
+      ws[depositAmountCellRef].s = {
+        alignment: { wrapText: true, vertical: 'top' },
+      };
+    }
+    if (ws[depositModeCellRef]) {
+      ws[depositModeCellRef].s = {
+        alignment: { wrapText: true, vertical: 'top' },
+      };
+    }
+  }
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Orders');

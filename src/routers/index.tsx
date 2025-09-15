@@ -1,20 +1,21 @@
-import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Loader from "../components/Loader";
-import { ToastContainer } from "react-toastify";
-import RequireAuth from "../components/RequireAuth/RequireAuth";
+import React, { Suspense } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import Loader from '../components/Loader';
+import RequireAuth from '../components/RequireAuth/RequireAuth';
 
-const MainLayout = React.lazy(() => import("../components/Layouts/MainLayout"));
-const AuthLayout = React.lazy(() => import("../components/Layouts/AuthLayout"));
-const Login = React.lazy(() => import("../pages/public/Login"));
-const ForgotPassword = React.lazy(() => import("../pages/public/ForgotPassword"));
-const ResetPassword = React.lazy(() => import("../pages/public/ResetPassword"));
-const Dashboard = React.lazy(() => import("../pages/private/Dashboard"));
-const Inventory = React.lazy(() => import("../pages/private/Stocks"));
-const Contacts = React.lazy(() => import("../pages/private/Customers/Contacts"));
-const Orders = React.lazy(() => import("../pages/private/Orders/Orders"));
-const NewOrder = React.lazy(() => import("../pages/private/Entries/NewOrder"));
-const OrderInvoice = React.lazy(() => import("../pages/private/Entries/OrderInvoice"));
+const MainLayout = React.lazy(() => import('../components/Layouts/MainLayout'));
+const AuthLayout = React.lazy(() => import('../components/Layouts/AuthLayout'));
+const Login = React.lazy(() => import('../pages/public/Login'));
+const ForgotPassword = React.lazy(() => import('../pages/public/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('../pages/public/ResetPassword'));
+const Dashboard = React.lazy(() => import('../pages/private/Dashboard'));
+const Inventory = React.lazy(() => import('../pages/private/Stocks'));
+const Contacts = React.lazy(() => import('../pages/private/Customers/Contacts'));
+const CustomerBills = React.lazy(() => import('../pages/private/Customers/CustomerBills'));
+const Orders = React.lazy(() => import('../pages/private/Orders/Orders'));
+const NewOrder = React.lazy(() => import('../pages/private/Entries/NewOrder'));
+const OrderInvoice = React.lazy(() => import('../pages/private/Entries/OrderInvoice'));
 
 type RouteType = {
   path: string;
@@ -25,23 +26,23 @@ type RouteType = {
 
 const publicRoutes = [
   {
-    path: "/auth",
+    path: '/auth',
     element: <AuthLayout />,
     children: [
       {
-        path: "login",
+        path: 'login',
         element: <Login />,
       },
       {
-        path: "forgot-password",
+        path: 'forgot-password',
         element: <ForgotPassword />,
       },
       {
-        path: "reset-password",
+        path: 'reset-password',
         element: <ResetPassword />,
       },
       {
-        path: "*",
+        path: '*',
         element: <Navigate to="/auth/login" replace />,
       },
     ],
@@ -50,7 +51,7 @@ const publicRoutes = [
 
 const privateRoutes = [
   {
-    path: "/",
+    path: '/',
     element: (
       <RequireAuth>
         <MainLayout />
@@ -59,39 +60,43 @@ const privateRoutes = [
     children: [
       {
         index: true,
-        path: "/orders",
+        path: '/orders',
         element: <Orders />,
       },
       {
-        path: "/orders/rentals",
+        path: '/orders/rentals',
         element: <NewOrder />,
       },
       {
-        path: "/dashboard",
+        path: '/dashboard',
         element: <Dashboard />,
       },
       {
-        path: "/inventory",
+        path: '/inventory',
         element: <Inventory />,
       },
       {
-        path: "/contacts",
+        path: '/contacts',
         element: <Contacts />,
       },
       {
-        path: "/orders/rentals/:rentalId",
+        path: '/contacts/:id',
+        element: <CustomerBills />,
+      },
+      {
+        path: '/orders/rentals/:rentalId',
         element: <NewOrder />,
       },
       {
-        path: "/orders/invoice/:rentalId",
+        path: '/orders/invoice/:rentalId',
         element: <OrderInvoice />,
       },
       {
-        path: "*",
+        path: '*',
         element: <Navigate to="/orders/rentals" replace />,
       },
       {
-        path: "/",
+        path: '/',
         element: <Navigate to="/orders/rentals" replace />,
       },
     ],

@@ -17,9 +17,9 @@ import {
   useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
 } from '../../../services/OrderService';
-import { calculateFinalAmount as calculateOrderAmount } from '../Orders/utils';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
+import { RootState } from '../../../store/store';
 import CustomAutoComplete from '../../../styled/CustomAutoComplete';
 import CustomButton from '../../../styled/CustomButton';
 import CustomDatePicker from '../../../styled/CustomDatePicker';
@@ -47,6 +47,7 @@ import {
 } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import {
+  calculateFinalAmount as calculateOrderAmount,
   // billingUnitOptions,
   formatProducts,
   getDefaultDeposit,
@@ -55,10 +56,9 @@ import {
   getNewOrderId,
   paymentModeOptions,
   repaymentModeOptions,
-  transportOptions,
   transformRentalOrderData,
+  transportOptions,
 } from '../Orders/utils';
-import { RootState } from '../../../store/store';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -682,7 +682,7 @@ const NewOrder = () => {
           createOption={false}
           labelNavigation={{
             label: 'View Past Bills',
-            link: `/orders?customerId=${selectedCustomerId}`,
+            link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
           }}
         />
         {orderInfo.type === ProductType.RENTAL && (

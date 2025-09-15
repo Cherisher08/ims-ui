@@ -564,6 +564,31 @@ const NewOrder = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderInfo.status]);
 
+  useEffect(() => {
+    if (!orderInfo.product_details || orderInfo.product_details.length === 0) return;
+
+    // Get all valid in_dates from product_details
+    const inDates = orderInfo.product_details
+      .map((prod) => prod.in_date)
+      .filter((date) => !!date)
+      .map((date) => dayjs(date));
+
+    if (inDates.length === 0) return;
+
+    // Find the latest in_date
+    const latestInDate = inDates.reduce((latest, current) =>
+      current.isAfter(latest) ? current : latest
+    );
+
+    // If orderInfo.in_date is before the latest in_date, update it
+    if (orderInfo.in_date && dayjs(orderInfo.in_date).isBefore(latestInDate)) {
+      setOrderInfo((prev) => ({
+        ...prev,
+        in_date: latestInDate.format('YYYY-MM-DDTHH:mm'),
+      }));
+    }
+  }, [orderInfo.product_details, orderInfo.in_date]);
+
   if (!isProductsQuerySuccess) {
     return <Loader />;
   }
@@ -818,7 +843,7 @@ const NewOrder = () => {
               orderInfo.product_details?.filter((current) => current._id === '').length > 0 || false
             }
             onClick={() => {
-              const newProduct = getDefaultProduct(orderInfo?.out_date, orderInfo.in_date);
+              const newProduct = getDefaultProduct(orderInfo?.out_date);
               setOrderInfo((prev) => ({
                 ...prev,
                 product_details: [...(prev.product_details || []), newProduct],

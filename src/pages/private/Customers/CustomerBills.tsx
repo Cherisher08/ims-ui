@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetContactByIdQuery } from '../../../services/ContactService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
@@ -25,104 +25,104 @@ const CustomerBills = () => {
   const [customerOrders, setCustomerOrders] = useState<RentalOrderInfo[]>([]);
   const [customerDetails, setCustomerDetails] = useState<ContactInfoType>();
 
-  const getTransactionRows = (orders: RentalOrderInfo[]) => {
-    const rows: {
-      date: string;
-      paymentMode: string;
-      billAmount: number;
-      receivedAmount: number;
-      repaidAmount: number;
-    }[] = [];
+  // const getTransactionRows = (orders: RentalOrderInfo[]) => {
+  //   const rows: {
+  //     date: string;
+  //     paymentMode: string;
+  //     billAmount: number;
+  //     receivedAmount: number;
+  //     repaidAmount: number;
+  //   }[] = [];
 
-    orders.forEach((order) => {
-      const billAmount = calculateFinalAmount(order as RentalOrderType);
+  //   orders.forEach((order) => {
+  //     const billAmount = calculateFinalAmount(order as RentalOrderType);
 
-      // 1. Deposits (can be multiple per order)
-      order.deposits.forEach((deposit) => {
-        rows.push({
-          date: deposit.date ? dayjs(deposit.date).format('DD-MM-YYYY') : '',
-          paymentMode: deposit.mode || order.payment_mode || '-',
-          billAmount: 0,
-          receivedAmount: deposit.amount,
-          repaidAmount: 0,
-        });
-      });
+  //     // 1. Deposits (can be multiple per order)
+  //     order.deposits.forEach((deposit) => {
+  //       rows.push({
+  //         date: deposit.date ? dayjs(deposit.date).format('DD-MM-YYYY') : '',
+  //         paymentMode: deposit.mode || order.payment_mode || '-',
+  //         billAmount: 0,
+  //         receivedAmount: deposit.amount,
+  //         repaidAmount: 0,
+  //       });
+  //     });
 
-      // 2. Balance Paid (if present and > 0)
-      if (order.balance_paid && order.balance_paid > 0) {
-        rows.push({
-          date: order.balance_paid_date
-            ? dayjs(order.balance_paid_date).format('DD-MM-YYYY')
-            : order.in_date
-            ? dayjs(order.in_date).format('DD-MM-YYYY')
-            : '',
-          paymentMode: order.balance_paid_mode || order.payment_mode || '-',
-          billAmount: 0,
-          receivedAmount: order.balance_paid,
-          repaidAmount: 0,
-        });
-      }
+  //     // 2. Balance Paid (if present and > 0)
+  //     if (order.balance_paid && order.balance_paid > 0) {
+  //       rows.push({
+  //         date: order.balance_paid_date
+  //           ? dayjs(order.balance_paid_date).format('DD-MM-YYYY')
+  //           : order.in_date
+  //           ? dayjs(order.in_date).format('DD-MM-YYYY')
+  //           : '',
+  //         paymentMode: order.balance_paid_mode || order.payment_mode || '-',
+  //         billAmount: 0,
+  //         receivedAmount: order.balance_paid,
+  //         repaidAmount: 0,
+  //       });
+  //     }
 
-      // 3. Repayment (if present and > 0)
-      const repaid_amount =
-        order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) - billAmount;
-      if (order.status === PaymentStatus.PAID && repaid_amount > 0) {
-        rows.push({
-          date: order.repay_date
-            ? dayjs(order.repay_date).format('DD-MM-YYYY')
-            : order.in_date
-            ? dayjs(order.in_date).format('DD-MM-YYYY')
-            : '',
-          paymentMode: order.payment_mode || '-',
-          billAmount: 0,
-          receivedAmount: 0,
-          repaidAmount: repaid_amount,
-        });
-      }
+  //     // 3. Repayment (if present and > 0)
+  //     const repaid_amount =
+  //       order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) - billAmount;
+  //     if (order.status === PaymentStatus.PAID && repaid_amount > 0) {
+  //       rows.push({
+  //         date: order.repay_date
+  //           ? dayjs(order.repay_date).format('DD-MM-YYYY')
+  //           : order.in_date
+  //           ? dayjs(order.in_date).format('DD-MM-YYYY')
+  //           : '',
+  //         paymentMode: order.payment_mode || '-',
+  //         billAmount: 0,
+  //         receivedAmount: 0,
+  //         repaidAmount: repaid_amount,
+  //       });
+  //     }
 
-      // 4. If no deposits, balance paid, or repayment, just show bill
-      // if (
-      //   (!order.deposits || order.deposits.length === 0) &&
-      //   (!order.balance_paid || order.balance_paid === 0) &&
-      //   order.status !== PaymentStatus.PAID
-      // ) {
-      rows.push({
-        date: order.out_date ? dayjs(order.out_date).format('DD-MM-YYYY') : '',
-        paymentMode: order.payment_mode || '-',
-        billAmount,
-        receivedAmount: 0,
-        repaidAmount: 0,
-      });
-      // }
-    });
+  //     // 4. If no deposits, balance paid, or repayment, just show bill
+  //     // if (
+  //     //   (!order.deposits || order.deposits.length === 0) &&
+  //     //   (!order.balance_paid || order.balance_paid === 0) &&
+  //     //   order.status !== PaymentStatus.PAID
+  //     // ) {
+  //     rows.push({
+  //       date: order.out_date ? dayjs(order.out_date).format('DD-MM-YYYY') : '',
+  //       paymentMode: order.payment_mode || '-',
+  //       billAmount,
+  //       receivedAmount: 0,
+  //       repaidAmount: 0,
+  //     });
+  //     // }
+  //   });
 
-    // Step 2: Group by date
-    const grouped: Record<string, (typeof rows)[0]> = {};
-    rows.forEach((row) => {
-      if (!row.date) return;
-      if (!grouped[row.date]) {
-        grouped[row.date] = { ...row };
-      } else {
-        grouped[row.date].billAmount += row.billAmount;
-        grouped[row.date].receivedAmount += row.receivedAmount;
-        grouped[row.date].repaidAmount += row.repaidAmount;
-        // Optionally, you can concatenate payment modes if needed:
-        if (!grouped[row.date].paymentMode.includes(row.paymentMode)) {
-          grouped[row.date].paymentMode += `, ${row.paymentMode}`;
-        }
-      }
-    });
+  //   // Step 2: Group by date
+  //   const grouped: Record<string, (typeof rows)[0]> = {};
+  //   rows.forEach((row) => {
+  //     if (!row.date) return;
+  //     if (!grouped[row.date]) {
+  //       grouped[row.date] = { ...row };
+  //     } else {
+  //       grouped[row.date].billAmount += row.billAmount;
+  //       grouped[row.date].receivedAmount += row.receivedAmount;
+  //       grouped[row.date].repaidAmount += row.repaidAmount;
+  //       // Optionally, you can concatenate payment modes if needed:
+  //       if (!grouped[row.date].paymentMode.includes(row.paymentMode)) {
+  //         grouped[row.date].paymentMode += `, ${row.paymentMode}`;
+  //       }
+  //     }
+  //   });
 
-    // Step 3: Sort by date and return as array
-    return Object.values(grouped).sort(
-      (a, b) => dayjs(a.date, 'DD-MM-YYYY').unix() - dayjs(b.date, 'DD-MM-YYYY').unix()
-    );
-    // rows.sort((a, b) => dayjs(a.date, 'DD-MM-YYYY').unix() - dayjs(b.date, 'DD-MM-YYYY').unix());
+  //   // Step 3: Sort by date and return as array
+  //   return Object.values(grouped).sort(
+  //     (a, b) => dayjs(a.date, 'DD-MM-YYYY').unix() - dayjs(b.date, 'DD-MM-YYYY').unix()
+  //   );
+  //   // rows.sort((a, b) => dayjs(a.date, 'DD-MM-YYYY').unix() - dayjs(b.date, 'DD-MM-YYYY').unix());
 
-    // return rows;
-  };
+  //   // return rows;
+  // };
 
-  const transactionRows = getTransactionRows(customerOrders);
+  // const transactionRows = getTransactionRows(customerOrders);
 
   useEffect(() => {
     if (rentalOrderData && id) {
@@ -142,7 +142,11 @@ const CustomerBills = () => {
 
     const splitOrders: RentalOrderInfo[] = [];
 
-    orders.forEach((order) => {
+    orders.forEach((currentOrder) => {
+      let order = {
+        ...currentOrder,
+      };
+
       const orderOutDate = formatDate(order.out_date);
       const remainingProducts: ProductDetails[] = [];
       const remainingDeposits: DepositType[] = [];
@@ -223,14 +227,6 @@ const CustomerBills = () => {
         };
       }
 
-      if (remainingProducts.length > 0 || remainingDeposits.length > 0) {
-        splitOrders.push({
-          ...order,
-          product_details: remainingProducts,
-          deposits: remainingDeposits,
-        });
-      }
-
       if (extraOrders.length > 0) {
         const billAmount = calculateFinalAmount(order as RentalOrderType);
 
@@ -246,10 +242,26 @@ const CustomerBills = () => {
 
           if (i === allDeposits.length - 1 && runningTotal > billAmount) {
             const repay = runningTotal - billAmount;
+            // order = {
+            //   ...order,
+            //   repay_amount: repay,
+            // };
             order.repay_amount = repay;
           } else {
+            // order = {
+            //   ...order,
+            //   repay_amount: 0,
+            // };
             order.repay_amount = 0;
           }
+        });
+      }
+
+      if (remainingProducts.length > 0 || remainingDeposits.length > 0) {
+        splitOrders.push({
+          ...order,
+          product_details: remainingProducts,
+          deposits: remainingDeposits,
         });
       }
 
@@ -305,13 +317,40 @@ const CustomerBills = () => {
     else return '-';
   };
 
-  const findPaymentMode = (order: RentalOrderType): string => {
-    if (order.deposits.length === 1) {
-      return order.deposits[0].mode;
-    } else if (order.balance_paid) {
-      return order.balance_paid_mode;
-    } else if (order.payment_mode) return order.payment_mode;
-    else return '-';
+  // const findPaymentMode = (order: RentalOrderType): string => {
+  //   const str = [];
+  //   if (order.deposits.length === 1) {
+  //     str.push(`Deposit - ${order.deposits[0].mode}`);
+  //   }
+  //   if (order.balance_paid && order.balance_paid_mode === '-') {
+  //     str.push(`Balance - ${order.balance_paid_mode}\n`);
+  //   }
+  //   if (order.payment_mode !== '-') str.push(`Repay - ${order.payment_mode}`);
+
+  //   if (str.length === 0) str.push('-');
+  //   return str.join(', ');
+  // };
+
+  const findPaymentMode = (order: RentalOrderType): JSX.Element => {
+    const elements: JSX.Element[] = [];
+
+    if (order.deposits.length > 0) {
+      elements.push(<span key="dep">Deposit - {order.deposits[0].mode}</span>);
+      elements.push(<br key="dep-br" />);
+    }
+
+    if (order.balance_paid && order.balance_paid_mode === '-') {
+      elements.push(<span key="balance">Balance - {order.balance_paid_mode}</span>);
+      elements.push(<br key="balance-br" />);
+    }
+
+    if (order.payment_mode !== '-') {
+      elements.push(<span key="repay">Repay - {order.payment_mode}</span>);
+    }
+
+    if (elements.length === 0) return <>-</>;
+
+    return <>{elements}</>;
   };
 
   // const calculateRepayAmount = (order: RentalOrderType): string => {
@@ -367,7 +406,7 @@ const CustomerBills = () => {
           <tbody>
             {customerOrders.length > 0 ? (
               customerOrders.map((order, index) => (
-                <tr key={index} className="border-b h-[2.5rem] border-gray-200">
+                <tr key={index} className="border-b min-h-[2.5rem] border-gray-200">
                   <td className="px-1 py-1">{index + 1}</td>
                   <td className="px-1 py-1">{dayjs(order.out_date).format('DD-MM-YYYY')}</td>
                   <td className="px-1 py-1">{findOrderType(order as RentalOrderType)}</td>
@@ -401,7 +440,7 @@ const CustomerBills = () => {
             )}
             {customerOrders.length > 0 && (
               <>
-                <tr className="border-b border-gray-200 bg-gray-100">
+                <tr className="border-b border-gray-200 h-[2.5rem] bg-gray-100">
                   <td></td>
                   <td></td>
                   <td></td>
@@ -412,7 +451,7 @@ const CustomerBills = () => {
                   <td className="px-1 py-1 font-semibold">{calculateTotalReceivedAmount()}</td>
                   {/* <td className="font-semibold px-1 py-1">{calculateTotalOutstandingAmount()}</td> */}
                 </tr>
-                <tr className="border-b border-gray-200 bg-gray-100">
+                <tr className="border-b border-gray-200 h-[2.5rem] bg-gray-100">
                   <td></td>
                   <td></td>
                   <td></td>

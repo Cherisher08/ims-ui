@@ -604,7 +604,10 @@ const NewOrder = () => {
     );
 
     // If orderInfo.in_date is before the latest in_date, update it
-    if (orderInfo.in_date && dayjs(orderInfo.in_date).isBefore(latestInDate)) {
+    if (
+      (orderInfo.in_date && dayjs(orderInfo.in_date).isBefore(latestInDate)) ||
+      orderInfo.in_date === ''
+    ) {
       setOrderInfo((prev) => ({
         ...prev,
         in_date: latestInDate.format('YYYY-MM-DDTHH:mm'),

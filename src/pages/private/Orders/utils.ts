@@ -230,10 +230,8 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
       'Repayment Amount': Math.abs(
         Math.min(
           0,
-          Math.abs(
-            calculateFinalAmount(order) -
-              order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-          )
+          calculateFinalAmount(order) -
+            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
         )
       ).toFixed(2),
       'Order Out Date': order.out_date ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') : '',

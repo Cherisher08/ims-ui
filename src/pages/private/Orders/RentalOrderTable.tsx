@@ -191,6 +191,54 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     //   },
     // },
     {
+      headerName: 'Deposit Amount',
+      headerClass: 'ag-header-wrap',
+      minWidth: 150,
+      maxWidth: 200,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: currencyFormatter,
+      valueGetter: (params: ValueGetterParams) => {
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return depositData.reduce((total, deposit) => total + deposit.amount, 0);
+      },
+    },
+    {
+      headerName: 'Balance Amount',
+      flex: 1,
+      minWidth: 200,
+      headerClass: 'ag-header-wrap',
+      filter: 'agNumberColumnFilter',
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        const depositData: DepositType[] = params.data.deposits ?? 0;
+        return (
+          <p>
+            ₹{' '}
+            {Math.max(
+              0,
+              calculateFinalAmount(data) -
+                depositData.reduce((total, deposit) => total + deposit.amount, 0)
+            ).toFixed(2)}
+          </p>
+        );
+      },
+    },
+    {
+      field: 'balance_paid',
+      headerName: 'Balance Paid Amount',
+      headerClass: 'ag-header-wrap',
+      minWidth: 150,
+      maxWidth: 200,
+      filter: 'agTextColumnFilter',
+      editable: true,
+      valueFormatter: currencyFormatter,
+      singleClickEdit: true,
+      cellEditor: 'agNumberCellEditor',
+      cellEditorParams: {
+        step: 1,
+      },
+    },
+    {
       field: 'repay_amount',
       headerName: 'Repayment Amount',
       flex: 1,
@@ -209,28 +257,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
                 calculateFinalAmount(data) -
                   depositData.reduce((total, deposit) => total + deposit.amount, 0)
               )
-            ).toFixed(2)}
-          </p>
-        );
-      },
-    },
-    {
-      field: 'balance_paid',
-      headerName: 'Balance Amount',
-      flex: 1,
-      minWidth: 200,
-      headerClass: 'ag-header-wrap',
-      filter: 'agNumberColumnFilter',
-      cellRenderer: (params: ICellRendererParams) => {
-        const data = params.data;
-        const depositData: DepositType[] = params.data.deposits ?? 0;
-        return (
-          <p>
-            ₹{' '}
-            {Math.max(
-              0,
-              calculateFinalAmount(data) -
-                depositData.reduce((total, deposit) => total + deposit.amount, 0)
             ).toFixed(2)}
           </p>
         );
@@ -437,18 +463,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditor: SelectCellEditor,
       cellEditorParams: {
         options: ['-', 'cash', 'account', 'upi'],
-      },
-    },
-    {
-      headerName: 'Deposit Amount',
-      headerClass: 'ag-header-wrap',
-      minWidth: 150,
-      maxWidth: 200,
-      filter: 'agNumberColumnFilter',
-      valueFormatter: currencyFormatter,
-      valueGetter: (params: ValueGetterParams) => {
-        const depositData: DepositType[] = params.data.deposits ?? 0;
-        return depositData.reduce((total, deposit) => total + deposit.amount, 0);
       },
     },
     // {

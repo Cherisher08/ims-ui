@@ -3,9 +3,16 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetContactByIdQuery } from '../../../services/ContactService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
+import { ProductType } from '../../../types/common';
 import { ContactInfoType } from '../../../types/contact';
-import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
-import { calculateFinalAmount } from '../Orders/utils';
+import {
+  DepositType,
+  PaymentStatus,
+  ProductDetails,
+  RentalOrderInfo,
+  RentalOrderType,
+} from '../../../types/order';
+import { calculateFinalAmount, calculateTotalAmount } from '../Orders/utils';
 
 const CustomerBills = () => {
   const { id } = useParams();
@@ -21,9 +28,137 @@ const CustomerBills = () => {
   useEffect(() => {
     if (rentalOrderData && id) {
       const filtered = rentalOrderData.filter((order) => order.customer?._id === id);
-      setCustomerOrders(filtered);
+
+      const orders = splitOrdersByDate(filtered);
+      setCustomerOrders(orders.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date))));
+      // setCustomerOrders(filtered);
     }
   }, [id, rentalOrderData]);
+
+  function splitOrdersByDate(orders: RentalOrderInfo[]) {
+    const formatDate = (date: string | null) => {
+      if (!date) return null;
+      return new Date(date).toISOString().split('T')[0];
+    };
+
+    const splitOrders: RentalOrderInfo[] = [];
+
+    orders.forEach((order) => {
+      const orderOutDate = formatDate(order.out_date);
+      const remainingProducts: ProductDetails[] = [];
+      const remainingDeposits: DepositType[] = [];
+      const extraOrders: RentalOrderInfo[] = [];
+
+      order.product_details?.forEach((p: ProductDetails) => {
+        const productOutDate = formatDate(p.out_date);
+
+        if (productOutDate && productOutDate !== orderOutDate) {
+          let newOrder = extraOrders.find((o) => formatDate(o.out_date) === productOutDate);
+          if (!newOrder) {
+            newOrder = {
+              ...order,
+              out_date: p.out_date,
+              product_details: [],
+              deposits: [],
+            };
+            extraOrders.push(newOrder);
+          }
+          newOrder.product_details.push(p);
+        } else {
+          remainingProducts.push(p);
+        }
+      });
+
+      order.deposits?.forEach((d: DepositType) => {
+        const depDate = formatDate(d.date);
+
+        if (depDate && depDate !== orderOutDate) {
+          let newOrder = extraOrders.find((o) => formatDate(o.out_date) === depDate);
+          if (!newOrder) {
+            newOrder = {
+              ...order,
+              out_date: d.date,
+              product_details: [],
+              deposits: [],
+            };
+            extraOrders.push(newOrder);
+          }
+          newOrder.deposits.push(d);
+        } else {
+          remainingDeposits.push(d);
+        }
+      });
+
+      const balancePaidDate = formatDate(order.balance_paid_date);
+      if (balancePaidDate && balancePaidDate !== orderOutDate) {
+        let newOrder = extraOrders.find((o) => formatDate(o.out_date) === balancePaidDate);
+        if (!newOrder) {
+          newOrder = {
+            ...order,
+            out_date: order.balance_paid_date,
+            product_details: [],
+            deposits: [],
+            balance_paid: order.balance_paid,
+            balance_paid_date: order.balance_paid_date,
+          };
+
+          extraOrders.push(newOrder);
+        } else {
+          newOrder.balance_paid = order.balance_paid;
+          newOrder.balance_paid_date = order.balance_paid_date;
+        }
+        order = {
+          ...order,
+          balance_paid: 0,
+          balance_paid_date: '',
+        };
+      }
+
+      if (remainingDeposits.length > 0 && order.status === PaymentStatus.PAID) {
+        const excess =
+          order.deposits.reduce((total, deposit) => total + deposit.amount, 0) -
+          calculateFinalAmount(order as RentalOrderType);
+        order = {
+          ...order,
+          repay_amount: excess > 0 ? excess : 0,
+        };
+      }
+
+      if (remainingProducts.length > 0 || remainingDeposits.length > 0) {
+        splitOrders.push({
+          ...order,
+          product_details: remainingProducts,
+          deposits: remainingDeposits,
+        });
+      }
+
+      if (extraOrders.length > 0) {
+        const billAmount = calculateFinalAmount(order as RentalOrderType);
+
+        const allDeposits: { order: RentalOrderInfo; dep: DepositType }[] = [];
+        remainingDeposits.forEach((dep) => allDeposits.push({ order, dep }));
+        extraOrders.forEach((eo) =>
+          eo.deposits.forEach((dep) => allDeposits.push({ order: eo, dep }))
+        );
+
+        let runningTotal = 0;
+        allDeposits.forEach(({ order, dep }, i) => {
+          runningTotal += dep.amount;
+
+          if (i === allDeposits.length - 1 && runningTotal > billAmount) {
+            const repay = runningTotal - billAmount;
+            order.repay_amount = repay;
+          } else {
+            order.repay_amount = 0;
+          }
+        });
+      }
+
+      splitOrders.push(...extraOrders);
+    });
+
+    return splitOrders;
+  }
 
   useEffect(() => {
     if (customer) {
@@ -33,18 +168,23 @@ const CustomerBills = () => {
 
   const calculateTotalBillAmount = () => {
     const total = customerOrders.reduce(
-      (total, order) => total + calculateFinalAmount(order as RentalOrderType),
+      (total, order) => total + calculateTotalAmount(order as RentalOrderType),
       0
     );
     return total;
   };
 
   const calculateTotalReceivedAmount = () => {
-    const total = customerOrders.reduce(
+    const totalDeposits = customerOrders.reduce(
       (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
       0
     );
-    return total;
+    const totalReceivedAmount =
+      customerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
+
+    const totalRepayment =
+      customerOrders.reduce((total, order) => total + order.repay_amount, 0) || 0;
+    return totalDeposits + totalReceivedAmount - totalRepayment;
   };
 
   const calculateTotalOutstandingAmount = () => {
@@ -62,6 +202,39 @@ const CustomerBills = () => {
     );
     return total;
   };
+
+  const findOrderType = (order: RentalOrderType): string => {
+    const products = order.product_details;
+    const isRental = products.find((prod) => prod.type === ProductType.RENTAL);
+    const isSales = products.find((prod) => prod.type === ProductType.SALES);
+    if (isRental && isSales) return 'RENTAL, SALES';
+    else if (isRental) return 'RENTAL';
+    else if (isSales) return 'SALES';
+    else return '-';
+  };
+
+  const findPaymentMode = (order: RentalOrderType): string => {
+    if (order.deposits.length === 1) {
+      return order.deposits[0].mode;
+    } else if (order.balance_paid) {
+      return order.balance_paid_mode;
+    } else if (order.payment_mode) return order.payment_mode;
+    else return '-';
+  };
+
+  // const calculateRepayAmount = (order: RentalOrderType): string => {
+  //   const depositData: DepositType[] = order.deposits ?? 0;
+  //   if (order.status === PaymentStatus.PAID && order.product_details.length > 0) {
+  //     const amount = Math.abs(
+  //       Math.min(
+  //         0,
+  //         calculateFinalAmount(order) -
+  //           depositData.reduce((total, deposit) => total + deposit.amount, 0)
+  //       )
+  //     ).toFixed(0);
+  //     return amount === '0' ? '' : amount;
+  //   } else return '';
+  // };
 
   return (
     <div>
@@ -89,54 +262,87 @@ const CustomerBills = () => {
             <tr className="bg-primary text-white border-b-3 border-gray-300">
               <th className="px-1 py-1 text-left ">S.No</th>
               <th className="px-1 py-1 text-left ">Date</th>
-              <th className="px-1 py-1 text-left ">Payment Mode</th>
+              <th className="px-1 py-1 text-left ">Type</th>
+              <th className="px-1 py-1 text-left ">Mode</th>
+              {/* <th className="px-1 py-1 text-left ">Payment Mode</th> */}
+              <th className="px-1 py-1 text-left ">Deposit</th>
+              <th className="px-1 py-1 text-left ">Repay</th>
               <th className="px-1 py-1 text-left ">Bill Amount</th>
               <th className="px-1 py-1 text-left ">Received Amount</th>
-              <th className="px-1 py-1 text-left ">Outstanding Amount</th>
+              {/* <th className="px-1 py-1 text-left ">Outstanding Amount</th> */}
             </tr>
           </thead>
           <tbody>
             {customerOrders.length > 0 ? (
               customerOrders.map((order, index) => (
-                <tr key={index} className="border-b border-gray-200">
+                <tr key={index} className="border-b h-[2.5rem] border-gray-200">
                   <td className="px-1 py-1">{index + 1}</td>
                   <td className="px-1 py-1">{dayjs(order.out_date).format('DD-MM-YYYY')}</td>
-                  <td className="px-1 py-1">{order.payment_mode}</td>
-                  <td className="px-1 py-1">{calculateFinalAmount(order as RentalOrderType)}</td>
+                  <td className="px-1 py-1">{findOrderType(order as RentalOrderType)}</td>
+                  <td className="px-1 py-1">{findPaymentMode(order as RentalOrderType)}</td>
                   <td className="px-1 py-1">
-                    {order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0)}
+                    {order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || '-'}
                   </td>
                   <td className="px-1 py-1">
-                    {Math.max(
-                      0,
-                      calculateFinalAmount(order as RentalOrderType) -
-                        order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0)
-                    ).toFixed(2)}
+                    {order.repay_amount}
+                    {/* {calculateRepayAmount(order as RentalOrderType) || '-'} */}
                   </td>
+                  <td
+                    className={`px-1 py-1 ${
+                      calculateFinalAmount(order as RentalOrderType) !== 0 &&
+                      order.status === PaymentStatus.PENDING
+                        ? 'bg-warning'
+                        : ''
+                    }`}
+                  >
+                    {calculateFinalAmount(order as RentalOrderType) || '-'}
+                  </td>
+                  <td className="px-1 py-1">{order.balance_paid || '-'}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="h-[5rem] text-center py-4">
+                <td colSpan={10} className="h-[5rem] text-center py-4">
                   No Bills Available...
                 </td>
               </tr>
             )}
             {customerOrders.length > 0 && (
-              <tr className="border-b border-gray-200 bg-gray-100">
-                <td></td>
-                <td></td>
-                <td className="font-semibold">Total</td>
-                <td className="px-1 py-1 font-semibold">{calculateTotalBillAmount()}</td>
-                <td className="px-1 py-1 font-semibold">{calculateTotalReceivedAmount()}</td>
-                <td
-                  className={`${
-                    Number(calculateTotalOutstandingAmount()) === 0 ? 'bg-green-400' : 'bg-red-400'
-                  } font-semibold px-1 py-1`}
-                >
-                  {calculateTotalOutstandingAmount()}
-                </td>
-              </tr>
+              <>
+                <tr className="border-b border-gray-200 bg-gray-100">
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td className="font-semibold">Total</td>
+                  <td className="px-1 py-1 font-semibold">{calculateTotalBillAmount()}</td>
+                  <td className="px-1 py-1 font-semibold">{calculateTotalReceivedAmount()}</td>
+                  {/* <td className="font-semibold px-1 py-1">{calculateTotalOutstandingAmount()}</td> */}
+                </tr>
+                <tr className="border-b border-gray-200 bg-gray-100">
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td className="font-semibold">
+                    {calculateTotalBillAmount() - calculateTotalReceivedAmount() > 0
+                      ? 'Balance Amount'
+                      : 'Repay Amount'}
+                  </td>
+                  <td
+                    className={`${
+                      Number(calculateTotalOutstandingAmount()) === 0
+                        ? 'bg-green-400'
+                        : 'bg-red-400'
+                    } font-semibold px-1 py-1`}
+                  >
+                    {Math.abs(calculateTotalBillAmount() - calculateTotalReceivedAmount())}
+                  </td>
+                </tr>
+              </>
             )}
           </tbody>
         </table>

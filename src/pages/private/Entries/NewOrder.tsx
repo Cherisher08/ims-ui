@@ -3,7 +3,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
@@ -19,7 +19,6 @@ import {
 } from '../../../services/OrderService';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
-import { RootState } from '../../../store/store';
 import CustomAutoComplete from '../../../styled/CustomAutoComplete';
 import CustomButton from '../../../styled/CustomButton';
 import CustomDatePicker from '../../../styled/CustomDatePicker';
@@ -47,7 +46,7 @@ import {
 } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import {
-  calculateFinalAmount as calculateOrderAmount,
+  calculateTotalAmount as calculateFinalAmountOfOrder,
   // billingUnitOptions,
   formatProducts,
   getDefaultDeposit,
@@ -121,7 +120,7 @@ const NewOrder = () => {
   const dispatch = useDispatch();
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
-  const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
+  // const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
@@ -229,22 +228,46 @@ const NewOrder = () => {
   ]);
 
   const getCustomerOrdersAndError = (customerId: string) => {
-    const customerOrders = transformRentalOrderData(
-      expiredRentalOrders.filter((order) => order.customer && order.customer._id === customerId)
-    );
+    if (rentalOrders) {
+      const customerOrders = transformRentalOrderData(
+        rentalOrders.filter((order) => order.customer && order.customer._id === customerId)
+      );
 
-    const amounts = customerOrders.map(
-      (order) =>
-        calculateOrderAmount(order) - order.deposits.reduce((sum, dep) => sum + dep.amount, 0)
-    );
-    const totalAmount = amounts.reduce((sum, amt) => sum + amt, 0);
-    const hasPositiveAmount = totalAmount > 0;
+      const totalDepositAmount = customerOrders.reduce(
+        (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
+        0
+      );
 
-    return {
-      customerOrders,
-      error: hasPositiveAmount,
-      totalAmount,
-    };
+      const totalReceivedAmount =
+        customerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
+
+      const totalCredit = totalDepositAmount + totalReceivedAmount;
+
+      console.log(customerOrders);
+
+      const totalBillAmount = customerOrders.reduce(
+        (total, order) => total + calculateFinalAmountOfOrder(order),
+        0
+      );
+
+      console.log(totalBillAmount);
+
+      const totalDebit = totalBillAmount;
+
+      const hasPositiveAmount = totalDebit - totalCredit > 0;
+
+      return {
+        customerOrders,
+        error: hasPositiveAmount,
+        totalAmount: totalDebit - totalCredit,
+      };
+    } else {
+      return {
+        customerOrders: [],
+        error: true,
+        totalAmount: 0,
+      };
+    }
   };
 
   // Usage in your CustomAutoComplete for Customer

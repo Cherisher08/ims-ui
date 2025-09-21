@@ -1,4 +1,4 @@
-import { MenuItem, Select } from "@mui/material";
+import { MenuItem, Select } from '@mui/material';
 
 export type CustomSelectOptionProps = {
   id: string;
@@ -16,6 +16,7 @@ type CustomSelectProps = {
   className?: string;
   wrapperClass?: string;
   labelClass?: string;
+  disabled?: boolean;
 };
 
 const CustomSelect = ({
@@ -23,12 +24,13 @@ const CustomSelect = ({
   options,
   label,
   onChange,
-  defaultValue = "",
+  defaultValue = '',
   error = false,
-  helperText = "",
-  className = "",
-  labelClass = "",
-  wrapperClass = "",
+  helperText = '',
+  className = '',
+  labelClass = '',
+  disabled = false,
+  wrapperClass = '',
 }: CustomSelectProps) => {
   return (
     <div className={`flex flex-col w-full h-fit ${wrapperClass}`}>
@@ -38,10 +40,11 @@ const CustomSelect = ({
           className={`h-[2.5rem] ${className}`}
           error={error}
           value={value}
+          disabled={disabled}
           defaultValue={defaultValue}
           onChange={(e) => onChange(e.target.value)}
           displayEmpty
-          inputProps={{ "aria-label": "Without label" }}
+          inputProps={{ 'aria-label': 'Without label' }}
         >
           {options.map((option) => (
             <MenuItem value={option.id} key={option.id}>

@@ -4,7 +4,6 @@ import type {
   GridApi,
   ICellRendererParams,
   RowHeightParams,
-  ValueFormatterParams,
   ValueGetterParams,
 } from 'ag-grid-community';
 import dayjs from 'dayjs';
@@ -36,6 +35,8 @@ import {
   calculateTotalAmount,
   currencyFormatter,
   exportOrderToExcel,
+  getOrderStatus,
+  getOrderStatusColors,
 } from './utils';
 
 type RentalOrderTableProps = {
@@ -512,52 +513,52 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       maxWidth: 170,
       filter: 'agTextColumnFilter',
       pinned: 'right',
-      editable: true,
-      singleClickEdit: true,
-      valueFormatter: (params: ValueFormatterParams) => {
-        const status = params.data.status;
-        if (status === 'paid') return 'Paid';
-        if (status === 'pending') {
-          const data = params.data;
-          const depositData: DepositType[] = params.data.deposits ?? 0;
-
-          const total =
-            calculateFinalAmount(data) -
-            depositData.reduce((total, deposit) => total + deposit.amount, 0);
-
-          return total >= 0 ? 'Machine and Balance Pending' : 'Machine and Repayment Pending';
-        }
-        return status;
-      },
-      cellEditor: SelectCellEditor,
-      cellEditorParams: {
-        options: ['paid', 'pending'],
-      },
-      cellStyle: (params) => {
+      // editable: true,
+      // singleClickEdit: true,
+      cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
-        if (data) {
-          const depositData: DepositType[] = data.deposits ?? 0;
+        const status = getOrderStatus(data);
+        const statusColor = getOrderStatusColors(status);
+        return (
+          <p
+            style={{
+              width: '100%',
+              height: '100%',
+              textAlign: 'center',
+              backgroundColor: statusColor.bg,
+              color: statusColor.text,
+            }}
+          >
+            {status}
+          </p>
+        );
+      },
+      // valueFormatter: (params: ValueFormatterParams) => {
+      //   const data = params.data;
+      //   const status = getOrderStatus(data);
+      //   return status;
+      //   // const status = params.data.status;
+      //   // if (status === 'paid') return 'Paid';
+      //   // if (status === 'pending') {
+      //   //   const data = params.data;
+      //   //   const depositData: DepositType[] = params.data.deposits ?? 0;
 
-          const total =
-            calculateFinalAmount(data) -
-            depositData.reduce((total, deposit) => total + deposit.amount, 0);
+      //   //   const total =
+      //   //     calculateFinalAmount(data) -
+      //   //     depositData.reduce((total, deposit) => total + deposit.amount, 0);
 
-          const status = data.status;
-
-          if (status === 'paid') {
-            return { backgroundColor: '#bbf7d0', color: '#166534' }; // green
-          }
-
-          if (status === 'pending') {
-            if (total >= 0) {
-              return { backgroundColor: '#fca5a5', color: '#7f1d1d' }; // red for us
-            } else {
-              return { backgroundColor: '#fde68a', color: '#78350f' }; // yellow for customer
-            }
-          }
-        }
-
-        return { backgroundColor: '#bfdbfe', color: '#1e3a8a' }; // default blue or fallback
+      //   //   return total >= 0 ? 'Machine and Balance Pending' : 'Machine and Repayment Pending';
+      //   // }
+      //   // return status;
+      // },
+      // cellEditor: SelectCellEditor,
+      // cellEditorParams: {
+      //   options: ['paid', 'pending'],
+      // },
+      cellStyle: () => {
+        return {
+          padding: 0,
+        };
       },
     },
     {
@@ -678,13 +679,27 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         }
       }
 
-      console.log(field, value);
-
       if (field === 'discount_type') {
         patchPayload.push({
           op: 'replace',
           path: '/discount',
           value: 0,
+        });
+      }
+
+      const notReturnedProducts =
+        data.product_details.find((prod: { in_date: unknown }) => !prod.in_date) || false;
+      if (data.in_date && (data.repay_date || data.balance_paid_date) && !notReturnedProducts) {
+        patchPayload.push({
+          op: 'replace',
+          path: '/status',
+          value: 'paid',
+        });
+      } else {
+        patchPayload.push({
+          op: 'replace',
+          path: '/status',
+          value: 'pending',
         });
       }
 

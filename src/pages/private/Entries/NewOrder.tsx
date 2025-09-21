@@ -1,5 +1,3 @@
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { Box, Tab, Tabs } from '@mui/material';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
@@ -29,6 +27,7 @@ import {
   DiscountType,
   discountTypeValues,
   EventNameType,
+  OrderStatusType,
   Product,
   ProductType,
 } from '../../../types/common';
@@ -53,6 +52,8 @@ import {
   getDefaultProduct,
   getDuration,
   getNewOrderId,
+  getOrderStatus,
+  getOrderStatusColors,
   paymentModeOptions,
   repaymentModeOptions,
   transformRentalOrderData,
@@ -121,7 +122,7 @@ const NewOrder = () => {
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   // const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
-  const isAllOrdersAllowed: boolean = false;
+  // const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
   const {
@@ -150,6 +151,7 @@ const NewOrder = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
   const [removedProducts, setRemovedProducts] = useState<Product[]>([]);
+  const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
@@ -210,18 +212,27 @@ const NewOrder = () => {
   const calculateFinalAmount = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
+    const balancePaid = orderInfo.balance_paid || 0;
     const discountAmount =
       orderInfo.discount_type === DiscountType.PERCENT
         ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
         : orderInfo.discount || 0;
     const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + orderInfo.eway_amount).toFixed(2)
+      (
+        finalAmount -
+        discountAmount -
+        balancePaid +
+        gstAmount +
+        roundOff +
+        orderInfo.eway_amount
+      ).toFixed(2)
     );
   }, [
     calculateTotalAmount,
     orderInfo.discount,
     orderInfo.discount_type,
+    orderInfo.balance_paid,
     orderInfo.eway_amount,
     orderInfo.gst,
     orderInfo.round_off,
@@ -243,14 +254,10 @@ const NewOrder = () => {
 
       const totalCredit = totalDepositAmount + totalReceivedAmount;
 
-      console.log(customerOrders);
-
       const totalBillAmount = customerOrders.reduce(
         (total, order) => total + calculateFinalAmountOfOrder(order),
         0
       );
-
-      console.log(totalBillAmount);
 
       const totalDebit = totalBillAmount;
 
@@ -383,7 +390,6 @@ const NewOrder = () => {
       }
     } else {
       try {
-        // 1️⃣ Create the rental order and wait for it to succeed
         const latestOrders = await getRefetchRentalOrders();
         const orderId = getNewOrderId(latestOrders.data || []);
         const orderResponse = await createRentalOrder({
@@ -392,7 +398,6 @@ const NewOrder = () => {
         }).unwrap();
         console.log('✅ Order created successfully', orderResponse);
 
-        // 2️⃣ Once order is created, update product stocks
         const results = await Promise.allSettled(
           newOrderInfo.product_details.map((product_detail) => {
             const currentProduct = products.find((product) => product._id === product_detail._id);
@@ -489,6 +494,13 @@ const NewOrder = () => {
   ]);
 
   useEffect(() => {
+    if (orderInfo) {
+      const status = getOrderStatus(orderInfo, customerTotalBalanceAmount);
+      setOrderStatus(status);
+    }
+  }, [customerTotalBalanceAmount, orderInfo]);
+
+  useEffect(() => {
     if (isProductsQuerySuccess) {
       setProducts(productsData);
     }
@@ -515,6 +527,30 @@ const NewOrder = () => {
     isRentalOrdersQuerySuccess,
     rentalId,
     rentalOrders,
+  ]);
+
+  useEffect(() => {
+    const notReturnedProducts = orderInfo.product_details.find((prod) => !prod.in_date) || false;
+    if (
+      orderInfo.in_date &&
+      (orderInfo.repay_date || orderInfo.balance_paid_date) &&
+      !notReturnedProducts
+    ) {
+      setOrderInfo((prev) => ({
+        ...prev,
+        status: PaymentStatus.PAID,
+      }));
+    } else {
+      setOrderInfo((prev) => ({
+        ...prev,
+        status: PaymentStatus.PENDING,
+      }));
+    }
+  }, [
+    orderInfo.balance_paid_date,
+    orderInfo.in_date,
+    orderInfo.product_details,
+    orderInfo.repay_date,
   ]);
 
   useEffect(() => {
@@ -622,8 +658,8 @@ const NewOrder = () => {
   return (
     <div className="w-full flex flex-col ">
       {/* === Top Tabs and Add Button === */}
-      <div className="w-full flex justify-between mb-4">
-        {isAllOrdersAllowed ? (
+      <div className="w-full flex justify-between mb-2">
+        {/* {isAllOrdersAllowed ? (
           <Tabs
             value={orderInfo.type}
             onChange={(_, value) => handleValueChange('type', value)}
@@ -644,21 +680,41 @@ const NewOrder = () => {
           </Tabs>
         ) : (
           <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
-        )}
+        )} */}
 
-        <div className="flex flex-col items-end">
-          <CustomButton
-            className="w-[6rem]"
-            onClick={() => setAddContactOpen(true)}
-            label="Add Customer"
-            icon={<LuPlus color="white" />}
-          />
-          <p className="text-sm text-primary whitespace-nowrap mt-3">
+        {/* <div className="flex flex-row justify-between w-full"> */}
+        <CustomButton
+          label="View Past Bills"
+          disabled={!selectedCustomerId}
+          onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
+        />
+        <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
+        <CustomButton
+          className="w-[6rem]"
+          onClick={() => setAddContactOpen(true)}
+          label="Add Customer"
+          icon={<LuPlus color="white" />}
+        />
+        {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
             to proceed.
-          </p>
-        </div>
+          </p> */}
+        {/* </div> */}
       </div>
+      <div className="w-full mb-2">
+        {orderInfo._id && (
+          <p
+            className="font-semibold text-center text-xl p-2"
+            style={{
+              backgroundColor: getOrderStatusColors(orderStatus).bg,
+              color: getOrderStatusColors(orderStatus).text,
+            }}
+          >
+            Order Status - {orderStatus}
+          </p>
+        )}
+      </div>
+
       <div className="flex justify-between">
         <label className="underline text-xl font-bold">Details:</label>
         <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
@@ -731,31 +787,33 @@ const NewOrder = () => {
           error={customerHasPositiveAmount}
           helperText={`Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`}
           createOption={false}
-          labelNavigation={{
-            label: 'View Past Bills',
-            link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
-          }}
+          // labelNavigation={{
+          //   label: 'View Past Bills',
+          //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
+          // }}
         />
         {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
             label="Payment Status"
             options={paymentStatusOptions}
+            disabled
             value={
               paymentStatusOptions.find((paymentStatus) => orderInfo.status === paymentStatus.value)
                 ?.id ?? ''
             }
-            onChange={(id) => {
-              const status = paymentStatusOptions.find((option) => option.id === id)?.value;
-              if (status === 'paid' && !orderInfo.in_date) {
-                toast.warning('Bill Date/End Date is empty');
-                return;
-              }
-              if (status === 'pending') {
-                handleValueChange('repay_date', '');
-                handleValueChange('payment_mode', RepaymentMode.NULL);
-              }
-              handleValueChange('status', status);
-            }}
+            onChange={() => {}}
+            // onChange={(id) => {
+            //   const status = paymentStatusOptions.find((option) => option.id === id)?.value;
+            //   if (status === 'paid' && !orderInfo.in_date) {
+            //     toast.warning('Bill Date/End Date is empty');
+            //     return;
+            //   }
+            //   if (status === 'pending') {
+            //     handleValueChange('repay_date', '');
+            //     handleValueChange('payment_mode', RepaymentMode.NULL);
+            //   }
+            //   handleValueChange('status', status);
+            // }}
           />
         )}
         <CustomAutoComplete

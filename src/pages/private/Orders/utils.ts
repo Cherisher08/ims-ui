@@ -1,7 +1,7 @@
 import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { DiscountType, Product, ProductType } from '../../../types/common';
+import { DiscountType, OrderStatusType, Product, ProductType } from '../../../types/common';
 import {
   BillingMode,
   OrderInfo,
@@ -190,13 +190,14 @@ export const calculateFinalAmount = (orderInfo: RentalOrderType) => {
   const finalAmount = calculateTotalAmount(orderInfo);
   const roundOff = orderInfo.round_off || 0;
   const ewayBillAmount = orderInfo.eway_amount || 0;
+  const balance_paid = orderInfo.balance_paid || 0;
   const discountAmount =
     orderInfo.discount_type === DiscountType.PERCENT
       ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
       : orderInfo.discount || 0;
   const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
   return parseFloat(
-    (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+    (finalAmount - discountAmount - balance_paid + gstAmount + roundOff + ewayBillAmount).toFixed(2)
   );
 };
 
@@ -377,4 +378,117 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
       },
     };
   });
+};
+
+// export const getOrderStatus = (order: RentalOrderInfo, balanceAmount: number): OrderStatusType => {
+//   const now = new Date();
+//   const totalAmount =
+//     calculateFinalAmount(order as RentalOrderType) -
+//     order.deposits.reduce((total, deposit) => total + deposit.amount, 0);
+
+//   const hasRepair = order.product_details.some((p) => p.order_repair_count > 0);
+//   if (hasRepair && order.status !== PaymentStatus.PAID) {
+//     return OrderStatusType.MACHINE_REPAIR;
+//   }
+
+//   const isNotReturned = order.product_details.some((p) => {
+//     if (p.type !== ProductType.RENTAL || !p.out_date) return false;
+
+//     const outDate = new Date(p.out_date);
+//     const expectedReturn = new Date(outDate);
+//     expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
+
+//     return now > expectedReturn && p.order_quantity > 0;
+//   });
+
+//   if (isNotReturned && balanceAmount === 0 && order.status === PaymentStatus.PAID) {
+//     return OrderStatusType.MACHINE_NOT_RETURN;
+//   }
+
+//   const isMachineWorking = order.product_details.some((p) => {
+//     if (p.type !== 'rental' || !p.out_date) return false;
+
+//     const outDate = new Date(p.out_date);
+//     const expectedReturn = new Date(outDate);
+//     expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
+
+//     return now <= expectedReturn;
+//   });
+
+//   if (isMachineWorking) {
+//     return OrderStatusType.MACHINE_WORKING;
+//   }
+
+//   if (totalAmount > 0 && PaymentStatus.PENDING) {
+//     return OrderStatusType.BILL_PENDING;
+//   } else if (totalAmount < 0 && PaymentStatus.PENDING && !order.repay_date) {
+//     return OrderStatusType.REPAYMENT_PENDING;
+//   }
+
+//   if (order.in_date) return OrderStatusType.PAID;
+// };
+
+export const getOrderStatus = (
+  order: RentalOrderInfo,
+  balanceAmount: number = 0
+): OrderStatusType => {
+  const now = new Date();
+
+  const totalAmount =
+    calculateFinalAmount(order as RentalOrderType) -
+    order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
+
+  console.log(balanceAmount);
+
+  const hasRepair = order.product_details.some((p) => p.order_repair_count > 0);
+  if (hasRepair) {
+    return OrderStatusType.MACHINE_REPAIR;
+  }
+  const isNotReturned = order.product_details.some((p) => {
+    if (p.type !== ProductType.RENTAL) return false;
+    const notReturned = !p.in_date;
+
+    return notReturned && p.order_quantity > 0;
+  });
+  if (isNotReturned) {
+    return OrderStatusType.MACHINE_NOT_RETURN;
+  }
+  const isMachineWorking = order.product_details.some((p) => {
+    if (p.type !== ProductType.RENTAL || !p.out_date) return false;
+
+    const outDate = new Date(p.out_date);
+    const expectedReturn = new Date(outDate);
+    expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
+
+    return now <= expectedReturn;
+  });
+  if (isMachineWorking) {
+    return OrderStatusType.MACHINE_WORKING;
+  }
+  if (order.status === PaymentStatus.PAID && (order.repay_date || order.balance_paid_date)) {
+    return OrderStatusType.PAID;
+  }
+
+  // if (totalAmount > 0 && order.status === PaymentStatus.PENDING) {
+  //   return OrderStatusType.BILL_PENDING;
+  // }
+
+  if (totalAmount < 0 && order.status === PaymentStatus.PENDING) {
+    return OrderStatusType.REPAYMENT_PENDING;
+  }
+
+  return OrderStatusType.BILL_PENDING;
+};
+
+export const getOrderStatusColors = (status: OrderStatusType): { bg: string; text: string } => {
+  const statusColors: Record<OrderStatusType, { bg: string; text: string }> = {
+    [OrderStatusType.MACHINE_WORKING]: { bg: '#800080', text: '#FFFFFF' },
+    [OrderStatusType.MACHINE_NOT_RETURN]: { bg: '#FFFF00', text: '#000000' },
+    [OrderStatusType.BILL_PENDING]: { bg: '#0000FF', text: '#FFFFFF' },
+    [OrderStatusType.REPAYMENT_PENDING]: { bg: '#FF0000', text: '#FFFFFF' },
+    [OrderStatusType.PAID]: { bg: '#008000', text: '#FFFFFF' },
+    [OrderStatusType.MACHINE_REPAIR]: { bg: '#000000', text: '#FFFFFF' },
+  };
+
+  return statusColors[status] || { bg: '#FFFFFF', text: '#000000' };
 };

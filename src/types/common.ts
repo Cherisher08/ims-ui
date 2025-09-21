@@ -47,6 +47,15 @@ export enum EventNameType {
   GARDEN_WORK = 'Garden Work',
 }
 
+export enum OrderStatusType {
+  MACHINE_WORKING = 'Machine working',
+  MACHINE_NOT_RETURN = 'Machine not return',
+  BILL_PENDING = 'Bill pending',
+  REPAYMENT_PENDING = 'Repayment pending',
+  PAID = 'Paid',
+  MACHINE_REPAIR = 'Machine Repair',
+}
+
 export interface Product {
   _id?: string;
   name: string;

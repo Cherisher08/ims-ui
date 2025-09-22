@@ -27,7 +27,7 @@ import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 import { RootState } from '../../../store/store';
 import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
-import { DepositType, RentalOrderType, RentalType } from '../../../types/order';
+import { DepositType, ProductDetails, RentalOrderType, RentalType } from '../../../types/order';
 import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
 import { IdNamePair } from '../Stocks';
 import {
@@ -687,9 +687,11 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         });
       }
 
-      const notReturnedProducts = data.product_details.find((prod) => !prod.in_date) || false;
+      const notReturnedProducts =
+        data.product_details.find((prod: ProductDetails) => !prod.in_date) || false;
       const finalAmount =
-        calculateFinalAmount(data) - data.deposits.reduce((sum, d) => sum + d.amount, 0);
+        calculateFinalAmount(data) -
+        data.deposits.reduce((sum: number, d: DepositType) => sum + d.amount, 0);
       if (data.in_date && (data.repay_date || finalAmount === 0) && !notReturnedProducts) {
         patchPayload.push({
           op: 'replace',

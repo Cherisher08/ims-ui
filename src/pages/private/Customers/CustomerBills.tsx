@@ -229,13 +229,11 @@ const CustomerBills = () => {
 
       if (extraOrders.length > 0) {
         const billAmount = calculateFinalAmount(order as RentalOrderType);
-
         const allDeposits: { order: RentalOrderInfo; dep: DepositType }[] = [];
         remainingDeposits.forEach((dep) => allDeposits.push({ order, dep }));
         extraOrders.forEach((eo) =>
           eo.deposits.forEach((dep) => allDeposits.push({ order: eo, dep }))
         );
-
         let runningTotal = 0;
         allDeposits.forEach(({ order, dep }, i) => {
           runningTotal += dep.amount;
@@ -339,7 +337,7 @@ const CustomerBills = () => {
       elements.push(<br key="dep-br" />);
     }
 
-    if (order.balance_paid && order.balance_paid_mode === '-') {
+    if (order.balance_paid && order.balance_paid_mode !== '-') {
       elements.push(<span key="balance">Balance - {order.balance_paid_mode}</span>);
       elements.push(<br key="balance-br" />);
     }
@@ -426,7 +424,9 @@ const CustomerBills = () => {
                         : ''
                     }`}
                   >
-                    {calculateFinalAmount(order as RentalOrderType) || '-'}
+                    {calculateFinalAmount(order as RentalOrderType) > 0
+                      ? calculateFinalAmount(order as RentalOrderType)
+                      : 0}
                   </td>
                   <td className="px-1 py-1">{order.balance_paid || '-'}</td>
                 </tr>
@@ -449,7 +449,6 @@ const CustomerBills = () => {
                   <td className="font-semibold">Total</td>
                   <td className="px-1 py-1 font-semibold">{calculateTotalBillAmount()}</td>
                   <td className="px-1 py-1 font-semibold">{calculateTotalReceivedAmount()}</td>
-                  {/* <td className="font-semibold px-1 py-1">{calculateTotalOutstandingAmount()}</td> */}
                 </tr>
                 <tr className="border-b border-gray-200 h-[2.5rem] bg-gray-100">
                   <td></td>
@@ -459,7 +458,7 @@ const CustomerBills = () => {
                   <td></td>
                   <td></td>
                   <td className="font-semibold">
-                    {calculateTotalBillAmount() - calculateTotalReceivedAmount() > 0
+                    {calculateTotalBillAmount() - calculateTotalReceivedAmount() >= 0
                       ? 'Balance Amount'
                       : 'Repay Amount'}
                   </td>
@@ -477,16 +476,6 @@ const CustomerBills = () => {
             )}
           </tbody>
         </table>
-        {/* <Box className="flex justify-end mt-4 align-middle gap-2">
-          <Typography className="font-semibold p-1">Outstanding Amount: </Typography>
-          <Typography
-            className={`${
-              Number(calculateTotalOutstandingAmount()) === 0 ? 'bg-green-400' : 'bg-red-400'
-            } font-semibold p-1 w-[5rem] border border-black border-t-2 border-b-2 border-l-0 border-r-0 text-center`}
-          >
-            {`₹${calculateTotalOutstandingAmount().toFixed(2)}`}
-          </Typography>
-        </Box> */}
       </div>
     </div>
   );

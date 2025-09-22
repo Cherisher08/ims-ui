@@ -467,9 +467,6 @@ export const getOrderStatus = (
     return OrderStatusType.MACHINE_NOT_RETURN;
   }
 
-  if (order.status === PaymentStatus.PAID && (order.repay_date || order.balance_paid_date)) {
-    return OrderStatusType.PAID;
-  }
   // if (totalAmount > 0 && order.status === PaymentStatus.PENDING) {
   //   return OrderStatusType.BILL_PENDING;
   // }
@@ -478,6 +475,9 @@ export const getOrderStatus = (
     return OrderStatusType.REPAYMENT_PENDING;
   }
 
+  if (order.status === PaymentStatus.PAID) {
+    return OrderStatusType.PAID;
+  }
   return OrderStatusType.BILL_PENDING;
 };
 

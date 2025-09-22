@@ -15,12 +15,11 @@ import { InDateCellEditor } from '../../../components/AgGridCellEditors/InDateCe
 import { SelectCellEditor } from '../../../components/AgGridCellEditors/SelectCellEditor';
 import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
 import { usePatchRentalOrderMutation } from '../../../services/OrderService';
-import { calculateProductRent } from '../../../services/utility_functions';
 import CustomButton from '../../../styled/CustomButton';
 import { PatchOperation, Product, ProductType } from '../../../types/common';
 import { ProductDetails, RentalType } from '../../../types/order';
 import { IdNamePair } from '../Stocks';
-import { currencyFormatter, getDefaultDeposit, getDefaultProduct } from './utils';
+import { currencyFormatter, getDefaultDeposit, getDefaultProduct, getDuration } from './utils';
 // import { usePatchRentalOrderMutation } from "../../../services/OrderService";
 
 const CustomDetailRenderer = (
@@ -86,8 +85,20 @@ const CustomDetailRenderer = (
             if (dayjs(value).diff(currentProduct.out_date) < 0) {
               value = currentProduct.out_date;
             }
+            currentProduct.in_date = value;
           }
-          const duration = calculateProductRent(currentProduct, true);
+          if (field === 'out_date') {
+            currentProduct.out_date = value;
+            if (dayjs(currentProduct.in_date).diff(value) < 0) {
+              patchPayload.push({
+                op: 'replace',
+                path: `/product_details/${rowIndex}/in_date`,
+                value: value,
+              });
+            }
+          }
+
+          const duration = getDuration(currentProduct.out_date, currentProduct.in_date);
           patchPayload.push({
             op: 'replace',
             path: `/product_details/${rowIndex}/duration`,
@@ -168,7 +179,7 @@ const CustomDetailRenderer = (
     const outDate = new Date(orderData.out_date || '');
     const expectedDate = new Date(outDate);
     expectedDate.setDate(outDate.getDate() + (orderData.rental_duration ?? 0));
-    const product = getDefaultProduct(orderData.out_date || '', expectedDate.toISOString());
+    const product = getDefaultProduct(orderData.out_date || '');
     const patchPayload: PatchOperation[] = [
       {
         op: 'add',
@@ -296,7 +307,7 @@ const CustomDetailRenderer = (
               // },
               valueFormatter: (params) => {
                 const date = new Date(params.value);
-                return dayjs(date).format('DD-MMM-YYYY hh:mm A');
+                return dayjs(date).format('DD-MMM-YYYY hh:mm A') || '';
               },
             },
             {
@@ -318,8 +329,8 @@ const CustomDetailRenderer = (
               // format: "DD/MM/YYYY",
               // },
               valueFormatter: (params) => {
-                const date = new Date(params.value);
-                return dayjs(date).format('DD-MMM-YYYY hh:mm A');
+                const date = params.value;
+                return date ? dayjs(date).format('DD-MMM-YYYY hh:mm A') : '';
               },
             },
             {

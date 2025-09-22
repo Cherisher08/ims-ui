@@ -626,7 +626,6 @@ const NewOrder = () => {
   useEffect(() => {
     if (!orderInfo.product_details || orderInfo.product_details.length === 0) return;
 
-    // Get all valid in_dates from product_details
     const inDates = orderInfo.product_details
       .map((prod) => prod.in_date)
       .filter((date) => !!date)
@@ -634,12 +633,10 @@ const NewOrder = () => {
 
     if (inDates.length === 0) return;
 
-    // Find the latest in_date
     const latestInDate = inDates.reduce((latest, current) =>
       current.isAfter(latest) ? current : latest
     );
 
-    // If orderInfo.in_date is before the latest in_date, update it
     if (
       (orderInfo.in_date && dayjs(orderInfo.in_date).isBefore(latestInDate)) ||
       orderInfo.in_date === ''
@@ -1149,18 +1146,20 @@ const NewOrder = () => {
                       <CustomDatePicker
                         label=""
                         value={
-                          dayjs(orderInfo.product_details[index].in_date).format(
-                            'DD-MMM-YYYY hh:mm A'
-                          ) || ''
+                          orderInfo.product_details[index].in_date
+                            ? dayjs(orderInfo.product_details[index].in_date).format(
+                                'DD-MMM-YYYY hh:mm A'
+                              )
+                            : ''
                         }
                         disabled={product.type !== ProductType.RENTAL}
                         className="w-[15rem]"
                         onChange={(val) => {
-                          if (dayjs(val).diff(product.out_date) < 0) {
+                          if (val !== undefined && dayjs(val).diff(product.out_date) < 0) {
                             val = product.out_date;
                           }
                           const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(newProducts[index].out_date, val);
+                          const duration = val ? getDuration(newProducts[index].out_date, val) : 1;
                           newProducts[index] = {
                             ...product,
                             in_date: val,

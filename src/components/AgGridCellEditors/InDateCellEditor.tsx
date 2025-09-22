@@ -1,9 +1,9 @@
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { CustomCellEditorProps } from 'ag-grid-react';
 import dayjs, { Dayjs } from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import { useState, useRef, useEffect, forwardRef } from 'react';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import utc from 'dayjs/plugin/utc';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -32,7 +32,7 @@ export const InDateCellEditor = forwardRef((props: CustomCellEditorProps & { for
   return (
     <div ref={wrapperRef} onKeyDown={handleKeyDown}>
       <DateTimePicker
-        value={value}
+        value={value ? dayjs(value) : null}
         onChange={handleChange}
         ampm
         format={format}

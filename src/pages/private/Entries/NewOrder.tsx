@@ -530,9 +530,10 @@ const NewOrder = () => {
   ]);
 
   useEffect(() => {
-    const notReturnedProducts = orderInfo.product_details.find((prod) => !prod.in_date) || false;
-    const finalAmount =
-      calculateFinalAmount() - orderInfo.deposits.reduce((sum, d) => sum + d.amount, 0);
+    const notReturnedProducts =
+      orderInfo.product_details.find((prod) => !prod.in_date && prod.type === ProductType.RENTAL) ||
+      false;
+    const finalAmount = calculateFinalAmount() - depositData.reduce((sum, d) => sum + d.amount, 0);
     if (orderInfo.in_date && (orderInfo.repay_date || finalAmount === 0) && !notReturnedProducts) {
       setOrderInfo((prev) => ({
         ...prev,
@@ -545,12 +546,13 @@ const NewOrder = () => {
       }));
     }
   }, [
-    calculateFinalAmount,
     orderInfo.balance_paid_date,
-    orderInfo.deposits,
+    depositData,
     orderInfo.in_date,
     orderInfo.product_details,
     orderInfo.repay_date,
+    orderInfo.deposits,
+    calculateFinalAmount,
   ]);
 
   useEffect(() => {
@@ -600,13 +602,11 @@ const NewOrder = () => {
   };
 
   const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
-    // Calculate the amount to be paid or received
     const amountDue = Math.abs(
       calculateFinalAmount() -
         orderInfo.deposits.reduce((total, deposit) => total + deposit.amount, 0)
     );
 
-    // If paid/received amount equals the amount due, mark as Paid
     if (value === amountDue) {
       handleValueChange(type, value);
       handleValueChange('status', PaymentStatus.PAID);
@@ -1152,7 +1152,7 @@ const NewOrder = () => {
                               )
                             : ''
                         }
-                        disabled={product.type !== ProductType.RENTAL}
+                        disabled={product.type !== ProductType.RENTAL || !product._id}
                         className="w-[15rem]"
                         onChange={(val) => {
                           if (val !== undefined && dayjs(val).diff(product.out_date) < 0) {

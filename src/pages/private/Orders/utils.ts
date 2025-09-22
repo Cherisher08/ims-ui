@@ -133,9 +133,9 @@ export const getDuration = (out_date: string, in_date: string) => {
 };
 
 export const getDefaultProduct = (out_date: string, in_date?: string) => {
-  const inDate = in_date || utcString();
+  const inDate = in_date || '';
   const outDate = out_date || utcString();
-  const duration = getDuration(outDate, inDate);
+  const duration = inDate ? getDuration(outDate, inDate) : 1;
   return {
     _id: '',
     name: '',

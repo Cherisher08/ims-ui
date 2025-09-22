@@ -687,9 +687,10 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         });
       }
 
-      const notReturnedProducts =
-        data.product_details.find((prod: { in_date: unknown }) => !prod.in_date) || false;
-      if (data.in_date && (data.repay_date || data.balance_paid_date) && !notReturnedProducts) {
+      const notReturnedProducts = data.product_details.find((prod) => !prod.in_date) || false;
+      const finalAmount =
+        calculateFinalAmount(data) - data.deposits.reduce((sum, d) => sum + d.amount, 0);
+      if (data.in_date && (data.repay_date || finalAmount === 0) && !notReturnedProducts) {
         patchPayload.push({
           op: 'replace',
           path: '/status',

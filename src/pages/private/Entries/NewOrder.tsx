@@ -531,11 +531,9 @@ const NewOrder = () => {
 
   useEffect(() => {
     const notReturnedProducts = orderInfo.product_details.find((prod) => !prod.in_date) || false;
-    if (
-      orderInfo.in_date &&
-      (orderInfo.repay_date || orderInfo.balance_paid_date) &&
-      !notReturnedProducts
-    ) {
+    const finalAmount =
+      calculateFinalAmount() - orderInfo.deposits.reduce((sum, d) => sum + d.amount, 0);
+    if (orderInfo.in_date && (orderInfo.repay_date || finalAmount === 0) && !notReturnedProducts) {
       setOrderInfo((prev) => ({
         ...prev,
         status: PaymentStatus.PAID,
@@ -547,7 +545,9 @@ const NewOrder = () => {
       }));
     }
   }, [
+    calculateFinalAmount,
     orderInfo.balance_paid_date,
+    orderInfo.deposits,
     orderInfo.in_date,
     orderInfo.product_details,
     orderInfo.repay_date,

@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
@@ -534,7 +535,16 @@ const NewOrder = () => {
       orderInfo.product_details.find((prod) => !prod.in_date && prod.type === ProductType.RENTAL) ||
       false;
     const finalAmount = calculateFinalAmount() - depositData.reduce((sum, d) => sum + d.amount, 0);
-    if (orderInfo.in_date && (orderInfo.repay_date || finalAmount === 0) && !notReturnedProducts) {
+    const hasProductOrTransportAmount =
+      (orderInfo.product_details.length > 0 &&
+        orderInfo.product_details.some((p) => p.order_quantity > 0)) ||
+      orderInfo.eway_amount > 0;
+    if (
+      orderInfo.in_date &&
+      (orderInfo.repay_date || finalAmount === 0) &&
+      !notReturnedProducts &&
+      hasProductOrTransportAmount
+    ) {
       setOrderInfo((prev) => ({
         ...prev,
         status: PaymentStatus.PAID,
@@ -548,6 +558,7 @@ const NewOrder = () => {
   }, [
     orderInfo.balance_paid_date,
     depositData,
+    orderInfo.eway_amount,
     orderInfo.in_date,
     orderInfo.product_details,
     orderInfo.repay_date,
@@ -639,7 +650,7 @@ const NewOrder = () => {
 
     if (
       (orderInfo.in_date && dayjs(orderInfo.in_date).isBefore(latestInDate)) ||
-      orderInfo.in_date === ''
+      !orderInfo.in_date
     ) {
       setOrderInfo((prev) => ({
         ...prev,
@@ -680,18 +691,20 @@ const NewOrder = () => {
         )} */}
 
         {/* <div className="flex flex-row justify-between w-full"> */}
-        <CustomButton
-          label="View Past Bills"
-          disabled={!selectedCustomerId}
-          onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
-        />
         <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
-        <CustomButton
-          className="w-[6rem]"
-          onClick={() => setAddContactOpen(true)}
-          label="Add Customer"
-          icon={<LuPlus color="white" />}
-        />
+        <Box className="flex gap-2">
+          <CustomButton
+            label="Customer History"
+            disabled={!selectedCustomerId}
+            onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
+          />
+          <CustomButton
+            className="w-[6rem]"
+            onClick={() => setAddContactOpen(true)}
+            label="Add Customer"
+            icon={<LuPlus color="white" />}
+          />
+        </Box>
         {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
             to proceed.

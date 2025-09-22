@@ -27,7 +27,13 @@ import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 import { RootState } from '../../../store/store';
 import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
-import { DepositType, ProductDetails, RentalOrderType, RentalType } from '../../../types/order';
+import {
+  DepositType,
+  PaymentStatus,
+  ProductDetails,
+  RentalOrderType,
+  RentalType,
+} from '../../../types/order';
 import DeleteOrderModal from '../Customers/modals/DeleteOrderModal';
 import { IdNamePair } from '../Stocks';
 import {
@@ -598,10 +604,17 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
                 }
               }}
             />
+
             <IoPrintOutline
+              color={params.data?.status === PaymentStatus.PAID ? 'black' : 'grey'}
               size={20}
-              className="cursor-pointer"
-              onClick={() => navigate(`/orders/invoice/${rowData?._id}`)}
+              className={
+                params.data?.status === PaymentStatus.PAID ? 'cursor-pointer' : 'cursor-not-allowed'
+              }
+              onClick={() => {
+                if (params.data?.status === PaymentStatus.PAID)
+                  navigate(`/orders/invoice/${rowData?._id}`);
+              }}
             />
           </div>
         );

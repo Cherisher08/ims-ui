@@ -1,4 +1,4 @@
-import { InputAdornment, TextField } from "@mui/material";
+import { InputAdornment, TextField } from '@mui/material';
 
 interface CustomInputProps {
   value: string | number;
@@ -23,17 +23,17 @@ const CustomInput: React.FC<CustomInputProps> = ({
   onChange,
   label,
   error = false,
-  helperText = "",
-  type = "text",
-  className = "",
-  placeholder = "",
+  helperText = '',
+  type = 'text',
+  className = '',
+  placeholder = '',
   multiline = false,
   minRows = 4,
   startIcon = null,
   maxLength = 120,
   disabled = false,
-  wrapperClass = "",
-  labelClass = "",
+  wrapperClass = '',
+  labelClass = '',
 }) => {
   return (
     <div className={`flex flex-col min-w-fit ${wrapperClass}`}>
@@ -47,7 +47,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
         multiline={multiline}
         minRows={minRows}
         disabled={disabled}
-        helperText={error ? helperText : helperText ? " " : ""}
+        helperText={error ? helperText : helperText ? ' ' : ''}
         placeholder={placeholder}
         slotProps={{
           input: {
@@ -56,10 +56,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
             }),
           },
           htmlInput: {
-            min: type === "number" ? 0 : undefined,
+            min: type === 'number' ? 0 : undefined,
             maxLength: maxLength,
             className: `${
-              multiline ? "h-fit p-0 box-border" : "h-[2.5rem]"
+              multiline ? 'h-fit p-0 box-border' : 'h-[2.5rem]'
             } box-border ${className}`,
           },
         }}

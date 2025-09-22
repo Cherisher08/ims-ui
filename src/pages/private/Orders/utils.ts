@@ -444,6 +444,19 @@ export const getOrderStatus = (
   if (hasRepair) {
     return OrderStatusType.MACHINE_REPAIR;
   }
+  const isMachineWorking = order.product_details.some((p) => {
+    if (p.type !== ProductType.RENTAL || !p.out_date) return false;
+
+    const outDate = new Date(p.out_date);
+    const expectedReturn = new Date(outDate);
+    expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
+
+    if (p.in_date) return now <= new Date(p.in_date);
+    return now <= expectedReturn;
+  });
+  if (isMachineWorking) {
+    return OrderStatusType.MACHINE_WORKING;
+  }
   const isNotReturned = order.product_details.some((p) => {
     if (p.type !== ProductType.RENTAL) return false;
     const notReturned = !p.in_date;
@@ -453,22 +466,10 @@ export const getOrderStatus = (
   if (isNotReturned) {
     return OrderStatusType.MACHINE_NOT_RETURN;
   }
-  const isMachineWorking = order.product_details.some((p) => {
-    if (p.type !== ProductType.RENTAL || !p.out_date) return false;
 
-    const outDate = new Date(p.out_date);
-    const expectedReturn = new Date(outDate);
-    expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
-
-    return now <= expectedReturn;
-  });
-  if (isMachineWorking) {
-    return OrderStatusType.MACHINE_WORKING;
-  }
   if (order.status === PaymentStatus.PAID && (order.repay_date || order.balance_paid_date)) {
     return OrderStatusType.PAID;
   }
-
   // if (totalAmount > 0 && order.status === PaymentStatus.PENDING) {
   //   return OrderStatusType.BILL_PENDING;
   // }

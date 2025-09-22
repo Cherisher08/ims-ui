@@ -532,9 +532,18 @@ const NewOrder = () => {
 
   useEffect(() => {
     const notReturnedProducts = orderInfo.product_details.find((prod) => !prod.in_date) || false;
+    const hasProductOrTransportAmount =
+      (orderInfo.product_details.length > 0 &&
+        orderInfo.product_details.some((p) => p.order_quantity > 0)) ||
+      orderInfo.eway_amount > 0;
     const finalAmount =
       calculateFinalAmount() - orderInfo.deposits.reduce((sum, d) => sum + d.amount, 0);
-    if (orderInfo.in_date && (orderInfo.repay_date || finalAmount === 0) && !notReturnedProducts) {
+    if (
+      orderInfo.in_date &&
+      (orderInfo.repay_date || finalAmount === 0) &&
+      !notReturnedProducts &&
+      hasProductOrTransportAmount
+    ) {
       setOrderInfo((prev) => ({
         ...prev,
         status: PaymentStatus.PAID,
@@ -549,6 +558,7 @@ const NewOrder = () => {
     calculateFinalAmount,
     orderInfo.balance_paid_date,
     orderInfo.deposits,
+    orderInfo.eway_amount,
     orderInfo.in_date,
     orderInfo.product_details,
     orderInfo.repay_date,

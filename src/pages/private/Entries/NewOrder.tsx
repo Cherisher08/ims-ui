@@ -652,7 +652,7 @@ const NewOrder = () => {
 
     if (
       (orderInfo.in_date && dayjs(orderInfo.in_date).isBefore(latestInDate)) ||
-      orderInfo.in_date === ''
+      !orderInfo.in_date
     ) {
       setOrderInfo((prev) => ({
         ...prev,

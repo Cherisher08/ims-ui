@@ -59,6 +59,7 @@ import {
   transformRentalOrderData,
   transportOptions,
 } from '../Orders/utils';
+import Box from '@mui/material/Box';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -683,18 +684,20 @@ const NewOrder = () => {
         )} */}
 
         {/* <div className="flex flex-row justify-between w-full"> */}
-        <CustomButton
-          label="View Past Bills"
-          disabled={!selectedCustomerId}
-          onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
-        />
         <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
-        <CustomButton
-          className="w-[6rem]"
-          onClick={() => setAddContactOpen(true)}
-          label="Add Customer"
-          icon={<LuPlus color="white" />}
-        />
+        <Box className="flex gap-2">
+          <CustomButton
+            label="Customer History"
+            disabled={!selectedCustomerId}
+            onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
+          />
+          <CustomButton
+            className="w-[6rem]"
+            onClick={() => setAddContactOpen(true)}
+            label="Add Customer"
+            icon={<LuPlus color="white" />}
+          />
+        </Box>
         {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
             to proceed.

@@ -531,7 +531,9 @@ const NewOrder = () => {
   ]);
 
   useEffect(() => {
-    const notReturnedProducts = orderInfo.product_details.find((prod) => !prod.in_date) || false;
+    const notReturnedProducts =
+      orderInfo.product_details.find((prod) => !prod.in_date && prod.type === ProductType.RENTAL) ||
+      false;
     const hasProductOrTransportAmount =
       (orderInfo.product_details.length > 0 &&
         orderInfo.product_details.some((p) => p.order_quantity > 0)) ||

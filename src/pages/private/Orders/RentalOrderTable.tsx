@@ -701,7 +701,9 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       }
 
       const notReturnedProducts =
-        data.product_details.find((prod: ProductDetails) => !prod.in_date) || false;
+        data.product_details.find(
+          (prod: ProductDetails) => !prod.in_date && prod.type === ProductType.RENTAL
+        ) || false;
       const finalAmount =
         calculateFinalAmount(data) -
         data.deposits.reduce((sum: number, d: DepositType) => sum + d.amount, 0);

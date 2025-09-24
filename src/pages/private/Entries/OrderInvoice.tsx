@@ -9,6 +9,7 @@ import {
   useGetRentalOrdersQuery,
 } from '../../../services/OrderService';
 import { ProductType } from '../../../types/common';
+import { PaymentStatus } from '../../../types/order';
 const OrderInvoice = () => {
   const { rentalId } = useParams();
   const { data: existingRentalOrder, isLoading: isRentalOrderQueryByIdLoading } =
@@ -31,10 +32,15 @@ const OrderInvoice = () => {
 
   if (isRentalOrdersQuerySuccess && rentalOrderData && invoiceId === '') {
     const sortedOrders = rentalOrderData
-      .filter((order) => order.in_date)
+      .filter((order) => order.in_date && order.status === PaymentStatus.PAID)
       .sort((a, b) => new Date(a.in_date).getTime() - new Date(b.in_date).getTime());
 
     const position = sortedOrders.findIndex((order) => order._id === existingRentalOrder._id) + 1;
+
+    if (!position) {
+      setInvoiceId('-');
+      return;
+    }
 
     const positionStr = position.toString().padStart(4, '0');
 

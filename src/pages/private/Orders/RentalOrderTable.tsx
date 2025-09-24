@@ -29,7 +29,6 @@ import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
 import {
   DepositType,
-  PaymentStatus,
   ProductDetails,
   RentalOrderInfo,
   RentalOrderType,
@@ -515,7 +514,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     },
     {
       field: 'status',
-      headerName: 'Payment Status',
+      headerName: 'Order Status',
       headerClass: 'ag-header-wrap',
       maxWidth: 170,
       filter: 'agTextColumnFilter',
@@ -608,14 +607,10 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
             />
 
             <IoPrintOutline
-              color={params.data?.status === PaymentStatus.PAID ? 'black' : 'grey'}
               size={20}
-              className={
-                params.data?.status === PaymentStatus.PAID ? 'cursor-pointer' : 'cursor-not-allowed'
-              }
+              className="cursor-pointer"
               onClick={() => {
-                if (params.data?.status === PaymentStatus.PAID)
-                  navigate(`/orders/invoice/${rowData?._id}`);
+                navigate(`/orders/invoice/${rowData?._id}`);
               }}
             />
           </div>
@@ -706,10 +701,19 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         data.product_details.find(
           (prod: ProductDetails) => !prod.in_date && prod.type === ProductType.RENTAL
         ) || false;
+      const hasProductOrTransportAmount =
+        (data.product_details.length > 0 &&
+          data.product_details.some((p: ProductDetails) => p.order_quantity > 0)) ||
+        data.eway_amount > 0;
       const finalAmount =
         calculateFinalAmount(data) -
-        data.deposits.reduce((sum: number, d: DepositType) => sum + d.amount, 0);
-      if (data.in_date && (data.repay_date || finalAmount === 0) && !notReturnedProducts) {
+        data.deposits.reduce((sum: number, deposit: DepositType) => sum + deposit.amount, 0);
+      if (
+        data.in_date &&
+        (data.repay_date || finalAmount === 0) &&
+        !notReturnedProducts &&
+        hasProductOrTransportAmount
+      ) {
         patchPayload.push({
           op: 'replace',
           path: '/status',

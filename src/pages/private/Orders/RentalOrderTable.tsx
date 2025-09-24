@@ -31,6 +31,7 @@ import {
   DepositType,
   PaymentStatus,
   ProductDetails,
+  RentalOrderInfo,
   RentalOrderType,
   RentalType,
 } from '../../../types/order';
@@ -521,6 +522,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       pinned: 'right',
       // editable: true,
       // singleClickEdit: true,
+      valueGetter: (params) => getOrderStatus(params.data as RentalOrderInfo),
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
         const status = getOrderStatus(data);

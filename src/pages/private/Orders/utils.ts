@@ -260,7 +260,7 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
           : '',
       'Balance Paid Mode': order.balance_paid_mode,
       'Round Off': order.round_off?.toString() || '',
-      Status: order.status,
+      Status: getOrderStatus(order as RentalOrderInfo),
       Remarks: order.remarks,
     };
   });

@@ -133,7 +133,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   <Text style={[styles.field, { fontSize: 11 }]}></Text>
                   <Text style={styles.colon}></Text>
                   <Text style={[styles.value, { fontSize: 11 }]}>
-                    {prod.name + ' - ' + `Rs. ${prod.rent_per_unit}`}
+                    {prod.name + ' / ' + `Rs. ${prod.rent_per_unit}`}
                   </Text>
                 </View>
               ))}

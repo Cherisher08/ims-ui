@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
+import { saveAs } from 'file-saver';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -60,6 +61,9 @@ import {
   transformRentalOrderData,
   transportOptions,
 } from '../Orders/utils';
+import CustomSplitButton from '../../../styled/CustomSplitButton';
+import DeliveryChallanPDF from './DeliveryChallanPDF';
+import { pdf } from '@react-pdf/renderer';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -436,6 +440,21 @@ const NewOrder = () => {
     }
   };
 
+  const handlePrintDeliveryChallan = async () => {
+    const blob = await pdf(<DeliveryChallanPDF orderInfo={orderInfo} />).toBlob();
+    saveAs(blob, `DeliveryChallan_${orderInfo.order_id}.pdf`);
+  };
+
+  const handleWhatsappChallan = async () => {
+    const blob = await pdf(<DeliveryChallanPDF orderInfo={orderInfo} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const message = `Dear ${
+      orderInfo.customer?.name || 'Customer'
+    },\n\nPlease find attached the Delivery Challan for your order ${
+      orderInfo.order_id
+    }.\n\nThank you for choosing our services!\n\nBest regards,\nMani Power Tools`;
+  };
+
   useEffect(() => {
     if (!rentalId) {
       setOrderInfo(initialRentalProduct);
@@ -666,8 +685,9 @@ const NewOrder = () => {
   return (
     <div className="w-full flex flex-col ">
       {/* === Top Tabs and Add Button === */}
-      <div className="w-full flex justify-between mb-2">
-        {/* {isAllOrdersAllowed ? (
+      <Box className="w-full top-0 sticky bg-white z-10">
+        <div className="w-full flex justify-between mb-2">
+          {/* {isAllOrdersAllowed ? (
           <Tabs
             value={orderInfo.type}
             onChange={(_, value) => handleValueChange('type', value)}
@@ -690,40 +710,48 @@ const NewOrder = () => {
           <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
         )} */}
 
-        {/* <div className="flex flex-row justify-between w-full"> */}
-        <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
-        <Box className="flex gap-2">
-          <CustomButton
-            label="Customer History"
-            disabled={!selectedCustomerId}
-            onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
-          />
-          <CustomButton
-            className="w-[6rem]"
-            onClick={() => setAddContactOpen(true)}
-            label="Add Customer"
-            icon={<LuPlus color="white" />}
-          />
-        </Box>
-        {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
+          {/* <div className="flex flex-row justify-between w-full"> */}
+          <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
+          <Box className="flex gap-2">
+            <CustomSplitButton
+              label="Print Delivery Challan"
+              disabled={!orderInfo._id}
+              onClick={() => handlePrintDeliveryChallan()}
+              options={['Send Whatsapp']}
+              onMenuItemClick={(index) => handleWhatsappChallan(orderInfo)}
+            />
+            <CustomButton
+              label="Customer History"
+              disabled={!selectedCustomerId}
+              onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
+            />
+            <CustomButton
+              className="w-[6rem]"
+              onClick={() => setAddContactOpen(true)}
+              label="Add Customer"
+              icon={<LuPlus color="white" />}
+            />
+          </Box>
+          {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
             to proceed.
           </p> */}
-        {/* </div> */}
-      </div>
-      <div className="w-full mb-2">
-        {orderInfo._id && (
-          <p
-            className="font-semibold text-center text-xl p-2"
-            style={{
-              backgroundColor: getOrderStatusColors(orderStatus).bg,
-              color: getOrderStatusColors(orderStatus).text,
-            }}
-          >
-            Order Status - {orderStatus}
-          </p>
-        )}
-      </div>
+          {/* </div> */}
+        </div>
+        <div className="w-full mb-2">
+          {orderInfo._id && (
+            <p
+              className="font-semibold text-center text-xl p-2"
+              style={{
+                backgroundColor: getOrderStatusColors(orderStatus).bg,
+                color: getOrderStatusColors(orderStatus).text,
+              }}
+            >
+              Order Status - {orderStatus}
+            </p>
+          )}
+        </div>
+      </Box>
 
       <div className="flex justify-between">
         <label className="underline text-xl font-bold">Details:</label>

@@ -115,10 +115,10 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               ))}
             </View> */}
             <View>
-              <View style={styles.row}>
+              {/* <View style={styles.row}>
                 <Text style={[styles.field, { fontSize: 11 }]}>Product Name</Text>
                 <Text style={[styles.value, { fontSize: 11 }]}>Per Day Rent</Text>
-              </View>
+              </View> */}
               {data.product_details.slice(0, 1).map((prod) => (
                 <View style={styles.row} key={prod._id}>
                   <Text style={[styles.field, { fontSize: 11 }]}>Product Name / Per Day Rent</Text>

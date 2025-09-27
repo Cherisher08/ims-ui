@@ -1,8 +1,9 @@
 import Box from '@mui/material/Box';
+import { pdf } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
+import { saveAs } from 'file-saver';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
-import { saveAs } from 'file-saver';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -24,6 +25,7 @@ import CustomButton from '../../../styled/CustomButton';
 import CustomDatePicker from '../../../styled/CustomDatePicker';
 import CustomInput from '../../../styled/CustomInput';
 import CustomSelect, { CustomSelectOptionProps } from '../../../styled/CustomSelect';
+import CustomSplitButton from '../../../styled/CustomSplitButton';
 import AntSwitch from '../../../styled/CustomSwitch';
 import {
   DiscountType,
@@ -61,9 +63,7 @@ import {
   transformRentalOrderData,
   transportOptions,
 } from '../Orders/utils';
-import CustomSplitButton from '../../../styled/CustomSplitButton';
 import DeliveryChallanPDF from './DeliveryChallanPDF';
-import { pdf } from '@react-pdf/renderer';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -441,13 +441,15 @@ const NewOrder = () => {
   };
 
   const handlePrintDeliveryChallan = async () => {
-    const blob = await pdf(<DeliveryChallanPDF orderInfo={orderInfo} />).toBlob();
+    const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
     saveAs(blob, `DeliveryChallan_${orderInfo.order_id}.pdf`);
   };
 
-  const handleWhatsappChallan = async () => {
-    const blob = await pdf(<DeliveryChallanPDF orderInfo={orderInfo} />).toBlob();
+  const handleWhatsappChallan = async (orderInfo: RentalOrderInfo) => {
+    const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const url = URL.createObjectURL(blob);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const message = `Dear ${
       orderInfo.customer?.name || 'Customer'
     },\n\nPlease find attached the Delivery Challan for your order ${
@@ -718,7 +720,7 @@ const NewOrder = () => {
               disabled={!orderInfo._id}
               onClick={() => handlePrintDeliveryChallan()}
               options={['Send Whatsapp']}
-              onMenuItemClick={(index) => handleWhatsappChallan(orderInfo)}
+              onMenuItemClick={() => handleWhatsappChallan(orderInfo)}
             />
             <CustomButton
               label="Customer History"

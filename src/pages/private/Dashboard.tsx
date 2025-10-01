@@ -370,7 +370,7 @@ const getDetailsData = (
 const Dashboard = () => {
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
-  const [filter, setFilter] = useState<string>('1');
+  const [filter, setFilter] = useState<string>('3');
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
   const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);

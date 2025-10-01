@@ -1,4 +1,4 @@
-import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
 import { RentalOrderInfo } from '../../../types/order';
 
@@ -18,13 +18,13 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     fontFamily: 'Inter',
-    padding: 15,
+    padding: 10,
   },
   container: {
     border: '2px solid #000000',
     width: '100%',
     fontSize: 12,
-    height: '100%',
+    // height: '100%',
   },
   header: {
     textAlign: 'center',
@@ -35,14 +35,15 @@ const styles = StyleSheet.create({
   content: {
     padding: 4,
     paddingHorizontal: 10,
-    flexGrow: 1,
+    // flexGrow: 1,
     borderBottom: 2,
+    fontSize: 10,
     borderColor: 'black',
-    gap: 4,
+    gap: 2,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   field: {
     flex: 1,
@@ -67,14 +68,24 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
 
   return (
     <Document>
-      <Page size="A5" style={styles.page}>
+      <Page size="A6" style={styles.page}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MANI POWER TOOLS</Text>
-            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                justifyContent: 'center',
+              }}
+            >
+              <Image src="/customer-logo.png" style={{ width: 70, height: 40 }} />
+              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MANI POWER TOOLS</Text>
+            </View>
+            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>
               Constructing Equipments and Dewatering Pumps for Rent
             </Text>
-            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>9042439153, 8428429453</Text>
+            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>9042439153, 8428429453</Text>
           </View>
           <View style={styles.content}>
             <View style={styles.row}>
@@ -124,11 +135,11 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   </Text>
                 </View>
               ))}
-              {data.product_details.slice(1).map((prod) => (
+              {data.product_details.slice(1, 6).map((prod) => (
                 <View style={styles.row} key={prod._id}>
-                  <Text style={[styles.field, { fontSize: 11 }]}></Text>
+                  <Text style={[styles.field]}></Text>
                   <Text style={styles.colon}></Text>
-                  <Text style={[styles.value, { fontSize: 11 }]}>
+                  <Text style={[styles.value]}>
                     {prod.name + ' / ' + `Rs. ${prod.rent_per_unit}`}
                   </Text>
                 </View>
@@ -167,17 +178,17 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             </View>
           </View>
           <View style={styles.footer}>
-            <Text style={{ fontSize: 11, fontWeight: 'bold', textAlign: 'center' }}>
+            <Text style={{ fontSize: 8, fontWeight: 'bold', textAlign: 'center' }}>
               You should generally return equipment within business hours (7.00 AM to 7.00 PM) &
               Customers are responsible for equipment's Damage
             </Text>
             <Text
               style={{
-                fontSize: 11,
+                fontSize: 8,
                 fontWeight: 'bold',
                 fontFamily: 'Tamil',
                 textAlign: 'center',
-                marginTop: 10,
+                marginTop: 6,
               }}
             >
               நீங்கள் வழக்கமாக வணிக நேரங்களுக்குள் (காலை 7.00 மணி முதல் மாலை 7.00 மணி வரை)

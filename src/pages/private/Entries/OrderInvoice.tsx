@@ -59,6 +59,7 @@ const OrderInvoice = () => {
       <p className="text-primary text-2xl font-bold mb-4">Order Invoice</p>
       {existingRentalOrder.type === ProductType.RENTAL && (
         <PDFViewer className="w-full h-full">
+          {/* <DeliveryChallan data={existingRentalOrder} /> */}
           <Invoice data={existingRentalOrder} invoiceId={invoiceId} />
         </PDFViewer>
       )}

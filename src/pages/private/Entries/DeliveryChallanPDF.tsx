@@ -83,7 +83,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MANI POWER TOOLS</Text>
             </View>
             <Text style={{ fontSize: 9, fontWeight: 'bold' }}>
-              Constructing Equipments and Dewatering Pumps for Rent
+              Generator, Dewatering Pumps, Scaffolding and all Construction equipments for Rent
             </Text>
             <Text style={{ fontSize: 9, fontWeight: 'bold' }}>9042439153, 8428429153</Text>
           </View>

@@ -8,9 +8,12 @@ import CustomCard from '../../styled/CustomCard';
 import CustomLineChart from '../../styled/CustomLineChart';
 import CustomSelect from '../../styled/CustomSelect';
 import AntSwitch from '../../styled/CustomSwitch';
-import { DiscountType, ProductType } from '../../types/common';
+import { DiscountType, OrderStatusType, ProductType } from '../../types/common';
 import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from '../../types/order';
-import { getDuration } from './Orders/utils';
+import { getDuration, getOrderStatus } from './Orders/utils';
+import CustomPieChart from '../../styled/CustomPieChart';
+
+export const OrderStatusValues: string[] = Object.values(OrderStatusType);
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
@@ -23,7 +26,8 @@ type ChartType =
   | 'machines_in'
   | 'machines_out'
   | 'machines_repair'
-  | 'machines_overdue';
+  | 'machines_overdue'
+  | 'order_status_summary';
 
 // const getRentalDuration = (outDate: string, inDate: string, unit: BillingUnit): number => {
 //   const out = new Date(outDate);
@@ -119,13 +123,16 @@ const getValidGroupKeys = (filter: string): string[] => {
 const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: ChartType) => {
   const groups: Record<string, number> = {};
 
-  const validGroupKeys = getValidGroupKeys(filter); // from earlier
+  const validGroupKeys =
+    chartType === 'order_status_summary' ? OrderStatusValues : getValidGroupKeys(filter);
 
   orders.forEach((order) => {
     const groupKey = groupKeyFormatter(order.in_date, filter);
 
-    // ignore if this group is outside the current date range
-    if (!validGroupKeys.includes(groupKey)) return;
+    if (chartType !== 'order_status_summary') {
+      // ignore if this group is outside the current date range
+      if (!validGroupKeys.includes(groupKey)) return;
+    }
 
     switch (chartType) {
       case 'incoming_pending': {
@@ -215,6 +222,12 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
             }
           }
         });
+        break;
+      }
+
+      case 'order_status_summary': {
+        const currentStatus = getOrderStatus(order);
+        groups[currentStatus] = (groups[currentStatus] || 0) + 1;
         break;
       }
 
@@ -557,8 +570,20 @@ const Dashboard = () => {
               >
                 Machines Overdue
               </li>
+              <li
+                className={`cursor-pointer ${
+                  graphFilter == 'order_status_summary' ? 'text-black' : 'text-gray-500'
+                }`}
+                onClick={() => setGraphFilter('order_status_summary')}
+              >
+                Order Status Summary
+              </li>
             </ul>
-            <CustomLineChart chartData={chartData} title="" isYPrice={isPriceData} />
+            {graphFilter === 'order_status_summary' ? (
+              <CustomPieChart chartData={chartData} title="" />
+            ) : (
+              <CustomLineChart chartData={chartData} title="" isYPrice={isPriceData} />
+            )}
           </div>
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
             <p className="text-lg font-semibold">Details</p>

@@ -716,7 +716,7 @@ const NewOrder = () => {
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
             <CustomSplitButton
-              label="Print Delivery Challan"
+              label="Download Delivery Challan"
               disabled={!orderInfo._id}
               onClick={() => handlePrintDeliveryChallan()}
               options={['Send Whatsapp']}

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Chart as ChartJS,
   LineElement,
@@ -10,8 +10,8 @@ import {
   Legend,
   Filler,
   type ChartOptions,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 
 ChartJS.register(
   LineElement,
@@ -24,7 +24,7 @@ ChartJS.register(
   Filler
 );
 
-interface ChartDataPoint {
+export interface ChartDataPoint {
   x: string;
   y: number;
 }
@@ -37,30 +37,30 @@ interface CustomLineChartProps {
 
 const CustomLineChart: React.FC<CustomLineChartProps> = ({
   chartData,
-  title = "",
+  title = '',
   isYPrice = true,
 }) => {
   const data = {
     labels: chartData.map((point) => point.x),
     datasets: [
       {
-        label: isYPrice ? "Price" : "Count",
+        label: isYPrice ? 'Price' : 'Count',
         data: chartData.map((point) => point.y),
         fill: false,
-        borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
         tension: 0.3,
       },
     ],
   };
 
-  const options: ChartOptions<"line"> = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
       legend: {
         display: false,
-        position: "top" as const,
-        align: "end" as const,
+        position: 'top' as const,
+        align: 'end' as const,
         labels: {
           boxWidth: 12,
           padding: 10,
@@ -69,7 +69,7 @@ const CustomLineChart: React.FC<CustomLineChartProps> = ({
       title: {
         display: !!title,
         text: title,
-        align: "start" as const,
+        align: 'start' as const,
         font: {
           size: 16,
         },
@@ -105,26 +105,20 @@ const CustomLineChart: React.FC<CustomLineChartProps> = ({
     },
     animations: {
       y: {
-        type: "number",
-        easing: "easeOutCubic",
+        type: 'number',
+        easing: 'easeOutCubic',
         duration: 1000,
         from: (ctx) => ctx.chart.scales.y?.max ?? 0,
       },
       x: {
-        type: "number",
-        easing: "easeOutQuad",
+        type: 'number',
+        easing: 'easeOutQuad',
         duration: 500,
       },
     },
   };
 
-  return (
-    <Line
-      data={data}
-      options={options}
-      className="max-w-full max-h-[24rem] rounded-sm"
-    />
-  );
+  return <Line data={data} options={options} className="max-w-full max-h-[24rem] rounded-sm" />;
 };
 
 export default CustomLineChart;

@@ -218,48 +218,48 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
     return {
       'Order ID': order.order_id,
       Customer: order.customer?.name,
-      Products: products,
-      'Product Amounts': productAmounts,
-      'Order Quantity': orderQuantities,
-      'Amount (Before Taxes)': calculateTotalAmount(order).toString(),
-      'Amount (After Taxes)': calculateFinalAmount(order).toString(),
       'Balance Amount': Math.max(
         0,
         calculateFinalAmount(order) -
           order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-      ).toFixed(2),
-      'Repayment Amount': Math.abs(
-        Math.min(
-          0,
-          calculateFinalAmount(order) -
-            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-        )
-      ).toFixed(2),
+      ),
       'Order Out Date': order.out_date ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') : '',
       'Order In Date':
         order.in_date && dayjs(order.in_date).isValid()
           ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
           : '',
       'Rental Duration': order.rental_duration?.toString() || '',
-      'Event Name': order.event_name,
-      'Event Venue': order.event_venue,
-      'Event Address': order.event_address,
-      'Billing Mode': order.billing_mode,
+      'Deposit Amount': depositAmounts,
+      'Deposit Mode': depositModes,
+      Products: products,
+      'Product Amounts': productAmounts,
+      'Order Quantity': orderQuantities,
+      'Amount (Before Taxes)': calculateTotalAmount(order),
+      'Amount (After Taxes)': calculateFinalAmount(order),
+      'Repayment Amount': Math.abs(
+        Math.min(
+          0,
+          calculateFinalAmount(order) -
+            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+        )
+      ),
+      'Repayment Mode': order.payment_mode,
       GST: `${order.gst} %`,
       Discount: order.discount?.toString() || '',
       'Discount Type': order.discount_type,
-      'Transport Amount': order.eway_amount?.toString() || '',
+      'Transport Amount': order.eway_amount || '',
       'Transport Payment Mode': order.eway_mode,
       'Transport Type': order.eway_type,
-      'Deposit Amount': depositAmounts,
-      'Deposit Mode': depositModes,
-      'Repayment Mode': order.payment_mode,
+      'Round Off': order.round_off || '',
       'Balance Paid Date':
         order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
           ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
           : '',
       'Balance Paid Mode': order.balance_paid_mode,
-      'Round Off': order.round_off?.toString() || '',
+      'Event Name': order.event_name,
+      'Event Venue': order.event_venue,
+      'Event Address': order.event_address,
+      'Billing Mode': order.billing_mode,
       Status: getOrderStatus(order as RentalOrderInfo),
       Remarks: order.remarks,
     };

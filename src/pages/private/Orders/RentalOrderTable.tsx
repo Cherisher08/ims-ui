@@ -229,12 +229,12 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       filter: 'agNumberColumnFilter',
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
-        const value = calculateFinalAmount(params.data);
+        const value = calculateFinalAmount(params.data, false);
         return isNaN(value) ? null : value;
       },
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
-        return <p>₹ {calculateFinalAmount(data)}</p>;
+        return <p>₹ {calculateFinalAmount(data, false)}</p>;
       },
     },
     // {

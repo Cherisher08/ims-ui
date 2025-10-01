@@ -186,11 +186,14 @@ export const calculateTotalAmount = (orderInfo: RentalOrderType) => {
   return 0;
 };
 
-export const calculateFinalAmount = (orderInfo: RentalOrderType) => {
+export const calculateFinalAmount = (
+  orderInfo: RentalOrderType,
+  isBalancePaidIncluded: boolean = true
+) => {
   const finalAmount = calculateTotalAmount(orderInfo);
   const roundOff = orderInfo.round_off || 0;
   const ewayBillAmount = orderInfo.eway_amount || 0;
-  const balance_paid = orderInfo.balance_paid || 0;
+  const balance_paid = isBalancePaidIncluded ? orderInfo.balance_paid || 0 : 0;
   const discountAmount =
     orderInfo.discount_type === DiscountType.PERCENT
       ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
@@ -235,7 +238,7 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
       'Product Amounts': productAmounts,
       'Order Quantity': orderQuantities,
       'Amount (Before Taxes)': calculateTotalAmount(order),
-      'Amount (After Taxes)': calculateFinalAmount(order),
+      'Amount (After Taxes)': calculateFinalAmount(order, false),
       'Repayment Amount': Math.abs(
         Math.min(
           0,
@@ -301,11 +304,11 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
 
   const range = XLSX.utils.decode_range(ws['!ref'] || '');
   for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-    const productCellRef = XLSX.utils.encode_cell({ r: R, c: 2 });
-    const amountCellRef = XLSX.utils.encode_cell({ r: R, c: 3 });
-    const quantityCellRef = XLSX.utils.encode_cell({ r: R, c: 4 });
-    const depositAmountCellRef = XLSX.utils.encode_cell({ r: R, c: 22 });
-    const depositModeCellRef = XLSX.utils.encode_cell({ r: R, c: 23 });
+    const productCellRef = XLSX.utils.encode_cell({ r: R, c: 8 });
+    const amountCellRef = XLSX.utils.encode_cell({ r: R, c: 9 });
+    const quantityCellRef = XLSX.utils.encode_cell({ r: R, c: 10 });
+    const depositAmountCellRef = XLSX.utils.encode_cell({ r: R, c: 6 });
+    const depositModeCellRef = XLSX.utils.encode_cell({ r: R, c: 7 });
 
     if (ws[productCellRef]) {
       ws[productCellRef].s = {

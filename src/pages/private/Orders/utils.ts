@@ -204,7 +204,7 @@ export const calculateFinalAmount = (
   );
 };
 
-export const exportOrderToExcel = (orders: RentalOrderType[]) => {
+export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]) => {
   const ws = XLSX.utils.aoa_to_sheet([]);
 
   const data: Record<string, string | number>[] = [];
@@ -230,20 +230,43 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
     for (let i = 0; i < maxRows; i++) {
       const balanceAmount = Math.max(
         0,
-        calculateFinalAmount(order) -
+        calculateFinalAmount(order as RentalOrderType) -
           order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
       );
       const repaymentAmount = Math.abs(
         Math.min(
           0,
-          calculateFinalAmount(order) -
+          calculateFinalAmount(order as RentalOrderType) -
             order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
         )
       );
 
+      const customerDetails = () => {
+        if (!order.customer) {
+          return { name: '', phone: '' };
+        }
+        // Check if order is instance of RentalOrderInfo (has personal_number)
+        if ('personal_number' in order.customer) {
+          return {
+            name: order.customer.name || '',
+            phone: order.customer.personal_number || '',
+          };
+        } else {
+          // RentalOrderType: name is "name-phone"
+          const parts = (order.customer.name || '').split('-');
+          const phone = parts.pop() || ''; // last part is phone
+          const name = parts.join('-') || ''; // rest is name
+          return {
+            name,
+            phone,
+          };
+        }
+      };
+
       data.push({
         'Order ID': i === 0 ? order.order_id : '',
-        Customer: i === 0 ? order.customer?.name : '',
+        Customer: i === 0 ? customerDetails().name : '',
+        'Customer Number': i === 0 ? customerDetails().phone : '',
         'Balance Amount': i === 0 ? balanceAmount : '',
         'Order Out Date':
           i === 0
@@ -266,8 +289,9 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
             ? products[i].rent_per_unit * products[i].order_quantity * products[i].duration
             : '',
         'Order Quantity': i < products.length ? products[i].order_quantity.toString() : '',
-        'Amount (Before Taxes)': i === 0 ? calculateTotalAmount(order) : '',
-        'Amount (After Taxes)': i === 0 ? calculateFinalAmount(order, false) : '',
+        'Amount (Before Taxes)': i === 0 ? calculateTotalAmount(order as RentalOrderType) : '',
+        'Amount (After Taxes)':
+          i === 0 ? calculateFinalAmount(order as RentalOrderType, false) : '',
         'Repayment Amount': i === 0 ? repaymentAmount : '',
         'Repayment Mode': i === 0 ? order.payment_mode : '',
         GST: i === 0 ? `${order.gst} %` : '',
@@ -297,8 +321,8 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
         totalDeposit += deposits[i].amount;
       }
       if (i === 0) {
-        totalBeforeTax += calculateTotalAmount(order);
-        totalAfterTax += calculateFinalAmount(order, false);
+        totalBeforeTax += calculateTotalAmount(order as RentalOrderType);
+        totalAfterTax += calculateFinalAmount(order as RentalOrderType, false);
         totalBalance += balanceAmount;
         totalRepayment += repaymentAmount;
       }

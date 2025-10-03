@@ -211,6 +211,12 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
   const merges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
   let currentRow = 1; // data starts at row 1 (row 0 is header)
 
+  let totalDeposit = 0;
+  let totalBeforeTax = 0;
+  let totalAfterTax = 0;
+  let totalBalance = 0;
+  let totalRepayment = 0;
+
   orders.forEach((order) => {
     const products = order.product_details;
     const deposits = order.deposits;
@@ -222,17 +228,23 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
     });
 
     for (let i = 0; i < maxRows; i++) {
+      const balanceAmount = Math.max(
+        0,
+        calculateFinalAmount(order) -
+          order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+      );
+      const repaymentAmount = Math.abs(
+        Math.min(
+          0,
+          calculateFinalAmount(order) -
+            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+        )
+      );
+
       data.push({
         'Order ID': i === 0 ? order.order_id : '',
         Customer: i === 0 ? order.customer?.name : '',
-        'Balance Amount':
-          i === 0
-            ? Math.max(
-                0,
-                calculateFinalAmount(order) -
-                  order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-              )
-            : '',
+        'Balance Amount': i === 0 ? balanceAmount : '',
         'Order Out Date':
           i === 0
             ? order.out_date
@@ -256,16 +268,7 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
         'Order Quantity': i < products.length ? products[i].order_quantity.toString() : '',
         'Amount (Before Taxes)': i === 0 ? calculateTotalAmount(order) : '',
         'Amount (After Taxes)': i === 0 ? calculateFinalAmount(order, false) : '',
-        'Repayment Amount':
-          i === 0
-            ? Math.abs(
-                Math.min(
-                  0,
-                  calculateFinalAmount(order) -
-                    order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-                )
-              )
-            : '',
+        'Repayment Amount': i === 0 ? repaymentAmount : '',
         'Repayment Mode': i === 0 ? order.payment_mode : '',
         GST: i === 0 ? `${order.gst} %` : '',
         Discount: i === 0 ? order.discount?.toString() || '' : '',
@@ -288,13 +291,54 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
         Status: i === 0 ? getOrderStatus(order as RentalOrderInfo) : '',
         Remarks: i === 0 ? order.remarks : '',
       });
+
+      // Accumulate totals
+      if (i < deposits.length) {
+        totalDeposit += deposits[i].amount;
+      }
+      if (i === 0) {
+        totalBeforeTax += calculateTotalAmount(order);
+        totalAfterTax += calculateFinalAmount(order, false);
+        totalBalance += balanceAmount;
+        totalRepayment += repaymentAmount;
+      }
     }
 
     currentRow += maxRows;
   });
 
+  // Add summary row with a blank line before it
+  data.push({}); // blank line
+
+  const summaryRowIndex = data.length; // index of summary row after push
+
+  data.push({
+    'Order ID': 'Order Summary',
+    'Deposit Amount': `₹${totalDeposit.toFixed(2)}`,
+    'Amount (Before Taxes)': `₹${totalBeforeTax.toFixed(2)}`,
+    'Amount (After Taxes)': `₹${totalAfterTax.toFixed(2)}`,
+    'Balance Amount': `₹${totalBalance.toFixed(2)}`,
+    'Repayment Amount': `₹${totalRepayment.toFixed(2)}`,
+  });
+
   XLSX.utils.sheet_add_json(ws, data, { origin: 0 });
   ws['!merges'] = merges;
+
+  // Bold the entire summary row and add thick top and bottom borders
+  const summaryRange = XLSX.utils.decode_range(ws['!ref'] || '');
+  for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
+    const cellRef = XLSX.utils.encode_cell({ r: summaryRowIndex + 1, c: C });
+    if (!ws[cellRef]) {
+      ws[cellRef] = { t: 's', v: '' }; // create empty cell if not exists
+    }
+
+    ws[cellRef].s = ws[cellRef].s || {};
+    ws[cellRef].s.font = { bold: true };
+    ws[cellRef].s.border = {
+      top: { style: 'thick' },
+      bottom: { style: 'thick' },
+    };
+  }
 
   // Set center alignment for merged Order ID cells
   merges.forEach((merge) => {
@@ -347,29 +391,24 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
     const depositModeCellRef = XLSX.utils.encode_cell({ r: R, c: 7 });
 
     if (ws[productCellRef]) {
-      ws[productCellRef].s = {
-        alignment: { wrapText: true, vertical: 'top' },
-      };
+      ws[productCellRef].s = ws[productCellRef].s || {};
+      ws[productCellRef].s.alignment = { wrapText: true, vertical: 'top' };
     }
     if (ws[amountCellRef]) {
-      ws[amountCellRef].s = {
-        alignment: { wrapText: true, vertical: 'top' },
-      };
+      ws[amountCellRef].s = ws[amountCellRef].s || {};
+      ws[amountCellRef].s.alignment = { wrapText: true, vertical: 'top' };
     }
     if (ws[quantityCellRef]) {
-      ws[quantityCellRef].s = {
-        alignment: { wrapText: true, vertical: 'top' },
-      };
+      ws[quantityCellRef].s = ws[quantityCellRef].s || {};
+      ws[quantityCellRef].s.alignment = { wrapText: true, vertical: 'top' };
     }
     if (ws[depositAmountCellRef]) {
-      ws[depositAmountCellRef].s = {
-        alignment: { wrapText: true, vertical: 'top' },
-      };
+      ws[depositAmountCellRef].s = ws[depositAmountCellRef].s || {};
+      ws[depositAmountCellRef].s.alignment = { wrapText: true, vertical: 'top' };
     }
     if (ws[depositModeCellRef]) {
-      ws[depositModeCellRef].s = {
-        alignment: { wrapText: true, vertical: 'top' },
-      };
+      ws[depositModeCellRef].s = ws[depositModeCellRef].s || {};
+      ws[depositModeCellRef].s.alignment = { wrapText: true, vertical: 'top' };
     }
   }
 

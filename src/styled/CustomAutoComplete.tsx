@@ -117,20 +117,18 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
               {error && <span className="text-red-700 text-[12px] ml-4">{helperText}</span>}
             </div>
           )}
-          renderOption={(props, option) =>
-            option.value === 'add-new' ? (
+          renderOption={(props, option) => {
+            return option.value === 'add-new' ? (
               <li
                 {...props}
-                key="create-option"
-                onClick={() => {
-                  addNewValue(inputValue);
-                }}
+                key="option-create-new"
+                onClick={() => addNewValue(inputValue)}
                 className="text-green-500 px-4 py-2 cursor-pointer"
               >
                 + Create New
               </li>
             ) : (
-              <li {...props} key={option.value} className="px-4 py-2 flex justify-between">
+              <li {...props} key={props.id} className="px-4 py-2 flex justify-between">
                 {option.value}{' '}
                 {option.description && (
                   <Box component="span" className="text-orange-600">
@@ -138,8 +136,8 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
                   </Box>
                 )}
               </li>
-            )
-          }
+            );
+          }}
           onChange={(_, newValue) => onChange(newValue?.value)}
         />
       </div>

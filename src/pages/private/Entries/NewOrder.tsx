@@ -810,8 +810,9 @@ const NewOrder = () => {
           }}
         />
         <CustomAutoComplete
-          addNewValue={() => setAddContactOpen(true)}
+          addNewValue={() => {}}
           placeholder=""
+          createOption={false}
           label="Customer"
           options={formatContacts(contacts)}
           value={
@@ -826,7 +827,6 @@ const NewOrder = () => {
           }}
           error={customerHasPositiveAmount}
           helperText={`Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`}
-          createOption={false}
           // labelNavigation={{
           //   label: 'View Past Bills',
           //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',

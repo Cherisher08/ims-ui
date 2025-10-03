@@ -207,68 +207,104 @@ export const calculateFinalAmount = (
 export const exportOrderToExcel = (orders: RentalOrderType[]) => {
   const ws = XLSX.utils.aoa_to_sheet([]);
 
-  const data = orders.map((order) => {
-    const products = order.product_details.map((p) => p.name).join('\n');
-    const productAmounts = order.product_details
-      .map((p) => (p.rent_per_unit * p.order_quantity * p.duration).toString())
-      .join('\n');
-    const orderQuantities = order.product_details
-      .map((p) => p.order_quantity.toString())
-      .join('\n');
-    const depositAmounts = order.deposits.map((d) => d.amount.toString()).join('\n');
-    const depositModes = order.deposits.map((d) => d.mode.toString()).join('\n');
+  const data: Record<string, string | number>[] = [];
+  const merges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
+  let currentRow = 1; // data starts at row 1 (row 0 is header)
 
-    return {
-      'Order ID': order.order_id,
-      Customer: order.customer?.name,
-      'Balance Amount': Math.max(
-        0,
-        calculateFinalAmount(order) -
-          order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-      ),
-      'Order Out Date': order.out_date ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') : '',
-      'Order In Date':
-        order.in_date && dayjs(order.in_date).isValid()
-          ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
-          : '',
-      'Rental Duration': order.rental_duration?.toString() || '',
-      'Deposit Amount': depositAmounts,
-      'Deposit Mode': depositModes,
-      Products: products,
-      'Product Amounts': productAmounts,
-      'Order Quantity': orderQuantities,
-      'Amount (Before Taxes)': calculateTotalAmount(order),
-      'Amount (After Taxes)': calculateFinalAmount(order, false),
-      'Repayment Amount': Math.abs(
-        Math.min(
-          0,
-          calculateFinalAmount(order) -
-            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-        )
-      ),
-      'Repayment Mode': order.payment_mode,
-      GST: `${order.gst} %`,
-      Discount: order.discount?.toString() || '',
-      'Discount Type': order.discount_type,
-      'Transport Amount': order.eway_amount || '',
-      'Transport Payment Mode': order.eway_mode,
-      'Transport Type': order.eway_type,
-      'Round Off': order.round_off || '',
-      'Balance Paid Date':
-        order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
-          ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
-          : '',
-      'Balance Paid Mode': order.balance_paid_mode,
-      'Event Name': order.event_name,
-      'Event Venue': order.event_venue,
-      'Event Address': order.event_address,
-      'Billing Mode': order.billing_mode,
-      Status: getOrderStatus(order as RentalOrderInfo),
-      Remarks: order.remarks,
-    };
+  orders.forEach((order) => {
+    const products = order.product_details;
+    const deposits = order.deposits;
+    const maxRows = Math.max(products.length || 1, deposits.length || 1);
+
+    merges.push({
+      s: { r: currentRow, c: 0 },
+      e: { r: currentRow + maxRows - 1, c: 0 },
+    });
+
+    for (let i = 0; i < maxRows; i++) {
+      data.push({
+        'Order ID': i === 0 ? order.order_id : '',
+        Customer: i === 0 ? order.customer?.name : '',
+        'Balance Amount':
+          i === 0
+            ? Math.max(
+                0,
+                calculateFinalAmount(order) -
+                  order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+              )
+            : '',
+        'Order Out Date':
+          i === 0
+            ? order.out_date
+              ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A')
+              : ''
+            : '',
+        'Order In Date':
+          i === 0
+            ? order.in_date && dayjs(order.in_date).isValid()
+              ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
+              : ''
+            : '',
+        'Rental Duration': i === 0 ? order.rental_duration?.toString() || '' : '',
+        'Deposit Amount': i < deposits.length ? deposits[i].amount : '',
+        'Deposit Mode': i < deposits.length ? deposits[i].mode.toString() : '',
+        Products: i < products.length ? products[i].name : '',
+        'Product Amounts':
+          i < products.length
+            ? products[i].rent_per_unit * products[i].order_quantity * products[i].duration
+            : '',
+        'Order Quantity': i < products.length ? products[i].order_quantity.toString() : '',
+        'Amount (Before Taxes)': i === 0 ? calculateTotalAmount(order) : '',
+        'Amount (After Taxes)': i === 0 ? calculateFinalAmount(order, false) : '',
+        'Repayment Amount':
+          i === 0
+            ? Math.abs(
+                Math.min(
+                  0,
+                  calculateFinalAmount(order) -
+                    order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+                )
+              )
+            : '',
+        'Repayment Mode': i === 0 ? order.payment_mode : '',
+        GST: i === 0 ? `${order.gst} %` : '',
+        Discount: i === 0 ? order.discount?.toString() || '' : '',
+        'Discount Type': i === 0 ? order.discount_type : '',
+        'Transport Amount': i === 0 ? order.eway_amount || '' : '',
+        'Transport Payment Mode': i === 0 ? order.eway_mode : '',
+        'Transport Type': i === 0 ? order.eway_type : '',
+        'Round Off': i === 0 ? order.round_off || '' : '',
+        'Balance Paid Date':
+          i === 0
+            ? order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
+              ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
+              : ''
+            : '',
+        'Balance Paid Mode': i === 0 ? order.balance_paid_mode : '',
+        'Event Name': i === 0 ? order.event_name : '',
+        'Event Venue': i === 0 ? order.event_venue : '',
+        'Event Address': i === 0 ? order.event_address : '',
+        'Billing Mode': i === 0 ? order.billing_mode : '',
+        Status: i === 0 ? getOrderStatus(order as RentalOrderInfo) : '',
+        Remarks: i === 0 ? order.remarks : '',
+      });
+    }
+
+    currentRow += maxRows;
   });
 
   XLSX.utils.sheet_add_json(ws, data, { origin: 0 });
+  ws['!merges'] = merges;
+
+  // Set center alignment for merged Order ID cells
+  merges.forEach((merge) => {
+    const cellRef = XLSX.utils.encode_cell(merge.s);
+    if (ws[cellRef]) {
+      ws[cellRef].s = {
+        alignment: { horizontal: 'center', vertical: 'center' },
+      };
+    }
+  });
 
   ws['!cols'] = [
     { wch: 20 },
@@ -339,7 +375,7 @@ export const exportOrderToExcel = (orders: RentalOrderType[]) => {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-  XLSX.writeFile(wb, 'orders.xlsx');
+  XLSX.writeFile(wb, `orders_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`);
 };
 
 // export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({

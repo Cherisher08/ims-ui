@@ -53,7 +53,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   ) => {
     setInputValue(inputValue);
     const filteredOptions = options.filter((option) =>
-      option.value.toLowerCase().startsWith(inputValue.toLowerCase())
+      option.value.toLowerCase().includes(inputValue.toLowerCase())
     );
     return createOption
       ? [

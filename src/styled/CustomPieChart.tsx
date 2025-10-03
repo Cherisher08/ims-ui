@@ -1,6 +1,7 @@
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, ChartOptions } from 'chart.js';
 import { ChartDataPoint } from './CustomLineChart';
+import Box from '@mui/material/Box';
 
 // Register chart.js components
 ChartJS.register(Title, Tooltip, Legend, ArcElement);
@@ -54,9 +55,26 @@ const CustomPieChart: React.FC<CustomLineChartProps> = ({ chartData, title = '' 
         },
       },
     },
+    animations: {
+      y: {
+        type: 'number',
+        easing: 'easeOutCubic',
+        duration: 1000,
+        from: (ctx) => ctx.chart.scales.y?.max ?? 0,
+      },
+      x: {
+        type: 'number',
+        easing: 'easeOutQuad',
+        duration: 500,
+      },
+    },
   };
 
-  return <Pie data={data} options={options} />;
+  return (
+    <Box className="h-full w-full flex items-center justify-center">
+      <Pie data={data} options={options} />
+    </Box>
+  );
 };
 
 export default CustomPieChart;

@@ -123,16 +123,13 @@ const getValidGroupKeys = (filter: string): string[] => {
 const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: ChartType) => {
   const groups: Record<string, number> = {};
 
-  const validGroupKeys =
-    chartType === 'order_status_summary' ? OrderStatusValues : getValidGroupKeys(filter);
+  let validGroupKeys = getValidGroupKeys(filter);
 
   orders.forEach((order) => {
     const groupKey = groupKeyFormatter(order.in_date, filter);
 
-    if (chartType !== 'order_status_summary') {
-      // ignore if this group is outside the current date range
-      if (!validGroupKeys.includes(groupKey)) return;
-    }
+    // ignore if this group is outside the current date range
+    if (!validGroupKeys.includes(groupKey)) return;
 
     switch (chartType) {
       case 'incoming_pending': {
@@ -235,6 +232,8 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
         break;
     }
   });
+
+  validGroupKeys = chartType === 'order_status_summary' ? OrderStatusValues : validGroupKeys;
 
   // guarantee that even group keys with zero are shown on the chart
   const chartData = validGroupKeys.map((key) => ({
@@ -371,7 +370,7 @@ const getDetailsData = (
 const Dashboard = () => {
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
-  const [filter, setFilter] = useState<string>('1');
+  const [filter, setFilter] = useState<string>('3');
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
   const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);

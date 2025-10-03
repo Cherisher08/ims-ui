@@ -7,7 +7,7 @@ import type {
   ValueGetterParams,
 } from 'ag-grid-community';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
@@ -56,7 +56,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const expiredOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const storedPage = useSelector((state: RootState) => state.rentalOrder.tablePage);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -67,11 +66,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   const [expandedRowIds, setExpandedRowIds] = useState<string[]>([]);
 
   const [customerList, setCustomerList] = useState<IdNamePair[]>([]);
-
-  const expiredOrderIds = useMemo(
-    () => new Set(expiredOrders.map((order) => order.order_id)),
-    [expiredOrders]
-  );
 
   const orderData = rentalOrders.map((order) => ({ ...order }));
 
@@ -235,12 +229,12 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       filter: 'agNumberColumnFilter',
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
-        const value = calculateFinalAmount(params.data);
+        const value = calculateFinalAmount(params.data, false);
         return isNaN(value) ? null : value;
       },
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
-        return <p>₹ {calculateFinalAmount(data)}</p>;
+        return <p>₹ {calculateFinalAmount(data, false)}</p>;
       },
     },
     // {
@@ -843,13 +837,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         colDefs={rentalOrderColDef}
         rowData={orderData}
         onGridReady={onGridReady}
-        getRowStyle={(params) => {
-          const orderId = params.data?.order_id;
-          if (orderId && expiredOrderIds.has(orderId)) {
-            return {
-              backgroundColor: '#D1D1D1',
-            };
-          }
+        getRowStyle={() => {
           return {
             backgroundColor: 'white',
           };

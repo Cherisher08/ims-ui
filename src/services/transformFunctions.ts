@@ -1,14 +1,12 @@
-import dayjs from "dayjs";
-import { RentalOrderInfo } from "../types/order";
+import dayjs from 'dayjs';
+import { DCWhatsappPayload, RentalOrderInfo } from '../types/order';
 
 const formatLocalDateTime = (isoDateStr: string) => {
   if (!isoDateStr) return isoDateStr;
-  return dayjs(isoDateStr).format("YYYY-MM-DDTHH:mm");
+  return dayjs(isoDateStr).format('YYYY-MM-DDTHH:mm');
 };
 
-export const transformRentalOrderResponse = (
-  order: RentalOrderInfo
-): RentalOrderInfo => {
+export const transformRentalOrderResponse = (order: RentalOrderInfo): RentalOrderInfo => {
   return {
     ...order,
     in_date: formatLocalDateTime(order.in_date),
@@ -64,4 +62,12 @@ export const transformRentalOrderToUTC = (order: RentalOrderInfo) => {
           : null,
       })) ?? [],
   };
+};
+
+export const constructWhatsappFormData = (payloadData: DCWhatsappPayload) => {
+  const formData = new FormData();
+  formData.append('mobile_number', payloadData.mobile_number);
+  formData.append('message', payloadData.message);
+  if (payloadData.pdf_file !== null) formData.append('pdf_file', payloadData.pdf_file);
+  return formData;
 };

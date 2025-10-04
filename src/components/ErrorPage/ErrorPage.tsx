@@ -20,7 +20,7 @@ const ErrorPage: React.FC<ErrorPageProps> = ({ message = 'Something went wrong.'
         <CustomButton
           onClick={() => navigate('/')}
           className="bg-gray-600 text-white"
-          label="Go Home"
+          label="Go to Entries page"
         />
       </div>
     </div>

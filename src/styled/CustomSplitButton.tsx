@@ -42,7 +42,7 @@ const CustomSplitButton: React.FC<CustomSplitButtonProps> = ({
   const anchorRef = useRef<HTMLDivElement>(null);
 
   const handleMenuItemClick = (
-    event: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    _event: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number
   ) => {
     if (onMenuItemClick) {

@@ -2,7 +2,11 @@ import { setExpiredRentalOrders } from '../store/OrdersSlice';
 import { PatchPayload } from '../types/common';
 import { DCWhatsappPayload, RentalOrderInfo } from '../types/order';
 import { rootApi } from './ApiService';
-import { transformRentalOrderResponse, transformRentalOrderToUTC } from './transformFunctions';
+import {
+  constructWhatsappFormData,
+  transformRentalOrderResponse,
+  transformRentalOrderToUTC,
+} from './transformFunctions';
 
 export const contactApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
@@ -95,11 +99,14 @@ export const contactApi = rootApi.injectEndpoints({
       },
     }),
     postOrderDcAsWhatsappMessage: build.mutation<string, DCWhatsappPayload>({
-      query: (body) => ({
-        url: 'orders/rentals/whatsapp-dc',
-        method: 'POST',
-        body: { body },
-      }),
+      query: (body) => {
+        const formData = constructWhatsappFormData(body);
+        return {
+          url: 'orders/rentals/whatsapp-dc',
+          method: 'POST',
+          body: formData,
+        };
+      },
     }),
   }),
 });
@@ -112,4 +119,5 @@ export const {
   useDeleteRentalOrderMutation,
   useLazyGetExpiredRentalOrdersQuery,
   usePatchRentalOrderMutation,
+  usePostOrderDcAsWhatsappMessageMutation,
 } = contactApi;

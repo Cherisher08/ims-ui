@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import Loader from '../components/Loader';
 import RequireAuth from '../components/RequireAuth/RequireAuth';
+import ErrorPage from '../components/ErrorPage/ErrorPage';
 
 const MainLayout = React.lazy(() => import('../components/Layouts/MainLayout'));
 const AuthLayout = React.lazy(() => import('../components/Layouts/AuthLayout'));
@@ -15,6 +16,7 @@ const Contacts = React.lazy(() => import('../pages/private/Customers/Contacts'))
 const CustomerBills = React.lazy(() => import('../pages/private/Customers/CustomerBills'));
 const Orders = React.lazy(() => import('../pages/private/Orders/Orders'));
 const NewOrder = React.lazy(() => import('../pages/private/Entries/NewOrder'));
+const Invoices = React.lazy(() => import('../pages/private/Invoices/Invoices'));
 const OrderInvoice = React.lazy(() => import('../pages/private/Entries/OrderInvoice'));
 const PrivacyPolicy = React.lazy(() => import('../pages/private/PrivacyPolicy/PrivacyPollicy'));
 
@@ -89,7 +91,11 @@ const privateRoutes = [
         element: <NewOrder />,
       },
       {
-        path: '/orders/invoice/:rentalId',
+        path: '/orders/invoices',
+        element: <Invoices />,
+      },
+      {
+        path: '/orders/invoices/:rentalId',
         element: <OrderInvoice />,
       },
       {
@@ -98,7 +104,7 @@ const privateRoutes = [
       },
       {
         path: '*',
-        element: <Navigate to="/orders/rentals" replace />,
+        element: <ErrorPage />,
       },
       {
         path: '/',

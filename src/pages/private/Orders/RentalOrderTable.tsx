@@ -617,7 +617,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
               size={20}
               className="cursor-pointer"
               onClick={() => {
-                navigate(`/orders/invoice/${rowData?._id}`);
+                navigate(`/orders/invoices/${rowData?._id}`);
               }}
             />
           </div>

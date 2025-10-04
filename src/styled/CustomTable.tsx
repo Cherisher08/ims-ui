@@ -8,12 +8,8 @@ import type {
   RowHeightParams,
   RowModelType,
   RowStyle,
-  SizeColumnsToContentStrategy,
-  SizeColumnsToFitGridStrategy,
-  SizeColumnsToFitProvidedWidthStrategy,
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
-// import "ag-grid-community/styles/ag-grid.css";
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import {
   AllCommunityModule,
@@ -27,7 +23,7 @@ import {
   ContextMenuModule,
   MasterDetailModule,
 } from 'ag-grid-enterprise';
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import CustomDetailRenderer from '../pages/private/Orders/CustomDetailRenderer';
 
 ModuleRegistry.registerModules([
@@ -83,17 +79,6 @@ const CustomTable = <T,>({
   onRowGroupOpened = () => null,
   onFilterChanged = () => {},
 }: CustomTableProps<T>) => {
-  const autoSizeStrategy = useMemo<
-    | SizeColumnsToFitGridStrategy
-    | SizeColumnsToFitProvidedWidthStrategy
-    | SizeColumnsToContentStrategy
-  >(() => {
-    return {
-      type: 'fitCellContents',
-      defaultMinWidth: 150,
-    };
-  }, []);
-
   const handleGridReady = useCallback(
     (params: GridReadyEvent) => {
       onGridReady(params.api);
@@ -130,7 +115,6 @@ const CustomTable = <T,>({
         localeText={{ noRowsToShow: 'No data Found...' }}
         loading={isLoading}
         onGridReady={handleGridReady}
-        autoSizeStrategy={autoSizeStrategy}
         onCellEditingStopped={handleCellEditingStopped}
         onFilterChanged={() => {
           onFilterChanged();

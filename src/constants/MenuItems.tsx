@@ -29,6 +29,12 @@ export const MenuItems: MenuItemsType[] = [
     logo: <MdDataSaverOn size={30} />,
   },
   {
+    id: 6,
+    title: 'Invoices',
+    path: '/orders/invoices',
+    logo: <LuClipboardList size={30} />,
+  },
+  {
     id: 3,
     title: 'Stocks',
     path: '/inventory',

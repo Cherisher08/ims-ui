@@ -113,6 +113,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     event_venue: '',
     balance_paid_date: '',
     repay_date: '',
+    invoice_id: '',
   };
 };
 

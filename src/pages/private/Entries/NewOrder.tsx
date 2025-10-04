@@ -119,6 +119,7 @@ const initialRentalProduct: RentalOrderInfo = {
   repay_date: '',
   event_name: '',
   event_venue: '',
+  invoice_id: '',
 };
 
 const NewOrder = () => {

@@ -126,6 +126,7 @@ export type RentalOrderInfo = OrderInfo & {
   repay_date: string;
   event_name: string;
   event_venue: string;
+  invoice_id: string;
 };
 
 export type SalesOrderInfo = OrderInfo & {

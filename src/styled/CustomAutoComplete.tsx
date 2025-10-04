@@ -23,6 +23,7 @@ type CustomAutoCompleteProps = {
   error?: boolean;
   helperText?: string;
   className?: string;
+  disabled?:boolean;
   labelNavigation?: LabelNavigation;
 };
 
@@ -37,6 +38,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   helperText = '',
   className = '',
   createOption = true,
+  disabled =false,
   labelNavigation = { label: '', link: '' },
 }) => {
   const [inputValue, setInputValue] = useState(value);
@@ -101,6 +103,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
             if (option?.value === 'add-new') return '+ Create New';
             return option?.value || '';
           }}
+          disabled={disabled}
           classes={{ root: `  ${className}` }}
           renderInput={(params) => (
             <div>

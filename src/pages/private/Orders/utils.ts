@@ -571,3 +571,56 @@ export const getOrderStatusColors = (status: OrderStatusType): { bg: string; tex
 
   return statusColors[status] || { bg: '#FFFFFF', text: '#000000' };
 };
+
+export function extractOrder(
+  oldOrder: RentalOrderInfo,
+  newOrder: RentalOrderInfo
+): RentalOrderInfo {
+  const updatedOrder: RentalOrderInfo = JSON.parse(JSON.stringify(oldOrder));
+
+  updatedOrder.product_details = updatedOrder.product_details.map((prod) => {
+    const extractedProd = newOrder.product_details.find((p) => p._id === prod._id);
+    if (extractedProd) {
+      const remainingQty = (prod.order_quantity || 0) - (extractedProd.order_quantity || 0);
+      return {
+        ...prod,
+        order_quantity: remainingQty > 0 ? remainingQty : 0,
+      };
+    }
+    return prod;
+  });
+
+  updatedOrder.product_details = updatedOrder.product_details.filter((p) => p.order_quantity > 0);
+
+  if (newOrder.deposits?.length) {
+    updatedOrder.deposits = updatedOrder.deposits
+      .map((dep, i) => {
+        const newDep = newOrder.deposits[i];
+        if (newDep) {
+          const remainingDep = (dep.amount || 0) - (newDep.amount || 0);
+          return {
+            ...dep,
+            amount: remainingDep > 0 ? remainingDep : 0,
+          };
+        }
+        return dep;
+      })
+      .filter((dep) => dep.amount > 0);
+  }
+
+  updatedOrder.eway_amount = (oldOrder.eway_amount || 0) - (newOrder.eway_amount || 0);
+  if (updatedOrder.eway_amount <= 0) {
+    updatedOrder.eway_amount = 0;
+    updatedOrder.eway_mode = PaymentMode.NULL;
+    updatedOrder.eway_type = TransportType.NULL;
+  }
+
+  updatedOrder.balance_paid = (oldOrder.balance_paid || 0) - (newOrder.balance_paid || 0);
+  if (updatedOrder.balance_paid <= 0) {
+    updatedOrder.balance_paid = 0;
+    updatedOrder.balance_paid_mode = PaymentMode.NULL;
+    updatedOrder.balance_paid_date = '';
+  }
+
+  return updatedOrder;
+}

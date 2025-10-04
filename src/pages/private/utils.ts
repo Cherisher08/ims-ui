@@ -38,3 +38,4 @@ export const initialProductData: Product = {
   discount: 0,
   discount_type: DiscountType.PERCENT,
 };
+

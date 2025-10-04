@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
+import SplitOrdermodal from '../../../components/SplitOrdermodal';
 import { TOAST_IDS } from '../../../constants/constants';
 import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
 import { useGetContactsQuery } from '../../../services/ContactService';
@@ -85,12 +86,12 @@ const getCurrentFY = () => {
   return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
 };
 
-const paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
-  id: key,
-  value,
-}));
+// const paymentStatusOptions = Object.entries(PaymentStatus).map(([key, value]) => ({
+//   id: key,
+//   value,
+// }));
 
-const initialRentalProduct: RentalOrderInfo = {
+const initialRentalOrder: RentalOrderInfo = {
   order_id: '',
   discount: 0,
   discount_type: DiscountType.RUPEES,
@@ -150,14 +151,14 @@ const NewOrder = () => {
   ] = useUpdateRentalOrderMutation();
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
-  const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalProduct);
+  const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalOrder);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
   const [removedProducts, setRemovedProducts] = useState<Product[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
-
+  const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
       amount: 0,
@@ -432,7 +433,7 @@ const NewOrder = () => {
         });
 
         // 3️⃣ Finally, reset your form or order state
-        setOrderInfo(initialRentalProduct);
+        setOrderInfo(initialRentalOrder);
       } catch (error) {
         console.error('❌ Failed to create rental order:', error);
         // optionally show user a toast or message
@@ -459,7 +460,7 @@ const NewOrder = () => {
 
   useEffect(() => {
     if (!rentalId) {
-      setOrderInfo(initialRentalProduct);
+      setOrderInfo(initialRentalOrder);
       setDepositData([]);
     }
   }, [rentalId]);
@@ -715,6 +716,7 @@ const NewOrder = () => {
           {/* <div className="flex flex-row justify-between w-full"> */}
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
+            <CustomButton label="Create Invoice" onClick={() => setSplitOrderModal(true)} />
             <CustomSplitButton
               label="Download Delivery Challan"
               disabled={!orderInfo._id}
@@ -832,7 +834,7 @@ const NewOrder = () => {
           //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
           // }}
         />
-        {orderInfo.type === ProductType.RENTAL && (
+        {/* {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
             label="Payment Status"
             options={paymentStatusOptions}
@@ -855,7 +857,7 @@ const NewOrder = () => {
             //   handleValueChange('status', status);
             // }}
           />
-        )}
+        )} */}
         <CustomAutoComplete
           options={eventNameOptions}
           addNewValue={(val) => addEventNameOption(val)}
@@ -916,6 +918,8 @@ const NewOrder = () => {
           type="number"
           placeholder="Enter expected days"
         />
+
+        <div></div>
 
         <CustomInput
           value={orderInfo?.event_venue ?? ''}
@@ -1707,7 +1711,7 @@ const NewOrder = () => {
                     navigate('/orders');
                   } else {
                     setDepositData([]);
-                    setOrderInfo(initialRentalProduct);
+                    setOrderInfo(initialRentalOrder);
                   }
                 }}
                 variant="outlined"
@@ -1724,6 +1728,11 @@ const NewOrder = () => {
       <AddContactModal
         addContactOpen={addContactOpen}
         setAddContactOpen={(value: boolean) => setAddContactOpen(value)}
+      />
+      <SplitOrdermodal
+        orderInfo={orderInfo}
+        open={splitOrderModal}
+        setOpen={() => setSplitOrderModal(false)}
       />
     </div>
   );

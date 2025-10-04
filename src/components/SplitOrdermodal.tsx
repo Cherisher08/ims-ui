@@ -72,6 +72,7 @@ const initialRentalOrder: RentalOrderInfo = {
   repay_date: '',
   event_name: '',
   event_venue: '',
+  invoice_id: '',
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {

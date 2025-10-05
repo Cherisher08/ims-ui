@@ -164,6 +164,7 @@ const NewOrder = () => {
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
+      _id: '',
       amount: 0,
       date: dayjs().format('YYYY-MM-DDTHH:mm'),
       product: null,

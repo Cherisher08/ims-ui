@@ -66,7 +66,7 @@ export const currencyFormatter = (params: ValueFormatterParams) => {
 export const getNewOrderId = (orders: OrderInfo[]) => {
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth() + 1; // JS months 0-11
+  const month = now.getMonth() + 1;
   const startYear = month < 4 ? year - 1 : year;
   const endYear = startYear + 1;
   const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
@@ -119,6 +119,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
 
 export const getDefaultDeposit = (products: IdNamePair[]) => {
   return {
+    _id: '',
     amount: 0,
     date: utcString(),
     mode: PaymentMode.CASH,
@@ -619,18 +620,23 @@ export function extractOrder(
 
   if (newOrder.deposits?.length) {
     updatedOrder.deposits = updatedOrder.deposits
-      .map((dep, i) => {
-        const newDep = newOrder.deposits[i];
+      .map((dep) => {
+        const newDep = newOrder.deposits.find((d) => d._id === dep._id);
         if (newDep) {
-          const remainingDep = (dep.amount || 0) - (newDep.amount || 0);
+          if (newDep.amount >= dep.amount) {
+            return null;
+          }
+          const remainingDep = dep.amount - newDep.amount;
+
           return {
             ...dep,
             amount: remainingDep > 0 ? remainingDep : 0,
           };
         }
+
         return dep;
       })
-      .filter((dep) => dep.amount > 0);
+      .filter((dep): dep is NonNullable<typeof dep> => dep !== null && dep.amount > 0);
   }
 
   updatedOrder.eway_amount = (oldOrder.eway_amount || 0) - (newOrder.eway_amount || 0);

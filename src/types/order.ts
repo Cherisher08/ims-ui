@@ -65,6 +65,7 @@ export type ContactSelectionType = {
 };
 
 export type DepositType = {
+  _id: string;
   amount: number;
   date: string;
   product: IdNamePair | null;

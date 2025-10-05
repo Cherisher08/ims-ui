@@ -1,10 +1,11 @@
-import { Checkbox, Modal } from '@mui/material';
+import { Alert, Checkbox, Modal } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { MdClose } from 'react-icons/md';
 import {
   calculateFinalAmount,
   extractOrder,
+  formatProducts,
   getDuration,
   paymentModeOptions,
   repaymentModeOptions,
@@ -18,6 +19,7 @@ import CustomSlider from '../styled/CustomSlider';
 import { DiscountType, discountTypeValues, ProductType } from '../types/common';
 import {
   BillingMode,
+  DepositType,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -77,12 +79,13 @@ const initialRentalOrder: RentalOrderInfo = {
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
   const [newOrder, setNewOrder] = useState(initialRentalOrder);
+  // const [createRentalOrder] = useCreateRentalOrderMutation();
+  // const { data: rentalOrders, refetch: getRefetchRentalOrders } = useGetRentalOrdersQuery();
 
   useEffect(() => {
     setNewOrder(() => ({
       ...orderInfo,
       customer: orderInfo.customer,
-      //   product_details: [],
     }));
   }, [orderInfo]);
 
@@ -94,9 +97,16 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
     }));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const oldOrder = extractOrder(orderInfo, newOrder);
-    console.log(orderInfo, oldOrder, newOrder);
+    console.log(oldOrder, newOrder);
+    // const latestOrders = await getRefetchRentalOrders();
+    // const orderId = getNewOrderId(latestOrders.data || []);
+    // console.log(orderId);
+    // const orderResponse = await createRentalOrder({
+    //   ...newOrder,
+    //   order_id: orderId,
+    // }).unwrap();
   };
 
   const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
@@ -143,9 +153,9 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
         onClose={() => setOpen(false)}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
-        className="flex justify-center items-center"
+        className="flex justify-center items-center overflow-x-auto"
       >
-        <div className="flex flex-col gap-4 justify-center w-4/5 items-center max-h-4/5 bg-white rounded-lg p-4">
+        <div className="flex flex-col gap-4 justify-center w-4/5 items-center max-h-4/5 overflow-y-auto bg-white rounded-lg p-4">
           <div className="flex justify-between w-full">
             <p className="text-primary text-xl font-semibold w-full text-start">Create Invoice</p>
             <MdClose
@@ -157,7 +167,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
             />
           </div>
 
-          <div className="overflow-y-auto flex flex-col gap-4 justify-center">
+          <div className="flex-1 min-h-0 overflow-auto overflow-x-auto flex flex-col gap-4">
             {/* Basic Details */}
             <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               <CustomInput
@@ -248,7 +258,6 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
                           setNewOrder((prev) => {
                             let updatedProducts: ProductDetails[] = [];
 
-                            console.log(e.target.checked);
                             if (e.target.checked) {
                               updatedProducts = orderInfo.product_details;
                             } else {
@@ -450,105 +459,179 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
             </div>
 
             {/* Deposits */}
-            {/* <div className="w-full overflow-x-auto min-h-fit">
-            <table className="w-full table-auto border border-gray-300">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="px-1 py-1 text-left w-[5rem]"></th>
-                  <th className="px-1 py-1 text-left w-[15rem]">Amount</th>
-                  <th className="px-1 py-1 text-left w-[15rem]">Date</th>
-                  <th className="px-1 py-1 text-left w-[15rem]">Product</th>
-                  <th className="px-1 py-1 text-left w-[20rem]">Payment Mode</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orderInfo.deposits.length > 0 ? (
-                  orderInfo.deposits.map((deposit, index) => (
-                    <tr key={index} className="border-b border-gray-200">
-                      <td className="px-1 py-2 content-start">
-                        <Checkbox
-                          checked={!!newOrder.deposits[index]}
-                          onChange={(e) => {
-                            setNewOrder((prev) => {
-                              let updatedDeposits = [...prev.deposits];
+            <div className="w-full overflow-x-auto min-h-fit">
+              <table className="w-full table-auto border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="px-1 py-1 text-left w-[3rem]">
+                      <Checkbox
+                        checked={newOrder.deposits.length === orderInfo.deposits.length}
+                        onChange={(e) => {
+                          setNewOrder((prev) => {
+                            let updatedDeposits: DepositType[] = [];
 
-                              if (e.target.checked) {
-                                updatedDeposits[index] = {
-                                  ...deposit,
-                                  amount: 0,
-                                };
-                              }
-                              updatedDeposits = updatedDeposits.filter(Boolean);
+                            if (e.target.checked) {
+                              updatedDeposits = orderInfo.deposits;
+                            } else {
+                              updatedDeposits = [];
+                            }
 
-                              return { ...prev, deposits: updatedDeposits };
-                            });
-                          }}
-                        />
-                      </td>
-
-                      <td className="px-1 py-1">
-                        <CustomInput
-                          type="number"
-                          label=""
-                          placeholder=""
-                          className="w-[14rem] p-2"
-                          disabled={!newOrder.deposits[index]}
-                          value={newOrder.deposits[index]?.amount || 0}
-                          onChange={(val) => {
-                            const numVal = Number(val);
-                            setNewOrder((prev) => {
-                              const updatedDeposits = [...prev.deposits];
-
-                              updatedDeposits[index] = {
-                                ...updatedDeposits[index],
-                                amount:
-                                  numVal > orderInfo.deposits[index].amount
-                                    ? orderInfo.deposits[index].amount
-                                    : numVal < 0
-                                    ? 0
-                                    : numVal,
-                              };
-
-                              return { ...prev, deposits: updatedDeposits };
-                            });
-                          }}
-                        />
-
-                        <div className="text-xs text-gray-500">Max: {deposit.amount}</div>
-                      </td>
-
-                      <td className="px-1 py-1">
-                        <CustomDatePicker
-                          label=""
-                          placeholder=""
-                          className="p-2"
-                          disabled={!deposit}
-                          value={deposit?.date || ''}
-                          onChange={(val) => {
-                            setNewOrder((prev) => {
-                              const updatedDeposits = prev.deposits.map((d) =>
-                                d._id === deposit._id ? { ...d, date: val } : d
-                              );
-                              return { ...prev, deposits: updatedDeposits };
-                            });
-                          }}
-                        />
-                      </td>
-                      <td className="px-1 py-1">{deposit.product?.name || '-'}</td>
-
-                      <td className="px-1 py-1">{deposit.mode}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="h-[5rem] text-center py-4">
-                      No Deposits Available...
-                    </td>
+                            return {
+                              ...prev,
+                              deposits: updatedDeposits,
+                            };
+                          });
+                        }}
+                      />
+                    </th>
+                    <th className="px-1 py-1 text-left w-[15rem]">Amount</th>
+                    <th className="px-1 py-1 text-left w-[15rem]">Date</th>
+                    <th className="px-1 py-1 text-left w-[15rem]">Product</th>
+                    <th className="px-1 py-1 text-left w-[20rem]">Payment Mode</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div> */}
+                </thead>
+                <tbody>
+                  {orderInfo.deposits.length > 0 ? (
+                    orderInfo.deposits.map((deposit) => {
+                      const existingDeposit = newOrder.deposits.find((d) => d._id === deposit._id);
+                      const isChecked = !!existingDeposit;
+
+                      return (
+                        <tr key={deposit._id} className="border-b border-gray-200">
+                          <td className="px-1 py-2 content-start">
+                            <Checkbox
+                              checked={isChecked}
+                              onChange={(e) => {
+                                setNewOrder((prev) => {
+                                  const updatedDeposits = e.target.checked
+                                    ? [
+                                        ...prev.deposits,
+                                        {
+                                          ...deposit,
+                                          amount: deposit.amount ?? 0,
+                                          date: deposit.date ?? '',
+                                          product: deposit.product,
+                                          mode: deposit.mode,
+                                        },
+                                      ].filter(
+                                        (d, idx, arr) =>
+                                          arr.findIndex((x) => x._id === d._id) === idx
+                                      ) // avoid duplicates
+                                    : prev.deposits.filter((d) => d._id !== deposit._id);
+
+                                  return { ...prev, deposits: updatedDeposits };
+                                });
+                              }}
+                            />
+                          </td>
+
+                          <td className="px-1 py-1">
+                            <CustomInput
+                              label=""
+                              placeholder=""
+                              type="number"
+                              className="w-[14rem] p-2"
+                              disabled={!isChecked}
+                              value={isChecked ? existingDeposit?.amount : deposit.amount}
+                              onChange={(val) => {
+                                if (!isChecked) return;
+                                const numVal = Number(val);
+                                setNewOrder((prev) => ({
+                                  ...prev,
+                                  deposits: prev.deposits.map((d) =>
+                                    d._id === deposit._id
+                                      ? {
+                                          ...d,
+                                          amount: Math.max(0, Math.min(numVal, deposit.amount)),
+                                        }
+                                      : d
+                                  ),
+                                }));
+                              }}
+                            />
+                          </td>
+
+                          <td className="px-1 py-1">
+                            <CustomDatePicker
+                              label=""
+                              disabled={!isChecked}
+                              value={isChecked ? existingDeposit?.date || '' : deposit.date || ''}
+                              onChange={(val) => {
+                                if (!isChecked) return;
+                                setNewOrder((prev) => ({
+                                  ...prev,
+                                  deposits: prev.deposits.map((d) =>
+                                    d._id === deposit._id ? { ...d, date: val } : d
+                                  ),
+                                }));
+                              }}
+                            />
+                          </td>
+
+                          <td className="px-1 py-1">
+                            <CustomSelect
+                              label=""
+                              disabled={!isChecked}
+                              value={
+                                (isChecked
+                                  ? existingDeposit?.product?._id
+                                  : deposit.product?._id) || ''
+                              }
+                              options={formatProducts(newOrder.product_details)}
+                              onChange={(id) => {
+                                if (!isChecked) return;
+                                const product =
+                                  newOrder.product_details.find((p) => p._id === id) || null;
+                                setNewOrder((prev) => ({
+                                  ...prev,
+                                  deposits: prev.deposits.map((d) =>
+                                    d._id === deposit._id ? { ...d, product } : d
+                                  ),
+                                }));
+                              }}
+                            />
+                          </td>
+
+                          <td className="px-1 py-1">
+                            <CustomSelect
+                              label=""
+                              disabled={!isChecked}
+                              value={
+                                paymentModeOptions.find(
+                                  (mode) =>
+                                    (isChecked ? existingDeposit?.mode : deposit.mode) ===
+                                    mode.value
+                                )?.id || ''
+                              }
+                              options={paymentModeOptions}
+                              onChange={(selectedId) => {
+                                if (!isChecked) return;
+                                const modeValue =
+                                  paymentModeOptions.find((m) => m.id === selectedId)?.value ??
+                                  deposit.mode;
+
+                                setNewOrder((prev) => ({
+                                  ...prev,
+                                  deposits: prev.deposits.map((d) =>
+                                    d._id === deposit._id ? { ...d, mode: modeValue } : d
+                                  ),
+                                }));
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="h-[5rem] text-center py-4">
+                        No Deposits Available...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             <div className="grid grid-cols-1  lg:grid-cols-2 gap-x-10 my-4">
               <div className="grid grid-cols-[3fr_1fr] gap-2">
@@ -707,9 +790,14 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
               </div>
             </div>
           </div>
-          <div className="flex gap-4 my-3 w-full justify-end">
-            <CustomButton label="Cancel" onClick={() => setOpen(false)} variant="outlined" />
-            <CustomButton label="Create" onClick={handleCreate} />
+          <div className="flex justify-between w-full items-center">
+            <Alert severity="warning" className="h-fit">
+              Changes here will affect the original order
+            </Alert>
+            <div className="flex gap-4 my-3 ">
+              <CustomButton label="Cancel" onClick={() => setOpen(false)} variant="outlined" />
+              <CustomButton label="Create" onClick={handleCreate} />
+            </div>
           </div>
         </div>
       </Modal>

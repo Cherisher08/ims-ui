@@ -449,7 +449,7 @@ const NewOrder = () => {
 
   const handleWhatsappChallan = async (orderInfo: RentalOrderInfo) => {
     const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
-    const file = new File([blob], 'delivery_challan.pdf', { type: 'application/pdf' });
+    const file = new File([blob], 'DeliveryChallan.pdf', { type: 'application/pdf' });
     const messageDetails = {
       customerName: orderInfo.customer?.name || '',
       orderId: orderInfo.order_id,

@@ -450,15 +450,14 @@ const NewOrder = () => {
   const handleWhatsappChallan = async (orderInfo: RentalOrderInfo) => {
     const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
     const file = new File([blob], 'delivery_challan.pdf', { type: 'application/pdf' });
-    const message = `Dear ${
-      orderInfo.customer?.name || 'Customer'
-    },\n\nPlease find attached the Delivery Challan for your order ${
-      orderInfo.order_id
-    }.\n\nThank you for choosing our services!\n\nBest regards,\nMani Power Tools`;
+    const messageDetails = {
+      customerName: orderInfo.customer?.name || '',
+      orderId: orderInfo.order_id,
+    };
     try {
       await whatsappRentalOrderDC({
         mobile_number: orderInfo.customer?.personal_number || '',
-        message,
+        messageDetails,
         pdf_file: file,
       }).unwrap();
       toast.success('WhatsApp message sent successfully', {

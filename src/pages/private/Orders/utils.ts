@@ -532,17 +532,12 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
 //   if (order.in_date) return OrderStatusType.PAID;
 // };
 
-export const getOrderStatus = (
-  order: RentalOrderInfo,
-  balanceAmount: number = 0
-): OrderStatusType => {
+export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
   const now = new Date();
 
   const totalAmount =
     calculateFinalAmount(order as RentalOrderType) -
     order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
-
-  console.log(balanceAmount);
 
   const hasRepair = order.product_details.some((p) => p.order_repair_count > 0);
   if (hasRepair) {
@@ -655,3 +650,37 @@ export function extractOrder(
 
   return updatedOrder;
 }
+
+export const getAvailableStockQuantity = (
+  currentProductStock: number,
+  product: ProductDetails,
+  newOrderInfo: RentalOrderInfo,
+  existingRentalOrder: RentalOrderInfo | undefined
+) => {
+  const oldStock =
+    existingRentalOrder?.product_details.find((p) => p._id === product._id)?.order_quantity || 0;
+
+  let newQuantity = 0;
+  if (existingRentalOrder) {
+    if (
+      existingRentalOrder.status === PaymentStatus.PENDING &&
+      newOrderInfo.status === PaymentStatus.PENDING
+    ) {
+      newQuantity = currentProductStock + oldStock - product.order_quantity;
+    } else if (
+      existingRentalOrder.status === PaymentStatus.PENDING &&
+      newOrderInfo.status === PaymentStatus.PAID
+    ) {
+      newQuantity = currentProductStock + oldStock;
+    } else if (
+      existingRentalOrder.status === PaymentStatus.PAID &&
+      newOrderInfo.status === PaymentStatus.PENDING
+    ) {
+      newQuantity = currentProductStock - product.order_quantity;
+    } else {
+      newQuantity = currentProductStock;
+    }
+  } else newQuantity = currentProductStock - product.order_quantity;
+
+  return newQuantity;
+};

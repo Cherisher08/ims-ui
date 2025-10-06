@@ -10,7 +10,11 @@ import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
 import SplitOrdermodal from '../../../components/SplitOrdermodal';
 import { TOAST_IDS } from '../../../constants/constants';
-import { useGetProductsQuery, useUpdateProductMutation } from '../../../services/ApiService';
+import {
+  useGetProductsQuery,
+  useLazyGetProductByIdQuery,
+  useUpdateProductMutation,
+} from '../../../services/ApiService';
 import { useGetContactsQuery } from '../../../services/ContactService';
 import {
   useCreateRentalOrderMutation,
@@ -54,6 +58,7 @@ import {
   calculateTotalAmount as calculateFinalAmountOfOrder,
   // billingUnitOptions,
   formatProducts,
+  getAvailableStockQuantity,
   getDefaultDeposit,
   getDefaultProduct,
   getDuration,
@@ -129,6 +134,7 @@ const NewOrder = () => {
   const dispatch = useDispatch();
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
+  const [triggerGetProduct] = useLazyGetProductByIdQuery();
   // const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   // const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
@@ -151,6 +157,7 @@ const NewOrder = () => {
     updateRentalOrder,
     { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
   ] = useUpdateRentalOrderMutation();
+
   const [whatsappRentalOrderDC] = usePostOrderDcAsWhatsappMessageMutation();
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
@@ -159,7 +166,7 @@ const NewOrder = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
-  const [removedProducts, setRemovedProducts] = useState<Product[]>([]);
+  const [removedProducts, setRemovedProducts] = useState<ProductDetails[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
   const [depositData, setDepositData] = useState<DepositType[]>([
@@ -292,27 +299,24 @@ const NewOrder = () => {
   const { error: customerHasPositiveAmount, totalAmount: customerTotalBalanceAmount } =
     getCustomerOrdersAndError(selectedCustomerId);
 
-  const removeOrderProduct = (id: string, index: number) => {
+  const removeOrderProduct = (id: string) => {
     if (orderInfo.type === ProductType.RENTAL) {
-      const filteredProducts = (orderInfo.product_details || []).filter((_, idx) => idx !== index);
+      const removedProduct = orderInfo.product_details.find((p) => p._id === id);
 
-      const removedProduct = orderInfo.product_details.find((_, idx) => idx === index);
-
+      const filteredProducts = orderInfo.product_details.filter((p) => p._id !== id);
       if (removedProduct) {
-        const removedProductData = products.find((_, idx) => idx === index);
-        if (removedProductData) {
-          const updatedProductData = {
-            ...removedProductData,
-            available_stock: removedProductData.available_stock + removedProduct.order_quantity,
-          };
+        // const updatedProductData = {
+        //   ...removedProductData,
+        //   available_stock: removedProductData.available_stock + removedProduct.order_quantity,
+        // };
 
-          const updatedProducts = products.map((prod) =>
-            prod._id === id ? updatedProductData : prod
-          );
-          setProducts(updatedProducts);
-          setRemovedProducts((prev) => [...prev, updatedProductData]);
-        }
+        // const updatedProducts = products.map((prod) =>
+        //   prod._id === id ? updatedProductData : prod
+        // );
+        // setProducts(updatedProducts);
+        setRemovedProducts((prev) => [...prev, removedProduct]);
       }
+      // }
 
       setOrderInfo({
         ...orderInfo,
@@ -321,99 +325,213 @@ const NewOrder = () => {
     }
   };
 
-  const updateProductStock = (paymentStatus: PaymentStatus | undefined) => {
-    const updatedProducts = orderInfo.product_details.map((updatedProductDetail) => {
-      const currentProduct = {
-        ...products.find((product) => product._id === updatedProductDetail._id)!,
-      };
-      if (paymentStatus === 'paid') {
-        currentProduct.available_stock += updatedProductDetail.order_quantity;
-      } else if (paymentStatus === 'pending') {
-        currentProduct.available_stock -= updatedProductDetail.order_quantity;
-      }
-      return currentProduct;
-    });
-    const newProducts = products.map((prod) =>
-      updatedProducts.find((p) => p._id === prod._id)
-        ? updatedProducts.find((p) => p._id === prod._id)
-        : prod
-    );
-    setProducts(newProducts.filter((product): product is Product => product !== undefined));
-  };
+  // const updateProductStock = (paymentStatus: PaymentStatus | undefined) => {
+  //   const updatedProducts = orderInfo.product_details.map((updatedProductDetail) => {
+  //     const currentProduct = {
+  //       ...products.find((product) => product._id === updatedProductDetail._id)!,
+  //     };
+  //     if (paymentStatus === 'paid') {
+  //       currentProduct.available_stock += updatedProductDetail.order_quantity;
+  //     } else if (paymentStatus === 'pending') {
+  //       currentProduct.available_stock -= updatedProductDetail.order_quantity;
+  //     }
+  //     return currentProduct;
+  //   });
+  //   // const newProducts = products.map((prod) =>
+  //   //   updatedProducts.find((p) => p._id === prod._id)
+  //   //     ? updatedProducts.find((p) => p._id === prod._id)
+  //   //     : prod
+  //   // );
+  //   // setProducts(newProducts.filter((product): product is Product => product !== undefined));
+  // };
+
+  // const createNewOrder = async () => {
+  //   const newOrderInfo = { ...orderInfo, deposits: depositData };
+  //   const productsInOrder = newOrderInfo.product_details;
+  //   const product = productsInOrder.find((product) => product.order_quantity === 0);
+  //   if (product) {
+  //     // mes
+  //     toast.error(`${product.name} has 0 quantity`);
+  //     return;
+  //   }
+  //   if (rentalId) {
+  //     for (let i = 0; i < newOrderInfo.product_details.length; i++) {
+  //       const product = newOrderInfo.product_details[i];
+  //       const currentProductDetail = await triggerGetProduct(product._id).unwrap();
+  //       if (!isFetching) {
+  //         const newQuantity = currentProductDetail.available_stock - product.order_quantity;
+  //         updateProductData({
+  //           ...currentProductDetail,
+  //           available_stock: newQuantity,
+  //         });
+  //       }
+  //     }
+
+  //     return;
+  //     updateRentalOrder(newOrderInfo);
+  //     if (existingRentalOrder) {
+  //       newOrderInfo.product_details.forEach((updatedProductDetail) => {
+  //         // const previousProductDetail = existingRentalOrder.product_details.find(
+  //         //   (prev) => prev._id === updatedProductDetail._id
+  //         // );
+
+  //         // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
+  //         // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
+
+  //         // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
+  //         // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
+
+  //         // find the product in inventory
+
+  //         const currentProduct = {
+  //           ...products.find((product) => product._id === updatedProductDetail._id)!,
+  //         };
+
+  //         // apply the delta
+  //         // currentProduct.available_stock -= quantityDelta;
+  //         // currentProduct.repair_count += repairDelta;
+  //         updateProductData(currentProduct);
+  //       });
+
+  //       removedProducts.forEach((updatedProductDetail) => {
+  //         // const previousProductDetail = existingRentalOrder.product_details.find(
+  //         //   (prev) => prev._id === updatedProductDetail._id
+  //         // );
+
+  //         // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
+  //         // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
+
+  //         // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
+  //         // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
+
+  //         // find the product in inventory
+  //         const currentProduct = {
+  //           ...products.find((product) => product._id === updatedProductDetail._id)!,
+  //         };
+
+  //         // apply the delta
+  //         // currentProduct.available_stock -= quantityDelta;
+  //         // currentProduct.repair_count += repairDelta;
+  //         updateProductData(currentProduct);
+  //       });
+  //     }
+  //   } else {
+  //     try {
+  //       const latestOrders = await getRefetchRentalOrders();
+  //       const orderId = getNewOrderId(latestOrders.data || []);
+  //       const orderResponse = await createRentalOrder({
+  //         ...newOrderInfo,
+  //         order_id: orderId,
+  //       }).unwrap();
+  //       console.log('✅ Order created successfully', orderResponse);
+
+  //       const results = await Promise.allSettled(
+  //         newOrderInfo.product_details.map((product_detail) => {
+  //           const currentProduct = products.find((product) => product._id === product_detail._id);
+
+  //           if (!currentProduct) {
+  //             console.warn(`⚠️ Product ${product_detail._id} not found, skipping`);
+  //             return Promise.resolve();
+  //           }
+
+  //           return updateProductData({
+  //             ...currentProduct,
+  //             available_stock: currentProduct.available_stock - product_detail.order_quantity,
+  //             repair_count: currentProduct.repair_count + product_detail.order_repair_count,
+  //           }).unwrap();
+  //         })
+  //       );
+
+  //       results.forEach((result, idx) => {
+  //         if (result.status === 'fulfilled') {
+  //           console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
+  //         } else {
+  //           console.error(
+  //             `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
+  //             result.reason
+  //           );
+  //         }
+  //       });
+
+  //       // 3️⃣ Finally, reset your form or order state
+  //       setOrderInfo(initialRentalOrder);
+  //     } catch (error) {
+  //       console.error('❌ Failed to create rental order:', error);
+  //       // optionally show user a toast or message
+  //     }
+  //   }
+  // };
 
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
-    const productsInOrder = newOrderInfo.product_details;
-    const product = productsInOrder.find((product) => product.order_quantity === 0);
-    if (product) {
-      // mes
-      toast.error(`${product.name} has 0 quantity`);
+
+    const productWithZeroQty = newOrderInfo.product_details.find(
+      (product) => product.order_quantity === 0
+    );
+    if (productWithZeroQty) {
+      toast.error(`${productWithZeroQty.name} has 0 quantity`);
       return;
     }
+
     if (rentalId) {
-      updateRentalOrder(newOrderInfo);
-      if (existingRentalOrder) {
-        newOrderInfo.product_details.forEach((updatedProductDetail) => {
-          // const previousProductDetail = existingRentalOrder.product_details.find(
-          //   (prev) => prev._id === updatedProductDetail._id
-          // );
+      try {
+        for (const product of newOrderInfo.product_details) {
+          const currentProductDetail = await triggerGetProduct(product._id).unwrap();
 
-          // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
-          // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
+          const newQuantity = getAvailableStockQuantity(
+            currentProductDetail.available_stock,
+            product,
+            newOrderInfo,
+            existingRentalOrder
+          );
 
-          // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
-          // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
+          await updateProductData({
+            ...currentProductDetail,
+            available_stock: newQuantity,
+          }).unwrap();
+        }
 
-          // find the product in inventory
+        if (existingRentalOrder) {
+          for (const product of removedProducts) {
+            if (product._id) {
+              const currentProductDetail = await triggerGetProduct(product._id).unwrap();
 
-          const currentProduct = {
-            ...products.find((product) => product._id === updatedProductDetail._id)!,
-          };
+              const newQuantity = getAvailableStockQuantity(
+                currentProductDetail.available_stock,
+                product,
+                newOrderInfo,
+                existingRentalOrder
+              );
 
-          // apply the delta
-          // currentProduct.available_stock -= quantityDelta;
-          // currentProduct.repair_count += repairDelta;
-          updateProductData(currentProduct);
-        });
+              updateProductData({
+                ...currentProductDetail,
+                available_stock: newQuantity + product.order_quantity,
+              });
+            }
+          }
+        }
 
-        removedProducts.forEach((updatedProductDetail) => {
-          // const previousProductDetail = existingRentalOrder.product_details.find(
-          //   (prev) => prev._id === updatedProductDetail._id
-          // );
-
-          // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
-          // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
-
-          // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
-          // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
-
-          // find the product in inventory
-          const currentProduct = {
-            ...products.find((product) => product._id === updatedProductDetail._id)!,
-          };
-
-          // apply the delta
-          // currentProduct.available_stock -= quantityDelta;
-          // currentProduct.repair_count += repairDelta;
-          updateProductData(currentProduct);
-        });
+        await updateRentalOrder(newOrderInfo).unwrap();
+      } catch (error) {
+        console.error('Failed to update rental order:', error);
       }
     } else {
       try {
         const latestOrders = await getRefetchRentalOrders();
         const orderId = getNewOrderId(latestOrders.data || []);
+
         const orderResponse = await createRentalOrder({
           ...newOrderInfo,
           order_id: orderId,
         }).unwrap();
-        console.log('✅ Order created successfully', orderResponse);
+        console.log('Order created successfully', orderResponse);
 
         const results = await Promise.allSettled(
           newOrderInfo.product_details.map((product_detail) => {
-            const currentProduct = products.find((product) => product._id === product_detail._id);
+            const currentProduct = products.find((p) => p._id === product_detail._id);
 
             if (!currentProduct) {
-              console.warn(`⚠️ Product ${product_detail._id} not found, skipping`);
+              console.warn(`Product ${product_detail._id} not found, skipping`);
               return Promise.resolve();
             }
 
@@ -427,20 +545,18 @@ const NewOrder = () => {
 
         results.forEach((result, idx) => {
           if (result.status === 'fulfilled') {
-            console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
+            console.log(`Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
           } else {
             console.error(
-              `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
+              `Product ${newOrderInfo.product_details[idx]._id} update failed:`,
               result.reason
             );
           }
         });
 
-        // 3️⃣ Finally, reset your form or order state
         setOrderInfo(initialRentalOrder);
       } catch (error) {
-        console.error('❌ Failed to create rental order:', error);
-        // optionally show user a toast or message
+        console.error('Failed to create rental order:', error);
       }
     }
   };
@@ -535,10 +651,10 @@ const NewOrder = () => {
 
   useEffect(() => {
     if (orderInfo) {
-      const status = getOrderStatus(orderInfo, customerTotalBalanceAmount);
+      const status = getOrderStatus(orderInfo);
       setOrderStatus(status);
     }
-  }, [customerTotalBalanceAmount, orderInfo]);
+  }, [orderInfo]);
 
   useEffect(() => {
     if (isProductsQuerySuccess) {
@@ -666,12 +782,12 @@ const NewOrder = () => {
     }
   };
 
-  useEffect(() => {
-    if (orderInfo.product_details.length > 0) {
-      updateProductStock(orderInfo.status);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderInfo.status]);
+  // useEffect(() => {
+  //   if (orderInfo.product_details.length > 0) {
+  //     updateProductStock(orderInfo.status);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [orderInfo.status]);
 
   useEffect(() => {
     if (!orderInfo.product_details || orderInfo.product_details.length === 0) return;
@@ -1017,63 +1133,86 @@ const NewOrder = () => {
             </thead>
             <tbody>
               {orderInfo.product_details.length > 0 ? (
-                orderInfo.product_details?.map((product: ProductDetails, index: number) => (
-                  <tr key={product._id} className="border-b border-gray-200">
-                    <td className="px-1 py-2 content-start">
-                      <CustomAutoComplete
-                        addNewValue={() => {}}
-                        placeholder=""
-                        createOption={false}
-                        label=""
-                        options={formatProducts(
-                          products.filter(
-                            (prod) =>
-                              !orderInfo.product_details?.find(
-                                (current) => current._id === prod._id && prod._id !== product._id
-                              )
-                          )
-                        )}
-                        className="w-[14rem]"
-                        value={product.name}
-                        onChange={(name) => {
-                          const data = products.find((prod) => prod.name === name);
-                          if (data) {
-                            const newProducts = [...orderInfo.product_details];
-                            newProducts[index] = {
-                              ...product,
-                              _id: data._id || '',
-                              name: data.name,
-                              type: data.type,
-                              category: data?.category.name,
-                              product_unit: data.unit,
-                              rent_per_unit:
-                                data.type === ProductType.RENTAL ? data.rent_per_unit : data.price,
-                              product_code: data.product_code,
-                            };
-                            if (removedProducts.find((prod) => prod._id === data._id)) {
-                              setRemovedProducts((prev) =>
-                                prev.filter((prod) => prod._id !== data._id)
-                              );
+                orderInfo.product_details?.map((product: ProductDetails, index: number) => {
+                  const currentProduct = products.find((p) => p._id === product._id);
+                  // const newQuantity =
+                  //   orderInfo.product_details.find((p) => p._id === product._id)?.order_quantity ??
+                  //   0;
+                  const newQuantity = currentProduct
+                    ? getAvailableStockQuantity(
+                        currentProduct.available_stock,
+                        product,
+                        orderInfo,
+                        existingRentalOrder
+                      )
+                    : 0;
+                  // let availableStock = 0;
+                  // const oldStock =
+                  //   existingRentalOrder?.product_details.find((p) => p._id === product._id)
+                  //     ?.order_quantity || 0;
+                  // if (existingRentalOrder) {
+                  //   availableStock = currentStock + oldStock - newQuantity;
+                  // } else availableStock = currentStock - newQuantity;
+
+                  return (
+                    <tr key={product._id} className="border-b border-gray-200">
+                      <td className="px-1 py-2 content-start">
+                        <CustomAutoComplete
+                          addNewValue={() => {}}
+                          placeholder=""
+                          createOption={false}
+                          label=""
+                          options={formatProducts(
+                            products.filter(
+                              (prod) =>
+                                !orderInfo.product_details?.find(
+                                  (current) => current._id === prod._id && prod._id !== product._id
+                                )
+                            )
+                          )}
+                          className="w-[14rem]"
+                          value={product.name}
+                          onChange={(name) => {
+                            const data = products.find((prod) => prod.name === name);
+                            if (data) {
+                              const newProducts = [...orderInfo.product_details];
+                              newProducts[index] = {
+                                ...product,
+                                _id: data._id || '',
+                                name: data.name,
+                                type: data.type,
+                                category: data?.category.name,
+                                product_unit: data.unit,
+                                rent_per_unit:
+                                  data.type === ProductType.RENTAL
+                                    ? data.rent_per_unit
+                                    : data.price,
+                                product_code: data.product_code,
+                              };
+                              if (removedProducts.find((prod) => prod._id === data._id)) {
+                                setRemovedProducts((prev) =>
+                                  prev.filter((prod) => prod._id !== data._id)
+                                );
+                              }
+                              setOrderInfo({
+                                ...orderInfo,
+                                product_details: newProducts,
+                              });
                             }
-                            setOrderInfo({
-                              ...orderInfo,
-                              product_details: newProducts,
-                            });
-                          }
-                        }}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        label=""
-                        placeholder=""
-                        disabled
-                        className="w-[7rem] p-2"
-                        value={orderInfo.product_details[index].product_unit.name || ''}
-                        onChange={() => {}}
-                      />
-                    </td>
-                    {/* <td className="px-1 py-2 content-start">
+                          }}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          label=""
+                          placeholder=""
+                          disabled
+                          className="w-[7rem] p-2"
+                          value={orderInfo.product_details[index].product_unit.name || ''}
+                          onChange={() => {}}
+                        />
+                      </td>
+                      {/* <td className="px-1 py-2 content-start">
                       <CustomSelect
                         label=""
                         className="w-[8rem]"
@@ -1107,240 +1246,223 @@ const NewOrder = () => {
                         }}
                       />
                     </td> */}
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        disabled
-                        value={products.find((p) => p._id === product._id)?.available_stock || 0}
-                        type="number"
-                        className="w-[8rem] p-2"
-                        onChange={() => {}}
-                        label=""
-                        placeholder=""
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        type="number"
-                        label=""
-                        placeholder=""
-                        disabled={orderInfo.status === PaymentStatus.PAID}
-                        className="w-[5rem] p-2"
-                        value={orderInfo.product_details[index].order_quantity || 0}
-                        onChange={(val) => {
-                          const newProducts = [...orderInfo.product_details];
-
-                          const newQuantity = Number(val);
-                          const currentProduct = products.find((p) => p._id === product._id);
-
-                          if (!currentProduct) return;
-
-                          const available_stock = currentProduct.available_stock;
-                          const prevQuantity = product.order_quantity;
-
-                          // Calculate the difference
-                          const diff = newQuantity - prevQuantity;
-
-                          let finalQuantity = prevQuantity;
-                          let finalStock = available_stock;
-
-                          // If user is increasing quantity
-                          if (diff > 0) {
-                            // Only increase up to available stock
-                            const increase = Math.min(diff, available_stock);
-                            finalQuantity += increase;
-                            finalStock -= increase;
-                          }
-
-                          // If user is decreasing quantity
-                          if (diff < 0) {
-                            const decrease = Math.abs(diff);
-                            finalQuantity -= decrease;
-                            finalStock += decrease; // return stock back
-                          }
-
-                          // Update products stock
-                          setProducts((prev) =>
-                            prev
-                              .map((p) =>
-                                p._id === product._id ? { ...p, available_stock: finalStock } : p
-                              )
-                              .filter((p): p is Product => p !== undefined)
-                          );
-
-                          // Update order info
-                          newProducts[index] = {
-                            ...product,
-                            order_quantity: finalQuantity,
-                          };
-
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomDatePicker
-                        label=""
-                        value={
-                          dayjs(orderInfo.product_details[index].out_date).format(
-                            'DD-MMM-YYYY hh:mm A'
-                          ) || ''
-                        }
-                        disabled={product.type !== ProductType.RENTAL}
-                        className="w-[15rem]"
-                        onChange={(val) => {
-                          const newProducts = [...orderInfo.product_details];
-                          const duration = getDuration(val, newProducts[index].in_date);
-                          newProducts[index] = {
-                            ...product,
-                            out_date: val,
-                            duration: duration,
-                          };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                        // format="DD/MM/YYYY"
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomDatePicker
-                        label=""
-                        value={
-                          orderInfo.product_details[index].in_date
-                            ? dayjs(orderInfo.product_details[index].in_date).format(
-                                'DD-MMM-YYYY hh:mm A'
-                              )
-                            : ''
-                        }
-                        disabled={product.type !== ProductType.RENTAL || !product._id}
-                        className="w-[15rem]"
-                        onChange={(val) => {
-                          if (val !== undefined && dayjs(val).diff(product.out_date) < 0) {
-                            val = product.out_date;
-                          }
-                          const newProducts = [...orderInfo.product_details];
-                          const duration = val ? getDuration(newProducts[index].out_date, val) : 1;
-                          newProducts[index] = {
-                            ...product,
-                            in_date: val,
-                            duration: duration,
-                          };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                        // format="DD/MM/YYYY"
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        type="number"
-                        label=""
-                        placeholder=""
-                        className="w-[5rem] p-2"
-                        disabled={product.type !== ProductType.RENTAL}
-                        value={orderInfo.product_details[index].duration || 0}
-                        onChange={(val) => {
-                          const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = {
-                            ...product,
-                            duration: Number(val),
-                          };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        type="number"
-                        label=""
-                        placeholder=""
-                        className="w-[8rem] p-2"
-                        value={orderInfo.product_details[index].order_repair_count || 0}
-                        onChange={(val) => {
-                          const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = {
-                            ...product,
-                            order_repair_count:
-                              Number(val) <= product.order_quantity
-                                ? Number(val)
-                                : product.order_quantity,
-                          };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        type="number"
-                        label=""
-                        placeholder=""
-                        className="w-[8rem] p-2"
-                        value={product.rent_per_unit}
-                        onChange={(val) => {
-                          const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = {
-                            ...product,
-                            rent_per_unit: Number(val),
-                          };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        disabled
-                        type="number"
-                        label=""
-                        placeholder=""
-                        className="w-[8rem] p-2"
-                        value={product.rent_per_unit * product.order_quantity * product.duration}
-                        onChange={() => {}}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <CustomInput
-                        type="number"
-                        label=""
-                        placeholder=""
-                        className="w-[20rem]"
-                        multiline
-                        minRows={1}
-                        value={orderInfo.product_details[index].damage || ''}
-                        onChange={(val) => {
-                          const newProducts = [...orderInfo.product_details];
-                          newProducts[index] = { ...product, damage: val };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-1 py-2 content-start">
-                      <div className="flex gap-2">
-                        <CustomButton
-                          label="Remove"
-                          onClick={() => removeOrderProduct(product._id, index)}
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          disabled
+                          value={newQuantity}
+                          type="number"
+                          className="w-[8rem] p-2"
+                          onChange={() => {}}
+                          label=""
+                          placeholder=""
                         />
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          type="number"
+                          label=""
+                          placeholder=""
+                          disabled={orderInfo.status === PaymentStatus.PAID}
+                          className="w-[5rem] p-2"
+                          value={orderInfo.product_details[index].order_quantity || 0}
+                          onChange={(val) => {
+                            const newProducts = [...orderInfo.product_details];
+                            const currentProductStock = getAvailableStockQuantity(
+                              currentProduct?.available_stock || 0,
+                              product,
+                              orderInfo,
+                              existingRentalOrder
+                            );
+
+                            console.log(currentProductStock);
+
+                            const newQuantity = existingRentalOrder
+                              ? Math.max(
+                                  0,
+                                  Math.min(
+                                    Number(val),
+                                    currentProductStock +
+                                      orderInfo.product_details[index].order_quantity
+                                  )
+                                )
+                              : Math.max(0, Math.min(Number(val), currentProductStock));
+
+                            newProducts[index] = {
+                              ...product,
+                              order_quantity: newQuantity,
+                            };
+
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomDatePicker
+                          label=""
+                          value={
+                            dayjs(orderInfo.product_details[index].out_date).format(
+                              'DD-MMM-YYYY hh:mm A'
+                            ) || ''
+                          }
+                          disabled={product.type !== ProductType.RENTAL}
+                          className="w-[15rem]"
+                          onChange={(val) => {
+                            const newProducts = [...orderInfo.product_details];
+                            const duration = getDuration(val, newProducts[index].in_date);
+                            newProducts[index] = {
+                              ...product,
+                              out_date: val,
+                              duration: duration,
+                            };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                          // format="DD/MM/YYYY"
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomDatePicker
+                          label=""
+                          value={
+                            orderInfo.product_details[index].in_date
+                              ? dayjs(orderInfo.product_details[index].in_date).format(
+                                  'DD-MMM-YYYY hh:mm A'
+                                )
+                              : ''
+                          }
+                          disabled={product.type !== ProductType.RENTAL || !product._id}
+                          className="w-[15rem]"
+                          onChange={(val) => {
+                            if (val !== undefined && dayjs(val).diff(product.out_date) < 0) {
+                              val = product.out_date;
+                            }
+                            const newProducts = [...orderInfo.product_details];
+                            const duration = val
+                              ? getDuration(newProducts[index].out_date, val)
+                              : 1;
+                            newProducts[index] = {
+                              ...product,
+                              in_date: val,
+                              duration: duration,
+                            };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                          // format="DD/MM/YYYY"
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          type="number"
+                          label=""
+                          placeholder=""
+                          className="w-[5rem] p-2"
+                          disabled={product.type !== ProductType.RENTAL}
+                          value={orderInfo.product_details[index].duration || 0}
+                          onChange={(val) => {
+                            const newProducts = [...orderInfo.product_details];
+                            newProducts[index] = {
+                              ...product,
+                              duration: Number(val),
+                            };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          type="number"
+                          label=""
+                          placeholder=""
+                          className="w-[8rem] p-2"
+                          value={orderInfo.product_details[index].order_repair_count || 0}
+                          onChange={(val) => {
+                            const newProducts = [...orderInfo.product_details];
+                            newProducts[index] = {
+                              ...product,
+                              order_repair_count:
+                                Number(val) <= product.order_quantity
+                                  ? Number(val)
+                                  : product.order_quantity,
+                            };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          type="number"
+                          label=""
+                          placeholder=""
+                          className="w-[8rem] p-2"
+                          value={product.rent_per_unit}
+                          onChange={(val) => {
+                            const newProducts = [...orderInfo.product_details];
+                            newProducts[index] = {
+                              ...product,
+                              rent_per_unit: Number(val),
+                            };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          disabled
+                          type="number"
+                          label=""
+                          placeholder=""
+                          className="w-[8rem] p-2"
+                          value={product.rent_per_unit * product.order_quantity * product.duration}
+                          onChange={() => {}}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          type="number"
+                          label=""
+                          placeholder=""
+                          className="w-[20rem]"
+                          multiline
+                          minRows={1}
+                          value={orderInfo.product_details[index].damage || ''}
+                          onChange={(val) => {
+                            const newProducts = [...orderInfo.product_details];
+                            newProducts[index] = { ...product, damage: val };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <div className="flex gap-2">
+                          <CustomButton
+                            label="Remove"
+                            onClick={() => removeOrderProduct(product._id)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={12} className="h-[5rem] text-center py-4">

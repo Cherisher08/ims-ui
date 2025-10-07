@@ -42,7 +42,6 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
       canvas.width = viewport.width;
       await page.render({ canvasContext: context, viewport, canvas }).promise;
       canvas.toBlob((imageBlob) => {
-        console.log('imageBlob: ', imageBlob);
         if (imageBlob) {
           saveAs(imageBlob, `DeliveryChallan_${orderInfo.order_id}.png`);
         }
@@ -54,26 +53,47 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
   };
 
   const handleWhatsappChallan = async (orderInfo: RentalOrderInfo) => {
-    const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
-    const file = new File([blob], 'DeliveryChallan.pdf', { type: 'application/pdf' });
-    const messageDetails = {
-      customerName: orderInfo.customer?.name || '',
-      orderId: orderInfo.order_id,
-    };
     try {
-      await whatsappRentalOrderDC({
-        mobile_number: orderInfo.customer?.personal_number || '',
-        messageDetails,
-        pdf_file: file,
-      }).unwrap();
-      toast.success('WhatsApp message sent successfully', {
-        toastId: TOAST_IDS.SUCCESS_WHATSAPP_ORDER_DC,
+      const pdfBlob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const pdfDoc = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+      const page = await pdfDoc.getPage(1);
+      const scale = 2; // Higher resolution
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      await page.render({ canvasContext: context, viewport, canvas }).promise;
+      canvas.toBlob(async (imageBlob) => {
+        if (imageBlob) {
+          const file = new File([imageBlob], 'DeliveryChallan.png', { type: 'image/png' });
+          const messageDetails = {
+            customerName: orderInfo.customer?.name || '',
+            orderId: orderInfo.order_id,
+          };
+          try {
+            await whatsappRentalOrderDC({
+              mobile_number: orderInfo.customer?.personal_number || '',
+              messageDetails,
+              pdf_file: file,
+            }).unwrap();
+            toast.success('WhatsApp message sent successfully', {
+              toastId: TOAST_IDS.SUCCESS_WHATSAPP_ORDER_DC,
+            });
+          } catch (error) {
+            console.error('Error sending WhatsApp message:', error);
+            toast.error('Failed to send WhatsApp message', {
+              toastId: TOAST_IDS.ERROR_WHATSAPP_ORDER_DC,
+            });
+          }
+        }
       });
     } catch (error) {
-      console.error('Error sending WhatsApp message:', error);
-      toast.error('Failed to send WhatsApp message', {
-        toastId: TOAST_IDS.ERROR_WHATSAPP_ORDER_DC,
-      });
+      console.error('Error converting PDF to image for WhatsApp:', error);
+      toast.error('Failed to send WhatsApp message');
     }
   };
   return (

@@ -107,6 +107,7 @@ export type OrderInfo = {
   round_off: number;
   payment_mode: RepaymentMode;
   gst: number;
+  invoice_id: string;
 };
 
 export type RentalOrderInfo = OrderInfo & {
@@ -127,7 +128,6 @@ export type RentalOrderInfo = OrderInfo & {
   repay_date: string;
   event_name: string;
   event_venue: string;
-  invoice_id: string;
 };
 
 export type SalesOrderInfo = OrderInfo & {

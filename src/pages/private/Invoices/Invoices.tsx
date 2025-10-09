@@ -1,20 +1,22 @@
-import { FC } from 'react';
-import CustomTable from '../../../styled/CustomTable';
-import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
+import { FC } from 'react';
+import { useGetRentalOrdersQuery } from '../../../services/OrderService';
+import CustomTable from '../../../styled/CustomTable';
 
 import { IoPrintOutline } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 import { RentalOrderType } from '../../../types/order';
 import { calculateFinalAmount, currencyFormatter } from '../Orders/utils';
-import { useNavigate } from 'react-router-dom';
 
 const Invoices: FC = () => {
   const navigate = useNavigate();
 
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
 
-  const orderData = isRentalOrdersQuerySuccess ? rentalOrders.map((order) => ({ ...order })) : [];
+  const orderData = isRentalOrdersQuerySuccess
+    ? rentalOrders.filter((order) => order.invoice_id)
+    : [];
 
   const rentalOrderColDef: ColDef[] = [
     {
@@ -101,7 +103,8 @@ const Invoices: FC = () => {
   ];
 
   return (
-    <div className="flex flex-col w-full h-full">
+    <div className="flex flex-col w-full h-full gap-2">
+      <p className="font-primary w-full text-center text-2xl font-bold">INVOICES</p>
       <CustomTable
         isLoading={false}
         colDefs={rentalOrderColDef}

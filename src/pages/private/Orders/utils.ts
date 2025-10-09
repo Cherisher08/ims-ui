@@ -84,6 +84,66 @@ export const getNewOrderId = (orders: OrderInfo[]) => {
   return `RO/${fy}/${nextSuffix}`;
 };
 
+export const getSplitOrderId = (orderId: string, orders: OrderInfo[]): string => {
+  const relatedOrders = orders.map((o) => o.order_id).filter((id) => id.startsWith(orderId));
+
+  const existingSuffixes = relatedOrders
+    .map((id) => {
+      const match = id.match(/\/([A-Z])$/);
+      return match ? match[1] : null;
+    })
+    .filter(Boolean) as string[];
+
+  if (existingSuffixes.length === 0) {
+    return `${orderId}/A`;
+  }
+
+  const nextCharCode = Math.max(...existingSuffixes.map((ch) => ch.charCodeAt(0))) + 1;
+
+  const nextSuffix = String.fromCharCode(nextCharCode);
+  return `${orderId}/${nextSuffix}`;
+};
+
+export const isValidOrder = (order: RentalOrderInfo): boolean => {
+  if (
+    order.eway_amount === 0 &&
+    order.deposits.length === 0 &&
+    order.product_details.length === 0
+  ) {
+    return false;
+  }
+  return true;
+};
+
+export const getLatestInvoiceId = (orders: OrderInfo[]): string => {
+  const invoiceIds = orders
+    .map((order) => order.invoice_id)
+    .filter((id): id is string => Boolean(id) && id.startsWith('INV/'));
+
+  if (invoiceIds.length === 0) {
+    const fy = new Date().getFullYear();
+    return `INV/${fy}/0001`;
+  }
+
+  let latestNum = 0;
+  let latestFy = new Date().getFullYear();
+
+  invoiceIds.forEach((id) => {
+    const parts = id.split('/');
+    const fy = parts[1];
+    const num = parseInt(parts[2], 10);
+
+    if (!isNaN(num) && num > latestNum) {
+      latestNum = num;
+      latestFy = parseInt(fy, 10);
+    }
+  });
+
+  const nextNum = (latestNum + 1).toString().padStart(4, '0');
+
+  return `INV/${latestFy}/${nextNum}`;
+};
+
 export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
   return {
     billing_mode: BillingMode.B2C,
@@ -655,7 +715,7 @@ export const getAvailableStockQuantity = (
   currentProductStock: number,
   product: ProductDetails,
   newOrderInfo: RentalOrderInfo,
-  existingRentalOrder: RentalOrderInfo | undefined
+  existingRentalOrder?: RentalOrderInfo
 ) => {
   const oldStock =
     existingRentalOrder?.product_details.find((p) => p._id === product._id)?.order_quantity || 0;
@@ -669,7 +729,8 @@ export const getAvailableStockQuantity = (
       newQuantity = currentProductStock + oldStock - product.order_quantity;
     } else if (
       existingRentalOrder.status === PaymentStatus.PENDING &&
-      newOrderInfo.status === PaymentStatus.PAID
+      newOrderInfo.status === PaymentStatus.PAID &&
+      product.type === ProductType.RENTAL
     ) {
       newQuantity = currentProductStock + oldStock;
     } else if (

@@ -17,16 +17,16 @@ export const MenuItems: MenuItemsType[] = [
     logo: <MdDashboardCustomize size={30} />,
   },
   {
-    id: 5,
-    title: 'Orders',
-    path: '/orders',
-    logo: <LuClipboardList size={30} />,
-  },
-  {
     id: 2,
     title: 'Entries',
     path: '/orders/rentals',
     logo: <MdDataSaverOn size={30} />,
+  },
+  {
+    id: 5,
+    title: 'Orders',
+    path: '/orders',
+    logo: <LuClipboardList size={30} />,
   },
   {
     id: 6,

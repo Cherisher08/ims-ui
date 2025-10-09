@@ -2,24 +2,38 @@ import { Alert, Checkbox, Modal } from '@mui/material';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { MdClose } from 'react-icons/md';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../constants/constants';
 import {
   calculateFinalAmount,
   extractOrder,
   formatProducts,
   getDuration,
+  getLatestInvoiceId,
+  getOrderStatus,
+  getSplitOrderId,
+  isValidOrder,
   paymentModeOptions,
   repaymentModeOptions,
   transportOptions,
 } from '../pages/private/Orders/utils';
+import { useLazyGetProductByIdQuery, useUpdateProductMutation } from '../services/ApiService';
+import {
+  useCreateRentalOrderMutation,
+  useGetRentalOrdersQuery,
+  useUpdateRentalOrderMutation,
+} from '../services/OrderService';
 import CustomButton from '../styled/CustomButton';
 import CustomDatePicker from '../styled/CustomDatePicker';
 import CustomInput from '../styled/CustomInput';
 import CustomSelect from '../styled/CustomSelect';
 import CustomSlider from '../styled/CustomSlider';
-import { DiscountType, discountTypeValues, ProductType } from '../types/common';
+import { DiscountType, discountTypeValues, OrderStatusType, ProductType } from '../types/common';
 import {
   BillingMode,
   DepositType,
+  OrderInfo,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -78,9 +92,19 @@ const initialRentalOrder: RentalOrderInfo = {
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
+  const navigate = useNavigate();
+  const [triggerGetProduct] = useLazyGetProductByIdQuery();
+  const [updateProductData] = useUpdateProductMutation();
   const [newOrder, setNewOrder] = useState(initialRentalOrder);
-  // const [createRentalOrder] = useCreateRentalOrderMutation();
-  // const { data: rentalOrders, refetch: getRefetchRentalOrders } = useGetRentalOrdersQuery();
+  const { data: orders } = useGetRentalOrdersQuery();
+  const [
+    createRentalOrder,
+    { isSuccess: isRentalOrderCreateSuccess, isError: isRentalOrderCreateError },
+  ] = useCreateRentalOrderMutation();
+  const [
+    updateRentalOrder,
+    { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
+  ] = useUpdateRentalOrderMutation();
 
   useEffect(() => {
     setNewOrder(() => ({
@@ -88,6 +112,32 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
       customer: orderInfo.customer,
     }));
   }, [orderInfo]);
+
+  useEffect(() => {
+    if (isRentalOrderCreateSuccess) {
+      toast.success('Rental Order Created Successfully', {
+        toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
+      });
+    }
+    if (isRentalOrderCreateError) {
+      toast.error('Rental Order was not Created Successfully', {
+        toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+      });
+    }
+  }, [isRentalOrderCreateError, isRentalOrderCreateSuccess]);
+
+  useEffect(() => {
+    if (isRentalOrderUpdateSuccess) {
+      toast.success('Rental Order Updated Successfully', {
+        toastId: TOAST_IDS.SUCCESS_RENTAL_ORDER_CREATE,
+      });
+    }
+    if (isRentalOrderUpdateError) {
+      toast.error('Rental Order was not Updated Successfully. Please Try Again', {
+        toastId: TOAST_IDS.ERROR_RENTAL_ORDER_CREATE,
+      });
+    }
+  }, [isRentalOrderUpdateError, isRentalOrderUpdateSuccess]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleValueChange = (key: string, value: any) => {
@@ -99,7 +149,62 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
 
   const handleCreate = async () => {
     const oldOrder = extractOrder(orderInfo, newOrder);
-    console.log(oldOrder, newOrder);
+    const validOldOrder = isValidOrder(oldOrder);
+    const newInvoiceId = getLatestInvoiceId(orders as OrderInfo[]);
+    const newOrderId = getSplitOrderId(orderInfo.order_id, orders as OrderInfo[]);
+    const newOrderStatus = getOrderStatus(newOrder);
+
+    if (newOrderStatus === OrderStatusType.PAID) {
+      newOrder.status = PaymentStatus.PAID;
+      newOrder.invoice_id = newInvoiceId;
+      for (const product of newOrder.product_details) {
+        const currentProductDetail = await triggerGetProduct(product._id).unwrap();
+        const newQuantity = currentProductDetail.available_stock + product.order_quantity;
+        await updateProductData({
+          ...currentProductDetail,
+          available_stock: newQuantity,
+        }).unwrap();
+      }
+    } else {
+      newOrder.status = PaymentStatus.PENDING;
+    }
+
+    if (validOldOrder) {
+      delete newOrder._id;
+      newOrder.order_id = newOrderId;
+
+      const oldOrderId = getSplitOrderId(orderInfo.order_id, [
+        ...(orders || []),
+        newOrder,
+      ] as OrderInfo[]);
+      // const oldOrderStatus = getOrderStatus(oldOrder);
+      oldOrder.order_id = oldOrderId;
+
+      // if (oldOrderStatus === OrderStatusType.PAID) {
+
+      //   oldOrder.status = PaymentStatus.PAID;
+
+      //   for (const product of newOrder.product_details) {
+      //     const currentProductDetail = await triggerGetProduct(product._id).unwrap();
+
+      //     const newQuantity = getAvailableStockQuantity(
+      //       currentProductDetail.available_stock,
+      //       product,
+      //       newOrder
+      //     );
+
+      //     await updateProductData({
+      //       ...currentProductDetail,
+      //       available_stock: newQuantity,
+      //     }).unwrap();
+      //   }
+      // } else oldOrder.status = PaymentStatus.PENDING;
+      updateRentalOrder(oldOrder);
+      createRentalOrder(newOrder);
+    } else {
+      updateRentalOrder(newOrder);
+    }
+    navigate('/orders');
     // const latestOrders = await getRefetchRentalOrders();
     // const orderId = getNewOrderId(latestOrders.data || []);
     // console.log(orderId);
@@ -109,20 +214,20 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
     // }).unwrap();
   };
 
-  const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
-    const amountDue = Math.abs(
-      calculateFinalAmount(newOrder as RentalOrderType) -
-        orderInfo.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-    );
+  // const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
+  //   const amountDue = Math.abs(
+  //     calculateTotalAmount(newOrder as RentalOrderType) -
+  //       newOrder.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+  //   );
 
-    if (value === amountDue) {
-      handleValueChange(type, value);
-      handleValueChange('status', PaymentStatus.PAID);
-    } else {
-      handleValueChange(type, value);
-      handleValueChange('status', PaymentStatus.PENDING);
-    }
-  };
+  //   if (value === amountDue) {
+  //     handleValueChange(type, value);
+  //     handleValueChange('status', PaymentStatus.PAID);
+  //   } else {
+  //     handleValueChange(type, value);
+  //     handleValueChange('status', PaymentStatus.PENDING);
+  //   }
+  // };
 
   useEffect(() => {
     if (!newOrder.product_details || newOrder.product_details.length === 0) return;
@@ -145,6 +250,15 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
       }));
     }
   }, [newOrder.product_details, newOrder.in_date]);
+
+  useEffect(() => {
+    const amountDue =
+      calculateFinalAmount(newOrder as RentalOrderType) -
+      newOrder.deposits.reduce((total, deposit) => total + deposit.amount, 0);
+    if (amountDue === 0 && newOrder.in_date) handleValueChange('status', PaymentStatus.PAID);
+    else handleValueChange('status', PaymentStatus.PENDING);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newOrder.product_details, newOrder.balance_paid, newOrder.deposits, newOrder.in_date]);
 
   return (
     <div>
@@ -339,7 +453,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
                                   ? dayjs(product.out_date).format('DD-MMM-YYYY hh:mm A')
                                   : ''
                               }
-                              disabled={!selectedProduct}
+                              disabled={!selectedProduct || product.type !== ProductType.RENTAL}
                               className="w-[15rem]"
                               onChange={(val) => {
                                 setNewOrder((prev) => {
@@ -710,8 +824,9 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
                   wrapperClass="w-full"
                   type="number"
                   value={newOrder.balance_paid}
-                  onChange={(val) => {
-                    handlePaymentStatus('balance_paid', Number(val));
+                  onChange={(value) => {
+                    handleValueChange('balance_paid', Number(value));
+                    // handlePaymentStatus('balance_paid', Number(val));
                   }}
                 />
                 <div className="flex items-end gap-2">
@@ -786,6 +901,31 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
                       handleValueChange('payment_mode', currentMode);
                     }}
                   />
+                </div>
+              </div>
+              <div></div>
+              <div className="grid grid-cols-2 pt-4">
+                <div className="flex flex-col gap-1 font-semibold pb-2">
+                  <p>Balance Amount</p>
+                </div>
+                <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
+                  <p>
+                    ₹{' '}
+                    {Math.max(
+                      0,
+                      calculateFinalAmount(newOrder as RentalOrderType) -
+                        newOrder.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+                    ).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <div></div>
+              <div className="grid grid-cols-2">
+                <div className="flex flex-col gap-1 font-semibold pb-2">
+                  <p>Order Status</p>
+                </div>
+                <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
+                  <p>{getOrderStatus(newOrder)}</p>
                 </div>
               </div>
             </div>

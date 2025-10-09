@@ -112,6 +112,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   // const sameKindOfDeposit =
   //   deposits.length === 0 ||
   //   (deposits.length > 0 && deposits.every((d) => d.mode === deposits[0].mode));
+  console.log(invoiceId);
   const calculateRentAfterGST = (rent: number, gst: number) => {
     if (data.billing_mode === BillingMode.B2C) {
       const exclusiveAmount = rent / (1 + gst / 100);
@@ -469,7 +470,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
           <View style={styles.detailContainer}>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Invoice No:</Text>
-              <Text style={styles.fieldValue}>{invoiceId}</Text>
+              <Text style={styles.fieldValue}>{data.invoice_id || '-'}</Text>
             </View>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Bill No:</Text>

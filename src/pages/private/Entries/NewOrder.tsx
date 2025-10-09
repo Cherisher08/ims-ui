@@ -46,6 +46,7 @@ import {
   BillingMode,
   // BillingUnit,
   DepositType,
+  OrderInfo,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -62,9 +63,11 @@ import {
   getDefaultDeposit,
   getDefaultProduct,
   getDuration,
+  getLatestInvoiceId,
   getNewOrderId,
   getOrderStatus,
   getOrderStatusColors,
+  getSplitOrderId,
   paymentModeOptions,
   repaymentModeOptions,
   transformRentalOrderData,
@@ -473,6 +476,13 @@ const NewOrder = () => {
       return;
     }
 
+    if (newOrderInfo.status === PaymentStatus.PAID) {
+      const newInvoiceId = getLatestInvoiceId(rentalOrders as OrderInfo[]);
+      const orderId = getSplitOrderId(newOrderInfo.order_id, rentalOrders as RentalOrderInfo[]);
+      newOrderInfo.invoice_id = newInvoiceId;
+      newOrderInfo.order_id = orderId;
+    }
+
     if (rentalId) {
       try {
         for (const product of newOrderInfo.product_details) {
@@ -519,10 +529,14 @@ const NewOrder = () => {
       try {
         const latestOrders = await getRefetchRentalOrders();
         const orderId = getNewOrderId(latestOrders.data || []);
+        const newOrderId =
+          newOrderInfo.status === PaymentStatus.PAID
+            ? getSplitOrderId(orderId, rentalOrders as RentalOrderInfo[])
+            : orderId;
 
         const orderResponse = await createRentalOrder({
           ...newOrderInfo,
-          order_id: orderId,
+          order_id: newOrderId,
         }).unwrap();
         console.log('Order created successfully', orderResponse);
 
@@ -534,7 +548,6 @@ const NewOrder = () => {
               console.warn(`Product ${product_detail._id} not found, skipping`);
               return Promise.resolve();
             }
-
             return updateProductData({
               ...currentProduct,
               available_stock: currentProduct.available_stock - product_detail.order_quantity,
@@ -845,11 +858,18 @@ const NewOrder = () => {
         ) : (
           <Box className="font-primary text-2xl font-bold w-full">Rental Order</Box>
         )} */}
-
           {/* <div className="flex flex-row justify-between w-full"> */}
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
-            <CustomButton label="Create Invoice" onClick={() => setSplitOrderModal(true)} />
+            <CustomButton
+              label="Generate Invoice"
+              disabled={
+                !orderInfo.customer ||
+                (orderInfo.product_details.length === 0 && !orderInfo.eway_amount) ||
+                !!orderInfo.invoice_id
+              }
+              onClick={() => setSplitOrderModal(true)}
+            />
             <CustomSplitButton
               label="Download Delivery Challan"
               disabled={!orderInfo._id}
@@ -1267,14 +1287,14 @@ const NewOrder = () => {
                           value={orderInfo.product_details[index].order_quantity || 0}
                           onChange={(val) => {
                             const newProducts = [...orderInfo.product_details];
-                            const currentProductStock = getAvailableStockQuantity(
-                              currentProduct?.available_stock || 0,
-                              product,
-                              orderInfo,
-                              existingRentalOrder
-                            );
-
-                            console.log(currentProductStock);
+                            const currentProductStock = existingRentalOrder
+                              ? getAvailableStockQuantity(
+                                  currentProduct?.available_stock || 0,
+                                  product,
+                                  orderInfo,
+                                  existingRentalOrder
+                                )
+                              : currentProduct?.available_stock || 0;
 
                             const newQuantity = existingRentalOrder
                               ? Math.max(

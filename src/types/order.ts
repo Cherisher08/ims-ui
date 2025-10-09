@@ -144,8 +144,13 @@ export type ServiceOrderInfo = OrderInfo & {
 
 export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo;
 
+type MessageDetails = {
+  customerName: string;
+  orderId: string;
+};
+
 export type DCWhatsappPayload = {
-  message: string;
+  messageDetails: MessageDetails;
   mobile_number: string;
   pdf_file: File | null;
 };

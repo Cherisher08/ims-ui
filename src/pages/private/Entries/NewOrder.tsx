@@ -1,7 +1,7 @@
+import ArticleIcon from '@mui/icons-material/Article';
+import BadgeIcon from '@mui/icons-material/Badge';
 import Box from '@mui/material/Box';
-import { pdf } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
-import { saveAs } from 'file-saver';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import { useDispatch } from 'react-redux';
@@ -21,7 +21,6 @@ import {
   useGetRentalOrderByIdQuery,
   useGetRentalOrdersQuery,
   useLazyGetExpiredRentalOrdersQuery,
-  usePostOrderDcAsWhatsappMessageMutation,
   useUpdateRentalOrderMutation,
 } from '../../../services/OrderService';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
@@ -31,7 +30,6 @@ import CustomButton from '../../../styled/CustomButton';
 import CustomDatePicker from '../../../styled/CustomDatePicker';
 import CustomInput from '../../../styled/CustomInput';
 import CustomSelect, { CustomSelectOptionProps } from '../../../styled/CustomSelect';
-import CustomSplitButton from '../../../styled/CustomSplitButton';
 import AntSwitch from '../../../styled/CustomSwitch';
 import {
   DiscountType,
@@ -73,7 +71,7 @@ import {
   transformRentalOrderData,
   transportOptions,
 } from '../Orders/utils';
-import DeliveryChallanPDF from './DeliveryChallanPDF';
+import DeliveryChallanDialog from './DeliveryChallanDialog';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -161,8 +159,6 @@ const NewOrder = () => {
     { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
   ] = useUpdateRentalOrderMutation();
 
-  const [whatsappRentalOrderDC] = usePostOrderDcAsWhatsappMessageMutation();
-
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalOrder);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
@@ -172,6 +168,8 @@ const NewOrder = () => {
   const [removedProducts, setRemovedProducts] = useState<ProductDetails[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
+  const [showDeliveryChallanModal, setShowDeliveryChallanModal] = useState<boolean>(false);
+
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
       _id: '',
@@ -574,36 +572,6 @@ const NewOrder = () => {
     }
   };
 
-  const handlePrintDeliveryChallan = async () => {
-    const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
-    saveAs(blob, `DeliveryChallan_${orderInfo.order_id}.pdf`);
-  };
-
-  const handleWhatsappChallan = async (orderInfo: RentalOrderInfo) => {
-    const blob = await pdf(<DeliveryChallanPDF data={orderInfo} />).toBlob();
-    const file = new File([blob], 'delivery_challan.pdf', { type: 'application/pdf' });
-    const message = `Dear ${
-      orderInfo.customer?.name || 'Customer'
-    },\n\nPlease find attached the Delivery Challan for your order ${
-      orderInfo.order_id
-    }.\n\nThank you for choosing our services!\n\nBest regards,\nMani Power Tools`;
-    try {
-      await whatsappRentalOrderDC({
-        mobile_number: orderInfo.customer?.personal_number || '',
-        message,
-        pdf_file: file,
-      }).unwrap();
-      toast.success('WhatsApp message sent successfully', {
-        toastId: TOAST_IDS.SUCCESS_WHATSAPP_ORDER_DC,
-      });
-    } catch (error) {
-      console.error('Error sending WhatsApp message:', error);
-      toast.error('Failed to send WhatsApp message', {
-        toastId: TOAST_IDS.ERROR_WHATSAPP_ORDER_DC,
-      });
-    }
-  };
-
   useEffect(() => {
     if (!rentalId) {
       setOrderInfo(initialRentalOrder);
@@ -870,17 +838,25 @@ const NewOrder = () => {
               }
               onClick={() => setSplitOrderModal(true)}
             />
+            {/*
             <CustomSplitButton
               label="Download Delivery Challan"
               disabled={!orderInfo._id}
               onClick={() => handlePrintDeliveryChallan()}
               options={['Send Whatsapp']}
               onMenuItemClick={() => handleWhatsappChallan(orderInfo)}
+            /> */}
+            <CustomButton
+              label="Delivery Challan"
+              disabled={!orderInfo._id}
+              onClick={() => setShowDeliveryChallanModal(true)}
+              icon={<ArticleIcon />}
             />
             <CustomButton
               label="Customer History"
               disabled={!selectedCustomerId}
               onClick={() => navigate(`/contacts/${selectedCustomerId}`)}
+              icon={<BadgeIcon />}
             />
             <CustomButton
               className="w-[6rem]"
@@ -1892,6 +1868,11 @@ const NewOrder = () => {
         orderInfo={orderInfo}
         open={splitOrderModal}
         setOpen={() => setSplitOrderModal(false)}
+      />
+      <DeliveryChallanDialog
+        open={showDeliveryChallanModal}
+        onClose={() => setShowDeliveryChallanModal(false)}
+        orderInfo={orderInfo}
       />
     </div>
   );

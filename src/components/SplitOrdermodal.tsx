@@ -936,7 +936,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
             </Alert>
             <div className="flex gap-4 my-3 ">
               <CustomButton label="Cancel" onClick={() => setOpen(false)} variant="outlined" />
-              <CustomButton label="Create" onClick={handleCreate} />
+              <CustomButton label="Save" onClick={handleCreate} />
             </div>
           </div>
         </div>

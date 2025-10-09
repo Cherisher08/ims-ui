@@ -326,143 +326,6 @@ const NewOrder = () => {
     }
   };
 
-  // const updateProductStock = (paymentStatus: PaymentStatus | undefined) => {
-  //   const updatedProducts = orderInfo.product_details.map((updatedProductDetail) => {
-  //     const currentProduct = {
-  //       ...products.find((product) => product._id === updatedProductDetail._id)!,
-  //     };
-  //     if (paymentStatus === 'paid') {
-  //       currentProduct.available_stock += updatedProductDetail.order_quantity;
-  //     } else if (paymentStatus === 'pending') {
-  //       currentProduct.available_stock -= updatedProductDetail.order_quantity;
-  //     }
-  //     return currentProduct;
-  //   });
-  //   // const newProducts = products.map((prod) =>
-  //   //   updatedProducts.find((p) => p._id === prod._id)
-  //   //     ? updatedProducts.find((p) => p._id === prod._id)
-  //   //     : prod
-  //   // );
-  //   // setProducts(newProducts.filter((product): product is Product => product !== undefined));
-  // };
-
-  // const createNewOrder = async () => {
-  //   const newOrderInfo = { ...orderInfo, deposits: depositData };
-  //   const productsInOrder = newOrderInfo.product_details;
-  //   const product = productsInOrder.find((product) => product.order_quantity === 0);
-  //   if (product) {
-  //     // mes
-  //     toast.error(`${product.name} has 0 quantity`);
-  //     return;
-  //   }
-  //   if (rentalId) {
-  //     for (let i = 0; i < newOrderInfo.product_details.length; i++) {
-  //       const product = newOrderInfo.product_details[i];
-  //       const currentProductDetail = await triggerGetProduct(product._id).unwrap();
-  //       if (!isFetching) {
-  //         const newQuantity = currentProductDetail.available_stock - product.order_quantity;
-  //         updateProductData({
-  //           ...currentProductDetail,
-  //           available_stock: newQuantity,
-  //         });
-  //       }
-  //     }
-
-  //     return;
-  //     updateRentalOrder(newOrderInfo);
-  //     if (existingRentalOrder) {
-  //       newOrderInfo.product_details.forEach((updatedProductDetail) => {
-  //         // const previousProductDetail = existingRentalOrder.product_details.find(
-  //         //   (prev) => prev._id === updatedProductDetail._id
-  //         // );
-
-  //         // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
-  //         // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
-
-  //         // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
-  //         // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
-
-  //         // find the product in inventory
-
-  //         const currentProduct = {
-  //           ...products.find((product) => product._id === updatedProductDetail._id)!,
-  //         };
-
-  //         // apply the delta
-  //         // currentProduct.available_stock -= quantityDelta;
-  //         // currentProduct.repair_count += repairDelta;
-  //         updateProductData(currentProduct);
-  //       });
-
-  //       removedProducts.forEach((updatedProductDetail) => {
-  //         // const previousProductDetail = existingRentalOrder.product_details.find(
-  //         //   (prev) => prev._id === updatedProductDetail._id
-  //         // );
-
-  //         // const previousQuantity = previousProductDetail?.order_quantity ?? 0;
-  //         // const previousRepair = previousProductDetail?.order_repair_count ?? 0;
-
-  //         // const quantityDelta = updatedProductDetail.order_quantity - previousQuantity;
-  //         // const repairDelta = updatedProductDetail.order_repair_count - previousRepair;
-
-  //         // find the product in inventory
-  //         const currentProduct = {
-  //           ...products.find((product) => product._id === updatedProductDetail._id)!,
-  //         };
-
-  //         // apply the delta
-  //         // currentProduct.available_stock -= quantityDelta;
-  //         // currentProduct.repair_count += repairDelta;
-  //         updateProductData(currentProduct);
-  //       });
-  //     }
-  //   } else {
-  //     try {
-  //       const latestOrders = await getRefetchRentalOrders();
-  //       const orderId = getNewOrderId(latestOrders.data || []);
-  //       const orderResponse = await createRentalOrder({
-  //         ...newOrderInfo,
-  //         order_id: orderId,
-  //       }).unwrap();
-  //       console.log('✅ Order created successfully', orderResponse);
-
-  //       const results = await Promise.allSettled(
-  //         newOrderInfo.product_details.map((product_detail) => {
-  //           const currentProduct = products.find((product) => product._id === product_detail._id);
-
-  //           if (!currentProduct) {
-  //             console.warn(`⚠️ Product ${product_detail._id} not found, skipping`);
-  //             return Promise.resolve();
-  //           }
-
-  //           return updateProductData({
-  //             ...currentProduct,
-  //             available_stock: currentProduct.available_stock - product_detail.order_quantity,
-  //             repair_count: currentProduct.repair_count + product_detail.order_repair_count,
-  //           }).unwrap();
-  //         })
-  //       );
-
-  //       results.forEach((result, idx) => {
-  //         if (result.status === 'fulfilled') {
-  //           console.log(`✅ Product ${newOrderInfo.product_details[idx]._id} updated successfully`);
-  //         } else {
-  //           console.error(
-  //             `❌ Product ${newOrderInfo.product_details[idx]._id} update failed:`,
-  //             result.reason
-  //           );
-  //         }
-  //       });
-
-  //       // 3️⃣ Finally, reset your form or order state
-  //       setOrderInfo(initialRentalOrder);
-  //     } catch (error) {
-  //       console.error('❌ Failed to create rental order:', error);
-  //       // optionally show user a toast or message
-  //     }
-  //   }
-  // };
-
   const createNewOrder = async () => {
     const newOrderInfo = { ...orderInfo, deposits: depositData };
 
@@ -671,13 +534,14 @@ const NewOrder = () => {
       orderInfo.product_details.find((prod) => !prod.in_date && prod.type === ProductType.RENTAL) ||
       false;
     const finalAmount = calculateFinalAmount() - depositData.reduce((sum, d) => sum + d.amount, 0);
+    console.log('finalAmount: ', finalAmount);
     const hasProductOrTransportAmount =
       (orderInfo.product_details.length > 0 &&
         orderInfo.product_details.some((p) => p.order_quantity > 0)) ||
       orderInfo.eway_amount > 0;
     if (
       orderInfo.in_date &&
-      (orderInfo.repay_date || finalAmount === 0) &&
+      ((orderInfo.repay_date && finalAmount < 0) || finalAmount === 0) &&
       !notReturnedProducts &&
       hasProductOrTransportAmount
     ) {
@@ -830,7 +694,7 @@ const NewOrder = () => {
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
             <CustomButton
-              label="Generate Invoice"
+              label="Save Invoice"
               disabled={
                 !orderInfo.customer ||
                 (orderInfo.product_details.length === 0 && !orderInfo.eway_amount) ||
@@ -1307,16 +1171,21 @@ const NewOrder = () => {
                           className="w-[15rem]"
                           onChange={(val) => {
                             const newProducts = [...orderInfo.product_details];
-                            const duration = getDuration(val, newProducts[index].in_date);
-                            newProducts[index] = {
-                              ...product,
-                              out_date: val,
-                              duration: duration,
-                            };
-                            setOrderInfo({
-                              ...orderInfo,
-                              product_details: newProducts,
-                            });
+                            if (
+                              !newProducts[index].in_date ||
+                              dayjs(val).isBefore(dayjs(newProducts[index].in_date))
+                            ) {
+                              const duration = getDuration(val, newProducts[index].in_date);
+                              newProducts[index] = {
+                                ...product,
+                                out_date: val,
+                                duration: duration,
+                              };
+                              setOrderInfo({
+                                ...orderInfo,
+                                product_details: newProducts,
+                              });
+                            }
                           }}
                           // format="DD/MM/YYYY"
                         />

@@ -39,8 +39,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
     <div className={`flex flex-col min-w-fit ${wrapperClass}`}>
       <label className={`w-full line-clamp-2 break-words ${labelClass}`}>{label}</label>
       <TextField
-        onChange={(e) => onChange(e.target.value)}
-        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
+        value={String(value)}
         error={error}
         type={type}
         variant="outlined"

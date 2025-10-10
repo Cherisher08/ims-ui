@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
-import SplitOrdermodal from '../../../components/SplitOrdermodal';
+import SplitOrdermodal from '../../../components/SplitOrderModal';
 import { TOAST_IDS } from '../../../constants/constants';
 import {
   useGetProductsQuery,
@@ -339,9 +339,11 @@ const NewOrder = () => {
 
     if (newOrderInfo.status === PaymentStatus.PAID) {
       const newInvoiceId = getLatestInvoiceId(rentalOrders as OrderInfo[]);
-      const orderId = getSplitOrderId(newOrderInfo.order_id, rentalOrders as RentalOrderInfo[]);
       newOrderInfo.invoice_id = newInvoiceId;
-      newOrderInfo.order_id = orderId;
+      if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
+        const orderId = getSplitOrderId(newOrderInfo.order_id, rentalOrders as RentalOrderInfo[]);
+        newOrderInfo.order_id = orderId;
+      }
     }
 
     if (rentalId) {

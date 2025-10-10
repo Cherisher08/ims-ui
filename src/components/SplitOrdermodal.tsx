@@ -936,7 +936,14 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
             </Alert>
             <div className="flex gap-4 my-3 ">
               <CustomButton label="Cancel" onClick={() => setOpen(false)} variant="outlined" />
-              <CustomButton label="Save" onClick={handleCreate} />
+              <CustomButton
+                label="Save"
+                disabled={
+                  (newOrder.product_details.length === 0 || !newOrder.eway_amount) &&
+                  getOrderStatus(newOrder) !== OrderStatusType.PAID
+                }
+                onClick={handleCreate}
+              />
             </div>
           </div>
         </div>

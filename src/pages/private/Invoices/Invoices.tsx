@@ -15,25 +15,27 @@ const Invoices: FC = () => {
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
 
   const orderData = isRentalOrdersQuerySuccess
-    ? rentalOrders.filter((order) => order.invoice_id)
+    ? rentalOrders
+        .filter((order) => order.invoice_id)
+        .sort((a, b) => (a.invoice_id < b.invoice_id ? 1 : -1))
     : [];
 
   const rentalOrderColDef: ColDef[] = [
-    {
-      field: 'order_id',
-      headerName: 'Order Id',
-      headerClass: 'ag-header-wrap',
-      minWidth: 100,
-      pinned: 'left',
-      filter: 'agTextColumnFilter',
-      cellRenderer: 'agGroupCellRenderer',
-      sort: 'desc',
-    },
     {
       field: 'invoice_id',
       headerName: 'Invoice Id',
       headerClass: 'ag-header-wrap',
       minWidth: 150,
+      filter: 'agTextColumnFilter',
+      cellRenderer: 'agGroupCellRenderer',
+      // sort: 'desc',
+      pinned: 'left',
+    },
+    {
+      field: 'order_id',
+      headerName: 'Order Id',
+      headerClass: 'ag-header-wrap',
+      minWidth: 100,
       filter: 'agTextColumnFilter',
       cellRenderer: 'agGroupCellRenderer',
     },

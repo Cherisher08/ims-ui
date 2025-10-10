@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
-import SplitOrdermodal from '../../../components/SplitOrderModal';
+import SplitOrdermodal from '../../../components/SplitOrderModals';
 import { TOAST_IDS } from '../../../constants/constants';
 import {
   useGetProductsQuery,

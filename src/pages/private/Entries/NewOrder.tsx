@@ -339,11 +339,15 @@ const NewOrder = () => {
     }
 
     if (newOrderInfo.status === PaymentStatus.PAID) {
-      const newInvoiceId = getLatestInvoiceId(rentalOrders as OrderInfo[]);
-      newOrderInfo.invoice_id = newInvoiceId;
+      console.log(rentalOrders);
+      const newInvoiceId = getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
+      // newOrderInfo.invoice_id = newInvoiceId;
       if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
-        const orderId = getSplitOrderId(newOrderInfo.order_id, rentalOrders as RentalOrderInfo[]);
-        newOrderInfo.order_id = orderId;
+        const orderId = getSplitOrderId(
+          newOrderInfo.order_id,
+          (rentalOrders as RentalOrderInfo[]) || []
+        );
+        // newOrderInfo.order_id = orderId;
       }
     }
 
@@ -395,7 +399,7 @@ const NewOrder = () => {
         const orderId = getNewOrderId(latestOrders.data || []);
         const newOrderId =
           newOrderInfo.status === PaymentStatus.PAID
-            ? getSplitOrderId(orderId, rentalOrders as RentalOrderInfo[])
+            ? getSplitOrderId(orderId, (rentalOrders as RentalOrderInfo[]) || [])
             : orderId;
 
         const orderResponse = await createRentalOrder({
@@ -412,9 +416,14 @@ const NewOrder = () => {
               console.warn(`Product ${product_detail._id} not found, skipping`);
               return Promise.resolve();
             }
+            const newQuantity = getAvailableStockQuantity(
+              currentProduct.available_stock,
+              product_detail,
+              newOrderInfo
+            );
             return updateProductData({
               ...currentProduct,
-              available_stock: currentProduct.available_stock - product_detail.order_quantity,
+              available_stock: newQuantity,
               repair_count: currentProduct.repair_count + product_detail.order_repair_count,
             }).unwrap();
           })
@@ -434,6 +443,34 @@ const NewOrder = () => {
         setOrderInfo(initialRentalOrder);
       } catch (error) {
         console.error('Failed to create rental order:', error);
+      }
+    }
+  };
+
+  const getNextInvoiceId = (currentId: string): string => {
+    const match = currentId.match(/(\d+)$/);
+    if (!match) return currentId;
+
+    const nextNumber = String(Number(match[1]) + 1).padStart(match[1].length, '0');
+    return currentId.replace(/\d+$/, nextNumber);
+  };
+
+  const updateInvoices = async (orders: RentalOrderInfo[]) => {
+    let currentInvoiceId = getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
+    let isFirst = true;
+
+    for (const order of orders) {
+      if (!order.invoice_id && order.status === PaymentStatus.PAID) {
+        const newInvoiceId = isFirst ? currentInvoiceId : getNextInvoiceId(currentInvoiceId);
+
+        await updateRentalOrder({
+          ...order,
+          invoice_id: newInvoiceId,
+        });
+
+        console.log(newInvoiceId);
+        currentInvoiceId = newInvoiceId;
+        isFirst = false;
       }
     }
   };
@@ -696,6 +733,7 @@ const NewOrder = () => {
           {/* <div className="flex flex-row justify-between w-full"> */}
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
+            <CustomButton label="Create Sub-Order" onClick={() => updateInvoices(rentalOrders)} />
             <CustomButton
               label="Create Sub-Order"
               icon={<MdAssignmentAdd />}

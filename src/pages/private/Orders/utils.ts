@@ -741,6 +741,8 @@ export const getAvailableStockQuantity = (
     } else {
       newQuantity = currentProductStock;
     }
+  } else if (newOrderInfo.status === PaymentStatus.PAID && product.type === ProductType.RENTAL) {
+    newQuantity = currentProductStock;
   } else newQuantity = currentProductStock - product.order_quantity;
 
   return newQuantity;

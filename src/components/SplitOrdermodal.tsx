@@ -271,7 +271,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
       >
         <div className="flex flex-col gap-4 justify-center w-4/5 items-center max-h-4/5 overflow-y-auto bg-white rounded-lg p-4">
           <div className="flex justify-between w-full">
-            <p className="text-primary text-xl font-semibold w-full text-start">Create Invoice</p>
+            <p className="text-primary text-xl font-semibold w-full text-start">Create Sub-Order</p>
             <MdClose
               size={25}
               className="cursor-pointer"
@@ -937,7 +937,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
             <div className="flex gap-4 my-3 ">
               <CustomButton label="Cancel" onClick={() => setOpen(false)} variant="outlined" />
               <CustomButton
-                label="Save"
+                label="Create"
                 disabled={
                   (newOrder.product_details.length === 0 || !newOrder.eway_amount) &&
                   getOrderStatus(newOrder) !== OrderStatusType.PAID

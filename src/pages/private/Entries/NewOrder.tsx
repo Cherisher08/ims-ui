@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
+import { MdAssignmentAdd } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -696,7 +697,8 @@ const NewOrder = () => {
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
             <CustomButton
-              label="Save Invoice"
+              label="Create Sub-Order"
+              icon={<MdAssignmentAdd />}
               disabled={
                 !orderInfo.customer ||
                 (orderInfo.product_details.length === 0 && !orderInfo.eway_amount) ||

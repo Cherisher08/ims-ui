@@ -341,13 +341,13 @@ const NewOrder = () => {
     if (newOrderInfo.status === PaymentStatus.PAID) {
       console.log(rentalOrders);
       const newInvoiceId = getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
-      // newOrderInfo.invoice_id = newInvoiceId;
+      newOrderInfo.invoice_id = newInvoiceId;
       if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
         const orderId = getSplitOrderId(
           newOrderInfo.order_id,
           (rentalOrders as RentalOrderInfo[]) || []
         );
-        // newOrderInfo.order_id = orderId;
+        newOrderInfo.order_id = orderId;
       }
     }
 

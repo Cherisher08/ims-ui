@@ -1,31 +1,26 @@
-import { Modal } from "@mui/material";
-import { useMemo, useState } from "react";
-import { MdClose } from "react-icons/md";
-import CustomInput from "../styled/CustomInput";
-import CustomAutoComplete, {
-  CustomOptionProps,
-} from "../styled/CustomAutoComplete";
-import { IdNamePair } from "../pages/private/Stocks";
-import CustomSelect from "../styled/CustomSelect";
-import CustomDatePicker from "../styled/CustomDatePicker";
-import { DiscountType, discountTypeValues, Product } from "../types/common";
+import { Modal } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { MdClose } from 'react-icons/md';
+import CustomInput from '../styled/CustomInput';
+import CustomAutoComplete, { CustomOptionProps } from '../styled/CustomAutoComplete';
+import { IdNamePair } from '../pages/private/Stocks';
+import CustomSelect from '../styled/CustomSelect';
+import CustomDatePicker from '../styled/CustomDatePicker';
+import { DiscountType, discountTypeValues, Product } from '../types/common';
 import {
   useCreateProductCategoryMutation,
   useCreateProductMutation,
   useCreateUnitMutation,
-} from "../services/ApiService";
-import CustomButton from "../styled/CustomButton";
-import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
-import {
-  initialProductData,
-  transformIdValuePair,
-} from "../pages/private/utils";
+} from '../services/ApiService';
+import CustomButton from '../styled/CustomButton';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { initialProductData, transformIdValuePair } from '../pages/private/utils';
 
 const productTypes = [
-  { id: "rental", value: "RENTAL" },
-  { id: "sales", value: "SALES" },
-  { id: "service", value: "SERVICE" },
+  { id: 'rental', value: 'RENTAL' },
+  { id: 'sales', value: 'SALES' },
+  { id: 'service', value: 'SERVICE' },
 ];
 
 type NewProductType = {
@@ -41,8 +36,7 @@ const NewProductModal = ({
   productCategories,
   productUnits,
 }: NewProductType) => {
-  const [newProductData, setNewProductData] =
-    useState<Product>(initialProductData);
+  const [newProductData, setNewProductData] = useState<Product>(initialProductData);
   const [createUnit] = useCreateUnitMutation();
   const [createProductCategory] = useCreateProductCategoryMutation();
   const [createProduct] = useCreateProductMutation();
@@ -57,9 +51,7 @@ const NewProductModal = ({
         const totalPrice = newProductData.price * newProductData.quantity;
         if (newProductData.discount === 0 || isNaN(newProductData.discount))
           return `₹${totalPrice}`;
-        const value =
-          totalPrice -
-          +((newProductData.discount / 100) * totalPrice).toFixed(2);
+        const value = totalPrice - +((newProductData.discount / 100) * totalPrice).toFixed(2);
         return `₹${value}`;
       }
       if (
@@ -67,13 +59,11 @@ const NewProductModal = ({
         newProductData.price &&
         newProductData.quantity
       ) {
-        const value =
-          newProductData.price * newProductData.quantity -
-          newProductData.discount;
+        const value = newProductData.price * newProductData.quantity - newProductData.discount;
         return `₹${value}`;
       }
     }
-    return `₹0`;
+    return '₹0';
   }, [
     addProductOpen,
     newProductData.discount,
@@ -82,10 +72,7 @@ const NewProductModal = ({
     newProductData.quantity,
   ]);
 
-  const handleProductChange = (
-    key: string,
-    value: string | number | IdNamePair | undefined
-  ) => {
+  const handleProductChange = (key: string, value: string | number | IdNamePair | undefined) => {
     setNewProductData((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -106,21 +93,15 @@ const NewProductModal = ({
     >
       <div className="flex flex-col gap-4 justify-center items-center max-w-4/5 max-h-4/5 bg-white rounded-lg p-4">
         <div className="flex justify-between w-full pb-4">
-          <p className="text-primary text-2xl font-semibold w-full text-start">
-            New Product
-          </p>
-          <MdClose
-            size={25}
-            className="cursor-pointer"
-            onClick={() => setAddProductOpen(false)}
-          />
+          <p className="text-primary text-2xl font-semibold w-full text-start">New Product</p>
+          <MdClose size={25} className="cursor-pointer" onClick={() => setAddProductOpen(false)} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 h-4/5 px-3 overflow-y-auto">
           <div className="flex flex-col gap-3">
             <CustomInput
               label="Product Name"
               value={newProductData.name}
-              onChange={(value) => handleProductChange("name", value)}
+              onChange={(value) => handleProductChange('name', value)}
               placeholder="Enter Product Name"
             />
             <CustomAutoComplete
@@ -128,27 +109,24 @@ const NewProductModal = ({
               error={false}
               placeholder="Select Unit"
               helperText="Please Select The Unit"
-              value={newProductData.unit?.name ?? ""}
+              value={newProductData.unit?.name ?? ''}
               options={productUnits}
               className=""
               addNewValue={(value) => {
                 const exists =
                   productUnits.filter(
-                    (option) =>
-                      option.value.toLocaleLowerCase() ===
-                      value.toLocaleLowerCase()
+                    (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                   ).length > 0;
                 if (!exists && value.length > 0) {
                   createUnit({
                     name: value,
                   });
                   handleProductChange(
-                    "unit",
+                    'unit',
                     transformIdValuePair(
                       value
-                        ? productUnits.find(
-                            (productUnit) => productUnit.value === value
-                          ) ?? productUnits[0]
+                        ? productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0]
                         : productUnits[0]
                     )
                   );
@@ -156,12 +134,11 @@ const NewProductModal = ({
               }}
               onChange={(value) =>
                 handleProductChange(
-                  "unit",
+                  'unit',
                   transformIdValuePair(
                     value
-                      ? productUnits.find(
-                          (productUnit) => productUnit.value === value
-                        ) ?? productUnits[0]
+                      ? productUnits.find((productUnit) => productUnit.value === value) ??
+                          productUnits[0]
                       : productUnits[0]
                   )
                 )
@@ -171,11 +148,10 @@ const NewProductModal = ({
               label="Type"
               options={productTypes}
               value={
-                productTypes.find(
-                  (productType) => newProductData.type === productType.id
-                )?.id ?? productTypes[0].id
+                productTypes.find((productType) => newProductData.type === productType.id)?.id ??
+                productTypes[0].id
               }
-              onChange={(value) => handleProductChange("type", value)}
+              onChange={(value) => handleProductChange('type', value)}
             />
             <CustomInput
               label="Available Stock"
@@ -190,13 +166,13 @@ const NewProductModal = ({
             <CustomInput
               label="HSN Code"
               value={newProductData.product_code}
-              onChange={(value) => handleProductChange("product_code", value)}
+              onChange={(value) => handleProductChange('product_code', value)}
               placeholder="Enter HSN Code"
             />
             <CustomDatePicker
               label="Purchase Date"
               value={newProductData.purchase_date}
-              onChange={(value) => handleProductChange("purchase_date", value)}
+              onChange={(value) => handleProductChange('purchase_date', value)}
               placeholder="Enter Purchase Date"
             />
             <CustomAutoComplete
@@ -204,26 +180,24 @@ const NewProductModal = ({
               error={false}
               placeholder="Select Category"
               helperText="Please Select The Category"
-              value={newProductData.category?.name ?? ""}
+              value={newProductData.category?.name ?? ''}
               options={productCategories}
               className=""
               addNewValue={(value) => {
                 const exists =
                   productCategories.filter(
-                    (option) =>
-                      option.value.toLocaleLowerCase() ===
-                      value.toLocaleLowerCase()
+                    (option) => option.value.toLocaleLowerCase() === value.toLocaleLowerCase()
                   ).length > 0;
                 if (!exists && value.length > 0) {
                   createProductCategory({
                     name: value,
                   });
-                  handleProductChange("category", value);
+                  handleProductChange('category', value);
                 }
               }}
               onChange={(value) =>
                 handleProductChange(
-                  "category",
+                  'category',
                   transformIdValuePair(
                     value
                       ? productCategories.find(
@@ -237,7 +211,7 @@ const NewProductModal = ({
             <CustomInput
               label="Rental Price"
               value={newProductData.rent_per_unit}
-              onChange={(value) => handleProductChange("rent_per_unit", value)}
+              onChange={(value) => handleProductChange('rent_per_unit', value)}
               placeholder="Enter Rental Price"
             />
           </div>
@@ -248,11 +222,8 @@ const NewProductModal = ({
               type="number"
               value={newProductData.quantity}
               onChange={(value) => {
-                handleProductChange("quantity", value ? parseInt(value) : "");
-                handleProductChange(
-                  "available_stock",
-                  value ? parseInt(value) : ""
-                );
+                handleProductChange('quantity', value ? parseInt(value) : '');
+                handleProductChange('available_stock', value ? parseInt(value) : '');
               }}
               placeholder="Enter Product Quantity"
             />
@@ -261,9 +232,7 @@ const NewProductModal = ({
               label="Price"
               value={newProductData.price}
               type="number"
-              onChange={(value) =>
-                handleProductChange("price", value ? parseInt(value) : "")
-              }
+              onChange={(value) => handleProductChange('price', value ? parseInt(value) : '')}
               placeholder="Enter Product Price"
             />
 
@@ -273,9 +242,7 @@ const NewProductModal = ({
                 placeholder=""
                 value={newProductData.discount}
                 type="number"
-                onChange={(value) =>
-                  handleProductChange("discount", value ? parseInt(value) : "")
-                }
+                onChange={(value) => handleProductChange('discount', value ? parseInt(value) : '')}
               />
               <CustomSelect
                 label=""
@@ -283,13 +250,10 @@ const NewProductModal = ({
                 options={discountTypeValues}
                 value={
                   discountTypeValues.find(
-                    (discountType) =>
-                      newProductData.discount_type === discountType.id
+                    (discountType) => newProductData.discount_type === discountType.id
                   )?.id ?? discountTypeValues[0].id
                 }
-                onChange={(value) =>
-                  handleProductChange("discount_type", value)
-                }
+                onChange={(value) => handleProductChange('discount_type', value)}
               />
             </div>
 

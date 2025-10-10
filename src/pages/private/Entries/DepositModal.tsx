@@ -46,6 +46,7 @@ const DepositModal = ({
     setDepositData([
       ...depositData,
       {
+        _id: '',
         amount: 0,
         date: dayjs().format('YYYY-MM-DDTHH:mm'),
         mode: PaymentMode.CASH,

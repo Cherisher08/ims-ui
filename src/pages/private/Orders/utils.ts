@@ -66,7 +66,7 @@ export const currencyFormatter = (params: ValueFormatterParams) => {
 export const getNewOrderId = (orders: OrderInfo[]) => {
   const now = new Date();
   const year = now.getFullYear();
-  const month = now.getMonth() + 1; // JS months 0-11
+  const month = now.getMonth() + 1;
   const startYear = month < 4 ? year - 1 : year;
   const endYear = startYear + 1;
   const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
@@ -82,6 +82,66 @@ export const getNewOrderId = (orders: OrderInfo[]) => {
   const nextSuffix = (maxSuffix + 1).toString().padStart(4, '0');
 
   return `RO/${fy}/${nextSuffix}`;
+};
+
+export const getSplitOrderId = (orderId: string, orders: OrderInfo[]): string => {
+  const relatedOrders = orders.map((o) => o.order_id).filter((id) => id.startsWith(orderId));
+
+  const existingSuffixes = relatedOrders
+    .map((id) => {
+      const match = id.match(/\/([A-Z])$/);
+      return match ? match[1] : null;
+    })
+    .filter(Boolean) as string[];
+
+  if (existingSuffixes.length === 0) {
+    return `${orderId}/A`;
+  }
+
+  const nextCharCode = Math.max(...existingSuffixes.map((ch) => ch.charCodeAt(0))) + 1;
+
+  const nextSuffix = String.fromCharCode(nextCharCode);
+  return `${orderId}/${nextSuffix}`;
+};
+
+export const isValidOrder = (order: RentalOrderInfo): boolean => {
+  if (
+    order.eway_amount === 0 &&
+    order.deposits.length === 0 &&
+    order.product_details.length === 0
+  ) {
+    return false;
+  }
+  return true;
+};
+
+export const getLatestInvoiceId = (orders: OrderInfo[]): string => {
+  const invoiceIds = orders
+    .map((order) => order.invoice_id)
+    .filter((id): id is string => Boolean(id) && id.startsWith('INV/'));
+
+  if (invoiceIds.length === 0) {
+    const fy = new Date().getFullYear();
+    return `INV/${fy}/0001`;
+  }
+
+  let latestNum = 0;
+  let latestFy = new Date().getFullYear();
+
+  invoiceIds.forEach((id) => {
+    const parts = id.split('/');
+    const fy = parts[1];
+    const num = parseInt(parts[2], 10);
+
+    if (!isNaN(num) && num > latestNum) {
+      latestNum = num;
+      latestFy = parseInt(fy, 10);
+    }
+  });
+
+  const nextNum = (latestNum + 1).toString().padStart(4, '0');
+
+  return `INV/${latestFy}/${nextNum}`;
 };
 
 export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
@@ -113,11 +173,13 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     event_venue: '',
     balance_paid_date: '',
     repay_date: '',
+    invoice_id: '',
   };
 };
 
 export const getDefaultDeposit = (products: IdNamePair[]) => {
   return {
+    _id: '',
     amount: 0,
     date: utcString(),
     mode: PaymentMode.CASH,
@@ -530,17 +592,12 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
 //   if (order.in_date) return OrderStatusType.PAID;
 // };
 
-export const getOrderStatus = (
-  order: RentalOrderInfo,
-  balanceAmount: number = 0
-): OrderStatusType => {
+export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
   const now = new Date();
 
   const totalAmount =
     calculateFinalAmount(order as RentalOrderType) -
     order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
-
-  console.log(balanceAmount);
 
   const hasRepair = order.product_details.some((p) => p.order_repair_count > 0);
   if (hasRepair) {
@@ -594,4 +651,97 @@ export const getOrderStatusColors = (status: OrderStatusType): { bg: string; tex
   };
 
   return statusColors[status] || { bg: '#FFFFFF', text: '#000000' };
+};
+
+export function extractOrder(
+  oldOrder: RentalOrderInfo,
+  newOrder: RentalOrderInfo
+): RentalOrderInfo {
+  const updatedOrder: RentalOrderInfo = JSON.parse(JSON.stringify(oldOrder));
+
+  updatedOrder.product_details = updatedOrder.product_details.map((prod) => {
+    const extractedProd = newOrder.product_details.find((p) => p._id === prod._id);
+    if (extractedProd) {
+      const remainingQty = (prod.order_quantity || 0) - (extractedProd.order_quantity || 0);
+      return {
+        ...prod,
+        order_quantity: remainingQty > 0 ? remainingQty : 0,
+      };
+    }
+    return prod;
+  });
+
+  updatedOrder.product_details = updatedOrder.product_details.filter((p) => p.order_quantity > 0);
+
+  if (newOrder.deposits?.length) {
+    updatedOrder.deposits = updatedOrder.deposits
+      .map((dep) => {
+        const newDep = newOrder.deposits.find((d) => d._id === dep._id);
+        if (newDep) {
+          if (newDep.amount >= dep.amount) {
+            return null;
+          }
+          const remainingDep = dep.amount - newDep.amount;
+
+          return {
+            ...dep,
+            amount: remainingDep > 0 ? remainingDep : 0,
+          };
+        }
+
+        return dep;
+      })
+      .filter((dep): dep is NonNullable<typeof dep> => dep !== null && dep.amount > 0);
+  }
+
+  updatedOrder.eway_amount = (oldOrder.eway_amount || 0) - (newOrder.eway_amount || 0);
+  if (updatedOrder.eway_amount <= 0) {
+    updatedOrder.eway_amount = 0;
+    updatedOrder.eway_mode = PaymentMode.NULL;
+    updatedOrder.eway_type = TransportType.NULL;
+  }
+
+  updatedOrder.balance_paid = (oldOrder.balance_paid || 0) - (newOrder.balance_paid || 0);
+  if (updatedOrder.balance_paid <= 0) {
+    updatedOrder.balance_paid = 0;
+    updatedOrder.balance_paid_mode = PaymentMode.NULL;
+    updatedOrder.balance_paid_date = '';
+  }
+
+  return updatedOrder;
+}
+
+export const getAvailableStockQuantity = (
+  currentProductStock: number,
+  product: ProductDetails,
+  newOrderInfo: RentalOrderInfo,
+  existingRentalOrder?: RentalOrderInfo
+) => {
+  const oldStock =
+    existingRentalOrder?.product_details.find((p) => p._id === product._id)?.order_quantity || 0;
+
+  let newQuantity = 0;
+  if (existingRentalOrder) {
+    if (
+      existingRentalOrder.status === PaymentStatus.PENDING &&
+      newOrderInfo.status === PaymentStatus.PENDING
+    ) {
+      newQuantity = currentProductStock + oldStock - product.order_quantity;
+    } else if (
+      existingRentalOrder.status === PaymentStatus.PENDING &&
+      newOrderInfo.status === PaymentStatus.PAID &&
+      product.type === ProductType.RENTAL
+    ) {
+      newQuantity = currentProductStock + oldStock;
+    } else if (
+      existingRentalOrder.status === PaymentStatus.PAID &&
+      newOrderInfo.status === PaymentStatus.PENDING
+    ) {
+      newQuantity = currentProductStock - product.order_quantity;
+    } else {
+      newQuantity = currentProductStock;
+    }
+  } else newQuantity = currentProductStock - product.order_quantity;
+
+  return newQuantity;
 };

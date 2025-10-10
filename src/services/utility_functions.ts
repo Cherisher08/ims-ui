@@ -14,3 +14,4 @@ export const calculateProductRent = (
   if (isReturnDuration) return duration;
   return rent_per_unit * effectiveQuantity * duration;
 };
+

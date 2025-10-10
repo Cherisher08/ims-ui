@@ -60,6 +60,9 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
                 },
               },
             },
+            actionBar: {
+              actions: ['clear', 'accept'],
+            },
           }}
           ampm
           format={dateFormat}

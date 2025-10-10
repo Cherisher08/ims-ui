@@ -65,6 +65,7 @@ export type ContactSelectionType = {
 };
 
 export type DepositType = {
+  _id: string;
   amount: number;
   date: string;
   product: IdNamePair | null;
@@ -106,6 +107,7 @@ export type OrderInfo = {
   round_off: number;
   payment_mode: RepaymentMode;
   gst: number;
+  invoice_id: string;
 };
 
 export type RentalOrderInfo = OrderInfo & {

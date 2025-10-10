@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { setExpiredRentalOrders } from '../store/OrdersSlice';
 import { PatchPayload } from '../types/common';
 import { DCWhatsappPayload, RentalOrderInfo } from '../types/order';

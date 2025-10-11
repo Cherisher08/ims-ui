@@ -179,7 +179,6 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
 
 export const getDefaultDeposit = (products: IdNamePair[]) => {
   return {
-    _id: '',
     amount: 0,
     date: utcString(),
     mode: PaymentMode.CASH,

@@ -61,7 +61,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               },
             },
             actionBar: {
-              actions: ['clear', 'accept'],
+              actions: ['clear', 'cancel', 'accept'],
             },
           }}
           ampm

@@ -166,6 +166,7 @@ const NewOrder = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
+  const [venueOptions, setVenueOptions] = useState<CustomSelectOptionProps[]>([]);
   const [removedProducts, setRemovedProducts] = useState<ProductDetails[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
@@ -598,6 +599,21 @@ const NewOrder = () => {
     setEventNameOptions(options);
   }, [orderInfo.event_name]);
 
+  useEffect(() => {
+    const options: CustomSelectOptionProps[] =
+      rentalOrders
+        ?.map((order) => ({ id: order.event_venue, value: order.event_venue }))
+        .filter(Boolean) || [];
+    const unique = options.filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i);
+    if (orderInfo.event_venue && !unique.find((val) => val.id === orderInfo.event_venue)) {
+      unique.push({
+        id: orderInfo.event_venue,
+        value: orderInfo.event_venue,
+      });
+    }
+    setVenueOptions(unique);
+  }, [rentalOrders, orderInfo.event_venue]);
+
   const addEventNameOption = (value: string) => {
     if (!value) return;
     const newOption = {
@@ -612,6 +628,15 @@ const NewOrder = () => {
       setEventNameOptions(options);
     }
     handleValueChange('event_name', value);
+  };
+
+  const addVenueOption = (value: string) => {
+    if (!value) return;
+    const newOption = { id: value, value };
+    if (!venueOptions.find((v) => v.id === value)) {
+      setVenueOptions((prev) => [...prev, newOption]);
+    }
+    handleValueChange('event_venue', value);
   };
 
   const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
@@ -917,13 +942,14 @@ const NewOrder = () => {
 
         <div></div>
 
-        <CustomInput
+        <CustomAutoComplete
+          options={venueOptions}
+          addNewValue={(val) => addVenueOption(val)}
+          createOption={true}
           value={orderInfo?.event_venue ?? ''}
           onChange={(value) => handleValueChange('event_venue', value)}
           label="Event Venue"
           placeholder="Enter Event Venue"
-          multiline
-          minRows={5}
         />
         <CustomInput
           value={orderInfo?.event_address ?? ''}

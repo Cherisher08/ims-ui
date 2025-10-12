@@ -12,11 +12,16 @@ import { DiscountType, OrderStatusType, ProductType } from '../../types/common';
 import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from '../../types/order';
 import { getDuration, getOrderStatus } from './Orders/utils';
 import CustomPieChart from '../../styled/CustomPieChart';
+import CustomDatePicker from '../../styled/CustomDatePicker';
 
 export const OrderStatusValues: string[] = Object.values(OrderStatusType);
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
+
+const addDaysToDate = (dateStr: string, days: number): string => {
+  return dayjs(dateStr).add(days, 'day').format('YYYY-MM-DD');
+};
 
 type PendingAmount = { x: string; y: number };
 
@@ -28,6 +33,8 @@ type ChartType =
   | 'machines_repair'
   | 'machines_overdue'
   | 'order_status_summary';
+
+type DateFilter = { start: string; end: string } | null;
 
 // const getRentalDuration = (outDate: string, inDate: string, unit: BillingUnit): number => {
 //   const out = new Date(outDate);
@@ -84,7 +91,7 @@ const groupKeyFormatter = (dateStr: string, filter: string) => {
   }
 };
 
-const getValidGroupKeys = (filter: string): string[] => {
+const getValidGroupKeys = (filter: string, filterDates: DateFilter): string[] => {
   const today = dayjs();
   const keys: string[] = [];
 
@@ -115,18 +122,35 @@ const getValidGroupKeys = (filter: string): string[] => {
       keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
       cursor = cursor.add(1, 'month');
     }
+  } else if (filter === '4') {
+    // custom: from start to end
+    if (filterDates) {
+      const start = dayjs(filterDates.start);
+      const end = dayjs(filterDates.end);
+      let cursor = start.clone();
+      while (cursor.isSameOrBefore(end)) {
+        keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+        cursor = cursor.add(1, 'day');
+      }
+    }
   }
 
   return keys;
 };
 
-const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: ChartType) => {
+const getChartData = (
+  orders: RentalOrderInfo[],
+  filter: string,
+  filterDates: DateFilter,
+  chartType: ChartType
+) => {
   const groups: Record<string, number> = {};
 
-  let validGroupKeys = getValidGroupKeys(filter);
+  let validGroupKeys = getValidGroupKeys(filter, filterDates);
 
   orders.forEach((order) => {
-    const groupKey = groupKeyFormatter(order.in_date, filter);
+    const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+    const groupKey = groupKeyFormatter(dateToGroupBy, filter);
 
     // ignore if this group is outside the current date range
     if (!validGroupKeys.includes(groupKey)) return;
@@ -247,20 +271,22 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
 const getDetailsData = (
   orders: RentalOrderInfo[],
   chartType: ChartType,
-  filter: string
+  filter: string,
+  filterDates: DateFilter
 ):
   | {
       pending: { name: string; amount: number }[];
       paid: { name: string; amount: number }[];
     }
   | { name: string; amount: number }[] => {
-  const validGroupKeys = getValidGroupKeys(filter);
+  const validGroupKeys = getValidGroupKeys(filter, filterDates);
   if (chartType === 'incoming_pending' || chartType === 'repayment_pending') {
     const pending: { name: string; amount: number }[] = [];
     const paid: { name: string; amount: number }[] = [];
 
     orders.forEach((order) => {
-      const groupKey = groupKeyFormatter(order.in_date, filter);
+      const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+      const groupKey = groupKeyFormatter(dateToGroupBy, filter);
 
       // ignore if this group is outside the current date range
       if (!validGroupKeys.includes(groupKey)) return;
@@ -371,15 +397,17 @@ const Dashboard = () => {
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
   const [filter, setFilter] = useState<string>('3');
+  const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
   const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<ChartType>('incoming_pending');
-  const detailsData = getDetailsData(orders, graphFilter, filter);
+  const detailsData = getDetailsData(orders, graphFilter, filter, filterDates);
   const filterOptions = [
-    { id: '1', value: 'daily' },
-    { id: '2', value: 'weekly' },
-    { id: '3', value: 'monthly' },
+    { id: '1', value: 'Daily' },
+    { id: '2', value: 'Weekly' },
+    { id: '3', value: 'Monthly' },
+    { id: '4', value: 'Custom' },
   ];
   const isPriceData = ['incoming_pending', 'repayment_pending'].includes(graphFilter);
 
@@ -398,10 +426,11 @@ const Dashboard = () => {
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
   useEffect(() => {
-    const validGroupKeys = getValidGroupKeys(filter);
+    const validGroupKeys = getValidGroupKeys(filter, filterDates);
 
     const filteredOrders = orders.filter((order) => {
-      const orderGroupKey = groupKeyFormatter(order.in_date, filter);
+      const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+      const orderGroupKey = groupKeyFormatter(dateToGroupBy, filter);
       return validGroupKeys.includes(orderGroupKey);
     });
 
@@ -466,19 +495,41 @@ const Dashboard = () => {
       mcIn,
       mcOut,
     });
-  }, [filter, orders, showPendingAmountsOnly]);
+  }, [filter, filterDates, orders, showPendingAmountsOnly]);
 
   useEffect(() => {
-    const pendingData = getChartData(orders, filter, graphFilter);
+    const pendingData = getChartData(orders, filter, filterDates, graphFilter);
     setChartData(pendingData);
-  }, [filter, graphFilter, orders]);
+  }, [filter, filterDates, graphFilter, orders]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">
       {/* Header */}
-      <div className="w-full flex justify-between mb-3">
+      <div className="w-full flex justify-between items-start mb-3">
         <p className="text-primary font-bold">Overview</p>
         <div className="flex gap-4">
+          {filter === '4' && (
+            <>
+              <CustomDatePicker
+                label={'Start Date'}
+                value={filterDates ? filterDates.start : ''}
+                onChange={(startDate) => {
+                  setFilterDates({ start: startDate, end: filterDates ? filterDates.end : '' });
+                }}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+              <CustomDatePicker
+                label={'End Date'}
+                value={filterDates ? filterDates.end : ''}
+                onChange={(endDate) => {
+                  setFilterDates({ start: filterDates ? filterDates.start : '', end: endDate });
+                }}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+            </>
+          )}
           <CustomSelect
             label=""
             onChange={(val) => setFilter(val)}

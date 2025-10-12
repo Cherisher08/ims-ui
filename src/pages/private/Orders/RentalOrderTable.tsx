@@ -617,7 +617,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
               size={20}
               className="cursor-pointer"
               onClick={() => {
-                navigate(`/orders/invoices/${rowData?._id}`);
+                window.open(`/orders/invoices/${rowData?._id}`, '_blank');
               }}
             />
           </div>

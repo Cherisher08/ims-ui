@@ -3,14 +3,14 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useEffect, useState } from 'react';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
-import { calculateDiscountAmount } from '../../services/utility_functions';
+import { calculateDiscountAmount, calculateProductRent } from '../../services/utility_functions';
 import CustomCard from '../../styled/CustomCard';
 import CustomLineChart from '../../styled/CustomLineChart';
 import CustomSelect from '../../styled/CustomSelect';
 import AntSwitch from '../../styled/CustomSwitch';
 import { DiscountType, OrderStatusType, ProductType } from '../../types/common';
 import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from '../../types/order';
-import { getDuration, getOrderStatus } from './Orders/utils';
+import { getOrderStatus } from './Orders/utils';
 import CustomPieChart from '../../styled/CustomPieChart';
 import CustomDatePicker from '../../styled/CustomDatePicker';
 
@@ -59,17 +59,9 @@ type DateFilter = { start: string; end: string } | null;
 // };
 
 const calcFinalAmount = (order: OrderInfoType): number => {
-  if (order.type === ProductType.RENTAL && order.product_details) {
+  if (order.type === ProductType.RENTAL && order.product_details.length > 0) {
     const total = order.product_details.reduce((sum, prod) => {
-      // const duration = getRentalDuration(
-      //   prod.out_date,
-      //   prod.in_date,
-      //   prod.billing_unit
-      // );
-
-      const duration = getDuration(prod.out_date, prod.in_date);
-      const quantity = prod.order_quantity - prod.order_repair_count;
-      return sum + prod.rent_per_unit * quantity * duration;
+      return sum + calculateProductRent(prod);
     }, 0);
 
     return parseFloat(total.toFixed(2));
@@ -169,7 +161,14 @@ const getChartData = (
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount =
+          finalAmount -
+          order.balance_paid -
+          depositTotal -
+          discountAmount +
+          gstAmount +
+          roundOff +
+          order.eway_amount;
 
         if (pendingAmount > 0) {
           groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
@@ -190,9 +189,10 @@ const getChartData = (
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount =
+          finalAmount - depositTotal - discountAmount + gstAmount + roundOff + order.eway_amount;
 
-        if (pendingAmount < 0) {
+        if (pendingAmount < 0 && order.status === PaymentStatus.PENDING) {
           groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
         }
         break;
@@ -236,10 +236,13 @@ const getChartData = (
 
       case 'machines_overdue': {
         order.product_details.forEach((p) => {
-          if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
-            const productGroupKey = groupKeyFormatter(p.in_date, filter);
-            if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+          if (p.out_date && !p.in_date) {
+            const expectedInDate = addDaysToDate(p.out_date, order.rental_duration);
+            if (dayjs(expectedInDate).isBefore(dayjs())) {
+              const productGroupKey = groupKeyFormatter(expectedInDate, filter);
+              if (validGroupKeys.includes(productGroupKey)) {
+                groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+              }
             }
           }
         });
@@ -376,11 +379,14 @@ const getDetailsData = (
       }
       case 'machines_overdue': {
         order.product_details.forEach((p) => {
-          if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
-            data.push({
-              name: p.name,
-              amount: p.order_quantity,
-            });
+          if (p.out_date && !p.in_date) {
+            const expectedInDate = addDaysToDate(p.out_date, order.rental_duration);
+            if (dayjs(expectedInDate).isBefore(dayjs())) {
+              data.push({
+                name: p.name,
+                amount: p.order_quantity,
+              });
+            }
           }
         });
         break;
@@ -454,7 +460,8 @@ const Dashboard = () => {
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
+      const pendingAmount =
+        finalAmount - order.balance_paid - depositSum - discountAmount + gstAmount + roundOff;
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {

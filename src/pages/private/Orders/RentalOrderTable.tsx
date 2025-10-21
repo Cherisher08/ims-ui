@@ -7,7 +7,7 @@ import type {
   ValueGetterParams,
 } from 'ag-grid-community';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
@@ -737,6 +737,11 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       await patchRentalOrder({ id: data._id, payload: patchPayload }).unwrap();
 
       console.log(`Successfully patched ${field} for order ${data._id}`);
+
+      // Refresh the grid to update calculated fields like status
+      if (gridApiRef.current) {
+        gridApiRef.current.refreshCells({ force: true });
+      }
     } catch (err) {
       console.error('Failed to patch rental order:', err);
       // Optional: revert or notify

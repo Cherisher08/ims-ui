@@ -13,6 +13,11 @@ import {
   RentalOrderType,
 } from '../../../types/order';
 import { calculateFinalAmount, calculateTotalAmount } from '../Orders/utils';
+import CustomButton from '../../../styled/CustomButton';
+import { LuPlus } from 'react-icons/lu';
+import AddBalanceModal, { BalanceData } from '../Entries/AddBalanceModal';
+import { usePatchRentalOrderMutation } from '../../../services/OrderService';
+import { PatchOperation } from '../../../types/common';
 
 const CustomerBills = () => {
   const { id } = useParams();
@@ -24,6 +29,9 @@ const CustomerBills = () => {
 
   const [customerOrders, setCustomerOrders] = useState<RentalOrderInfo[]>([]);
   const [customerDetails, setCustomerDetails] = useState<ContactInfoType>();
+  const [showAddBalanceModal, setShowAddBalanceModal] = useState<boolean>(false);
+
+  const [patchRentalOrder] = usePatchRentalOrderMutation();
 
   // const getTransactionRows = (orders: RentalOrderInfo[]) => {
   //   const rows: {
@@ -351,6 +359,88 @@ const CustomerBills = () => {
     return <>{elements}</>;
   };
 
+  const setBalancePaidToOrders = async (balanceData: BalanceData) => {
+    let remainingAmount = balanceData.amount;
+
+    // Filter rental orders for the current customer
+    const rentalOrders = rentalOrderData?.filter(
+      (order) => order.customer?._id === id
+    ) as RentalOrderType[];
+
+    // Sort orders by out_date to process in chronological order
+    const sortedOrders = rentalOrders.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date)));
+
+    for (const order of sortedOrders) {
+      if (remainingAmount <= 0) break;
+
+      // Calculate outstanding amount for this order
+      const billAmount = calculateFinalAmount(order as RentalOrderType);
+      const deposits = order.deposits.reduce((sum, dep) => sum + dep.amount, 0);
+      const repayAmount = order.repay_amount || 0;
+      const outstanding = billAmount - deposits + repayAmount;
+
+      if (outstanding > 0) {
+        const amountToPay = Math.min(remainingAmount, outstanding);
+
+        // Create patch payload
+        const patchPayload: PatchOperation[] = [
+          {
+            op: 'replace',
+            path: '/balance_paid',
+            value: (order.balance_paid || 0) + amountToPay,
+          },
+          {
+            op: 'replace',
+            path: '/balance_paid_date',
+            value: balanceData.date,
+          },
+          {
+            op: 'replace',
+            path: '/balance_paid_mode',
+            value: balanceData.mode,
+          },
+        ];
+
+        // Patch the order
+        try {
+          await patchRentalOrder({ id: order._id!, payload: patchPayload });
+          remainingAmount -= amountToPay;
+        } catch (error) {
+          console.error('Failed to patch order:', error);
+        }
+      }
+    }
+
+    // If there is still remaining amount, add it as a deposit to the last order
+    if (remainingAmount > 0 && sortedOrders.length > 0) {
+      const lastOrder = sortedOrders[sortedOrders.length - 1];
+      const newDeposit = {
+        amount: remainingAmount,
+        date: balanceData.date,
+        mode: balanceData.mode,
+        product: { _id: lastOrder.product_details[0]._id, name: lastOrder.product_details[0].name },
+      };
+
+      const patchPayload: PatchOperation[] = [
+        {
+          op: 'add',
+          path: '/deposits',
+          value: newDeposit,
+        },
+      ];
+
+      try {
+        await patchRentalOrder({ id: lastOrder._id!, payload: patchPayload });
+      } catch (error) {
+        console.error('Failed to add deposit to last order:', error);
+      }
+    }
+  };
+
+  const handleAddBalance = () => {
+    setShowAddBalanceModal(true);
+  };
+
   // const calculateRepayAmount = (order: RentalOrderType): string => {
   //   const depositData: DepositType[] = order.deposits ?? 0;
   //   if (order.status === PaymentStatus.PAID && order.product_details.length > 0) {
@@ -368,23 +458,18 @@ const CustomerBills = () => {
   return (
     <div>
       <div className="w-full h-fit flex flex-col">
-        <div className="w-full flex justify-between my-2">
-          {/* <CustomButton
-            label="Add Deposit"
-            onClick={() => {
-              const newDeposit = getDefaultDeposit(products);
-              setDepositData((prev) => {
-                if (prev) return [...prev, newDeposit];
-                else return [newDeposit];
-              });
-            }}
-          /> */}
-        </div>
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex gap-1 justify-between align-middle pb-1">
           <p className="text-xl">CUSTOMER HISTORY</p>
           <p className="text-lg font-semibold">
             {customerDetails?.name} - {customerDetails?.personal_number}
           </p>
+          <CustomButton
+            label={'Add Balance'}
+            onClick={() => {
+              handleAddBalance();
+            }}
+            icon={<LuPlus color="white" />}
+          />
         </div>
         <table className="w-full table-auto border-3 border-gray-300">
           <thead>
@@ -477,6 +562,15 @@ const CustomerBills = () => {
           </tbody>
         </table>
       </div>
+      <AddBalanceModal
+        addBalanceOpen={showAddBalanceModal}
+        setAddBalanceOpen={() => {
+          setShowAddBalanceModal(false);
+        }}
+        setBalanceData={(balanceData) => {
+          setBalancePaidToOrders(balanceData);
+        }}
+      />
     </div>
   );
 };

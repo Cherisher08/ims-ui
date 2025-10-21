@@ -72,12 +72,12 @@ const calcFinalAmount = (order: OrderInfoType): number => {
 const groupKeyFormatter = (dateStr: string, filter: string) => {
   const date = dayjs(dateStr);
   switch (filter) {
-    case '1':
-      return date.format('YYYY-MM-DD');
-    case '2':
-      return `${date.year()}-W${date.week()}`;
-    case '3':
-      return date.format('YYYY-MM');
+    // case '1':
+    //   return date.format('YYYY-MM-DD');
+    // case '2':
+    //   return `${date.year()}-W${date.week()}`;
+    // case '3':
+    //   return date.format('YYYY-MM');
     default:
       return date.format('YYYY-MM-DD');
   }
@@ -88,31 +88,26 @@ const getValidGroupKeys = (filter: string, filterDates: DateFilter): string[] =>
   const keys: string[] = [];
 
   if (filter === '1') {
-    // daily: current month, from 1st to today
-    const start = today.startOf('month');
+    // Today
+    const cursor = today.clone();
+    keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+  } else if (filter === '2') {
+    // Last 7 Days
+    const start = today.subtract(6, 'days');
     const end = today;
     let cursor = start.clone();
     while (cursor.isSameOrBefore(end)) {
       keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
       cursor = cursor.add(1, 'day');
     }
-  } else if (filter === '2') {
-    // weekly: last 5 weeks + current week (total 6 weeks ending this week)
-    const start = today.startOf('week').subtract(5, 'weeks');
-    const end = today.startOf('week');
-    let cursor = start.clone();
-    while (cursor.isSameOrBefore(end)) {
-      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
-      cursor = cursor.add(1, 'week');
-    }
   } else if (filter === '3') {
-    // monthly: last 5 months + current month (total 6 months ending this month)
-    const start = today.startOf('month').subtract(5, 'months');
-    const end = today.startOf('month');
+    // Current month: current month, from 1st to today
+    const start = today.startOf('month');
+    const end = today;
     let cursor = start.clone();
     while (cursor.isSameOrBefore(end)) {
       keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
-      cursor = cursor.add(1, 'month');
+      cursor = cursor.add(1, 'day');
     }
   } else if (filter === '4') {
     // custom: from start to end
@@ -410,9 +405,9 @@ const Dashboard = () => {
   const [graphFilter, setGraphFilter] = useState<ChartType>('incoming_pending');
   const detailsData = getDetailsData(orders, graphFilter, filter, filterDates);
   const filterOptions = [
-    { id: '1', value: 'Daily' },
-    { id: '2', value: 'Weekly' },
-    { id: '3', value: 'Monthly' },
+    { id: '1', value: 'Today' },
+    { id: '2', value: 'Last 7 Days' },
+    { id: '3', value: 'Current Month' },
     { id: '4', value: 'Custom' },
   ];
   const isPriceData = ['incoming_pending', 'repayment_pending'].includes(graphFilter);
@@ -421,6 +416,7 @@ const Dashboard = () => {
     balanceAmount: 0,
     repaymentAmount: 0,
     depositAmount: 0,
+    receivedAmount: 0,
     mcIn: 0,
     mcOut: 0,
   });
@@ -443,6 +439,7 @@ const Dashboard = () => {
     let balanceAmount = 0;
     let repaymentAmount = 0;
     let depositAmount = 0;
+    let receivedAmount = 0;
     let mcIn = 0;
     let mcOut = 0;
 
@@ -465,6 +462,7 @@ const Dashboard = () => {
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
+          receivedAmount += order.balance_paid + depositSum;
           depositAmount += depositSum;
           if (pendingAmount > 0) {
             balanceAmount += pendingAmount;
@@ -474,6 +472,7 @@ const Dashboard = () => {
           }
         }
       } else {
+        receivedAmount += order.balance_paid + depositSum;
         depositAmount += depositSum;
         if (pendingAmount > 0) balanceAmount += pendingAmount; // total billed regardless of status
         if (pendingAmount < 0) repaymentAmount += Math.abs(pendingAmount);
@@ -499,6 +498,7 @@ const Dashboard = () => {
       balanceAmount,
       repaymentAmount,
       depositAmount,
+      receivedAmount,
       mcIn,
       mcOut,
     });
@@ -572,6 +572,11 @@ const Dashboard = () => {
             title="Deposited Amount"
             className="grow"
             value={`₹${totalInfo.depositAmount.toFixed(2)}`}
+          />
+          <CustomCard
+            title="Received Amount"
+            className="grow"
+            value={`₹${totalInfo.receivedAmount.toFixed(2)}`}
           />
           <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
           <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />

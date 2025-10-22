@@ -474,7 +474,7 @@ const CustomerBills = () => {
         <table className="w-full table-auto border-3 border-gray-300">
           <thead>
             <tr className="bg-primary text-white border-b-3 border-gray-300">
-              <th className="px-1 py-1 text-left ">S.No</th>
+              <th className="px-1 py-1 text-left ">Order Id</th>
               <th className="px-1 py-1 text-left ">Date</th>
               <th className="px-1 py-1 text-left ">Type</th>
               <th className="px-1 py-1 text-left ">Mode</th>
@@ -490,7 +490,7 @@ const CustomerBills = () => {
             {customerOrders.length > 0 ? (
               customerOrders.map((order, index) => (
                 <tr key={index} className="border-b min-h-[2.5rem] border-gray-200">
-                  <td className="px-1 py-1">{index + 1}</td>
+                  <td className="px-1 py-1">{order.order_id}</td>
                   <td className="px-1 py-1">{dayjs(order.out_date).format('DD-MM-YYYY')}</td>
                   <td className="px-1 py-1">{findOrderType(order as RentalOrderType)}</td>
                   <td className="px-1 py-1">{findPaymentMode(order as RentalOrderType)}</td>

@@ -463,8 +463,7 @@ const Dashboard = () => {
           ? 0
           : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount =
-        finalAmount - order.balance_paid - depositSum - discountAmount + gstAmount + roundOff;
+      const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {

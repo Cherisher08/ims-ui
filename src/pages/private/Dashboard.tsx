@@ -133,17 +133,14 @@ const getChartData = (
 ) => {
   const groups: Record<string, number> = {};
 
-  let validGroupKeys = getValidGroupKeys(filter, filterDates);
+  const validGroupKeys = getValidGroupKeys(filter, filterDates);
 
   orders.forEach((order) => {
-    const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
-    const groupKey = groupKeyFormatter(dateToGroupBy, filter);
-
-    // ignore if this group is outside the current date range
-    if (!validGroupKeys.includes(groupKey)) return;
-
     switch (chartType) {
       case 'incoming_pending': {
+        const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
@@ -172,6 +169,9 @@ const getChartData = (
       }
 
       case 'repayment_pending': {
+        const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
@@ -218,12 +218,13 @@ const getChartData = (
       }
 
       case 'machines_repair': {
+        const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
           if (repairCount > 0) {
-            if (validGroupKeys.includes(groupKey)) {
-              groups[groupKey] = (groups[groupKey] || 0) + repairCount;
-            }
+            groups[groupKey] = (groups[groupKey] || 0) + repairCount;
           }
         });
         break;
@@ -245,6 +246,9 @@ const getChartData = (
       }
 
       case 'order_status_summary': {
+        const dateToGroupBy = order.out_date;
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         const currentStatus = getOrderStatus(order);
         groups[currentStatus] = (groups[currentStatus] || 0) + 1;
         break;
@@ -255,10 +259,11 @@ const getChartData = (
     }
   });
 
-  validGroupKeys = chartType === 'order_status_summary' ? OrderStatusValues : validGroupKeys;
+  const validGroupKeysForChart =
+    chartType === 'order_status_summary' ? OrderStatusValues : validGroupKeys;
 
   // guarantee that even group keys with zero are shown on the chart
-  const chartData = validGroupKeys.map((key) => ({
+  const chartData = validGroupKeysForChart.map((key) => ({
     x: key,
     y: groups[key] || 0,
   }));
@@ -443,6 +448,7 @@ const Dashboard = () => {
     let mcIn = 0;
     let mcOut = 0;
 
+    // Calculate balanceAmount and repaymentAmount from filtered orders
     filteredOrders.forEach((order) => {
       const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
 
@@ -462,8 +468,6 @@ const Dashboard = () => {
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
-          receivedAmount += order.balance_paid + depositSum;
-          depositAmount += depositSum;
           if (pendingAmount > 0) {
             balanceAmount += pendingAmount;
           }
@@ -472,12 +476,28 @@ const Dashboard = () => {
           }
         }
       } else {
-        receivedAmount += order.balance_paid + depositSum;
-        depositAmount += depositSum;
         if (pendingAmount > 0) balanceAmount += pendingAmount; // total billed regardless of status
         if (pendingAmount < 0) repaymentAmount += Math.abs(pendingAmount);
       }
+    });
 
+    // Calculate depositAmount and receivedAmount based on deposit dates and balance paid dates within filter
+    orders.forEach((order) => {
+      order.deposits.forEach((dep) => {
+        const depKey = groupKeyFormatter(dep.date, filter);
+        if (validGroupKeys.includes(depKey)) {
+          depositAmount += dep.amount;
+          receivedAmount += dep.amount;
+        }
+      });
+      const balKey = groupKeyFormatter(order.balance_paid_date, filter);
+      if (validGroupKeys.includes(balKey)) {
+        receivedAmount += order.balance_paid;
+      }
+    });
+
+    // Calculate mcIn and mcOut from all orders based on product dates within filter
+    orders.forEach((order) => {
       order.product_details.forEach((product) => {
         if (product.in_date) {
           const productGroupKey = groupKeyFormatter(product.in_date, filter);
@@ -660,23 +680,27 @@ const Dashboard = () => {
                   {detailsData.pending.length === 0 && (
                     <li className="text-gray-400 italic">No pending</li>
                   )}
-                  {detailsData.pending.map((record, index) => (
-                    <li key={'pending-' + index} className="flex justify-between text-sm">
-                      <span>{record.name}</span>
-                      <span>{`₹${record.amount.toFixed(2)}`}</span>
-                    </li>
-                  ))}
+                  {detailsData.pending.map(
+                    (record: { name: string; amount: number }, index: number) => (
+                      <li key={'pending-' + index} className="flex justify-between text-sm">
+                        <span>{record.name}</span>
+                        <span>{`₹${record.amount.toFixed(2)}`}</span>
+                      </li>
+                    )
+                  )}
 
                   <h3 className="font-bold mt-4">Paid</h3>
                   {detailsData.paid.length === 0 && (
                     <li className="text-gray-400 italic">No paid</li>
                   )}
-                  {detailsData.paid.map((record, index) => (
-                    <li key={'paid-' + index} className="flex justify-between text-sm">
-                      <span>{record.name}</span>
-                      <span>{`₹${record.amount.toFixed(2)}`}</span>
-                    </li>
-                  ))}
+                  {detailsData.paid.map(
+                    (record: { name: string; amount: number }, index: number) => (
+                      <li key={'paid-' + index} className="flex justify-between text-sm">
+                        <span>{record.name}</span>
+                        <span>{`₹${record.amount.toFixed(2)}`}</span>
+                      </li>
+                    )
+                  )}
                 </>
               ) : (
                 <>

@@ -248,9 +248,10 @@ const getChartData = (
       case 'order_status_summary': {
         const dateToGroupBy = order.out_date;
         const groupKey = groupKeyFormatter(dateToGroupBy, filter);
-        if (!validGroupKeys.includes(groupKey)) break;
-        const currentStatus = getOrderStatus(order);
-        groups[currentStatus] = (groups[currentStatus] || 0) + 1;
+        if (validGroupKeys.includes(groupKey)) {
+          const currentStatus = getOrderStatus(order);
+          groups[currentStatus] = (groups[currentStatus] || 0) + 1;
+        }
         break;
       }
 
@@ -345,7 +346,8 @@ const getDetailsData = (
     switch (chartType) {
       case 'machines_in': {
         order.product_details.forEach((p) => {
-          if (p.in_date) {
+          const productGroupKey = groupKeyFormatter(p.in_date, filter);
+          if (validGroupKeys.includes(productGroupKey)) {
             data.push({
               name: p.name,
               amount: p.order_quantity,
@@ -356,7 +358,8 @@ const getDetailsData = (
       }
       case 'machines_out': {
         order.product_details.forEach((p) => {
-          if (p.out_date) {
+          const productGroupKey = groupKeyFormatter(p.out_date, filter);
+          if (validGroupKeys.includes(productGroupKey)) {
             data.push({
               name: p.name,
               amount: p.order_quantity,
@@ -368,7 +371,8 @@ const getDetailsData = (
       case 'machines_repair': {
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
-          if (repairCount > 0) {
+          const productGroupKey = groupKeyFormatter(p.in_date, filter);
+          if (repairCount > 0 && validGroupKeys.includes(productGroupKey)) {
             data.push({
               name: p.name,
               amount: repairCount,
@@ -389,6 +393,19 @@ const getDetailsData = (
             }
           }
         });
+        break;
+      }
+      case 'order_status_summary': {
+        const dateToGroupBy = order.out_date;
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
+        const currentStatus = getOrderStatus(order);
+        const existing = data.find((d) => d.name === currentStatus);
+        if (existing) {
+          existing.amount += 1;
+        } else {
+          data.push({ name: currentStatus, amount: 1 });
+        }
         break;
       }
       default:
@@ -704,7 +721,7 @@ const Dashboard = () => {
               ) : (
                 <>
                   <li key={'table-header'} className="flex justify-between text-sm">
-                    <span>Product</span>
+                    <span>Product (or) Status</span>
                     <span>Nos</span>
                   </li>
                   {Array.isArray(detailsData) && detailsData.length === 0 && (

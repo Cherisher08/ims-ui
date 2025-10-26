@@ -271,7 +271,11 @@ const NewOrder = () => {
           order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) -
           order.balance_paid;
         if (order.status !== PaymentStatus.PENDING) {
-          orderBalance = Math.max(0, orderBalance);
+          if (order.status !== PaymentStatus.PAID) {
+            orderBalance = 0;
+          } else {
+            orderBalance = Math.max(0, orderBalance);
+          }
         }
         return total + orderBalance;
       }, 0);

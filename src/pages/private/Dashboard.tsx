@@ -129,7 +129,8 @@ const getChartData = (
   orders: RentalOrderInfo[],
   filter: string,
   filterDates: DateFilter,
-  chartType: ChartType
+  chartType: ChartType,
+  showPendingAmountsOnly: boolean
 ) => {
   const groups: Record<string, number> = {};
 
@@ -187,7 +188,8 @@ const getChartData = (
         const pendingAmount =
           finalAmount - depositTotal - discountAmount + gstAmount + roundOff + order.eway_amount;
 
-        if (pendingAmount < 0 && order.status === PaymentStatus.PENDING) {
+        if (pendingAmount < 0) {
+          if (showPendingAmountsOnly && order.status !== PaymentStatus.PENDING) break;
           groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
         }
         break;
@@ -321,6 +323,8 @@ const getDetailsData = (
           });
         }
       } else {
+        if (order.status === PaymentStatus.CANCELLED || order.status === PaymentStatus.NO_BILL)
+          return; // skip cancelled orders
         // paid section
         if (chartType === 'incoming_pending' && pendingAmount > 0) {
           paid.push({
@@ -492,6 +496,8 @@ const Dashboard = () => {
           }
         }
       } else {
+        if (order.status === PaymentStatus.CANCELLED || order.status === PaymentStatus.NO_BILL)
+          return; // skip cancelled orders
         if (pendingAmount > 0) balanceAmount += pendingAmount; // total billed regardless of status
         if (pendingAmount < 0) repaymentAmount += Math.abs(pendingAmount);
       }
@@ -541,9 +547,15 @@ const Dashboard = () => {
   }, [filter, filterDates, orders, showPendingAmountsOnly]);
 
   useEffect(() => {
-    const pendingData = getChartData(orders, filter, filterDates, graphFilter);
+    const pendingData = getChartData(
+      orders,
+      filter,
+      filterDates,
+      graphFilter,
+      showPendingAmountsOnly
+    );
     setChartData(pendingData);
-  }, [filter, filterDates, graphFilter, orders]);
+  }, [filter, filterDates, graphFilter, orders, showPendingAmountsOnly]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">

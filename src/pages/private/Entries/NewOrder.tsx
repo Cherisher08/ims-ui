@@ -73,6 +73,7 @@ import {
   transportOptions,
 } from '../Orders/utils';
 import DeliveryChallanDialog from './DeliveryChallanDialog';
+import EntryMenu from './EntryMenu';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -262,43 +263,50 @@ const NewOrder = () => {
       const customerOrders = transformRentalOrderData(
         rentalOrders.filter((order) => order.customer && order.customer._id === customerId)
       );
+      console.log('customerOrders: ', customerOrders);
 
-      const totalDepositAmount = customerOrders.reduce(
-        (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
-        0
-      );
+      const customerTotalBalanceAmount = customerOrders.reduce((total, order) => {
+        let orderBalance =
+          calculateFinalAmountOfOrder(order) -
+          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) -
+          order.balance_paid;
+        if (order.status !== PaymentStatus.PENDING) {
+          orderBalance = Math.max(0, orderBalance);
+        }
+        return total + orderBalance;
+      }, 0);
 
-      const totalReceivedAmount =
-        customerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
+      const hasPositiveAmount = customerTotalBalanceAmount > 0;
 
-      const totalCredit = totalDepositAmount + totalReceivedAmount;
+      const isError =
+        hasPositiveAmount || (customerId !== '' && orderInfo.customer?.address_proof === '');
+      let errorText = hasPositiveAmount
+        ? `Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`
+        : '';
 
-      const totalBillAmount = customerOrders.reduce(
-        (total, order) => total + calculateFinalAmountOfOrder(order),
-        0
-      );
-
-      const totalDebit = totalBillAmount;
-
-      const hasPositiveAmount = totalDebit - totalCredit > 0;
+      if (orderInfo.customer?.address_proof === '') {
+        errorText = errorText
+          ? errorText + ' | Address proof is missing for selected customer'
+          : 'Address proof is missing for this customer.';
+      }
 
       return {
         customerOrders,
-        error: hasPositiveAmount,
-        totalAmount: totalDebit - totalCredit,
+        error: isError,
+        errorText,
       };
     } else {
       return {
         customerOrders: [],
         error: true,
-        totalAmount: 0,
+        errorText: '',
       };
     }
   };
 
   // Usage in your CustomAutoComplete for Customer
   const selectedCustomerId = orderInfo.customer?._id || '';
-  const { error: customerHasPositiveAmount, totalAmount: customerTotalBalanceAmount } =
+  const { error: customerError, errorText: customerErrorText } =
     getCustomerOrdersAndError(selectedCustomerId);
 
   const removeOrderProduct = (id: string) => {
@@ -345,6 +353,14 @@ const NewOrder = () => {
         const orderId = getSplitOrderId(newOrderInfo.order_id, rentalOrders as RentalOrderInfo[]);
         newOrderInfo.order_id = orderId;
       }
+    }
+
+    if (newOrderInfo.status === PaymentStatus.CANCELLED) {
+      newOrderInfo.in_date = dayjs().format('YYYY-MM-DDTHH:mm');
+      newOrderInfo.product_details = newOrderInfo.product_details.map((product) => ({
+        ...product,
+        in_date: dayjs().format('YYYY-MM-DDTHH:mm'),
+      }));
     }
 
     if (rentalId) {
@@ -537,11 +553,18 @@ const NewOrder = () => {
       orderInfo.product_details.find((prod) => !prod.in_date && prod.type === ProductType.RENTAL) ||
       false;
     const finalAmount = calculateFinalAmount() - depositData.reduce((sum, d) => sum + d.amount, 0);
-    console.log('finalAmount: ', finalAmount);
     const hasProductOrTransportAmount =
       (orderInfo.product_details.length > 0 &&
         orderInfo.product_details.some((p) => p.order_quantity > 0)) ||
       orderInfo.eway_amount > 0;
+    if (
+      rentalId &&
+      isRentalOrdersQuerySuccess &&
+      (existingRentalOrder?.status === PaymentStatus.CANCELLED ||
+        existingRentalOrder?.status === PaymentStatus.NO_BILL)
+    ) {
+      return;
+    }
     if (
       orderInfo.in_date &&
       ((orderInfo.repay_date && finalAmount < 0) || finalAmount === 0) &&
@@ -559,6 +582,7 @@ const NewOrder = () => {
       }));
     }
   }, [
+    rentalId,
     orderInfo.balance_paid_date,
     depositData,
     orderInfo.eway_amount,
@@ -567,6 +591,8 @@ const NewOrder = () => {
     orderInfo.repay_date,
     orderInfo.deposits,
     calculateFinalAmount,
+    isRentalOrdersQuerySuccess,
+    existingRentalOrder?.status,
   ]);
 
   useEffect(() => {
@@ -756,6 +782,7 @@ const NewOrder = () => {
               label="Add Customer"
               icon={<LuPlus color="white" />}
             />
+            <EntryMenu rentalOrder={orderInfo} handleValueChange={handleValueChange} />
           </Box>
           {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
@@ -848,8 +875,8 @@ const NewOrder = () => {
               contacts.find((option) => option.name === name)
             );
           }}
-          error={customerHasPositiveAmount}
-          helperText={`Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`}
+          error={customerError}
+          helperText={customerErrorText}
           // labelNavigation={{
           //   label: 'View Past Bills',
           //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',

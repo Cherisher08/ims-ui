@@ -54,6 +54,8 @@ export enum OrderStatusType {
   REPAYMENT_PENDING = 'Repayment pending',
   PAID = 'Paid',
   MACHINE_REPAIR = 'Machine Repair',
+  CANCELLED = 'Cancelled',
+  NO_BILL = 'No Bill',
 }
 
 export interface Product {

@@ -583,6 +583,13 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
 
 export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
   const now = new Date();
+  if (order.status === PaymentStatus.CANCELLED) {
+    return OrderStatusType.CANCELLED;
+  }
+
+  if (order.status === PaymentStatus.NO_BILL) {
+    return OrderStatusType.NO_BILL;
+  }
 
   const totalAmount =
     calculateFinalAmount(order as RentalOrderType) -
@@ -637,6 +644,8 @@ export const getOrderStatusColors = (status: OrderStatusType): { bg: string; tex
     [OrderStatusType.REPAYMENT_PENDING]: { bg: '#FF0000', text: '#FFFFFF' },
     [OrderStatusType.PAID]: { bg: '#008000', text: '#FFFFFF' },
     [OrderStatusType.MACHINE_REPAIR]: { bg: '#000000', text: '#FFFFFF' },
+    [OrderStatusType.CANCELLED]: { bg: '#FF9900', text: '#FFFFFF' },
+    [OrderStatusType.NO_BILL]: { bg: '#FF00FF', text: '#FFFFFF' },
   };
 
   return statusColors[status] || { bg: '#FFFFFF', text: '#000000' };
@@ -712,18 +721,31 @@ export const getAvailableStockQuantity = (
   let newQuantity = 0;
   if (existingRentalOrder) {
     if (
+      existingRentalOrder.status !== PaymentStatus.NO_BILL &&
+      newOrderInfo.status === PaymentStatus.NO_BILL
+    ) {
+      if (product.type === ProductType.RENTAL && product.in_date) {
+        newQuantity = currentProductStock + oldStock;
+      } else if (product.type === ProductType.RENTAL && !product.in_date) {
+        newQuantity = currentProductStock + oldStock - product.order_quantity;
+      } else {
+        newQuantity = currentProductStock;
+      }
+    } else if (
       existingRentalOrder.status === PaymentStatus.PENDING &&
       newOrderInfo.status === PaymentStatus.PENDING
     ) {
       newQuantity = currentProductStock + oldStock - product.order_quantity;
     } else if (
       existingRentalOrder.status === PaymentStatus.PENDING &&
-      newOrderInfo.status === PaymentStatus.PAID &&
+      (newOrderInfo.status === PaymentStatus.PAID ||
+        newOrderInfo.status === PaymentStatus.CANCELLED) &&
       product.type === ProductType.RENTAL
     ) {
       newQuantity = currentProductStock + oldStock;
     } else if (
-      existingRentalOrder.status === PaymentStatus.PAID &&
+      (existingRentalOrder.status === PaymentStatus.PAID ||
+        existingRentalOrder.status === PaymentStatus.CANCELLED) &&
       newOrderInfo.status === PaymentStatus.PENDING
     ) {
       newQuantity = currentProductStock - product.order_quantity;

@@ -1,8 +1,8 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
+import React from 'react';
 
-type Vertical = "top" | "center" | "bottom";
-type Horizontal = "left" | "center" | "right";
+type Vertical = 'top' | 'center' | 'bottom';
+type Horizontal = 'left' | 'center' | 'right';
 
 export interface CustomMenuItemProps {
   label: string;
@@ -33,8 +33,8 @@ const CustomMenu: React.FC<CustomMenuProps> = ({
   handleClose,
   menuItems,
   transformPosition,
-  className = "",
-  menuItemClassName = "",
+  className = '',
+  menuItemClassName = '',
 }) => {
   return (
     <Menu
@@ -45,12 +45,12 @@ const CustomMenu: React.FC<CustomMenuProps> = ({
       open={open}
       onClose={handleClose}
       transformOrigin={transformPosition}
-      anchorOrigin={{ horizontal: "center", vertical: "bottom" }}
+      anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
       autoFocus={false}
     >
       {menuItems.map((item) => (
         <MenuItem
-          className={`${menuItemClassName} px-3 py-1`}
+          className={`${menuItemClassName} px-4 py-2`}
           onClick={item.handleItem}
           disabled={item.disabled ?? false}
           key={item.key}

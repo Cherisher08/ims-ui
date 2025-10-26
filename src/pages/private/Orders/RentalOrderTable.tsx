@@ -29,6 +29,7 @@ import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
 import {
   DepositType,
+  PaymentStatus,
   ProductDetails,
   RentalOrderInfo,
   RentalOrderType,
@@ -582,6 +583,8 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {
         const rowData = params.data;
+        const isPrintDisabled =
+          rowData?.status === PaymentStatus.CANCELLED || rowData?.status === PaymentStatus.NO_BILL;
         return (
           <div className="flex gap-2 h-[2rem] items-center">
             <FiEdit
@@ -615,8 +618,11 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 
             <IoPrintOutline
               size={20}
-              className="cursor-pointer"
+              className={`cursor-pointer ${
+                isPrintDisabled ? 'opacity-50 !cursor-not-allowed' : ''
+              }`}
               onClick={() => {
+                if (isPrintDisabled) return;
                 window.open(`/orders/invoices/${rowData?._id}`, '_blank');
               }}
             />

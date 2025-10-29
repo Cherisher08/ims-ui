@@ -26,6 +26,8 @@ const CustomPieChart: React.FC<CustomLineChartProps> = ({ chartData, title = '' 
           'rgba(255, 0, 0, 0.6)',
           'rgba(0, 128, 0, 0.6)',
           'rgba(0, 0, 0, 0.6)',
+          'rgba(255, 153, 0, 0.6)',
+          'rgba(255, 0, 255, 0.6)',
         ],
         borderColor: [
           'rgba(128, 0, 128, 1)',
@@ -34,6 +36,8 @@ const CustomPieChart: React.FC<CustomLineChartProps> = ({ chartData, title = '' 
           'rgba(255, 0, 0, 1)',
           'rgba(0, 128, 0, 1)',
           'rgba(0, 0, 0, 1)',
+          'rgba(255, 153, 0, 1)',
+          'rgba(255, 0, 255, 1)',
         ],
         borderWidth: 1,
       },

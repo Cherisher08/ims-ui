@@ -263,7 +263,6 @@ const NewOrder = () => {
       const customerOrders = transformRentalOrderData(
         rentalOrders.filter((order) => order.customer && order.customer._id === customerId)
       );
-      console.log('customerOrders: ', customerOrders);
 
       const customerTotalBalanceAmount = customerOrders.reduce((total, order) => {
         let orderBalance =

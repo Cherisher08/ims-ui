@@ -13,6 +13,7 @@ import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
 import { RiFileExcel2Line } from 'react-icons/ri';
 
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -48,11 +49,13 @@ import {
 
 type RentalOrderTableProps = {
   rentalOrders: RentalOrderType[];
+  viewChallans: boolean;
   setSelectedCustomerId: (id: string) => void;
 };
 
 const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   rentalOrders,
+  viewChallans = false,
   setSelectedCustomerId,
 }) => {
   const navigate = useNavigate();
@@ -106,6 +109,22 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     id: `event-${index}`,
     name: val,
   }));
+
+  const renderIcon = (params: { data: RentalOrderInfo }) => {
+    const challan = params.data?.challan;
+
+    const sent = challan?.sent || false;
+
+    return sent ? (
+      <div className="flex h-full w-full justify-center items-center">
+        <FaCheckCircle className="text-green-600 text-xl" />
+      </div>
+    ) : (
+      <div className="flex h-full w-full justify-center items-center">
+        <FaTimesCircle className="text-red-600 text-xl" />
+      </div>
+    );
+  };
 
   const rentalOrderColDef: ColDef<RentalType>[] = [
     // {
@@ -195,6 +214,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         if (date) return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         return '';
       },
+      hide: viewChallans,
     },
     {
       field: 'rental_duration',
@@ -209,6 +229,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         step: 1,
       },
+      hide: viewChallans,
     },
     {
       headerName: 'Deposit Amount',
@@ -221,6 +242,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const depositData: DepositType[] = params.data.deposits ?? 0;
         return depositData.reduce((total, deposit) => total + deposit.amount, 0);
       },
+      hide: viewChallans,
     },
     {
       headerName: 'Amount (After Taxes)',
@@ -237,6 +259,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const data = params.data;
         return <p>₹ {calculateFinalAmount(data, false)}</p>;
       },
+      hide: viewChallans,
     },
     // {
     //   headerName: "Outstanding Amount",
@@ -280,6 +303,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         step: 1,
       },
+      hide: viewChallans,
     },
     {
       field: 'repay_amount',
@@ -304,6 +328,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
           </p>
         );
       },
+      hide: viewChallans,
     },
     {
       field: 'event_name',
@@ -318,6 +343,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         customerOptions: eventOptions,
       },
+      hide: viewChallans,
     },
     {
       field: 'event_venue',
@@ -329,6 +355,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       editable: true,
       singleClickEdit: true,
       cellEditor: AddressCellEditor,
+      hide: viewChallans,
     },
     {
       field: 'event_address',
@@ -343,6 +370,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       valueFormatter: (params) => {
         return params.value?.replace(/\n/g, ' ') ?? '';
       },
+      hide: viewChallans,
     },
     {
       field: 'billing_mode',
@@ -356,6 +384,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         options: ['B2C', 'B2B'],
       },
+      hide: viewChallans,
     },
     {
       field: 'gst',
@@ -370,6 +399,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         step: 1,
       },
+      hide: viewChallans,
     },
     {
       headerName: 'GST Amount',
@@ -384,6 +414,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         if (isNaN(gstPercent) || isNaN(totalAmount)) return 0;
         return (gstPercent / 100) * totalAmount;
       },
+      hide: viewChallans,
     },
     {
       field: 'discount',
@@ -410,6 +441,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         }
         return `₹${data?.discount.toFixed(2)}`;
       },
+      hide: viewChallans,
     },
     {
       field: 'discount_type',
@@ -423,6 +455,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         options: ['percent', 'rupees'],
       },
+      hide: viewChallans,
     },
     {
       field: 'round_off',
@@ -438,6 +471,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         step: 1,
       },
+      hide: viewChallans,
     },
     {
       field: 'eway_amount',
@@ -453,6 +487,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         step: 1,
       },
+      hide: viewChallans,
     },
     {
       field: 'eway_type',
@@ -466,6 +501,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         options: ['-', 'Up', 'Down', 'Both'],
       },
+      hide: viewChallans,
     },
     {
       field: 'eway_mode',
@@ -479,6 +515,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         options: ['-', 'cash', 'account', 'upi'],
       },
+      hide: viewChallans,
     },
     // {
     //   field: 'remarks',
@@ -506,6 +543,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         options: ['-', 'cash less', 'upi less', 'kvb less'],
       },
+      hide: viewChallans,
     },
     {
       field: 'balance_paid_mode',
@@ -519,6 +557,28 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellEditorParams: {
         options: ['-', 'cash', 'account', 'upi'],
       },
+      hide: viewChallans,
+    },
+    {
+      headerName: 'Sent',
+      flex: 1,
+      minWidth: 100,
+      cellRenderer: renderIcon,
+      hide: !viewChallans,
+    },
+    {
+      headerName: 'Last Sent Date',
+      minWidth: 160,
+      filter: 'agDateColumnFilter',
+      valueFormatter: (params) => {
+        const data = params.data;
+        const challan = data?.challan;
+        if (challan) {
+          const date = new Date(challan.last_sent_date);
+          return dayjs(date).format('DD-MMM-YYYY hh:mm A');
+        } else return '';
+      },
+      hide: !viewChallans,
     },
     {
       field: 'status',

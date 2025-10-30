@@ -130,6 +130,10 @@ export type RentalOrderInfo = OrderInfo & {
   repay_date: string;
   event_name: string;
   event_venue: string;
+  challan?: {
+    sent: boolean;
+    last_sent_date: string;
+  };
 };
 
 export type SalesOrderInfo = OrderInfo & {

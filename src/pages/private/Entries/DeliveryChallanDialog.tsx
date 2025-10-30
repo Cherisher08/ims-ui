@@ -78,6 +78,7 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
           const messageDetails = {
             customerName: orderInfo.customer?.name || '',
             orderId: orderInfo.order_id,
+            bill_type: 'Delivery Challan',
           };
           try {
             await whatsappRentalOrderDC({
@@ -126,6 +127,7 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
       toast.error('Failed to send WhatsApp message');
     }
   };
+
   return (
     <Modal
       open={open}

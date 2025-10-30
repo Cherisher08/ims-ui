@@ -159,6 +159,7 @@ export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo;
 
 type MessageDetails = {
   customerName: string;
+  bill_type: string;
   orderId: string;
 };
 

@@ -1,23 +1,23 @@
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { LuPlus } from 'react-icons/lu';
 import { MdOutlineMail } from 'react-icons/md';
 import { RiFileExcel2Line } from 'react-icons/ri';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Box, Tab, Tabs, Typography } from '@mui/material';
 import NewProductModal from '../../../components/NewProductModal.';
 import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
+import { RootState } from '../../../store/store';
 import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
+import CustomButton from '../../../styled/CustomButton';
+import AntSwitch from '../../../styled/CustomSwitch';
 import { RentalOrderType } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
 import RentalOrderTable from './RentalOrderTable';
-import { exportOrderToExcel } from './utils';
-import { calculateFinalAmount, transformRentalOrderData } from './utils';
-import CustomButton from '../../../styled/CustomButton';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../store/store';
+import { calculateFinalAmount, exportOrderToExcel, transformRentalOrderData } from './utils';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -28,6 +28,7 @@ const Orders = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
+  const [viewChallans, setViewChallans] = useState(false);
   const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
     useGetProductCategoriesQuery();
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
@@ -148,6 +149,23 @@ const Orders = () => {
         </div>
       </div>
 
+      <div className="flex justify-end">
+        <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
+          <p>View Orders</p>
+          <AntSwitch
+            checked={viewChallans}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setViewChallans(true);
+              } else {
+                setViewChallans(false);
+              }
+            }}
+          />
+          <p>Whatsapp Notifications</p>
+        </div>
+      </div>
+
       {/* Tabs */}
       <Box
         sx={{
@@ -177,6 +195,7 @@ const Orders = () => {
       <div role="tabpanel" hidden={activeTab !== 1}>
         <RentalOrderTable
           rentalOrders={rentalOrders}
+          viewChallans={viewChallans}
           setSelectedCustomerId={(selectedId) => {
             setCustomerId(selectedId);
           }}

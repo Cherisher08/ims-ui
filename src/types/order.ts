@@ -112,6 +112,16 @@ export type OrderInfo = {
   invoice_id: string;
 };
 
+export type DocumentNotification = {
+  is_sent: boolean;
+  last_sent_date: string;
+};
+
+export type WhatsappNotifications = {
+  invoice?: DocumentNotification;
+  delivery_challan: DocumentNotification;
+};
+
 export type RentalOrderInfo = OrderInfo & {
   type: ProductType.RENTAL;
   deposits: DepositType[];
@@ -130,6 +140,7 @@ export type RentalOrderInfo = OrderInfo & {
   repay_date: string;
   event_name: string;
   event_venue: string;
+  whatsapp_notifications?: WhatsappNotifications;
 };
 
 export type SalesOrderInfo = OrderInfo & {

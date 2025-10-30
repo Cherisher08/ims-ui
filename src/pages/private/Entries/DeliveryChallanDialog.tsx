@@ -1,15 +1,18 @@
-import { FC } from 'react';
-import { RentalOrderInfo } from '../../../types/order';
-import { pdf, PDFViewer } from '@react-pdf/renderer';
-import DeliveryChallanPDF from './DeliveryChallanPDF';
-import { saveAs } from 'file-saver';
-import { TOAST_IDS } from '../../../constants/constants';
-import { toast } from 'react-toastify';
-import { usePostOrderDcAsWhatsappMessageMutation } from '../../../services/OrderService';
 import { Modal } from '@mui/material';
-import CustomButton from '../../../styled/CustomButton';
-import { MdClose } from 'react-icons/md';
+import { pdf, PDFViewer } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
 import * as pdfjsLib from 'pdfjs-dist';
+import { FC } from 'react';
+import { MdClose } from 'react-icons/md';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../constants/constants';
+import {
+  usePostOrderDcAsWhatsappMessageMutation,
+  useUpdateRentalOrderMutation,
+} from '../../../services/OrderService';
+import CustomButton from '../../../styled/CustomButton';
+import { RentalOrderInfo } from '../../../types/order';
+import DeliveryChallanPDF from './DeliveryChallanPDF';
 
 interface DeliveryChallanDialogProps {
   onClose: () => void;
@@ -19,6 +22,8 @@ interface DeliveryChallanDialogProps {
 
 const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, orderInfo }) => {
   const [whatsappRentalOrderDC] = usePostOrderDcAsWhatsappMessageMutation();
+  const [updateRentalOrder] = useUpdateRentalOrderMutation();
+  // const [patchRentalOrder] = usePatchRentalOrderMutation();
 
   // Set PDF.js worker
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -91,6 +96,31 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
           }
         }
       });
+
+      // const payload: PatchOperation[] = [
+      //   {
+      //     op: 'replace',
+      //     path: '/whatsapp_notifications',
+      //     value: {
+      //       delivery_challan: {
+      //         is_sent: true,
+      //         last_sent_date: new Date().toISOString(),
+      //       },
+      //     },
+      //   },
+      // ];
+
+      await updateRentalOrder({
+        ...orderInfo,
+        whatsapp_notifications: {
+          ...orderInfo.whatsapp_notifications,
+          delivery_challan: {
+            is_sent: true,
+            last_sent_date: new Date().toISOString(),
+          },
+        },
+      });
+      // if (orderInfo._id) await patchRentalOrder({ id: orderInfo._id, payload: payload }).unwrap();
     } catch (error) {
       console.error('Error converting PDF to image for WhatsApp:', error);
       toast.error('Failed to send WhatsApp message');

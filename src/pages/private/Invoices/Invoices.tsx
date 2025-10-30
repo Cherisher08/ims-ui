@@ -6,8 +6,13 @@ import CustomTable from '../../../styled/CustomTable';
 
 import { IoPrintOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
-import { RentalOrderType } from '../../../types/order';
-import { calculateFinalAmount, currencyFormatter } from '../Orders/utils';
+import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
+import {
+  calculateFinalAmount,
+  currencyFormatter,
+  getOrderStatus,
+  getOrderStatusColors,
+} from '../Orders/utils';
 
 const Invoices: FC = () => {
   const navigate = useNavigate();
@@ -80,6 +85,40 @@ const Invoices: FC = () => {
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
         return <p>₹ {calculateFinalAmount(data as RentalOrderType, false)}</p>;
+      },
+    },
+    {
+      field: 'status',
+      headerName: 'Order Status',
+      headerClass: 'ag-header-wrap',
+      maxWidth: 170,
+      filter: 'agTextColumnFilter',
+      pinned: 'right',
+      // editable: true,
+      // singleClickEdit: true,
+      valueGetter: (params) => getOrderStatus(params.data as RentalOrderInfo),
+      cellRenderer: (params: ICellRendererParams) => {
+        const data = params.data;
+        const status = getOrderStatus(data);
+        const statusColor = getOrderStatusColors(status);
+        return (
+          <p
+            style={{
+              width: '100%',
+              height: '100%',
+              textAlign: 'center',
+              backgroundColor: statusColor.bg,
+              color: statusColor.text,
+            }}
+          >
+            {status}
+          </p>
+        );
+      },
+      cellStyle: () => {
+        return {
+          padding: 0,
+        };
       },
     },
     {

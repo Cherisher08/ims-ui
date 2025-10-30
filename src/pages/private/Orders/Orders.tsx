@@ -12,6 +12,7 @@ import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import { RootState } from '../../../store/store';
 import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
 import CustomButton from '../../../styled/CustomButton';
+import AntSwitch from '../../../styled/CustomSwitch';
 import { RentalOrderType } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
@@ -139,16 +140,29 @@ const Orders = () => {
             icon={<LuPlus color="white" />}
           />
           <CustomButton
-            onClick={() => setViewChallans((prev) => !prev)}
-            label={viewChallans ? 'View Orders' : 'View Challan Status'}
-          />
-          <CustomButton
             onClick={() => {
               if (rentalOrderData) exportOrderToExcel(rentalOrderData as RentalOrderType[]);
             }}
             label="Export Orders"
             icon={<RiFileExcel2Line color="white" />}
           />
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
+          <p>View Orders</p>
+          <AntSwitch
+            checked={viewChallans}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setViewChallans(true);
+              } else {
+                setViewChallans(false);
+              }
+            }}
+          />
+          <p>Whatsapp Notifications</p>
         </div>
       </div>
 

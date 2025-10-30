@@ -110,20 +110,18 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     if (!gridApiRef.current) return;
     const api = gridApiRef.current;
 
-    setTimeout(() => {
-      if (viewChallans) {
-        api.setFilterModel({
-          sent: {
-            filterType: 'text',
-            type: 'equals',
-            filter: 'Yes',
-          },
-        });
-      } else {
-        api.setFilterModel(null);
-      }
-      api.onFilterChanged();
-    }, 100);
+    if (viewChallans) {
+      api.setFilterModel({
+        sent: {
+          filterType: 'text',
+          type: 'equals',
+          filter: 'Yes',
+        },
+      });
+    } else {
+      api.setFilterModel(null);
+    }
+    api.onFilterChanged();
   }, [viewChallans]);
 
   const eventOptions: IdNamePair[] = Object.values(EventNameType).map((val, index) => ({
@@ -132,9 +130,9 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   }));
 
   const renderIcon = (params: { data: RentalOrderInfo }) => {
-    const challan = params.data?.challan;
+    const challan = params.data?.whatsapp_notifications?.delivery_challan;
 
-    const sent = challan?.sent || false;
+    const sent = challan?.is_sent || false;
 
     return sent ? (
       <div className="flex h-full w-full justify-center items-center">
@@ -587,7 +585,9 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       minWidth: 100,
       cellRenderer: renderIcon,
       valueGetter: (params) => {
-        return params.data?.challan?.sent === true ? 'Yes' : 'No';
+        return params.data?.whatsapp_notifications?.delivery_challan?.is_sent === true
+          ? 'Yes'
+          : 'No';
       },
       filter: 'agTextColumnFilter',
     },
@@ -597,7 +597,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       filter: 'agDateColumnFilter',
       valueFormatter: (params) => {
         const data = params.data;
-        const challan = data?.challan;
+        const challan = data?.whatsapp_notifications?.delivery_challan;
         if (challan) {
           const date = new Date(challan.last_sent_date);
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');

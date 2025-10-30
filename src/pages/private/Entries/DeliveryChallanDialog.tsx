@@ -23,6 +23,7 @@ interface DeliveryChallanDialogProps {
 const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, orderInfo }) => {
   const [whatsappRentalOrderDC] = usePostOrderDcAsWhatsappMessageMutation();
   const [updateRentalOrder] = useUpdateRentalOrderMutation();
+  // const [patchRentalOrder] = usePatchRentalOrderMutation();
 
   // Set PDF.js worker
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -95,13 +96,31 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
           }
         }
       });
+
+      // const payload: PatchOperation[] = [
+      //   {
+      //     op: 'replace',
+      //     path: '/whatsapp_notifications',
+      //     value: {
+      //       delivery_challan: {
+      //         is_sent: true,
+      //         last_sent_date: new Date().toISOString(),
+      //       },
+      //     },
+      //   },
+      // ];
+
       await updateRentalOrder({
         ...orderInfo,
-        challan: {
-          sent: true,
-          last_sent_date: new Date().toISOString(),
+        whatsapp_notifications: {
+          ...orderInfo.whatsapp_notifications,
+          delivery_challan: {
+            is_sent: true,
+            last_sent_date: new Date().toISOString(),
+          },
         },
       });
+      // if (orderInfo._id) await patchRentalOrder({ id: orderInfo._id, payload: payload }).unwrap();
     } catch (error) {
       console.error('Error converting PDF to image for WhatsApp:', error);
       toast.error('Failed to send WhatsApp message');

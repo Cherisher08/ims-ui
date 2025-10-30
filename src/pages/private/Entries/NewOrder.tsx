@@ -466,34 +466,6 @@ const NewOrder = () => {
     }
   };
 
-  const getNextInvoiceId = (currentId: string): string => {
-    const match = currentId.match(/(\d+)$/);
-    if (!match) return currentId;
-
-    const nextNumber = String(Number(match[1]) + 1).padStart(match[1].length, '0');
-    return currentId.replace(/\d+$/, nextNumber);
-  };
-
-  const updateInvoices = async (orders: RentalOrderInfo[]) => {
-    let currentInvoiceId = getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
-    let isFirst = true;
-
-    for (const order of orders) {
-      if (!order.invoice_id && order.status === PaymentStatus.PAID) {
-        const newInvoiceId = isFirst ? currentInvoiceId : getNextInvoiceId(currentInvoiceId);
-
-        await updateRentalOrder({
-          ...order,
-          invoice_id: newInvoiceId,
-        });
-
-        console.log(newInvoiceId);
-        currentInvoiceId = newInvoiceId;
-        isFirst = false;
-      }
-    }
-  };
-
   useEffect(() => {
     if (!rentalId) {
       setOrderInfo(initialRentalOrder);
@@ -786,7 +758,6 @@ const NewOrder = () => {
           {/* <div className="flex flex-row justify-between w-full"> */}
           <p className="font-primary text-2xl font-bold w-fit">Rental Order</p>
           <Box className="flex gap-2">
-            <CustomButton label="Create Sub-Order" onClick={() => updateInvoices(rentalOrders)} />
             <CustomButton
               label="Create Sub-Order"
               icon={<MdAssignmentAdd />}

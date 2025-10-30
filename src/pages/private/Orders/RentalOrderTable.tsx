@@ -7,7 +7,7 @@ import type {
   ValueGetterParams,
 } from 'ag-grid-community';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { FiEdit } from 'react-icons/fi';
 import { IoPrintOutline } from 'react-icons/io5';
@@ -29,6 +29,7 @@ import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
 import {
   DepositType,
+  PaymentStatus,
   ProductDetails,
   RentalOrderInfo,
   RentalOrderType,
@@ -582,6 +583,8 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       maxWidth: 120,
       cellRenderer: (params: ICellRendererParams<RentalType>) => {
         const rowData = params.data;
+        const isPrintDisabled =
+          rowData?.status === PaymentStatus.CANCELLED || rowData?.status === PaymentStatus.NO_BILL;
         return (
           <div className="flex gap-2 h-[2rem] items-center">
             <FiEdit
@@ -615,9 +618,12 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 
             <IoPrintOutline
               size={20}
-              className="cursor-pointer"
+              className={`cursor-pointer ${
+                isPrintDisabled ? 'opacity-50 !cursor-not-allowed' : ''
+              }`}
               onClick={() => {
-                navigate(`/orders/invoices/${rowData?._id}`);
+                if (isPrintDisabled) return;
+                window.open(`/orders/invoices/${rowData?._id}`, '_blank');
               }}
             />
           </div>
@@ -737,6 +743,11 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       await patchRentalOrder({ id: data._id, payload: patchPayload }).unwrap();
 
       console.log(`Successfully patched ${field} for order ${data._id}`);
+
+      // Refresh the grid to update calculated fields like status
+      if (gridApiRef.current) {
+        gridApiRef.current.refreshCells({ force: true });
+      }
     } catch (err) {
       console.error('Failed to patch rental order:', err);
       // Optional: revert or notify

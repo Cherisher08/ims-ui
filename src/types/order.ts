@@ -17,6 +17,8 @@ export enum BillingMode {
 export enum PaymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
+  CANCELLED = 'cancelled',
+  NO_BILL = 'no bill',
 }
 
 export enum PaymentMode {
@@ -65,7 +67,7 @@ export type ContactSelectionType = {
 };
 
 export type DepositType = {
-  _id: string;
+  _id?: string;
   amount: number;
   date: string;
   product: IdNamePair | null;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type {
   CellEditingStoppedEvent,
   ColDef,
@@ -104,6 +105,26 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   //     return rent;
   //   }
   // };
+
+  useEffect(() => {
+    if (!gridApiRef.current) return;
+    const api = gridApiRef.current;
+
+    setTimeout(() => {
+      if (viewChallans) {
+        api.setFilterModel({
+          sent: {
+            filterType: 'text',
+            type: 'equals',
+            filter: 'Yes',
+          },
+        });
+      } else {
+        api.setFilterModel(null);
+      }
+      api.onFilterChanged();
+    }, 100);
+  }, [viewChallans]);
 
   const eventOptions: IdNamePair[] = Object.values(EventNameType).map((val, index) => ({
     id: `event-${index}`,
@@ -560,11 +581,15 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       hide: viewChallans,
     },
     {
+      colId: 'sent',
       headerName: 'Sent',
       flex: 1,
       minWidth: 100,
       cellRenderer: renderIcon,
-      hide: !viewChallans,
+      valueGetter: (params) => {
+        return params.data?.challan?.sent === true ? 'Yes' : 'No';
+      },
+      filter: 'agTextColumnFilter',
     },
     {
       headerName: 'Last Sent Date',
@@ -578,7 +603,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         } else return '';
       },
-      hide: !viewChallans,
     },
     {
       field: 'status',

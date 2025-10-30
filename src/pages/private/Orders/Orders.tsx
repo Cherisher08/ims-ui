@@ -140,7 +140,7 @@ const Orders = () => {
           />
           <CustomButton
             onClick={() => setViewChallans((prev) => !prev)}
-            label="View Challan Status"
+            label={viewChallans ? 'View Orders' : 'View Challan Status'}
           />
           <CustomButton
             onClick={() => {

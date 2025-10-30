@@ -62,6 +62,14 @@ const Invoices: FC = () => {
       },
     },
     {
+      field: 'customer.gstin',
+      headerName: 'GST Number',
+      minWidth: 200,
+      resizable: true,
+      headerClass: 'ag-header-wrap',
+      filter: 'agTextColumnFilter',
+    },
+    {
       field: 'in_date',
       headerName: 'Bill Date',
       minWidth: 180,
@@ -88,14 +96,20 @@ const Invoices: FC = () => {
       },
     },
     {
+      field: 'gst',
+      headerName: 'GST(%)',
+      headerClass: 'ag-header-wrap',
+      minWidth: 150,
+      maxWidth: 200,
+      filter: 'agNumberColumnFilter',
+    },
+    {
       field: 'status',
       headerName: 'Order Status',
       headerClass: 'ag-header-wrap',
       maxWidth: 170,
       filter: 'agTextColumnFilter',
       pinned: 'right',
-      // editable: true,
-      // singleClickEdit: true,
       valueGetter: (params) => getOrderStatus(params.data as RentalOrderInfo),
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;

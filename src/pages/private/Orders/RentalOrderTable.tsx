@@ -703,7 +703,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
             <IoPrintOutline
               size={20}
               className={`cursor-pointer ${
-                isPrintDisabled ? 'opacity-50 !cursor-not-allowed' : ''
+                isPrintDisabled ? 'opacity-50 cursor-not-allowed!' : ''
               }`}
               onClick={() => {
                 if (isPrintDisabled) return;

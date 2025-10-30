@@ -368,6 +368,7 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
         'Billing Mode': i === 0 ? order.billing_mode : '',
         Status: i === 0 ? getOrderStatus(order as RentalOrderInfo) : '',
         Remarks: i === 0 ? order.remarks : '',
+        Month: i === 0 ? dayjs(order.out_date).format('MMMM') : '',
       });
 
       // Accumulate totals

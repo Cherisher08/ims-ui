@@ -579,8 +579,8 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       hide: viewChallans,
     },
     {
-      colId: 'sent',
-      headerName: 'Sent',
+      colId: 'sent_dc',
+      headerName: 'Sent DC',
       flex: 1,
       minWidth: 100,
       cellRenderer: renderIcon,
@@ -592,7 +592,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       filter: 'agTextColumnFilter',
     },
     {
-      headerName: 'Last Sent Date',
+      headerName: 'DC - Last Sent Date',
       minWidth: 160,
       filter: 'agDateColumnFilter',
       valueFormatter: (params) => {
@@ -600,6 +600,30 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const challan = data?.whatsapp_notifications?.delivery_challan;
         if (challan) {
           const date = new Date(challan.last_sent_date);
+          return dayjs(date).format('DD-MMM-YYYY hh:mm A');
+        } else return '';
+      },
+    },
+    {
+      colId: 'sent_invoice',
+      headerName: 'Sent Invoice',
+      flex: 1,
+      minWidth: 100,
+      cellRenderer: renderIcon,
+      valueGetter: (params) => {
+        return params.data?.whatsapp_notifications?.invoice?.is_sent === true ? 'Yes' : 'No';
+      },
+      filter: 'agTextColumnFilter',
+    },
+    {
+      headerName: 'Invoice - Last Sent Date',
+      minWidth: 160,
+      filter: 'agDateColumnFilter',
+      valueFormatter: (params) => {
+        const data = params.data;
+        const invoice = data?.whatsapp_notifications?.invoice;
+        if (invoice) {
+          const date = new Date(invoice.last_sent_date);
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         } else return '';
       },

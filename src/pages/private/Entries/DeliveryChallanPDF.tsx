@@ -128,10 +128,10 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             <View>
               {data.product_details.slice(0, 1).map((prod) => (
                 <View style={styles.row} key={prod._id}>
-                  <Text style={styles.field}>Product Name / Per Day Rent</Text>
+                  <Text style={styles.field}>Product Name - Quantity / Per Day Rent</Text>
                   <Text style={styles.colon}>:</Text>
                   <Text style={styles.value}>
-                    {prod.name + ' / ' + `Rs. ${prod.rent_per_unit}`}
+                    {prod.name + ' - ' + prod.order_quantity + ' / ' + `Rs. ${prod.rent_per_unit}`}
                   </Text>
                 </View>
               ))}
@@ -140,7 +140,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   <Text style={[styles.field]}></Text>
                   <Text style={styles.colon}></Text>
                   <Text style={[styles.value]}>
-                    {prod.name + ' / ' + `Rs. ${prod.rent_per_unit}`}
+                    {prod.name + ' - ' + prod.order_quantity + ' / ' + `Rs. ${prod.rent_per_unit}`}
                   </Text>
                 </View>
               ))}
@@ -165,6 +165,11 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.value}>
                 {data.deposits.reduce((total, dep) => total + dep.amount, 0) || '-'}
               </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.field}>Transport</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.eway_amount || '-'}</Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.field}>Working Place</Text>

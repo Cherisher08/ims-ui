@@ -3,20 +3,25 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useEffect, useState } from 'react';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
-import { calculateDiscountAmount } from '../../services/utility_functions';
+import { calculateDiscountAmount, calculateProductRent } from '../../services/utility_functions';
 import CustomCard from '../../styled/CustomCard';
 import CustomLineChart from '../../styled/CustomLineChart';
 import CustomSelect from '../../styled/CustomSelect';
 import AntSwitch from '../../styled/CustomSwitch';
 import { DiscountType, OrderStatusType, ProductType } from '../../types/common';
 import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from '../../types/order';
-import { getDuration, getOrderStatus } from './Orders/utils';
+import { getOrderStatus } from './Orders/utils';
 import CustomPieChart from '../../styled/CustomPieChart';
+import CustomDatePicker from '../../styled/CustomDatePicker';
 
 export const OrderStatusValues: string[] = Object.values(OrderStatusType);
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
+
+const addDaysToDate = (dateStr: string, days: number): string => {
+  return dayjs(dateStr).add(days, 'day').format('YYYY-MM-DD');
+};
 
 type PendingAmount = { x: string; y: number };
 
@@ -28,6 +33,8 @@ type ChartType =
   | 'machines_repair'
   | 'machines_overdue'
   | 'order_status_summary';
+
+type DateFilter = { start: string; end: string } | null;
 
 // const getRentalDuration = (outDate: string, inDate: string, unit: BillingUnit): number => {
 //   const out = new Date(outDate);
@@ -52,17 +59,9 @@ type ChartType =
 // };
 
 const calcFinalAmount = (order: OrderInfoType): number => {
-  if (order.type === ProductType.RENTAL && order.product_details) {
+  if (order.type === ProductType.RENTAL && order.product_details.length > 0) {
     const total = order.product_details.reduce((sum, prod) => {
-      // const duration = getRentalDuration(
-      //   prod.out_date,
-      //   prod.in_date,
-      //   prod.billing_unit
-      // );
-
-      const duration = getDuration(prod.out_date, prod.in_date);
-      const quantity = prod.order_quantity - prod.order_repair_count;
-      return sum + prod.rent_per_unit * quantity * duration;
+      return sum + calculateProductRent(prod);
     }, 0);
 
     return parseFloat(total.toFixed(2));
@@ -73,23 +72,36 @@ const calcFinalAmount = (order: OrderInfoType): number => {
 const groupKeyFormatter = (dateStr: string, filter: string) => {
   const date = dayjs(dateStr);
   switch (filter) {
-    case '1':
-      return date.format('YYYY-MM-DD');
-    case '2':
-      return `${date.year()}-W${date.week()}`;
-    case '3':
-      return date.format('YYYY-MM');
+    // case '1':
+    //   return date.format('YYYY-MM-DD');
+    // case '2':
+    //   return `${date.year()}-W${date.week()}`;
+    // case '3':
+    //   return date.format('YYYY-MM');
     default:
       return date.format('YYYY-MM-DD');
   }
 };
 
-const getValidGroupKeys = (filter: string): string[] => {
+const getValidGroupKeys = (filter: string, filterDates: DateFilter): string[] => {
   const today = dayjs();
   const keys: string[] = [];
 
   if (filter === '1') {
-    // daily: current month, from 1st to today
+    // Today
+    const cursor = today.clone();
+    keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+  } else if (filter === '2') {
+    // Last 7 Days
+    const start = today.subtract(6, 'days');
+    const end = today;
+    let cursor = start.clone();
+    while (cursor.isSameOrBefore(end)) {
+      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+      cursor = cursor.add(1, 'day');
+    }
+  } else if (filter === '3') {
+    // Current month: current month, from 1st to today
     const start = today.startOf('month');
     const end = today;
     let cursor = start.clone();
@@ -97,42 +109,39 @@ const getValidGroupKeys = (filter: string): string[] => {
       keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
       cursor = cursor.add(1, 'day');
     }
-  } else if (filter === '2') {
-    // weekly: last 5 weeks + current week (total 6 weeks ending this week)
-    const start = today.startOf('week').subtract(5, 'weeks');
-    const end = today.startOf('week');
-    let cursor = start.clone();
-    while (cursor.isSameOrBefore(end)) {
-      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
-      cursor = cursor.add(1, 'week');
-    }
-  } else if (filter === '3') {
-    // monthly: last 5 months + current month (total 6 months ending this month)
-    const start = today.startOf('month').subtract(5, 'months');
-    const end = today.startOf('month');
-    let cursor = start.clone();
-    while (cursor.isSameOrBefore(end)) {
-      keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
-      cursor = cursor.add(1, 'month');
+  } else if (filter === '4') {
+    // custom: from start to end
+    if (filterDates) {
+      const start = dayjs(filterDates.start);
+      const end = dayjs(filterDates.end);
+      let cursor = start.clone();
+      while (cursor.isSameOrBefore(end)) {
+        keys.push(groupKeyFormatter(cursor.format('YYYY-MM-DD'), filter));
+        cursor = cursor.add(1, 'day');
+      }
     }
   }
 
   return keys;
 };
 
-const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: ChartType) => {
+const getChartData = (
+  orders: RentalOrderInfo[],
+  filter: string,
+  filterDates: DateFilter,
+  chartType: ChartType,
+  showPendingAmountsOnly: boolean
+) => {
   const groups: Record<string, number> = {};
 
-  let validGroupKeys = getValidGroupKeys(filter);
+  const validGroupKeys = getValidGroupKeys(filter, filterDates);
 
   orders.forEach((order) => {
-    const groupKey = groupKeyFormatter(order.in_date, filter);
-
-    // ignore if this group is outside the current date range
-    if (!validGroupKeys.includes(groupKey)) return;
-
     switch (chartType) {
       case 'incoming_pending': {
+        const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
@@ -145,7 +154,14 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount =
+          finalAmount -
+          order.balance_paid -
+          depositTotal -
+          discountAmount +
+          gstAmount +
+          roundOff +
+          order.eway_amount;
 
         if (pendingAmount > 0) {
           groups[groupKey] = (groups[groupKey] || 0) + pendingAmount;
@@ -154,6 +170,9 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
       }
 
       case 'repayment_pending': {
+        const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
         const finalAmount = calcFinalAmount(order);
         const roundOff = order.round_off || 0;
@@ -166,9 +185,11 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
             ? 0
             : calculateDiscountAmount(order.gst, finalAmount);
 
-        const pendingAmount = finalAmount - depositTotal - discountAmount + gstAmount + roundOff;
+        const pendingAmount =
+          finalAmount - depositTotal - discountAmount + gstAmount + roundOff + order.eway_amount;
 
         if (pendingAmount < 0) {
+          if (showPendingAmountsOnly && order.status !== PaymentStatus.PENDING) break;
           groups[groupKey] = (groups[groupKey] || 0) + Math.abs(pendingAmount);
         }
         break;
@@ -199,12 +220,13 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
       }
 
       case 'machines_repair': {
+        const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
           if (repairCount > 0) {
-            if (validGroupKeys.includes(groupKey)) {
-              groups[groupKey] = (groups[groupKey] || 0) + repairCount;
-            }
+            groups[groupKey] = (groups[groupKey] || 0) + repairCount;
           }
         });
         break;
@@ -212,10 +234,13 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
 
       case 'machines_overdue': {
         order.product_details.forEach((p) => {
-          if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
-            const productGroupKey = groupKeyFormatter(p.in_date, filter);
-            if (validGroupKeys.includes(productGroupKey)) {
-              groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+          if (p.out_date && !p.in_date) {
+            const expectedInDate = addDaysToDate(p.out_date, order.rental_duration);
+            if (dayjs(expectedInDate).isBefore(dayjs())) {
+              const productGroupKey = groupKeyFormatter(expectedInDate, filter);
+              if (validGroupKeys.includes(productGroupKey)) {
+                groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
+              }
             }
           }
         });
@@ -223,8 +248,12 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
       }
 
       case 'order_status_summary': {
-        const currentStatus = getOrderStatus(order);
-        groups[currentStatus] = (groups[currentStatus] || 0) + 1;
+        const dateToGroupBy = order.out_date;
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (validGroupKeys.includes(groupKey)) {
+          const currentStatus = getOrderStatus(order);
+          groups[currentStatus] = (groups[currentStatus] || 0) + 1;
+        }
         break;
       }
 
@@ -233,10 +262,11 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
     }
   });
 
-  validGroupKeys = chartType === 'order_status_summary' ? OrderStatusValues : validGroupKeys;
+  const validGroupKeysForChart =
+    chartType === 'order_status_summary' ? OrderStatusValues : validGroupKeys;
 
   // guarantee that even group keys with zero are shown on the chart
-  const chartData = validGroupKeys.map((key) => ({
+  const chartData = validGroupKeysForChart.map((key) => ({
     x: key,
     y: groups[key] || 0,
   }));
@@ -247,20 +277,22 @@ const getChartData = (orders: RentalOrderInfo[], filter: string, chartType: Char
 const getDetailsData = (
   orders: RentalOrderInfo[],
   chartType: ChartType,
-  filter: string
+  filter: string,
+  filterDates: DateFilter
 ):
   | {
       pending: { name: string; amount: number }[];
       paid: { name: string; amount: number }[];
     }
   | { name: string; amount: number }[] => {
-  const validGroupKeys = getValidGroupKeys(filter);
+  const validGroupKeys = getValidGroupKeys(filter, filterDates);
   if (chartType === 'incoming_pending' || chartType === 'repayment_pending') {
     const pending: { name: string; amount: number }[] = [];
     const paid: { name: string; amount: number }[] = [];
 
     orders.forEach((order) => {
-      const groupKey = groupKeyFormatter(order.in_date, filter);
+      const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+      const groupKey = groupKeyFormatter(dateToGroupBy, filter);
 
       // ignore if this group is outside the current date range
       if (!validGroupKeys.includes(groupKey)) return;
@@ -291,6 +323,8 @@ const getDetailsData = (
           });
         }
       } else {
+        if (order.status === PaymentStatus.CANCELLED || order.status === PaymentStatus.NO_BILL)
+          return; // skip cancelled orders
         // paid section
         if (chartType === 'incoming_pending' && pendingAmount > 0) {
           paid.push({
@@ -316,7 +350,8 @@ const getDetailsData = (
     switch (chartType) {
       case 'machines_in': {
         order.product_details.forEach((p) => {
-          if (p.in_date) {
+          const productGroupKey = groupKeyFormatter(p.in_date, filter);
+          if (validGroupKeys.includes(productGroupKey)) {
             data.push({
               name: p.name,
               amount: p.order_quantity,
@@ -327,7 +362,8 @@ const getDetailsData = (
       }
       case 'machines_out': {
         order.product_details.forEach((p) => {
-          if (p.out_date) {
+          const productGroupKey = groupKeyFormatter(p.out_date, filter);
+          if (validGroupKeys.includes(productGroupKey)) {
             data.push({
               name: p.name,
               amount: p.order_quantity,
@@ -339,7 +375,8 @@ const getDetailsData = (
       case 'machines_repair': {
         order.product_details.forEach((p) => {
           const repairCount = p.order_repair_count || 0;
-          if (repairCount > 0) {
+          const productGroupKey = groupKeyFormatter(p.in_date, filter);
+          if (repairCount > 0 && validGroupKeys.includes(productGroupKey)) {
             data.push({
               name: p.name,
               amount: repairCount,
@@ -350,13 +387,29 @@ const getDetailsData = (
       }
       case 'machines_overdue': {
         order.product_details.forEach((p) => {
-          if (p.in_date && dayjs(p.in_date).isBefore(dayjs())) {
-            data.push({
-              name: p.name,
-              amount: p.order_quantity,
-            });
+          if (p.out_date && !p.in_date) {
+            const expectedInDate = addDaysToDate(p.out_date, order.rental_duration);
+            if (dayjs(expectedInDate).isBefore(dayjs())) {
+              data.push({
+                name: p.name,
+                amount: p.order_quantity,
+              });
+            }
           }
         });
+        break;
+      }
+      case 'order_status_summary': {
+        const dateToGroupBy = order.out_date;
+        const groupKey = groupKeyFormatter(dateToGroupBy, filter);
+        if (!validGroupKeys.includes(groupKey)) break;
+        const currentStatus = getOrderStatus(order);
+        const existing = data.find((d) => d.name === currentStatus);
+        if (existing) {
+          existing.amount += 1;
+        } else {
+          data.push({ name: currentStatus, amount: 1 });
+        }
         break;
       }
       default:
@@ -371,15 +424,17 @@ const Dashboard = () => {
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
     useGetRentalOrdersQuery();
   const [filter, setFilter] = useState<string>('3');
+  const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
   const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<ChartType>('incoming_pending');
-  const detailsData = getDetailsData(orders, graphFilter, filter);
+  const detailsData = getDetailsData(orders, graphFilter, filter, filterDates);
   const filterOptions = [
-    { id: '1', value: 'daily' },
-    { id: '2', value: 'weekly' },
-    { id: '3', value: 'monthly' },
+    { id: '1', value: 'Today' },
+    { id: '2', value: 'Last 7 Days' },
+    { id: '3', value: 'Current Month' },
+    { id: '4', value: 'Custom' },
   ];
   const isPriceData = ['incoming_pending', 'repayment_pending'].includes(graphFilter);
 
@@ -387,6 +442,7 @@ const Dashboard = () => {
     balanceAmount: 0,
     repaymentAmount: 0,
     depositAmount: 0,
+    receivedAmount: 0,
     mcIn: 0,
     mcOut: 0,
   });
@@ -398,19 +454,22 @@ const Dashboard = () => {
   }, [isRentalOrdersQuerySuccess, rentalOrderData]);
 
   useEffect(() => {
-    const validGroupKeys = getValidGroupKeys(filter);
+    const validGroupKeys = getValidGroupKeys(filter, filterDates);
 
     const filteredOrders = orders.filter((order) => {
-      const orderGroupKey = groupKeyFormatter(order.in_date, filter);
+      const dateToGroupBy = order.in_date || addDaysToDate(order.out_date, order.rental_duration);
+      const orderGroupKey = groupKeyFormatter(dateToGroupBy, filter);
       return validGroupKeys.includes(orderGroupKey);
     });
 
     let balanceAmount = 0;
     let repaymentAmount = 0;
     let depositAmount = 0;
+    let receivedAmount = 0;
     let mcIn = 0;
     let mcOut = 0;
 
+    // Calculate balanceAmount and repaymentAmount from filtered orders
     filteredOrders.forEach((order) => {
       const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
 
@@ -429,7 +488,6 @@ const Dashboard = () => {
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
-          depositAmount += depositSum;
           if (pendingAmount > 0) {
             balanceAmount += pendingAmount;
           }
@@ -438,11 +496,30 @@ const Dashboard = () => {
           }
         }
       } else {
-        depositAmount += depositSum;
+        if (order.status === PaymentStatus.CANCELLED || order.status === PaymentStatus.NO_BILL)
+          return; // skip cancelled orders
         if (pendingAmount > 0) balanceAmount += pendingAmount; // total billed regardless of status
         if (pendingAmount < 0) repaymentAmount += Math.abs(pendingAmount);
       }
+    });
 
+    // Calculate depositAmount and receivedAmount based on deposit dates and balance paid dates within filter
+    orders.forEach((order) => {
+      order.deposits.forEach((dep) => {
+        const depKey = groupKeyFormatter(dep.date, filter);
+        if (validGroupKeys.includes(depKey)) {
+          depositAmount += dep.amount;
+          receivedAmount += dep.amount;
+        }
+      });
+      const balKey = groupKeyFormatter(order.balance_paid_date, filter);
+      if (validGroupKeys.includes(balKey)) {
+        receivedAmount += order.balance_paid;
+      }
+    });
+
+    // Calculate mcIn and mcOut from all orders based on product dates within filter
+    orders.forEach((order) => {
       order.product_details.forEach((product) => {
         if (product.in_date) {
           const productGroupKey = groupKeyFormatter(product.in_date, filter);
@@ -463,22 +540,51 @@ const Dashboard = () => {
       balanceAmount,
       repaymentAmount,
       depositAmount,
+      receivedAmount,
       mcIn,
       mcOut,
     });
-  }, [filter, orders, showPendingAmountsOnly]);
+  }, [filter, filterDates, orders, showPendingAmountsOnly]);
 
   useEffect(() => {
-    const pendingData = getChartData(orders, filter, graphFilter);
+    const pendingData = getChartData(
+      orders,
+      filter,
+      filterDates,
+      graphFilter,
+      showPendingAmountsOnly
+    );
     setChartData(pendingData);
-  }, [filter, graphFilter, orders]);
+  }, [filter, filterDates, graphFilter, orders, showPendingAmountsOnly]);
 
   return (
     <div className="h-auto w-full overflow-y-auto">
       {/* Header */}
-      <div className="w-full flex justify-between mb-3">
+      <div className="w-full flex justify-between items-start mb-3">
         <p className="text-primary font-bold">Overview</p>
         <div className="flex gap-4">
+          {filter === '4' && (
+            <>
+              <CustomDatePicker
+                label={'Start Date'}
+                value={filterDates ? filterDates.start : ''}
+                onChange={(startDate) => {
+                  setFilterDates({ start: startDate, end: filterDates ? filterDates.end : '' });
+                }}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+              <CustomDatePicker
+                label={'End Date'}
+                value={filterDates ? filterDates.end : ''}
+                onChange={(endDate) => {
+                  setFilterDates({ start: filterDates ? filterDates.start : '', end: endDate });
+                }}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+            </>
+          )}
           <CustomSelect
             label=""
             onChange={(val) => setFilter(val)}
@@ -514,6 +620,11 @@ const Dashboard = () => {
             title="Deposited Amount"
             className="grow"
             value={`₹${totalInfo.depositAmount.toFixed(2)}`}
+          />
+          <CustomCard
+            title="Received Amount"
+            className="grow"
+            value={`₹${totalInfo.receivedAmount.toFixed(2)}`}
           />
           <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
           <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />
@@ -597,28 +708,32 @@ const Dashboard = () => {
                   {detailsData.pending.length === 0 && (
                     <li className="text-gray-400 italic">No pending</li>
                   )}
-                  {detailsData.pending.map((record, index) => (
-                    <li key={'pending-' + index} className="flex justify-between text-sm">
-                      <span>{record.name}</span>
-                      <span>{`₹${record.amount.toFixed(2)}`}</span>
-                    </li>
-                  ))}
+                  {detailsData.pending.map(
+                    (record: { name: string; amount: number }, index: number) => (
+                      <li key={'pending-' + index} className="flex justify-between text-sm">
+                        <span>{record.name}</span>
+                        <span>{`₹${record.amount.toFixed(2)}`}</span>
+                      </li>
+                    )
+                  )}
 
                   <h3 className="font-bold mt-4">Paid</h3>
                   {detailsData.paid.length === 0 && (
                     <li className="text-gray-400 italic">No paid</li>
                   )}
-                  {detailsData.paid.map((record, index) => (
-                    <li key={'paid-' + index} className="flex justify-between text-sm">
-                      <span>{record.name}</span>
-                      <span>{`₹${record.amount.toFixed(2)}`}</span>
-                    </li>
-                  ))}
+                  {detailsData.paid.map(
+                    (record: { name: string; amount: number }, index: number) => (
+                      <li key={'paid-' + index} className="flex justify-between text-sm">
+                        <span>{record.name}</span>
+                        <span>{`₹${record.amount.toFixed(2)}`}</span>
+                      </li>
+                    )
+                  )}
                 </>
               ) : (
                 <>
                   <li key={'table-header'} className="flex justify-between text-sm">
-                    <span>Product</span>
+                    <span>Product (or) Status</span>
                     <span>Nos</span>
                   </li>
                   {Array.isArray(detailsData) && detailsData.length === 0 && (

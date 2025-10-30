@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'tailwindcss';
 
 @theme {
   --color-primary: #002f53;
@@ -13,16 +13,16 @@
 }
 
 body {
-  font-family: "Roboto";
+  font-family: 'Roboto';
 }
 
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-input[type="number"] {
+input[type='number'] {
   -moz-appearance: textfield;
 }
 
@@ -36,7 +36,7 @@ input[type="number"] {
 }
 
 .menu-active::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 0;

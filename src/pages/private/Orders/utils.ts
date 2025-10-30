@@ -179,7 +179,6 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
 
 export const getDefaultDeposit = (products: IdNamePair[]) => {
   return {
-    _id: '',
     amount: 0,
     date: utcString(),
     mode: PaymentMode.CASH,
@@ -270,8 +269,6 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
   const ws = XLSX.utils.aoa_to_sheet([]);
 
   const data: Record<string, string | number>[] = [];
-  const merges: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }> = [];
-  let currentRow = 1; // data starts at row 1 (row 0 is header)
 
   let totalDeposit = 0;
   let totalBeforeTax = 0;
@@ -283,11 +280,6 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
     const products = order.product_details;
     const deposits = order.deposits;
     const maxRows = Math.max(products.length || 1, deposits.length || 1);
-
-    merges.push({
-      s: { r: currentRow, c: 0 },
-      e: { r: currentRow + maxRows - 1, c: 0 },
-    });
 
     for (let i = 0; i < maxRows; i++) {
       const balanceAmount = Math.max(
@@ -389,8 +381,6 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
         totalRepayment += repaymentAmount;
       }
     }
-
-    currentRow += maxRows;
   });
 
   // Add summary row with a blank line before it
@@ -408,7 +398,6 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
   });
 
   XLSX.utils.sheet_add_json(ws, data, { origin: 0 });
-  ws['!merges'] = merges;
 
   // Bold the entire summary row and add thick top and bottom borders
   const summaryRange = XLSX.utils.decode_range(ws['!ref'] || '');
@@ -426,15 +415,15 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
     };
   }
 
-  // Set center alignment for merged Order ID cells
-  merges.forEach((merge) => {
-    const cellRef = XLSX.utils.encode_cell(merge.s);
-    if (ws[cellRef]) {
-      ws[cellRef].s = {
-        alignment: { horizontal: 'center', vertical: 'center' },
-      };
-    }
-  });
+  // // Set center alignment for merged Order ID cells
+  // merges.forEach((merge) => {
+  //   const cellRef = XLSX.utils.encode_cell(merge.s);
+  //   if (ws[cellRef]) {
+  //     ws[cellRef].s = {
+  //       alignment: { horizontal: 'center', vertical: 'center' },
+  //     };
+  //   }
+  // });
 
   ws['!cols'] = [
     { wch: 20 },
@@ -594,6 +583,13 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
 
 export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
   const now = new Date();
+  if (order.status === PaymentStatus.CANCELLED) {
+    return OrderStatusType.CANCELLED;
+  }
+
+  if (order.status === PaymentStatus.NO_BILL) {
+    return OrderStatusType.NO_BILL;
+  }
 
   const totalAmount =
     calculateFinalAmount(order as RentalOrderType) -
@@ -648,6 +644,8 @@ export const getOrderStatusColors = (status: OrderStatusType): { bg: string; tex
     [OrderStatusType.REPAYMENT_PENDING]: { bg: '#FF0000', text: '#FFFFFF' },
     [OrderStatusType.PAID]: { bg: '#008000', text: '#FFFFFF' },
     [OrderStatusType.MACHINE_REPAIR]: { bg: '#000000', text: '#FFFFFF' },
+    [OrderStatusType.CANCELLED]: { bg: '#FF9900', text: '#FFFFFF' },
+    [OrderStatusType.NO_BILL]: { bg: '#FF00FF', text: '#FFFFFF' },
   };
 
   return statusColors[status] || { bg: '#FFFFFF', text: '#000000' };
@@ -723,18 +721,31 @@ export const getAvailableStockQuantity = (
   let newQuantity = 0;
   if (existingRentalOrder) {
     if (
+      existingRentalOrder.status !== PaymentStatus.NO_BILL &&
+      newOrderInfo.status === PaymentStatus.NO_BILL
+    ) {
+      if (product.type === ProductType.RENTAL && product.in_date) {
+        newQuantity = currentProductStock + oldStock;
+      } else if (product.type === ProductType.RENTAL && !product.in_date) {
+        newQuantity = currentProductStock + oldStock - product.order_quantity;
+      } else {
+        newQuantity = currentProductStock;
+      }
+    } else if (
       existingRentalOrder.status === PaymentStatus.PENDING &&
       newOrderInfo.status === PaymentStatus.PENDING
     ) {
       newQuantity = currentProductStock + oldStock - product.order_quantity;
     } else if (
       existingRentalOrder.status === PaymentStatus.PENDING &&
-      newOrderInfo.status === PaymentStatus.PAID &&
+      (newOrderInfo.status === PaymentStatus.PAID ||
+        newOrderInfo.status === PaymentStatus.CANCELLED) &&
       product.type === ProductType.RENTAL
     ) {
       newQuantity = currentProductStock + oldStock;
     } else if (
-      existingRentalOrder.status === PaymentStatus.PAID &&
+      (existingRentalOrder.status === PaymentStatus.PAID ||
+        existingRentalOrder.status === PaymentStatus.CANCELLED) &&
       newOrderInfo.status === PaymentStatus.PENDING
     ) {
       newQuantity = currentProductStock - product.order_quantity;

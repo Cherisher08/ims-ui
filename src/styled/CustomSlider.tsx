@@ -29,7 +29,7 @@ const CustomSlider = ({
   disabled = false,
   hideLabel = false,
 }: Props) => {
-  const handleSliderChange = (event: Event, newValue: number) => {
+  const handleSliderChange = (_event: Event, newValue: number) => {
     setValue(newValue);
   };
 

@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../../components/Loader';
-import SplitOrdermodal from '../../../components/SplitOrderModal';
+import SplitOrdermodal from '../../../components/SplitOrderModals';
 import { TOAST_IDS } from '../../../constants/constants';
 import {
   useGetProductsQuery,
@@ -73,6 +73,7 @@ import {
   transportOptions,
 } from '../Orders/utils';
 import DeliveryChallanDialog from './DeliveryChallanDialog';
+import EntryMenu from './EntryMenu';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -166,6 +167,7 @@ const NewOrder = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
+  const [venueOptions, setVenueOptions] = useState<CustomSelectOptionProps[]>([]);
   const [removedProducts, setRemovedProducts] = useState<ProductDetails[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
@@ -173,7 +175,6 @@ const NewOrder = () => {
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
-      _id: '',
       amount: 0,
       date: dayjs().format('YYYY-MM-DDTHH:mm'),
       product: null,
@@ -263,42 +264,52 @@ const NewOrder = () => {
         rentalOrders.filter((order) => order.customer && order.customer._id === customerId)
       );
 
-      const totalDepositAmount = customerOrders.reduce(
-        (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
-        0
-      );
+      const customerTotalBalanceAmount = customerOrders.reduce((total, order) => {
+        let orderBalance =
+          calculateFinalAmountOfOrder(order) -
+          order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) -
+          order.balance_paid;
+        if (order.status !== PaymentStatus.PENDING) {
+          if (order.status !== PaymentStatus.PAID) {
+            orderBalance = 0;
+          } else {
+            orderBalance = Math.max(0, orderBalance);
+          }
+        }
+        return total + orderBalance;
+      }, 0);
 
-      const totalReceivedAmount =
-        customerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
+      const hasPositiveAmount = customerTotalBalanceAmount > 0;
 
-      const totalCredit = totalDepositAmount + totalReceivedAmount;
+      const isError =
+        hasPositiveAmount || (customerId !== '' && orderInfo.customer?.address_proof === '');
+      let errorText = hasPositiveAmount
+        ? `Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`
+        : '';
 
-      const totalBillAmount = customerOrders.reduce(
-        (total, order) => total + calculateFinalAmountOfOrder(order),
-        0
-      );
-
-      const totalDebit = totalBillAmount;
-
-      const hasPositiveAmount = totalDebit - totalCredit > 0;
+      if (orderInfo.customer?.address_proof === '') {
+        errorText = errorText
+          ? errorText + ' | Address proof is missing for selected customer'
+          : 'Address proof is missing for this customer.';
+      }
 
       return {
         customerOrders,
-        error: hasPositiveAmount,
-        totalAmount: totalDebit - totalCredit,
+        error: isError,
+        errorText,
       };
     } else {
       return {
         customerOrders: [],
         error: true,
-        totalAmount: 0,
+        errorText: '',
       };
     }
   };
 
   // Usage in your CustomAutoComplete for Customer
   const selectedCustomerId = orderInfo.customer?._id || '';
-  const { error: customerHasPositiveAmount, totalAmount: customerTotalBalanceAmount } =
+  const { error: customerError, errorText: customerErrorText } =
     getCustomerOrdersAndError(selectedCustomerId);
 
   const removeOrderProduct = (id: string) => {
@@ -349,6 +360,14 @@ const NewOrder = () => {
         );
         newOrderInfo.order_id = orderId;
       }
+    }
+
+    if (newOrderInfo.status === PaymentStatus.CANCELLED) {
+      newOrderInfo.in_date = dayjs().format('YYYY-MM-DDTHH:mm');
+      newOrderInfo.product_details = newOrderInfo.product_details.map((product) => ({
+        ...product,
+        in_date: dayjs().format('YYYY-MM-DDTHH:mm'),
+      }));
     }
 
     if (rentalId) {
@@ -574,11 +593,18 @@ const NewOrder = () => {
       orderInfo.product_details.find((prod) => !prod.in_date && prod.type === ProductType.RENTAL) ||
       false;
     const finalAmount = calculateFinalAmount() - depositData.reduce((sum, d) => sum + d.amount, 0);
-    console.log('finalAmount: ', finalAmount);
     const hasProductOrTransportAmount =
       (orderInfo.product_details.length > 0 &&
         orderInfo.product_details.some((p) => p.order_quantity > 0)) ||
       orderInfo.eway_amount > 0;
+    if (
+      rentalId &&
+      isRentalOrdersQuerySuccess &&
+      (existingRentalOrder?.status === PaymentStatus.CANCELLED ||
+        existingRentalOrder?.status === PaymentStatus.NO_BILL)
+    ) {
+      return;
+    }
     if (
       orderInfo.in_date &&
       ((orderInfo.repay_date && finalAmount < 0) || finalAmount === 0) &&
@@ -596,6 +622,7 @@ const NewOrder = () => {
       }));
     }
   }, [
+    rentalId,
     orderInfo.balance_paid_date,
     depositData,
     orderInfo.eway_amount,
@@ -604,6 +631,8 @@ const NewOrder = () => {
     orderInfo.repay_date,
     orderInfo.deposits,
     calculateFinalAmount,
+    isRentalOrdersQuerySuccess,
+    existingRentalOrder?.status,
   ]);
 
   useEffect(() => {
@@ -636,6 +665,21 @@ const NewOrder = () => {
     setEventNameOptions(options);
   }, [orderInfo.event_name]);
 
+  useEffect(() => {
+    const options: CustomSelectOptionProps[] =
+      rentalOrders
+        ?.map((order) => ({ id: order.event_venue, value: order.event_venue }))
+        .filter(Boolean) || [];
+    const unique = options.filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i);
+    if (orderInfo.event_venue && !unique.find((val) => val.id === orderInfo.event_venue)) {
+      unique.push({
+        id: orderInfo.event_venue,
+        value: orderInfo.event_venue,
+      });
+    }
+    setVenueOptions(unique);
+  }, [rentalOrders, orderInfo.event_venue]);
+
   const addEventNameOption = (value: string) => {
     if (!value) return;
     const newOption = {
@@ -650,6 +694,15 @@ const NewOrder = () => {
       setEventNameOptions(options);
     }
     handleValueChange('event_name', value);
+  };
+
+  const addVenueOption = (value: string) => {
+    if (!value) return;
+    const newOption = { id: value, value };
+    if (!venueOptions.find((v) => v.id === value)) {
+      setVenueOptions((prev) => [...prev, newOption]);
+    }
+    handleValueChange('event_venue', value);
   };
 
   const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
@@ -770,6 +823,7 @@ const NewOrder = () => {
               label="Add Customer"
               icon={<LuPlus color="white" />}
             />
+            <EntryMenu rentalOrder={orderInfo} handleValueChange={handleValueChange} />
           </Box>
           {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
@@ -862,8 +916,8 @@ const NewOrder = () => {
               contacts.find((option) => option.name === name)
             );
           }}
-          error={customerHasPositiveAmount}
-          helperText={`Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`}
+          error={customerError}
+          helperText={customerErrorText}
           // labelNavigation={{
           //   label: 'View Past Bills',
           //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
@@ -956,13 +1010,14 @@ const NewOrder = () => {
 
         <div></div>
 
-        <CustomInput
+        <CustomAutoComplete
+          options={venueOptions}
+          addNewValue={(val) => addVenueOption(val)}
+          createOption={true}
           value={orderInfo?.event_venue ?? ''}
           onChange={(value) => handleValueChange('event_venue', value)}
           label="Event Venue"
           placeholder="Enter Event Venue"
-          multiline
-          minRows={5}
         />
         <CustomInput
           value={orderInfo?.event_address ?? ''}

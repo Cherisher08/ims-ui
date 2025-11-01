@@ -654,7 +654,7 @@ const Inventory = () => {
                 label="Type"
                 options={productTypes}
                 value={
-                  productTypes.find((productType) => newProductData.type === productType.id)?.id ??
+                  productTypes.find((productType) => updateData?.type === productType.id)?.id ??
                   productTypes[0].id
                 }
                 onChange={(value) => {

@@ -1,6 +1,7 @@
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
 import { RentalOrderInfo } from '../../../types/order';
+import Logo from '/New_Logo.png';
 
 Font.register({
   family: 'Tamil',
@@ -79,13 +80,24 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                 justifyContent: 'center',
               }}
             >
-              <Image src="/customer-logo.png" style={{ width: 70, height: 40 }} />
+              <Image src={Logo} style={{ width: 70, height: 40, objectFit: 'contain' }} />
               <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MANI POWER TOOLS</Text>
             </View>
             <Text style={{ fontSize: 9, fontWeight: 'bold' }}>
               Generator, Dewatering Pumps, Scaffolding and all Construction equipments for Rent
             </Text>
             <Text style={{ fontSize: 9, fontWeight: 'bold' }}>9042439153, 8428429153</Text>
+          </View>
+          <View
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 2,
+              borderBottom: '2px solid #000000',
+              paddingBottom: 2,
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: 'bold' }}>Delivery Challan</Text>
           </View>
           <View style={styles.content}>
             <View style={styles.row}>

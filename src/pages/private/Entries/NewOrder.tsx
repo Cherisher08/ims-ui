@@ -847,16 +847,22 @@ const NewOrder = () => {
           />
         )}
         <CustomAutoComplete
-          options={contacts.map((contact) => ({
-            id: contact.personal_number,
-            value: contact.personal_number,
-          }))}
+          options={contacts.flatMap((contact) => {
+            const options = [{ id: contact.personal_number, value: contact.personal_number }];
+            if (contact.office_number) {
+              options.push({ id: contact.office_number, value: contact.office_number });
+            }
+            return options;
+          })}
           addNewValue={() => {}}
           placeholder=""
           createOption={false}
           value={
-            contacts.find((cont) => cont?.personal_number === orderInfo?.customer?.personal_number)
-              ?.personal_number || ''
+            contacts.find(
+              (cont) =>
+                cont?.personal_number === orderInfo?.customer?.personal_number ||
+                cont?.office_number === orderInfo?.customer?.personal_number
+            )?.personal_number || ''
           }
           label="Customer Mobile"
           onChange={(value) => {

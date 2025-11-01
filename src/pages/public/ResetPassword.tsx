@@ -1,16 +1,13 @@
-import { useNavigate } from "react-router-dom";
-import NamedLogo from "/named-logo.png";
-import Logo from "../../assets/logo.svg";
-import { useEffect, useState } from "react";
-import { Button } from "@mui/material";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store/store";
-import {
-  useUpdateUserPasswordMutation,
-  useVerifyOtpMutation,
-} from "../../services/ApiService";
-import { toast } from "react-toastify";
-import { TOAST_IDS } from "../../constants/constants";
+import { useNavigate } from 'react-router-dom';
+import NamedLogo from '/named-logo.png';
+import Logo from '../../assets/New_Logo.svg';
+import { useEffect, useState } from 'react';
+import { Button } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { useUpdateUserPasswordMutation, useVerifyOtpMutation } from '../../services/ApiService';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../constants/constants';
 
 interface PasswordObject {
   password: string;
@@ -19,16 +16,15 @@ interface PasswordObject {
 
 const ResetPassword = () => {
   const email = useSelector((state: RootState) => state.user.email);
-  const name = "Mani";
+  const name = 'Mani';
   const navigate = useNavigate();
   const [otp, setOtp] = useState<string>();
   const [password, setPassword] = useState<PasswordObject>({
-    password: "",
-    confirmPassword: "",
+    password: '',
+    confirmPassword: '',
   });
   const [verified, setVerified] = useState<boolean>(false);
-  const [verifyOtp, { isSuccess: isOtpSuccess, isError: isOtpError }] =
-    useVerifyOtpMutation();
+  const [verifyOtp, { isSuccess: isOtpSuccess, isError: isOtpError }] = useVerifyOtpMutation();
   const [updateUserPassword, { isSuccess: isPasswordUpdateSuccess }] =
     useUpdateUserPasswordMutation();
 
@@ -47,26 +43,25 @@ const ResetPassword = () => {
     });
   };
 
-  const isValidPassword =
-    password.password && password.password === password.confirmPassword;
+  const isValidPassword = password.password && password.password === password.confirmPassword;
 
   useEffect(() => {
     if (isOtpSuccess) {
-      toast("Entered OTP is valid", {
+      toast('Entered OTP is valid', {
         toastId: TOAST_IDS.OTP_VALID,
       });
       setVerified(true);
     }
     if (isOtpError) {
-      toast("Entered OTP is invalid. Please try again", {
+      toast('Entered OTP is invalid. Please try again', {
         toastId: TOAST_IDS.OTP_INVALID,
       });
     }
     if (isPasswordUpdateSuccess) {
-      toast("Password Updated Successfully", {
+      toast('Password Updated Successfully', {
         toastId: TOAST_IDS.SUCCESS_PASSWORD_UPDATE,
       });
-      navigate("/");
+      navigate('/');
     }
   }, [isOtpError, isOtpSuccess, isPasswordUpdateSuccess, navigate]);
 
@@ -121,7 +116,7 @@ const ResetPassword = () => {
           <Button
             variant="contained"
             className={`${
-              !isValidPassword ? "bg-disabled" : "bg-secondary"
+              !isValidPassword ? 'bg-disabled' : 'bg-secondary'
             } w-full p-3 rounded-md content-center h-11 text-white`}
             onClick={handleSignIn}
             disabled={!isValidPassword}
@@ -135,9 +130,7 @@ const ResetPassword = () => {
             <img src={Logo} className="w-20 h-20" />
           </div>
           <div className="flex flex-col gap-2 -intro-x">
-            <h3 className="text-[#2B2F38] font-semibold text-2xl text-center">
-              Enter OTP
-            </h3>
+            <h3 className="text-[#2B2F38] font-semibold text-2xl text-center">Enter OTP</h3>
             <p className="text-[#667085] text-center">
               Enter the OTP received in the entered email
             </p>
@@ -156,7 +149,7 @@ const ResetPassword = () => {
           <Button
             variant="contained"
             className={`${
-              !(otp && email) ? "bg-disabled" : "bg-secondary"
+              !(otp && email) ? 'bg-disabled' : 'bg-secondary'
             } w-full p-3 h-11 rounded-md content-center bg-new text-white`}
             onClick={handleVerify}
             disabled={!(otp && email)}

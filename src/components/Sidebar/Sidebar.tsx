@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { useEffect } from 'react';
 import { LuChevronsLeft } from 'react-icons/lu';
-import Logo from '../../assets/logo.svg';
+import Logo from '../../assets/New_Logo.svg';
 import { MenuItems } from '../../constants/MenuItems';
 import { useMenu } from '../../contexts/MenuContext';
 import { useLocation, useNavigate } from 'react-router-dom';

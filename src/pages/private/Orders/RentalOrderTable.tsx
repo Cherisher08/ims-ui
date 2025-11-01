@@ -16,7 +16,7 @@ import { RiFileExcel2Line } from 'react-icons/ri';
 
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AddressCellEditor } from '../../../components/AgGridCellEditors/AddressCellEditor';
 import { AutocompleteCellEditor } from '../../../components/AgGridCellEditors/AutocompleteCellEditor';
@@ -51,19 +51,17 @@ import {
 type RentalOrderTableProps = {
   rentalOrders: RentalOrderType[];
   viewChallans: boolean;
-  setSelectedCustomerId: (id: string) => void;
 };
 
 const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   rentalOrders,
   viewChallans = false,
-  setSelectedCustomerId,
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const storedPage = useSelector((state: RootState) => state.rentalOrder.tablePage);
   const [patchRentalOrder] = usePatchRentalOrderMutation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  // const [searchParams, setSearchParams] = useSearchParams();
   // const customer = searchParams.get('customerId') || '';
   const { data: contactsQueryData, isSuccess: isGetContactsSuccess } = useGetContactsQuery();
 
@@ -129,10 +127,13 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     name: val,
   }));
 
-  const renderIcon = (params: { data: RentalOrderInfo }) => {
-    const challan = params.data?.whatsapp_notifications?.delivery_challan;
+  const renderIcon = (params: { data: RentalOrderInfo; type: 'delivery_challan' | 'invoice' }) => {
+    const bill =
+      params.data?.whatsapp_notifications?.[
+        params.type === 'delivery_challan' ? 'delivery_challan' : 'invoice'
+      ];
 
-    const sent = challan?.is_sent || false;
+    const sent = bill?.is_sent || false;
 
     return sent ? (
       <div className="flex h-full w-full justify-center items-center">
@@ -584,6 +585,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       flex: 1,
       minWidth: 100,
       cellRenderer: renderIcon,
+      cellRendererParams: { type: 'delivery_challan' },
       valueGetter: (params) => {
         return params.data?.whatsapp_notifications?.delivery_challan?.is_sent === true
           ? 'Yes'
@@ -598,7 +600,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       valueFormatter: (params) => {
         const data = params.data;
         const challan = data?.whatsapp_notifications?.delivery_challan;
-        if (challan) {
+        if (challan?.is_sent) {
           const date = new Date(challan.last_sent_date);
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         } else return '';
@@ -610,6 +612,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       flex: 1,
       minWidth: 100,
       cellRenderer: renderIcon,
+      cellRendererParams: { type: 'invoice' },
       valueGetter: (params) => {
         return params.data?.whatsapp_notifications?.invoice?.is_sent === true ? 'Yes' : 'No';
       },
@@ -622,7 +625,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       valueFormatter: (params) => {
         const data = params.data;
         const invoice = data?.whatsapp_notifications?.invoice;
-        if (invoice) {
+        if (invoice?.is_sent) {
           const date = new Date(invoice.last_sent_date);
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         } else return '';
@@ -694,7 +697,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const isPrintDisabled =
           rowData?.status === PaymentStatus.CANCELLED || rowData?.status === PaymentStatus.NO_BILL;
         return (
-          <div className="flex gap-2 h-[2rem] items-center">
+          <div className="flex gap-2 h-8 items-center">
             <FiEdit
               size={19}
               className="cursor-pointer"
@@ -907,7 +910,9 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       setCustomerList(
         contactsQueryData.map((contact) => ({
           _id: contact._id,
-          name: `${contact.name}-${contact.personal_number}`,
+          name: `${contact.name}-${contact.personal_number}${
+            contact.office_number ? `-${contact.office_number}` : ''
+          }`,
         }))
       );
     }
@@ -931,23 +936,23 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     });
   };
 
-  useEffect(() => {
-    if (!gridApiRef.current) return;
-    // if (customer && customerList.length > 0) {
-    //   const selectedCustomer = customerList.find((c) => c._id === customer)?.name;
-    //   if (!selectedCustomer) return;
-    //   gridApiRef.current.setFilterModel({
-    //     customer: {
-    //       type: 'contains',
-    //       filter: selectedCustomer,
-    //     },
-    //   });
-    //   setSelectedCustomerId(customer);
+  // useEffect(() => {
+  //   if (!gridApiRef.current) return;
+  //   // if (customer && customerList.length > 0) {
+  //   //   const selectedCustomer = customerList.find((c) => c._id === customer)?.name;
+  //   //   if (!selectedCustomer) return;
+  //   //   gridApiRef.current.setFilterModel({
+  //   //     customer: {
+  //   //       type: 'contains',
+  //   //       filter: selectedCustomer,
+  //   //     },
+  //   //   });
+  //   //   setSelectedCustomerId(customer);
 
-    //   searchParams.delete('customerId');
-    //   setSearchParams(searchParams, { replace: true });
-    // }
-  }, [customerList, searchParams, setSearchParams, setSelectedCustomerId]);
+  //   //   searchParams.delete('customerId');
+  //   //   setSearchParams(searchParams, { replace: true });
+  //   // }
+  // }, [customerList, searchParams, setSearchParams, setSelectedCustomerId]);
 
   return (
     <>

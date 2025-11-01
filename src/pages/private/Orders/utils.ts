@@ -334,10 +334,12 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
               ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
               : ''
             : '',
+        Month: i === 0 ? dayjs(order.out_date).format('MMMM') : '',
         'Rental Duration': i === 0 ? order.rental_duration?.toString() || '' : '',
         'Deposit Amount': i < deposits.length ? deposits[i].amount : '',
         'Deposit Mode': i < deposits.length ? deposits[i].mode.toString() : '',
         Products: i < products.length ? products[i].name : '',
+        'Product Type': i < products.length ? products[i].type.toString() : '',
         'Product Amounts':
           i < products.length
             ? products[i].rent_per_unit * products[i].order_quantity * products[i].duration
@@ -368,7 +370,6 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
         'Billing Mode': i === 0 ? order.billing_mode : '',
         Status: i === 0 ? getOrderStatus(order as RentalOrderInfo) : '',
         Remarks: i === 0 ? order.remarks : '',
-        Month: i === 0 ? dayjs(order.out_date).format('MMMM') : '',
       });
 
       // Accumulate totals
@@ -528,7 +529,9 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
       ...rentalOrder,
       customer: {
         _id: rentalOrder.customer._id,
-        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}`,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}${
+          rentalOrder.customer.office_number ? `-${rentalOrder.customer.office_number}` : ''
+        }`,
       },
     };
   });

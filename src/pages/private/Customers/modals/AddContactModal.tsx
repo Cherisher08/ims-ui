@@ -27,7 +27,10 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
   ] = useCreateContactMutation();
   const [addressProof, setAddressProof] = useState<File | null>(null);
   const { data: contacts } = useGetContactsQuery();
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ personal: string | null; office: string | null }>({
+    personal: null,
+    office: null,
+  });
 
   const handleAddContact = () => {
     const contactWithFile: ContactWithFile = {
@@ -107,16 +110,17 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
             <CustomInput
               type="number"
               label="Personal Number"
-              error={error !== null && newContactData.personal_number !== ''}
-              helperText={error || ''}
+              error={errors.personal !== null && newContactData.personal_number !== ''}
+              helperText={errors.personal || ''}
               value={newContactData?.personal_number ?? ''}
               onChange={(value) => {
-                const exists = contacts?.find((contact) => contact.personal_number === value);
-                if (!exists || value === '') {
-                  setError(null);
-                } else {
-                  setError('Contact already exists');
-                }
+                const exists = contacts?.find(
+                  (contact) => contact.personal_number === value || contact.office_number === value
+                );
+                setErrors((prev) => ({
+                  ...prev,
+                  personal: !exists || value === '' ? null : 'Contact already exists',
+                }));
                 handleContactChange('personal_number', value);
               }}
               placeholder="Enter Personal Number"
@@ -136,8 +140,19 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
             <CustomInput
               type="number"
               label="Office Number"
+              error={errors.office !== null && newContactData.office_number !== ''}
+              helperText={errors.office || ''}
               value={newContactData?.office_number ?? ''}
-              onChange={(value) => handleContactChange('office_number', value)}
+              onChange={(value) => {
+                const exists = contacts?.find(
+                  (contact) => contact.personal_number === value || contact.office_number === value
+                );
+                setErrors((prev) => ({
+                  ...prev,
+                  office: !exists || value === '' ? null : 'Contact already exists',
+                }));
+                handleContactChange('office_number', value);
+              }}
               placeholder="Enter Office Number"
             />
 
@@ -221,7 +236,10 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
           <CustomButton
             onClick={handleAddContact}
             disabled={
-              error !== null || newContactData.name === '' || newContactData.personal_number === ''
+              errors.personal !== null ||
+              errors.office !== null ||
+              newContactData.name === '' ||
+              newContactData.personal_number === ''
             }
             label="Add Contact"
           />

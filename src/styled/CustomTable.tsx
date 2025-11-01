@@ -18,6 +18,8 @@ import {
   RowApiModule,
 } from 'ag-grid-community';
 import {
+  CellSelectionModule,
+  ClipboardModule,
   ColumnMenuModule,
   ColumnsToolPanelModule,
   ContextMenuModule,
@@ -34,6 +36,8 @@ ModuleRegistry.registerModules([
   ColumnsToolPanelModule,
   MasterDetailModule,
   AllCommunityModule,
+  CellSelectionModule,
+  ClipboardModule
 ]);
 
 type CustomTableProps<T> = {
@@ -119,6 +123,7 @@ const CustomTable = <T,>({
         onFilterChanged={() => {
           onFilterChanged();
         }}
+        cellSelection={true}
       />
     </div>
   );

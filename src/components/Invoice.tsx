@@ -11,6 +11,8 @@ import {
 } from '../types/order';
 import paidStamp from '/paid-icon.png';
 
+import Logo from '/named-logo.png';
+
 Font.register({
   family: 'Inter',
   src: '/Inter_18pt-Regular.ttf',
@@ -200,6 +202,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     image: {
       width: 150,
       height: 90,
+      objectFit: 'contain',
     },
     ownerDetails: {
       flexDirection: 'column',
@@ -539,7 +542,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             </View>
           </View>
           <View style={styles.container}>
-            <Image src="/customer-logo.png" style={styles.image} />
+            <Image src={Logo} style={styles.image} />
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
               <Text style={styles.fieldValue}>
@@ -1141,28 +1144,26 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 )}
               </View>
             </View>
-            <View style={styles.signatureContainer}>
-              <View style={styles.signatureHeader}>
-                <Text style={{ fontSize: 12 }}>For</Text>
-                <Text
-                  style={{
-                    color: 'black',
-                    fontWeight: 'bold',
-                    fontSize: 12,
-                  }}
-                >
-                  MANI POWER TOOLS
-                </Text>
-              </View>
-              <View style={{ position: 'relative', width: 150, height: 50 }}>
-                <Image src="/sign.png" style={styles.signImage} />
-              </View>
-              <Text style={styles.signatureFooter}>Authorized Signatory</Text>
+            <View
+              style={{
+                width: '40%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 12, marginBottom: 2 }}>Bill Amount</Text>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                }}
+              >
+                Rs. {Math.abs(calcTotal()).toFixed(2)}
+              </Text>
             </View>
           </View>
         </View>
-        {/* </View> */}
-        {/* </View> */}
         <View
           wrap={false}
           style={{
@@ -1264,6 +1265,24 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   <Text>{data.remarks}</Text>
                 </View>
               )}
+              <View style={styles.signatureContainer}>
+                <View style={styles.signatureHeader}>
+                  <Text style={{ fontSize: 12 }}>For</Text>
+                  <Text
+                    style={{
+                      color: 'black',
+                      fontWeight: 'bold',
+                      fontSize: 12,
+                    }}
+                  >
+                    MANI POWER TOOLS
+                  </Text>
+                </View>
+                <View style={{ position: 'relative', width: 150, height: 30 }}>
+                  <Image src="/sign.png" style={styles.signImage} />
+                </View>
+                <Text style={styles.signatureFooter}>Authorized Signatory</Text>
+              </View>
             </View>
           </View>
           <View

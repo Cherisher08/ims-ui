@@ -28,7 +28,7 @@ import { toast } from 'react-toastify';
 import { TOAST_IDS } from '../../constants/constants';
 import { useLazyGetExpiredRentalOrdersQuery } from '../../services/OrderService';
 import { setExpiredRentalOrders } from '../../store/OrdersSlice';
-import Logo from '../../assets/logo.svg';
+import Logo from '../../assets/New_Logo.svg';
 import { MenuItems } from '../../constants/MenuItems';
 import { useMenu } from '../../contexts/MenuContext';
 

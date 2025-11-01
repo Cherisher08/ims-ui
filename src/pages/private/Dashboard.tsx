@@ -3,14 +3,14 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useEffect, useState } from 'react';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
-import { calculateDiscountAmount, calculateProductRent } from '../../services/utility_functions';
+import { calculateDiscountAmount } from '../../services/utility_functions';
 import CustomCard from '../../styled/CustomCard';
 import CustomLineChart from '../../styled/CustomLineChart';
 import CustomSelect from '../../styled/CustomSelect';
 import AntSwitch from '../../styled/CustomSwitch';
 import { DiscountType, OrderStatusType, ProductType } from '../../types/common';
-import { BillingMode, OrderInfoType, PaymentStatus, RentalOrderInfo } from '../../types/order';
-import { getOrderStatus } from './Orders/utils';
+import { BillingMode, PaymentStatus, RentalOrderInfo, RentalOrderType } from '../../types/order';
+import { getOrderStatus, calculateFinalAmount } from './Orders/utils';
 import CustomPieChart from '../../styled/CustomPieChart';
 import CustomDatePicker from '../../styled/CustomDatePicker';
 
@@ -57,17 +57,6 @@ type DateFilter = { start: string; end: string } | null;
 //       return 1;
 //   }
 // };
-
-const calcFinalAmount = (order: OrderInfoType): number => {
-  if (order.type === ProductType.RENTAL && order.product_details.length > 0) {
-    const total = order.product_details.reduce((sum, prod) => {
-      return sum + calculateProductRent(prod);
-    }, 0);
-
-    return parseFloat(total.toFixed(2));
-  }
-  return 0;
-};
 
 const groupKeyFormatter = (dateStr: string, filter: string) => {
   const date = dayjs(dateStr);
@@ -143,7 +132,7 @@ const getChartData = (
         const groupKey = groupKeyFormatter(dateToGroupBy, filter);
         if (!validGroupKeys.includes(groupKey)) break;
         const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
-        const finalAmount = calcFinalAmount(order);
+        const finalAmount = calculateFinalAmount(order as RentalOrderType, false);
         const roundOff = order.round_off || 0;
         const discountAmount =
           order.discount_type === DiscountType.PERCENT
@@ -174,7 +163,7 @@ const getChartData = (
         const groupKey = groupKeyFormatter(dateToGroupBy, filter);
         if (!validGroupKeys.includes(groupKey)) break;
         const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
-        const finalAmount = calcFinalAmount(order);
+        const finalAmount = calculateFinalAmount(order as RentalOrderType, false);
         const roundOff = order.round_off || 0;
         const discountAmount =
           order.discount_type === DiscountType.PERCENT
@@ -197,7 +186,7 @@ const getChartData = (
 
       case 'machines_in': {
         order.product_details.forEach((p) => {
-          if (p.in_date) {
+          if (p.in_date && p.type === ProductType.RENTAL) {
             const productGroupKey = groupKeyFormatter(p.in_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
               groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
@@ -209,7 +198,7 @@ const getChartData = (
 
       case 'machines_out': {
         order.product_details.forEach((p) => {
-          if (p.out_date) {
+          if (p.out_date && p.type === ProductType.RENTAL) {
             const productGroupKey = groupKeyFormatter(p.out_date, filter);
             if (validGroupKeys.includes(productGroupKey)) {
               groups[productGroupKey] = (groups[productGroupKey] || 0) + p.order_quantity;
@@ -234,7 +223,7 @@ const getChartData = (
 
       case 'machines_overdue': {
         order.product_details.forEach((p) => {
-          if (p.out_date && !p.in_date) {
+          if (p.out_date && !p.in_date && p.type === ProductType.RENTAL) {
             const expectedInDate = addDaysToDate(p.out_date, order.rental_duration);
             if (dayjs(expectedInDate).isBefore(dayjs())) {
               const productGroupKey = groupKeyFormatter(expectedInDate, filter);
@@ -297,7 +286,7 @@ const getDetailsData = (
       // ignore if this group is outside the current date range
       if (!validGroupKeys.includes(groupKey)) return;
       const depositTotal = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
-      const finalAmount = calcFinalAmount(order);
+      const finalAmount = calculateFinalAmount(order as RentalOrderType, false);
       const roundOff = order.round_off || 0;
       const discountAmount =
         order.discount_type === DiscountType.PERCENT
@@ -351,7 +340,7 @@ const getDetailsData = (
       case 'machines_in': {
         order.product_details.forEach((p) => {
           const productGroupKey = groupKeyFormatter(p.in_date, filter);
-          if (validGroupKeys.includes(productGroupKey)) {
+          if (validGroupKeys.includes(productGroupKey) && p.type === ProductType.RENTAL) {
             data.push({
               name: p.name,
               amount: p.order_quantity,
@@ -363,7 +352,7 @@ const getDetailsData = (
       case 'machines_out': {
         order.product_details.forEach((p) => {
           const productGroupKey = groupKeyFormatter(p.out_date, filter);
-          if (validGroupKeys.includes(productGroupKey)) {
+          if (validGroupKeys.includes(productGroupKey) && p.type === ProductType.RENTAL) {
             data.push({
               name: p.name,
               amount: p.order_quantity,
@@ -389,7 +378,7 @@ const getDetailsData = (
         order.product_details.forEach((p) => {
           if (p.out_date && !p.in_date) {
             const expectedInDate = addDaysToDate(p.out_date, order.rental_duration);
-            if (dayjs(expectedInDate).isBefore(dayjs())) {
+            if (dayjs(expectedInDate).isBefore(dayjs()) && p.type === ProductType.RENTAL) {
               data.push({
                 name: p.name,
                 amount: p.order_quantity,
@@ -442,7 +431,7 @@ const Dashboard = () => {
     balanceAmount: 0,
     repaymentAmount: 0,
     depositAmount: 0,
-    receivedAmount: 0,
+    billAmount: 0,
     mcIn: 0,
     mcOut: 0,
   });
@@ -465,7 +454,7 @@ const Dashboard = () => {
     let balanceAmount = 0;
     let repaymentAmount = 0;
     let depositAmount = 0;
-    let receivedAmount = 0;
+    let billAmount = 0;
     let mcIn = 0;
     let mcOut = 0;
 
@@ -473,7 +462,7 @@ const Dashboard = () => {
     filteredOrders.forEach((order) => {
       const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
 
-      const finalAmount = calcFinalAmount(order);
+      const finalAmount = calculateFinalAmount(order as RentalOrderType, false);
       const roundOff = order.round_off || 0;
       const discountAmount =
         order.discount_type === DiscountType.PERCENT
@@ -503,33 +492,32 @@ const Dashboard = () => {
       }
     });
 
-    // Calculate depositAmount and receivedAmount based on deposit dates and balance paid dates within filter
     orders.forEach((order) => {
       order.deposits.forEach((dep) => {
         const depKey = groupKeyFormatter(dep.date, filter);
         if (validGroupKeys.includes(depKey)) {
           depositAmount += dep.amount;
-          receivedAmount += dep.amount;
         }
       });
-      const balKey = groupKeyFormatter(order.balance_paid_date, filter);
-      if (validGroupKeys.includes(balKey)) {
-        receivedAmount += order.balance_paid;
-      }
     });
+
+    // Calculate billAmount (sum of final amounts for filtered orders)
+    billAmount = filteredOrders.reduce((sum, o) => {
+      return sum + calculateFinalAmount(o as RentalOrderType, false);
+    }, 0);
 
     // Calculate mcIn and mcOut from all orders based on product dates within filter
     orders.forEach((order) => {
       order.product_details.forEach((product) => {
         if (product.in_date) {
           const productGroupKey = groupKeyFormatter(product.in_date, filter);
-          if (validGroupKeys.includes(productGroupKey)) {
+          if (validGroupKeys.includes(productGroupKey) && product.type === ProductType.RENTAL) {
             mcIn += product.order_quantity;
           }
         }
         if (product.out_date) {
           const productGroupKey = groupKeyFormatter(product.out_date, filter);
-          if (validGroupKeys.includes(productGroupKey)) {
+          if (validGroupKeys.includes(productGroupKey) && product.type === ProductType.RENTAL) {
             mcOut += product.order_quantity;
           }
         }
@@ -540,7 +528,7 @@ const Dashboard = () => {
       balanceAmount,
       repaymentAmount,
       depositAmount,
-      receivedAmount,
+      billAmount,
       mcIn,
       mcOut,
     });
@@ -622,9 +610,9 @@ const Dashboard = () => {
             value={`₹${totalInfo.depositAmount.toFixed(2)}`}
           />
           <CustomCard
-            title="Received Amount"
+            title="Bill Amount"
             className="grow"
-            value={`₹${totalInfo.receivedAmount.toFixed(2)}`}
+            value={`₹${totalInfo.billAmount.toFixed(2)}`}
           />
           <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
           <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import NamedLogo from '/named-logo.png';
-import Logo from '../../assets/New_Logo.svg';
+import Logo from '/New_Logo.png';
 import { Button } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useResetPasswordMutation } from '../../services/ApiService';

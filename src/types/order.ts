@@ -110,6 +110,7 @@ export type OrderInfo = {
   payment_mode: RepaymentMode;
   gst: number;
   invoice_id: string;
+  invoice_date: string;
 };
 
 export type DocumentNotification = {

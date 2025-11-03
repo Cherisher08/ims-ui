@@ -201,7 +201,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
     image: {
       width: 150,
-      height: 90,
+      // height: 120,
       objectFit: 'contain',
     },
     ownerDetails: {

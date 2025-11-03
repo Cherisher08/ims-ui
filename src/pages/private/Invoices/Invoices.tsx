@@ -70,8 +70,8 @@ const Invoices: FC = () => {
       filter: 'agTextColumnFilter',
     },
     {
-      field: 'in_date',
-      headerName: 'Bill Date',
+      field: 'invoice_date',
+      headerName: 'Invoice Date',
       minWidth: 180,
       filter: 'agDateColumnFilter',
       valueFormatter: (params) => {

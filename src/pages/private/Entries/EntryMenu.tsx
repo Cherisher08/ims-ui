@@ -1,18 +1,19 @@
-import { FC, useRef, useState } from 'react';
-import CustomMenu from '../../../styled/CustomMenu';
-import { IoMdMore } from 'react-icons/io';
-import CustomButton from '../../../styled/CustomButton';
 import ClearIcon from '@mui/icons-material/Clear';
 import DoNotDisturbIcon from '@mui/icons-material/DoNotDisturb';
+import { FC, useRef, useState } from 'react';
+import { IoMdMore } from 'react-icons/io';
+import CustomButton from '../../../styled/CustomButton';
+import CustomMenu from '../../../styled/CustomMenu';
 import { RentalOrderInfo } from '../../../types/order';
 
 interface EntryMenuProps {
   rentalOrder: RentalOrderInfo;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleValueChange: (field: string, value: any) => void;
+  setIsCancelled: (val: boolean) => void;
 }
 
-const EntryMenu: FC<EntryMenuProps> = ({ rentalOrder, handleValueChange }) => {
+const EntryMenu: FC<EntryMenuProps> = ({ rentalOrder, handleValueChange, setIsCancelled }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const isMenuItemsDisabled = rentalOrder._id ? false : true;
@@ -23,12 +24,12 @@ const EntryMenu: FC<EntryMenuProps> = ({ rentalOrder, handleValueChange }) => {
 
   const handleCancelEntry = () => {
     handleValueChange('status', 'cancelled');
+    setIsCancelled(true);
     handleMenu(false);
   };
 
   const handleNoEntry = () => {
     // Implement cancel entry logic here
-    console.log('Entry set as no bill');
     handleValueChange?.('status', 'no bill');
     handleMenu(false);
   };

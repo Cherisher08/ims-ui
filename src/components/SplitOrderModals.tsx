@@ -89,6 +89,7 @@ const initialRentalOrder: RentalOrderInfo = {
   event_name: '',
   event_venue: '',
   invoice_id: '',
+  invoice_date: '',
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
@@ -157,6 +158,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
     if (newOrderStatus === OrderStatusType.PAID) {
       newOrder.status = PaymentStatus.PAID;
       newOrder.invoice_id = newInvoiceId;
+      newOrder.invoice_date = new Date().toISOString();
       for (const product of newOrder.product_details) {
         const currentProductDetail = await triggerGetProduct(product._id).unwrap();
         const newQuantity = currentProductDetail.available_stock + product.order_quantity;

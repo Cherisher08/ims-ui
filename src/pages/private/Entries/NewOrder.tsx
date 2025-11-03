@@ -129,6 +129,7 @@ const initialRentalOrder: RentalOrderInfo = {
   event_name: '',
   event_venue: '',
   invoice_id: '',
+  invoice_date: '',
 };
 
 const NewOrder = () => {
@@ -165,6 +166,7 @@ const NewOrder = () => {
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalOrder);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isCancelled, setIsCancelled] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
   const [venueOptions, setVenueOptions] = useState<CustomSelectOptionProps[]>([]);
@@ -181,6 +183,18 @@ const NewOrder = () => {
       mode: PaymentMode.CASH,
     },
   ]);
+
+  useEffect(() => {
+    if (isCancelled) {
+      setOrderInfo((prev) => ({
+        ...prev,
+        product_details: prev.product_details.map((product) => ({
+          ...product,
+          in_date: dayjs().format('YYYY-MM-DDTHH:mm'),
+        })),
+      }));
+    }
+  }, [isCancelled]);
 
   const [errors, setErrors] = useState<ErrorType>({
     expectedDate: false,
@@ -350,9 +364,9 @@ const NewOrder = () => {
     }
 
     if (newOrderInfo.status === PaymentStatus.PAID) {
-      console.log(rentalOrders);
       const newInvoiceId = getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
       newOrderInfo.invoice_id = newInvoiceId;
+      newOrderInfo.invoice_date = new Date().toISOString();
       if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
         const orderId = getSplitOrderId(
           newOrderInfo.order_id,
@@ -362,13 +376,13 @@ const NewOrder = () => {
       }
     }
 
-    if (newOrderInfo.status === PaymentStatus.CANCELLED) {
-      newOrderInfo.in_date = dayjs().format('YYYY-MM-DDTHH:mm');
-      newOrderInfo.product_details = newOrderInfo.product_details.map((product) => ({
-        ...product,
-        in_date: dayjs().format('YYYY-MM-DDTHH:mm'),
-      }));
-    }
+    // if (newOrderInfo.status === PaymentStatus.CANCELLED) {
+    //   newOrderInfo.in_date = dayjs().format('YYYY-MM-DDTHH:mm');
+    //   newOrderInfo.product_details = newOrderInfo.product_details.map((product) => ({
+    //     ...product,
+    //     in_date: dayjs().format('YYYY-MM-DDTHH:mm'),
+    //   }));
+    // }
 
     if (rentalId) {
       try {
@@ -728,6 +742,37 @@ const NewOrder = () => {
     return <Loader />;
   }
 
+  const getCurrentOrderStatus = () => {
+    const now = new Date();
+    const isMachineWorking = orderInfo.product_details.some((p) => {
+      if (p.type !== ProductType.RENTAL || !p.out_date) return false;
+
+      const outDate = new Date(p.out_date);
+      const expectedReturn = new Date(outDate);
+      expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
+
+      if (p.in_date) return now <= new Date(p.in_date);
+      return now <= expectedReturn;
+    });
+    const newStatus =
+      isMachineWorking &&
+      (orderStatus === OrderStatusType.NO_BILL || orderStatus === OrderStatusType.CANCELLED)
+        ? `${orderStatus} & Machine Not Returned`
+        : orderStatus;
+
+    return (
+      <p
+        className="font-semibold text-center text-xl p-2"
+        style={{
+          backgroundColor: getOrderStatusColors(orderStatus).bg,
+          color: getOrderStatusColors(orderStatus).text,
+        }}
+      >
+        Order Status - {newStatus}
+      </p>
+    );
+  };
+
   return (
     <div className="w-full flex flex-col ">
       {/* === Top Tabs and Add Button === */}
@@ -794,7 +839,11 @@ const NewOrder = () => {
               label="Add Customer"
               icon={<LuPlus color="white" />}
             />
-            <EntryMenu rentalOrder={orderInfo} handleValueChange={handleValueChange} />
+            <EntryMenu
+              rentalOrder={orderInfo}
+              handleValueChange={handleValueChange}
+              setIsCancelled={(val) => setIsCancelled(val)}
+            />
           </Box>
           {/* <p className="text-sm text-primary whitespace-nowrap mt-3">
             <InfoOutlinedIcon fontSize="small" className="text-blue-800" /> Add at least one product
@@ -802,19 +851,7 @@ const NewOrder = () => {
           </p> */}
           {/* </div> */}
         </div>
-        <div className="w-full mb-2">
-          {orderInfo._id && (
-            <p
-              className="font-semibold text-center text-xl p-2"
-              style={{
-                backgroundColor: getOrderStatusColors(orderStatus).bg,
-                color: getOrderStatusColors(orderStatus).text,
-              }}
-            >
-              Order Status - {orderStatus}
-            </p>
-          )}
-        </div>
+        <div className="w-full mb-2">{orderInfo._id && getCurrentOrderStatus()}</div>
       </Box>
 
       <div className="flex justify-between">

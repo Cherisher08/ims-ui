@@ -28,7 +28,7 @@ import { usePatchRentalOrderMutation } from '../../../services/OrderService';
 import { setRentalOrderTablePage } from '../../../store/OrdersSlice';
 import { RootState } from '../../../store/store';
 import CustomTable from '../../../styled/CustomTable';
-import { EventNameType, PatchOperation, ProductType } from '../../../types/common';
+import { EventNameType, OrderStatusType, PatchOperation, ProductType } from '../../../types/common';
 import {
   DepositType,
   PaymentStatus,
@@ -635,7 +635,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       field: 'status',
       headerName: 'Order Status',
       headerClass: 'ag-header-wrap',
-      maxWidth: 170,
+      maxWidth: 250,
       filter: 'agTextColumnFilter',
       pinned: 'right',
       // editable: true,
@@ -644,6 +644,22 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       cellRenderer: (params: ICellRendererParams) => {
         const data = params.data;
         const status = getOrderStatus(data);
+        const now = new Date();
+        const isMachineWorking = data.product_details.some((p: ProductDetails) => {
+          if (p.type !== ProductType.RENTAL || !p.out_date) return false;
+
+          const outDate = new Date(p.out_date);
+          const expectedReturn = new Date(outDate);
+          expectedReturn.setDate(outDate.getDate() + (p.duration || 0));
+
+          if (p.in_date) return now <= new Date(p.in_date);
+          return now <= expectedReturn;
+        });
+
+        const newStatus =
+          isMachineWorking && status === (OrderStatusType.NO_BILL || OrderStatusType.CANCELLED)
+            ? status + ' & Machine Not Returned'
+            : status;
         const statusColor = getOrderStatusColors(status);
         return (
           <p
@@ -651,11 +667,13 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
               width: '100%',
               height: '100%',
               textAlign: 'center',
+              textWrap: 'wrap',
+              fontSize: 13,
               backgroundColor: statusColor.bg,
               color: statusColor.text,
             }}
           >
-            {status}
+            {newStatus}
           </p>
         );
       },
@@ -874,7 +892,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 
   const onRowDataUpdated = useCallback(() => {
     if (gridApiRef.current === null) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     gridApiRef?.current?.forEachNode((node: any) => {
       if (expandedRowIds.includes(node.data._id)) {
         node.setExpanded(true);
@@ -918,7 +935,6 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     }
   }, [contactsQueryData, isGetContactsSuccess]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onRowGroupOpened = (params: any) => {
     const rowId = params.node.data?._id;
     if (!rowId) return;

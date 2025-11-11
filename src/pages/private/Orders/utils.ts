@@ -201,24 +201,23 @@ export const getDuration = (
   switch (billing_unit) {
     case BillingUnit.SHIFT: {
       const hoursDiff = end.diff(start, 'hour');
-      duration = Math.ceil(hoursDiff / 8) || 1;
+      duration = Math.ceil(hoursDiff / 8) || 0;
       break;
     }
     case BillingUnit.DAYS:
-      duration = end.diff(start, 'day') || 1;
+      duration = end.diff(start, 'day') || 0;
       break;
     case BillingUnit.WEEKS:
-      duration = end.diff(start, 'week') || 1;
+      duration = end.diff(start, 'week') || 0;
       break;
     case BillingUnit.MONTHS:
-      duration = end.diff(start, 'month') || 1;
+      duration = end.diff(start, 'month') || 0;
       break;
     default:
       duration = 1;
   }
 
-  console.log('duration', duration);
-  return duration;
+  return duration + 1;
 };
 
 export const getDefaultProduct = (out_date: string, in_date?: string) => {

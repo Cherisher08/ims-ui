@@ -1198,12 +1198,10 @@ const NewOrder = () => {
                               billingUnitOptions.find((ut) => ut.id === unit)?.value ??
                               BillingUnit.DAYS;
                             const newProducts = [...orderInfo.product_details];
-                            const duration = calculateProductRent(
-                              {
-                                ...newProducts[index],
-                                billing_unit: currentUnit,
-                              },
-                              true
+                            const duration = getDuration(
+                              product.out_date,
+                              product.in_date,
+                              currentUnit
                             );
                             newProducts[index] = {
                               ...product,

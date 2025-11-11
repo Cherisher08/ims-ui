@@ -5,12 +5,8 @@ export const calculateDiscountAmount = (discountPercent: number, finalAmount: nu
   return +((discountPercent / 100.0) * finalAmount).toFixed(2);
 };
 
-export const calculateProductRent = (
-  product: ProductDetails,
-  isReturnDuration: boolean = false
-): number => {
+export const calculateProductRent = (product: ProductDetails): number => {
   const {
-    in_date,
     out_date,
     duration: expected_duration,
     billing_unit,
@@ -19,18 +15,16 @@ export const calculateProductRent = (
     order_repair_count,
   } = product;
   if (!out_date) return 0;
-  let end_date = in_date;
+  let end_date = '';
 
-  if (!end_date) {
-    if (billing_unit === BillingUnit.SHIFT) {
-      end_date = dayjs(out_date)
-        .add(expected_duration * 8, 'hour')
-        .toISOString();
-    } else {
-      end_date = dayjs(out_date)
-        .add(expected_duration, billing_unit.toLowerCase() as dayjs.ManipulateType)
-        .toISOString();
-    }
+  if (billing_unit === BillingUnit.SHIFT) {
+    end_date = dayjs(out_date)
+      .add(expected_duration * 8, 'hour')
+      .toISOString();
+  } else {
+    end_date = dayjs(out_date)
+      .add(expected_duration, billing_unit.toLowerCase() as dayjs.ManipulateType)
+      .toISOString();
   }
 
   let duration = 0;
@@ -41,7 +35,6 @@ export const calculateProductRent = (
     case BillingUnit.SHIFT: {
       const hoursDiff = end.diff(start, 'hour');
       duration = Math.ceil(hoursDiff / 8) || 1;
-      console.log('duration: ', duration);
       break;
     }
     case BillingUnit.DAYS:
@@ -56,9 +49,7 @@ export const calculateProductRent = (
     default:
       duration = 1;
   }
-  console.log('duration: ', duration);
 
   const effectiveQuantity = order_quantity - order_repair_count;
-  if (isReturnDuration) return duration;
   return rent_per_unit * effectiveQuantity * duration;
 };

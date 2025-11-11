@@ -98,7 +98,11 @@ const CustomDetailRenderer = (
             }
           }
 
-          const duration = getDuration(currentProduct.out_date, currentProduct.in_date);
+          const duration = getDuration(
+            currentProduct.out_date,
+            currentProduct.in_date,
+            currentProduct.billing_unit
+          );
           patchPayload.push({
             op: 'replace',
             path: `/product_details/${rowIndex}/duration`,

@@ -89,7 +89,7 @@ const initialRentalOrder: RentalOrderInfo = {
   event_name: '',
   event_venue: '',
   invoice_id: '',
-  invoice_date: '',
+  invoice_date: null,
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
@@ -464,7 +464,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
                                       ? {
                                           ...p,
                                           out_date: val,
-                                          duration: getDuration(val, p.in_date),
+                                          duration: getDuration(val, p.in_date, p.billing_unit),
                                         }
                                       : p
                                   );
@@ -495,7 +495,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
                                         ...p,
                                         in_date: safeInDate,
                                         duration: safeInDate
-                                          ? getDuration(p.out_date, safeInDate)
+                                          ? getDuration(p.out_date, safeInDate, p.billing_unit)
                                           : 1,
                                       };
                                     }

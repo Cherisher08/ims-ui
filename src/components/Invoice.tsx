@@ -542,7 +542,20 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             </View>
           </View>
           <View style={styles.container}>
-            <Image src={Logo} style={styles.image} />
+            <View style={{ flexDirection: 'column', gap: 0 }}>
+              <Image src={Logo} style={styles.image} />
+              <Text
+                style={{
+                  fontSize: 8,
+                  fontWeight: 'bold',
+                  marginTop: 0,
+                  textAlign: 'center',
+                  maxWidth: '150px',
+                }}
+              >
+                Generator, Dewatering Pumps, Scaffolding and all Construction equipments for Rent
+              </Text>
+            </View>
             <View style={styles.tableField}>
               <Text style={styles.fieldTitle}>Delivery Place/Venue:</Text>
               <Text style={styles.fieldValue}>
@@ -806,9 +819,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 <Text style={[styles.productColumn, { width: 80 }]}>
                   {product.type && product.type === ProductType.SALES
                     ? '-'
-                    : calculateProductRent(product, true) +
-                      ' ' +
-                      (calculateProductRent(product, true) === 1 ? 'day' : 'days')}
+                    : calculateProductRent(product, true) + ' ' + product.billing_unit}
                 </Text>
                 <Text style={[styles.productColumn, { width: 60 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}

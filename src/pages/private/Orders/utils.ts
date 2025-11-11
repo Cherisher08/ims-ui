@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc';
 import { DiscountType, OrderStatusType, Product, ProductType } from '../../../types/common';
 import {
   BillingMode,
+  BillingUnit,
   OrderInfo,
   PaymentMode,
   PaymentStatus,
@@ -15,7 +16,6 @@ import {
 } from '../../../types/order';
 import { IdNamePair } from '../Stocks';
 
-// import * as XLSX from 'xlsx';
 import XLSX from 'xlsx-js-style';
 
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
@@ -174,7 +174,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     balance_paid_date: '',
     repay_date: '',
     invoice_id: '',
-    invoice_date: '',
+    invoice_date: null,
   };
 };
 
@@ -187,10 +187,37 @@ export const getDefaultDeposit = (products: IdNamePair[]) => {
   };
 };
 
-export const getDuration = (out_date: string, in_date: string) => {
-  const start = dayjs(out_date).startOf('day');
-  const end = dayjs(in_date).endOf('day');
-  const duration = end.diff(start, 'day') + 1;
+export const getDuration = (
+  out_date: string,
+  in_date: string,
+  billing_unit: BillingUnit = BillingUnit.DAYS
+) => {
+  let duration = 0;
+  if (!out_date || !in_date) return duration;
+
+  const start = dayjs(out_date).second(0).millisecond(0);
+  const end = dayjs(in_date).second(0).millisecond(0);
+
+  switch (billing_unit) {
+    case BillingUnit.SHIFT: {
+      const hoursDiff = end.diff(start, 'hour');
+      duration = Math.ceil(hoursDiff / 8) || 1;
+      break;
+    }
+    case BillingUnit.DAYS:
+      duration = end.diff(start, 'day') || 1;
+      break;
+    case BillingUnit.WEEKS:
+      duration = end.diff(start, 'week') || 1;
+      break;
+    case BillingUnit.MONTHS:
+      duration = end.diff(start, 'month') || 1;
+      break;
+    default:
+      duration = 1;
+  }
+
+  console.log('duration', duration);
   return duration;
 };
 
@@ -203,7 +230,7 @@ export const getDefaultProduct = (out_date: string, in_date?: string) => {
     name: '',
     type: ProductType.RENTAL,
     category: '',
-    // billing_unit: BillingUnit.DAYS,
+    billing_unit: BillingUnit.DAYS,
     product_unit: {
       _id: '',
       name: '',
@@ -246,6 +273,28 @@ export const calculateTotalAmount = (orderInfo: RentalOrderType) => {
     return parseFloat(total.toFixed(2));
   }
   return 0;
+};
+
+export const getRentalDuration = (outDate: string, inDate: string, unit: BillingUnit): number => {
+  const out = new Date(outDate);
+  const inn = new Date(inDate);
+  const diffMs = inn.getTime() - out.getTime();
+
+  switch (unit) {
+    case BillingUnit.SHIFT:
+      return 1;
+    case BillingUnit.DAYS:
+      return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+    case BillingUnit.WEEKS:
+      return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7)));
+    case BillingUnit.MONTHS:
+      return Math.max(
+        1,
+        (inn.getFullYear() - out.getFullYear()) * 12 + (inn.getMonth() - out.getMonth())
+      );
+    default:
+      return 1;
+  }
 };
 
 export const calculateFinalAmount = (
@@ -495,10 +544,10 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
   XLSX.writeFile(wb, `orders_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`);
 };
 
-// export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
-//   id: key,
-//   value,
-// }));
+export const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+  id: key,
+  value,
+}));
 
 export const paymentModeOptions = Object.entries(PaymentMode).map(([key, value]) => ({
   id: key,

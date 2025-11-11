@@ -1,5 +1,5 @@
 import { Modal } from '@mui/material';
-import { ProductDetails } from '../../../../types/order';
+import { BillingUnit, ProductDetails } from '../../../../types/order';
 import { MdClose } from 'react-icons/md';
 import CustomButton from '../../../../styled/CustomButton';
 import { useEffect, useState } from 'react';
@@ -17,16 +17,16 @@ type AddProductModalOpen = {
   addProductToOrder: (product: ProductDetails) => void;
 };
 
-// const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
-//   id: key,
-//   value,
-// }));
+const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+  id: key,
+  value,
+}));
 
 const initialProductState: ProductDetails = {
   _id: '',
   name: '',
   category: '',
-  // billing_unit: BillingUnit.DAYS,
+  billing_unit: BillingUnit.DAYS,
   product_unit: {
     _id: '',
     name: '',
@@ -73,9 +73,9 @@ const AddProductModal = ({
   };
 
   useEffect(() => {
-    const duration = getDuration(newProduct.out_date, newProduct.in_date);
+    const duration = getDuration(newProduct.out_date, newProduct.in_date, newProduct.billing_unit);
     handleValueChange('duration', duration);
-  }, [newProduct.in_date, newProduct.out_date]);
+  }, [newProduct.billing_unit, newProduct.in_date, newProduct.out_date]);
 
   return (
     <Modal
@@ -126,23 +126,21 @@ const AddProductModal = ({
               onChange={() => {}}
               placeholder={''}
             />
-            {/* <CustomSelect
+            <CustomSelect
               label="Billing Unit"
               className=""
               labelClass="w-[8rem]"
               options={billingUnitOptions}
               value={
-                billingUnitOptions.find(
-                  (val) => val.value === newProduct?.billing_unit
-                )?.id ?? ""
+                billingUnitOptions.find((val) => val.value === newProduct?.billing_unit)?.id ?? ''
               }
               onChange={(id) => {
                 handleValueChange(
-                  "billing_unit",
+                  'billing_unit',
                   billingUnitOptions.find((unit) => unit.id === id)?.value
                 );
               }}
-            /> */}
+            />
             <CustomInput
               label="Order Quantity"
               type="number"

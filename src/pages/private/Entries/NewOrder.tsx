@@ -43,7 +43,7 @@ import {
 import { ContactInfoType, initialContactType } from '../../../types/contact';
 import {
   BillingMode,
-  // BillingUnit,
+  BillingUnit,
   DepositType,
   OrderInfo,
   PaymentMode,
@@ -56,7 +56,7 @@ import {
 import AddContactModal from '../Customers/modals/AddContactModal';
 import {
   calculateTotalAmount as calculateFinalAmountOfOrder,
-  // billingUnitOptions,
+  billingUnitOptions,
   formatProducts,
   getAvailableStockQuantity,
   getDefaultDeposit,
@@ -129,7 +129,7 @@ const initialRentalOrder: RentalOrderInfo = {
   event_name: '',
   event_venue: '',
   invoice_id: '',
-  invoice_date: '',
+  invoice_date: null,
 };
 
 const NewOrder = () => {
@@ -1090,6 +1090,7 @@ const NewOrder = () => {
               <tr className="bg-gray-200">
                 <th className="px-1 py-1 text-left w-[15rem]">Product</th>
                 <th className="px-1 py-1 text-left w-[8rem]">Product Unit</th>
+                <th className="px-1 py-1 text-left w-[9rem]">Billing Unit</th>
                 <th className="px-1 py-1 text-left w-[9rem]">Available Stock</th>
                 <th className="px-1 py-1 text-left w-[6rem]">Order Quantity</th>
                 <th className="px-1 py-1 text-left w-[11rem]">Out Date</th>
@@ -1183,40 +1184,39 @@ const NewOrder = () => {
                           onChange={() => {}}
                         />
                       </td>
-                      {/* <td className="px-1 py-2 content-start">
-                      <CustomSelect
-                        label=""
-                        className="w-[8rem]"
-                        options={billingUnitOptions}
-                        value={
-                          billingUnitOptions.find(
-                            (unit) => product.billing_unit === unit.value
-                          )?.id || ""
-                        }
-                        onChange={(unit) => {
-                          const currentUnit =
-                            billingUnitOptions.find((ut) => ut.id === unit)
-                              ?.value ?? BillingUnit.DAYS;
-                          const newProducts = [...orderInfo.product_details];
-                          const duration = calculateProductRent(
-                            {
-                              ...newProducts[index],
+                      <td className="px-1 py-2 content-start">
+                        <CustomSelect
+                          label=""
+                          className="w-[8rem]"
+                          options={billingUnitOptions}
+                          value={
+                            billingUnitOptions.find((unit) => product.billing_unit === unit.value)
+                              ?.id || ''
+                          }
+                          onChange={(unit) => {
+                            const currentUnit =
+                              billingUnitOptions.find((ut) => ut.id === unit)?.value ??
+                              BillingUnit.DAYS;
+                            const newProducts = [...orderInfo.product_details];
+                            const duration = calculateProductRent(
+                              {
+                                ...newProducts[index],
+                                billing_unit: currentUnit,
+                              },
+                              true
+                            );
+                            newProducts[index] = {
+                              ...product,
                               billing_unit: currentUnit,
-                            },
-                            true
-                          );
-                          newProducts[index] = {
-                            ...product,
-                            billing_unit: currentUnit,
-                            duration: duration,
-                          };
-                          setOrderInfo({
-                            ...orderInfo,
-                            product_details: newProducts,
-                          });
-                        }}
-                      />
-                    </td> */}
+                              duration: duration,
+                            };
+                            setOrderInfo({
+                              ...orderInfo,
+                              product_details: newProducts,
+                            });
+                          }}
+                        />
+                      </td>
                       <td className="px-1 py-2 content-start">
                         <CustomInput
                           disabled
@@ -1286,7 +1286,11 @@ const NewOrder = () => {
                               !newProducts[index].in_date ||
                               dayjs(val).isBefore(dayjs(newProducts[index].in_date))
                             ) {
-                              const duration = getDuration(val, newProducts[index].in_date);
+                              const duration = getDuration(
+                                val,
+                                newProducts[index].in_date,
+                                newProducts[index].billing_unit
+                              );
                               newProducts[index] = {
                                 ...product,
                                 out_date: val,
@@ -1319,7 +1323,11 @@ const NewOrder = () => {
                             }
                             const newProducts = [...orderInfo.product_details];
                             const duration = val
-                              ? getDuration(newProducts[index].out_date, val)
+                              ? getDuration(
+                                  newProducts[index].out_date,
+                                  val,
+                                  newProducts[index].billing_unit
+                                )
                               : 1;
                             newProducts[index] = {
                               ...product,

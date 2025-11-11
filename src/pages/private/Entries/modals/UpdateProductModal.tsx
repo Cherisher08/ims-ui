@@ -1,5 +1,5 @@
 import { Modal } from '@mui/material';
-import { ProductDetails } from '../../../../types/order';
+import { BillingUnit, ProductDetails } from '../../../../types/order';
 import { MdClose } from 'react-icons/md';
 import CustomButton from '../../../../styled/CustomButton';
 import { Product } from '../../../../types/common';
@@ -18,10 +18,10 @@ type UpdateProductModalOpen = {
   updateProductToOrder: () => void;
 };
 
-// const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
-//   id: key,
-//   value,
-// }));
+const billingUnitOptions = Object.entries(BillingUnit).map(([key, value]) => ({
+  id: key,
+  value,
+}));
 
 const formatProducts = (products: Product[]) => {
   return products.map((product) => ({
@@ -56,8 +56,8 @@ const UpdateProductModal = ({
   useEffect(() => {
     const duration = getDuration(
       updateProduct.out_date,
-      updateProduct.in_date
-      // updateProduct.billing_unit
+      updateProduct.in_date,
+      updateProduct.billing_unit
     );
     handleValueChange('duration', duration);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -110,22 +110,21 @@ const UpdateProductModal = ({
               onChange={() => {}}
               placeholder={''}
             />
-            {/* <CustomSelect
+            <CustomSelect
               label="Billing Unit"
               labelClass="w-[8rem]"
               options={billingUnitOptions}
               value={
-                billingUnitOptions.find(
-                  (val) => val.value === updateProduct?.billing_unit
-                )?.id ?? ""
+                billingUnitOptions.find((val) => val.value === updateProduct?.billing_unit)?.id ??
+                ''
               }
               onChange={(id) => {
                 handleValueChange(
-                  "billing_unit",
+                  'billing_unit',
                   billingUnitOptions.find((unit) => unit.id === id)?.value
                 );
               }}
-            /> */}
+            />
             <CustomInput
               label="Order Quantity"
               type="number"

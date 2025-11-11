@@ -36,28 +36,6 @@ type ChartType =
 
 type DateFilter = { start: string; end: string } | null;
 
-// const getRentalDuration = (outDate: string, inDate: string, unit: BillingUnit): number => {
-//   const out = new Date(outDate);
-//   const inn = new Date(inDate);
-//   const diffMs = inn.getTime() - out.getTime();
-
-//   switch (unit) {
-//     case BillingUnit.SHIFT:
-//       return 1;
-//     case BillingUnit.DAYS:
-//       return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-//     case BillingUnit.WEEKS:
-//       return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7)));
-//     case BillingUnit.MONTHS:
-//       return Math.max(
-//         1,
-//         (inn.getFullYear() - out.getFullYear()) * 12 + (inn.getMonth() - out.getMonth())
-//       );
-//     default:
-//       return 1;
-//   }
-// };
-
 const groupKeyFormatter = (dateStr: string, filter: string) => {
   const date = dayjs(dateStr);
   switch (filter) {

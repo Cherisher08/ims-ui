@@ -216,8 +216,8 @@ const Header = ({ open, setOpen }: HeaderType) => {
     <div className="w-full flex justify-between bg-primary items-center mb-3 shadow-lg">
       <div className="w-full px-6 h-18 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="rounded-full max-md:hidden overflow-hidden min-w-12 h-12 aspect-square content-center bg-white">
-            <img src={Logo} className="w-12 h-12" onClick={() => setOpen(!open)} />
+          <div className="rounded-full max-md:hidden overflow-hidden min-w-14 h-14 aspect-square content-center border-2 border-white shadow-lg">
+            <img src={Logo} className="w-14 h-14 drop-shadow-lg" onClick={() => setOpen(!open)} />
           </div>
           <IoMenu
             size={30}

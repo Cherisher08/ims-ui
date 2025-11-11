@@ -287,8 +287,7 @@ const CustomDetailRenderer = (
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                // options: ['shift', 'days', 'weeks', 'months'],
-                options: ['days'],
+                options: ['shift', 'days', 'weeks', 'months'],
               },
             },
             {

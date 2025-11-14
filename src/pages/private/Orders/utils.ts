@@ -811,3 +811,79 @@ export const getAvailableStockQuantity = (
 
   return newQuantity;
 };
+
+export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]) => {
+  const ws = XLSX.utils.aoa_to_sheet([]);
+
+  const data: Record<string, string | number>[] = [];
+
+  const getCustomerDetails = (order: RentalOrderType | RentalOrderInfo) => {
+    if (!order.customer) return { name: '', phone: '', gst: '' };
+    if ('personal_number' in order.customer) {
+      const custObj = order.customer as unknown as Record<string, unknown>;
+      const gstVal =
+        typeof custObj['gst_number'] === 'string'
+          ? (custObj['gst_number'] as string)
+          : typeof custObj['gst_no'] === 'string'
+          ? (custObj['gst_no'] as string)
+          : '';
+      return {
+        name: order.customer.name || '',
+        phone: order.customer.personal_number || '',
+        gst: gstVal,
+      };
+    }
+    const parts = (order.customer.name || '').split('-');
+    const phone = parts.pop() || '';
+    const name = parts.join('-') || '';
+    return { name, phone, gst: '' };
+  };
+
+  orders.forEach((order) => {
+    const cust = getCustomerDetails(order as RentalOrderType);
+
+    const totalBeforeTax = calculateTotalAmount(order as RentalOrderType);
+    const discountAmount =
+      order.discount_type === DiscountType.PERCENT
+        ? calculateDiscountAmount(order.discount || 0, totalBeforeTax)
+        : order.discount || 0;
+    const gstCost = calculateDiscountAmount(order.gst || 0, totalBeforeTax - discountAmount);
+    const amountAfterTax = calculateFinalAmount(order as RentalOrderType, false);
+
+    data.push({
+      'Invoice no': order.invoice_id || '',
+      Month: order.out_date ? dayjs(order.out_date).format('MMMM') : '',
+      'Bill Date': order.invoice_date
+        ? dayjs(order.invoice_date).format('DD-MMM-YYYY hh:mm A')
+        : order.out_date
+        ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A')
+        : '',
+      Customer: cust.name,
+      'Phone number': cust.phone,
+      'Event name': order.event_name || '',
+      'Bill Amount': totalBeforeTax,
+      'Gst no': order.billing_mode === BillingMode.B2C ? 'URP' : cust.gst || '',
+      'Gst cost': gstCost,
+      'Amount after tax': amountAfterTax,
+    });
+  });
+
+  XLSX.utils.sheet_add_json(ws, data, { origin: 0 });
+
+  ws['!cols'] = [
+    { wch: 20 }, // Invoice no
+    { wch: 15 }, // Month
+    { wch: 20 }, // Bill Date
+    { wch: 30 }, // Customer
+    { wch: 18 }, // Phone number
+    { wch: 25 }, // Event name
+    { wch: 15 }, // Bill Amount
+    { wch: 18 }, // Gst no
+    { wch: 15 }, // Gst cost
+    { wch: 18 }, // Amount after tax
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
+  XLSX.writeFile(wb, `invoices_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`);
+};

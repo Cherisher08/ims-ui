@@ -19,9 +19,13 @@ import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
 import {
   calculateFinalAmount,
   currencyFormatter,
+  exportInvoiceToExcel,
   getOrderStatus,
   getOrderStatusColors,
 } from '../Orders/utils';
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { RiFileExcel2Line } from 'react-icons/ri';
+import CustomButton from '../../../styled/CustomButton';
 
 const Invoices: FC = () => {
   // Set PDF.js worker once
@@ -42,6 +46,25 @@ const Invoices: FC = () => {
         .filter((order) => order.invoice_id)
         .sort((a, b) => (a.invoice_id < b.invoice_id ? 1 : -1))
     : [];
+
+  const renderIcon = (params: { data: RentalOrderInfo; type: 'delivery_challan' | 'invoice' }) => {
+    const bill =
+      params.data?.whatsapp_notifications?.[
+        params.type === 'delivery_challan' ? 'delivery_challan' : 'invoice'
+      ];
+
+    const sent = bill?.is_sent || false;
+
+    return sent ? (
+      <div className="flex h-full w-full justify-center items-center">
+        <FaCheckCircle className="text-green-600 text-xl" />
+      </div>
+    ) : (
+      <div className="flex h-full w-full justify-center items-center">
+        <FaTimesCircle className="text-red-600 text-xl" />
+      </div>
+    );
+  };
 
   const rentalOrderColDef: ColDef[] = [
     {
@@ -120,6 +143,31 @@ const Invoices: FC = () => {
       minWidth: 150,
       maxWidth: 200,
       filter: 'agNumberColumnFilter',
+    },
+    {
+      colId: 'sent_invoice',
+      headerName: 'Sent Invoice',
+      flex: 1,
+      minWidth: 100,
+      cellRenderer: renderIcon,
+      cellRendererParams: { type: 'invoice' },
+      valueGetter: (params) => {
+        return params.data?.whatsapp_notifications?.invoice?.is_sent === true ? 'Yes' : 'No';
+      },
+      filter: 'agTextColumnFilter',
+    },
+    {
+      headerName: 'Invoice - Last Sent Date',
+      minWidth: 160,
+      filter: 'agDateColumnFilter',
+      valueFormatter: (params) => {
+        const data = params.data;
+        const invoice = data?.whatsapp_notifications?.invoice;
+        if (invoice?.is_sent) {
+          const date = new Date(invoice.last_sent_date);
+          return dayjs(date).format('DD-MMM-YYYY hh:mm A');
+        } else return '';
+      },
     },
     {
       field: 'status',
@@ -208,6 +256,15 @@ const Invoices: FC = () => {
                 }
               }}
             />
+            <RiFileExcel2Line
+              size={20}
+              className="cursor-pointer"
+              onClick={() => {
+                if (params.data) {
+                  exportInvoiceToExcel([params.data]);
+                }
+              }}
+            />
           </div>
         );
       },
@@ -216,7 +273,16 @@ const Invoices: FC = () => {
 
   return (
     <div className="flex flex-col w-full h-full gap-2">
-      <p className="font-primary w-full text-center text-2xl font-bold">INVOICES</p>
+      <div className="flex justify-between">
+        <p className="font-primary w-full text-center text-2xl font-bold">INVOICES</p>
+        <CustomButton
+          onClick={() => {
+            if (orderData) exportInvoiceToExcel(orderData as RentalOrderType[]);
+          }}
+          label="Export Invoices"
+          icon={<RiFileExcel2Line color="white" />}
+        />
+      </div>
       <CustomTable
         isLoading={false}
         colDefs={rentalOrderColDef}

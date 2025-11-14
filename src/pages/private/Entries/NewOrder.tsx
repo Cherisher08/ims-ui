@@ -364,7 +364,9 @@ const NewOrder = () => {
     }
 
     if (newOrderInfo.status === PaymentStatus.PAID) {
-      const newInvoiceId = getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
+      const newInvoiceId = newOrderInfo.invoice_id
+        ? newOrderInfo.invoice_id
+        : getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
       newOrderInfo.invoice_id = newInvoiceId;
       newOrderInfo.invoice_date = new Date().toISOString();
       if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {

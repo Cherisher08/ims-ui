@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import NamedLogo from '/named-logo.png';
-import Logo from '/New_Logo.png';
+import NamedLogo from '/nameless-logo.jpg';
 
 import Button from '@mui/material/Button';
 import { rootApi, useAuthorizeUserMutation } from '../../services/ApiService';
@@ -57,12 +56,22 @@ const Login = () => {
   return (
     <>
       <div className="bg-white w-full min-h-screen items-center px-3 grid grid-cols-[60%_40%]">
-        <div className="flex justify-center items-center">
-          <img src={NamedLogo} />
+        <div className="flex flex-col justify-center items-center">
+          <img src={NamedLogo} width={400} height={400} />
+          <Typography
+            className="mt-1 text-red-700 font-medium leading-none"
+            variant="h2"
+            sx={{
+              fontFamily: '"Impact", "Arial Black", sans-serif',
+              WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
+            }}
+          >
+            MANI POWER TOOLS
+          </Typography>
         </div>
         <div className="flex flex-col w-3/5 gap-5">
           <div className="flex justify-center">
-            <img src={Logo} className="w-20 h-20" />
+            <img src={NamedLogo} className="w-30 h-30" />
           </div>
           <div className="flex flex-col gap-2 -intro-x">
             <h3 className="text-[#2B2F38] font-semibold text-2xl text-center">

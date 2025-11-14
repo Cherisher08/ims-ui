@@ -158,7 +158,7 @@ export type ServiceOrderInfo = OrderInfo & {
 
 export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo;
 
-type MessageDetails = {
+export type MessageDetails = {
   customerName: string;
   bill_type: string;
   orderId: string;

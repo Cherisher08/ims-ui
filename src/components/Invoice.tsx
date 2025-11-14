@@ -11,7 +11,7 @@ import {
 } from '../types/order';
 import paidStamp from '/paid-icon.png';
 
-import Logo from '/named-logo.png';
+import Logo from '/nameless-logo.jpg';
 
 Font.register({
   family: 'Inter',
@@ -107,6 +107,7 @@ function numberToWordsIndian(num: number) {
 interface InvoiceRentalOrder {
   data: RentalOrderInfo;
   invoiceId: string;
+  fileName?: string;
 }
 
 const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
@@ -200,7 +201,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       gap: 10,
     },
     image: {
-      width: 150,
+      width: 140,
       // height: 120,
       objectFit: 'contain',
     },
@@ -546,14 +547,28 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Image src={Logo} style={styles.image} />
               <Text
                 style={{
-                  fontSize: 8,
-                  fontWeight: 'bold',
-                  marginTop: 0,
+                  fontSize: 16,
+                  color: '#b91c1c',
+                  marginTop: 4,
                   textAlign: 'center',
-                  maxWidth: '150px',
+                  fontFamily: 'Helvetica-Bold',
+                  letterSpacing: -0.8,
+                  lineHeight: 1,
                 }}
               >
-                Generator, Dewatering Pumps, Scaffolding and all Construction equipments for Rent
+                MANI POWER TOOLS
+              </Text>
+              <Text
+                style={{
+                  fontSize: 9,
+                  marginTop: 0,
+                  textAlign: 'center',
+                  maxWidth: '153px',
+                  marginLeft: '-3px',
+                }}
+              >
+                Generator, Dewatering Pumps, Scaffolding and all Construction equipments for{' '}
+                <Text style={{ fontWeight: 'bold' }}>Rent </Text>
               </Text>
             </View>
             <View style={styles.tableField}>

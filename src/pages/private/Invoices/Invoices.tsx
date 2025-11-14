@@ -1,6 +1,16 @@
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
-import { FC } from 'react';
+import { FC, useState } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
+import Invoice from '../../../components/Invoice';
+import { pdfElementToPngFile, sendImageViaWhatsapp } from '../Entries/pdfWhatsappUtils';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../constants/constants';
+import { IoLogoWhatsapp } from 'react-icons/io5';
+import {
+  usePostOrderDcAsWhatsappMessageMutation,
+  useUpdateRentalOrderMutation,
+} from '../../../services/OrderService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import CustomTable from '../../../styled/CustomTable';
 
@@ -16,6 +26,17 @@ import {
 
 const Invoices: FC = () => {
   const navigate = useNavigate();
+
+  // Set PDF.js worker once
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
+
+  const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
+
+  const [sendDcWhatsapp] = usePostOrderDcAsWhatsappMessageMutation();
+  const [updateRentalOrder] = useUpdateRentalOrderMutation();
 
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
 
@@ -143,12 +164,51 @@ const Invoices: FC = () => {
       cellRenderer: (params: ICellRendererParams) => {
         const rowData = params.data;
         return (
-          <div className="flex gap-2 h-[2rem] items-center">
+          <div className="flex gap-2 h-8 items-center">
             <IoPrintOutline
               size={20}
               className="cursor-pointer"
               onClick={() => {
                 navigate(`/orders/invoices/${rowData?._id}`);
+              }}
+            />
+
+            {/* WhatsApp send icon: renders invoice -> converts to PNG -> sends via existing mutation */}
+            <IoLogoWhatsapp
+              size={20}
+              className={`cursor-pointer text-green-600 ${
+                sendingMap[rowData._id] ? 'opacity-50 pointer-events-none' : ''
+              }`}
+              onClick={async () => {
+                if (!rowData) return;
+                const orderId = rowData._id;
+                try {
+                  setSendingMap((s) => ({ ...s, [orderId]: true }));
+                  const invoiceId = rowData.invoice_id || '';
+
+                  const file = await pdfElementToPngFile(
+                    <Invoice data={rowData} invoiceId={invoiceId} />,
+                    `${rowData.customer?.name || 'Invoice'}.png`
+                  );
+
+                  await sendImageViaWhatsapp({
+                    file,
+                    order: rowData,
+                    sendDcWhatsapp,
+                    updateRentalOrder,
+                  });
+
+                  toast.success('Invoice sent via WhatsApp', {
+                    toastId: TOAST_IDS.SUCCESS_WHATSAPP_ORDER_DC,
+                  });
+                } catch (err) {
+                  console.error('Error sending invoice via WhatsApp from Invoices table', err);
+                  toast.error('Failed to send invoice via WhatsApp', {
+                    toastId: TOAST_IDS.ERROR_WHATSAPP_ORDER_DC,
+                  });
+                } finally {
+                  setSendingMap((s) => ({ ...s, [rowData._id]: false }));
+                }
               }}
             />
           </div>

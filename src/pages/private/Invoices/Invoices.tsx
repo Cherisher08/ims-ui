@@ -15,7 +15,6 @@ import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import CustomTable from '../../../styled/CustomTable';
 
 import { IoPrintOutline } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
 import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
 import {
   calculateFinalAmount,
@@ -25,8 +24,6 @@ import {
 } from '../Orders/utils';
 
 const Invoices: FC = () => {
-  const navigate = useNavigate();
-
   // Set PDF.js worker once
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -169,7 +166,7 @@ const Invoices: FC = () => {
               size={20}
               className="cursor-pointer"
               onClick={() => {
-                navigate(`/orders/invoices/${rowData?._id}`);
+                window.open(`/orders/invoices/${rowData?._id}`, '_blank');
               }}
             />
 

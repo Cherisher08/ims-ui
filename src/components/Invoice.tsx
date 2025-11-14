@@ -445,14 +445,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     },
   });
 
-  const enoughProduct = (data.product_details?.length || 0) <= 7;
+  const enoughProduct = (data.product_details?.length || 0) <= 5;
   const emptySpaces =
     (data.product_details?.length || 0) +
     (data.eway_amount ? 1 : 0) +
     (data.discount ? 1 : 0) +
     (data.status === PaymentStatus.PAID ? 1 : 0) +
     (data.round_off ? 1 : 0);
-  const maxProducts = 8 - emptySpaces;
+  const maxProducts = 6 - emptySpaces;
 
   return (
     <Document>
@@ -549,12 +549,13 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Text
                 style={{
                   fontSize: 16,
-                  color: '#b91c1c',
+                  color: '#C41E3A',
                   marginTop: 4,
                   textAlign: 'center',
                   fontFamily: 'Helvetica-Bold',
-                  letterSpacing: -0.8,
-                  lineHeight: 1,
+                  letterSpacing: 0.5,
+                  lineHeight: 1.1,
+                  fontWeight: 'bold',
                 }}
               >
                 MANI POWER TOOLS
@@ -562,14 +563,17 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Text
                 style={{
                   fontSize: 9,
-                  marginTop: 0,
+                  marginTop: 3,
                   textAlign: 'center',
-                  maxWidth: '153px',
-                  marginLeft: '-3px',
+                  maxWidth: '175px',
+                  fontFamily: 'Helvetica-Bold',
+                  fontWeight: 700,
+                  color: '#DC2626',
+                  lineHeight: 1.4,
                 }}
               >
-                Generator, Dewatering Pumps, Scaffolding and all Construction equipments for{' '}
-                <Text style={{ fontWeight: 'bold' }}>Rent </Text>
+                Power Tools, Garden Tools, Generator, Dewatering Pumps, Scaffolding and all
+                construction equipment for Rent
               </Text>
             </View>
             <View style={styles.tableField}>

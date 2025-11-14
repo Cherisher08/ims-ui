@@ -461,9 +461,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         <View style={styles.pageTitle}>
           <Text
             style={{
-              fontSize: '15px',
+              fontSize: '18px',
               fontWeight: 'bold',
               marginTop: '10px',
+              textDecoration: 'underline',
             }}
           >
             Tax Invoice

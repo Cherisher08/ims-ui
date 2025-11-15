@@ -37,16 +37,38 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
       const arrayBuffer = await pdfBlob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       const pdfDoc = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-      const page = await pdfDoc.getPage(1);
       const scale = 2; // Higher resolution
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (!context) return;
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      await page.render({ canvasContext: context, viewport, canvas }).promise;
-      canvas.toBlob((imageBlob) => {
+
+      // Render all pages and stack them vertically into one image
+      const pageCanvases: HTMLCanvasElement[] = [];
+      let totalHeight = 0;
+      let maxWidth = 0;
+      for (let p = 1; p <= pdfDoc.numPages; p++) {
+        const page = await pdfDoc.getPage(p);
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (!context) return;
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: context, viewport, canvas }).promise;
+        pageCanvases.push(canvas);
+        totalHeight += canvas.height;
+        maxWidth = Math.max(maxWidth, canvas.width);
+      }
+
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = maxWidth;
+      finalCanvas.height = totalHeight;
+      const finalCtx = finalCanvas.getContext('2d');
+      if (!finalCtx) return;
+      let yOffset = 0;
+      for (const c of pageCanvases) {
+        finalCtx.drawImage(c, 0, yOffset);
+        yOffset += c.height;
+      }
+
+      finalCanvas.toBlob((imageBlob) => {
         if (imageBlob) {
           saveAs(imageBlob, `DeliveryChallan_${orderInfo.order_id}.png`);
         }
@@ -63,16 +85,38 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
       const arrayBuffer = await pdfBlob.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       const pdfDoc = await pdfjsLib.getDocument({ data: uint8Array }).promise;
-      const page = await pdfDoc.getPage(1);
       const scale = 2; // Higher resolution
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (!context) return;
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      await page.render({ canvasContext: context, viewport, canvas }).promise;
-      canvas.toBlob(async (imageBlob) => {
+
+      // Render all pages and stack them vertically into one image
+      const pageCanvases: HTMLCanvasElement[] = [];
+      let totalHeight = 0;
+      let maxWidth = 0;
+      for (let p = 1; p <= pdfDoc.numPages; p++) {
+        const page = await pdfDoc.getPage(p);
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (!context) return;
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: context, viewport, canvas }).promise;
+        pageCanvases.push(canvas);
+        totalHeight += canvas.height;
+        maxWidth = Math.max(maxWidth, canvas.width);
+      }
+
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = maxWidth;
+      finalCanvas.height = totalHeight;
+      const finalCtx = finalCanvas.getContext('2d');
+      if (!finalCtx) return;
+      let yOffset = 0;
+      for (const c of pageCanvases) {
+        finalCtx.drawImage(c, 0, yOffset);
+        yOffset += c.height;
+      }
+
+      finalCanvas.toBlob(async (imageBlob) => {
         if (imageBlob) {
           const file = new File([imageBlob], 'DeliveryChallan.png', { type: 'image/png' });
           const messageDetails = {

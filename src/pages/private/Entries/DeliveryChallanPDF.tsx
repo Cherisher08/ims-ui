@@ -147,7 +147,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   </Text>
                 </View>
               ))}
-              {data.product_details.slice(1, 6).map((prod) => (
+              {data.product_details.slice(1).map((prod) => (
                 <View style={styles.row} key={prod._id}>
                   <Text style={[styles.field]}></Text>
                   <Text style={styles.colon}></Text>

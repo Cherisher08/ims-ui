@@ -32,6 +32,8 @@ const styles = StyleSheet.create({
     borderBottom: '2px solid #000000',
     paddingHorizontal: 5,
     paddingVertical: 3,
+    display: 'flex',
+    flexDirection: 'row',
   },
   content: {
     padding: 4,
@@ -72,21 +74,54 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
       <Page size="A6" style={styles.page}>
         <View style={styles.container}>
           <View style={styles.header}>
+            <Image src={Logo} style={{ width: 75, height: 75, objectFit: 'contain' }} />
             <View
               style={{
-                flexDirection: 'row',
                 alignItems: 'center',
-                gap: 6,
                 justifyContent: 'center',
               }}
             >
-              <Image src={Logo} style={{ width: 70, height: 40, objectFit: 'contain' }} />
-              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MANI POWER TOOLS</Text>
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: '#C41E3A',
+                  marginTop: 4,
+                  textAlign: 'center',
+                  fontFamily: 'Helvetica-Bold',
+                  letterSpacing: 0.5,
+                  lineHeight: 1.1,
+                  fontWeight: 'bold',
+                }}
+              >
+                MANI POWER TOOLS
+              </Text>
+              <Text
+                style={{
+                  fontSize: 9,
+                  marginTop: 3,
+                  textAlign: 'center',
+                  maxWidth: '180px',
+                  fontFamily: 'Helvetica-Bold',
+                  fontWeight: 700,
+                  color: '#DC2626',
+                  lineHeight: 1.4,
+                }}
+              >
+                Power Tools, Garden Tools, Generator, Dewatering Pumps, Scaffolding and all
+                construction equipment for Rent
+              </Text>
+              <Text
+                style={{
+                  fontSize: 9,
+                  fontFamily: 'Helvetica-Bold',
+                  fontWeight: 700,
+                  color: '#DC2626',
+                  lineHeight: 1.4,
+                }}
+              >
+                9042439153, 8428429153
+              </Text>
             </View>
-            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>
-              Generator, Dewatering Pumps, Scaffolding and all Construction equipments for Rent
-            </Text>
-            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>9042439153, 8428429153</Text>
           </View>
           <View
             style={{
@@ -195,7 +230,15 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             </View>
           </View>
           <View style={styles.footer}>
-            <Text style={{ fontSize: 8, fontWeight: 'bold', textAlign: 'center' }}>
+            <Text
+              style={{
+                fontSize: 8,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                color: '#DC2626',
+                lineHeight: 1.4,
+              }}
+            >
               You should generally return equipment within business hours (7.00 AM to 7.00 PM) &
               Customers are responsible for equipment's Damage
             </Text>
@@ -206,6 +249,8 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                 fontFamily: 'Tamil',
                 textAlign: 'center',
                 marginTop: 6,
+                color: '#DC2626',
+                lineHeight: 1.4,
               }}
             >
               நீங்கள் வழக்கமாக வணிக நேரங்களுக்குள் (காலை 7.00 மணி முதல் மாலை 7.00 மணி வரை)

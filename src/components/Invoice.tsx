@@ -593,7 +593,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 <Text style={styles.title}>MANI POWER TOOLS</Text>
                 <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
                 <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
-                <Text style={styles.ownerAddress}>Mobile No - 8428429153 , 9042439153</Text>
+                <Text style={[styles.ownerAddress, { color: '#DC2626', fontWeight: 900 }]}>
+                  Mobile No - 8428429153 , 9042439153
+                </Text>
                 <Text style={[styles.ownerAddress, { fontWeight: 'bold' }]}>
                   manipowertools9153@gmail.com
                 </Text>

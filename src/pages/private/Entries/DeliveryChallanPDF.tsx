@@ -132,7 +132,9 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               paddingBottom: 2,
             }}
           >
-            <Text style={{ fontSize: 12, fontWeight: 'bold' }}>Delivery Challan</Text>
+            <Text style={{ fontSize: 12, fontWeight: 900, fontFamily: 'Helvetica-Bold' }}>
+              Delivery Challan
+            </Text>
           </View>
           <View style={styles.content}>
             <View style={styles.row}>

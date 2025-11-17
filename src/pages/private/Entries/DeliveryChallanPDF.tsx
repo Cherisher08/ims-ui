@@ -74,11 +74,12 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
       <Page size="A6" style={styles.page}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Image src={Logo} style={{ width: 75, height: 75, objectFit: 'contain' }} />
+            <Image src={Logo} style={{ width: 65, height: 65, objectFit: 'contain' }} />
             <View
               style={{
                 alignItems: 'center',
                 justifyContent: 'center',
+                marginLeft: '-10px',
               }}
             >
               <Text
@@ -97,13 +98,14 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               </Text>
               <Text
                 style={{
-                  fontSize: 9,
+                  fontSize: 8,
                   marginTop: 3,
                   textAlign: 'center',
-                  maxWidth: '180px',
+                  maxWidth: '210px',
                   fontFamily: 'Helvetica-Bold',
                   fontWeight: 700,
                   color: '#DC2626',
+                  letterSpacing: -0.2,
                   lineHeight: 1.4,
                 }}
               >
@@ -112,7 +114,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               </Text>
               <Text
                 style={{
-                  fontSize: 9,
+                  fontSize: 8,
                   fontFamily: 'Helvetica-Bold',
                   fontWeight: 700,
                   color: '#DC2626',

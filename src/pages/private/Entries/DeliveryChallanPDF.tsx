@@ -2,6 +2,7 @@ import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/
 import dayjs from 'dayjs';
 import { RentalOrderInfo } from '../../../types/order';
 import Logo from '/New_Logo.png';
+import { formatBillingUnit } from '../../../services/utility_functions';
 
 Font.register({
   family: 'Tamil',
@@ -179,10 +180,14 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             <View>
               {data.product_details.slice(0, 1).map((prod) => (
                 <View style={styles.row} key={prod._id}>
-                  <Text style={styles.field}>Product Name - Quantity / Per Day Rent</Text>
+                  <Text style={styles.field}>Product Name - Quantity / Rent per Duration</Text>
                   <Text style={styles.colon}>:</Text>
                   <Text style={styles.value}>
-                    {prod.name + ' - ' + prod.order_quantity + ' / ' + `Rs. ${prod.rent_per_unit}`}
+                    {prod.name +
+                      ' - ' +
+                      prod.order_quantity +
+                      ' / ' +
+                      `Rs. ${prod.rent_per_unit} per ${formatBillingUnit(prod.billing_unit)}`}
                   </Text>
                 </View>
               ))}
@@ -191,7 +196,11 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   <Text style={[styles.field]}></Text>
                   <Text style={styles.colon}></Text>
                   <Text style={[styles.value]}>
-                    {prod.name + ' - ' + prod.order_quantity + ' / ' + `Rs. ${prod.rent_per_unit}`}
+                    {prod.name +
+                      ' - ' +
+                      prod.order_quantity +
+                      ' / ' +
+                      `Rs. ${prod.rent_per_unit} per ${formatBillingUnit(prod.billing_unit)}`}
                   </Text>
                 </View>
               ))}

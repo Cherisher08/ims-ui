@@ -53,3 +53,11 @@ export const calculateProductRent = (product: ProductDetails): number => {
   const effectiveQuantity = order_quantity - order_repair_count;
   return rent_per_unit * effectiveQuantity * duration;
 };
+
+export const formatBillingUnit = (unit: BillingUnit | string): string => {
+  if (!unit) return '-';
+  const normalized = unit.toLowerCase();
+  // Convert to title case and put trailing 's' in parentheses
+  const titleCase = normalized.charAt(0).toUpperCase() + normalized.slice(1, -1);
+  return `${titleCase}(s)`;
+};

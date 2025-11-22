@@ -18,9 +18,17 @@ interface DeliveryChallanDialogProps {
   onClose: () => void;
   open: boolean;
   orderInfo: RentalOrderInfo;
+  createOrder?: () => Promise<void>;
+  createOrderLabel?: string;
 }
 
-const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, orderInfo }) => {
+const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({
+  onClose,
+  open,
+  orderInfo,
+  createOrder,
+  createOrderLabel,
+}) => {
   const [whatsappRentalOrderDC] = usePostOrderDcAsWhatsappMessageMutation();
   const [updateRentalOrder] = useUpdateRentalOrderMutation();
   // const [patchRentalOrder] = usePatchRentalOrderMutation();
@@ -76,6 +84,17 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
     } catch (error) {
       console.error('Error converting PDF to image:', error);
       toast.error('Failed to download as image');
+    }
+  };
+
+  const handleCreateOrderClick = async () => {
+    // Close the dialog first to unmount PDFViewer and avoid react-pdf renderer errors
+    try {
+      onClose();
+      if (createOrder) await createOrder();
+    } catch (error) {
+      console.error('Error while creating order from dialog:', error);
+      // swallow error to avoid breaking navigation/UI flow
     }
   };
 
@@ -183,6 +202,10 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
           <p className="text-primary text-xl font-semibold w-full text-start">Delivery Challan</p>
           <MdClose size={25} className="cursor-pointer" onClick={onClose} />
         </div>
+        <div className="flex w-full gap-3 justify-end">
+          <CustomButton onClick={handlePrintDeliveryChallan} label="Download as Image" />
+          <CustomButton onClick={() => handleWhatsappChallan(orderInfo)} label="Send WhatsApp" />
+        </div>
         <div className="flex flex-col gap-3 h-full w-full px-3 overflow-y-auto scrollbar-stable">
           <PDFViewer width="100%" height="700">
             <DeliveryChallanPDF data={orderInfo} />
@@ -190,8 +213,9 @@ const DeliveryChallanDialog: FC<DeliveryChallanDialogProps> = ({ onClose, open, 
         </div>
         <div className="flex w-full gap-3 justify-end">
           <CustomButton onClick={onClose} label="Close" variant="outlined" className="bg-white" />
-          <CustomButton onClick={handlePrintDeliveryChallan} label="Download as Image" />
-          <CustomButton onClick={() => handleWhatsappChallan(orderInfo)} label="Send WhatsApp" />
+          {createOrderLabel && createOrder && (
+            <CustomButton label={createOrderLabel} onClick={handleCreateOrderClick} />
+          )}
         </div>
       </div>
     </Modal>

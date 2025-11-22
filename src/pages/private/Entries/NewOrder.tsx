@@ -174,6 +174,7 @@ const NewOrder = () => {
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
   const [showDeliveryChallanModal, setShowDeliveryChallanModal] = useState<boolean>(false);
+  const [deliveryChallanOrderLabel, setDeliveryChallanOrderLabel] = useState<string>('');
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
@@ -243,34 +244,34 @@ const NewOrder = () => {
     return 0;
   }, [orderInfo.type, orderInfo.product_details, orderInfo.billing_mode, orderInfo.gst]);
 
-  const calculateFinalAmount = useCallback(() => {
+  // Calculate final amount excluding any balancePaid value
+  const calculateFinalAmountExcludingBalance = useCallback(() => {
     const finalAmount = calculateTotalAmount;
     const roundOff = orderInfo.round_off || 0;
-    const balancePaid = orderInfo.balance_paid || 0;
     const discountAmount =
       orderInfo.discount_type === DiscountType.PERCENT
         ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
         : orderInfo.discount || 0;
     const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+
     return parseFloat(
-      (
-        finalAmount -
-        discountAmount -
-        balancePaid +
-        gstAmount +
-        roundOff +
-        orderInfo.eway_amount
-      ).toFixed(2)
+      (finalAmount - discountAmount + gstAmount + roundOff + orderInfo.eway_amount).toFixed(2)
     );
   }, [
     calculateTotalAmount,
     orderInfo.discount,
     orderInfo.discount_type,
-    orderInfo.balance_paid,
     orderInfo.eway_amount,
     orderInfo.gst,
     orderInfo.round_off,
   ]);
+
+  // Final amount that subtracts any balance paid
+  const calculateFinalAmount = useCallback(() => {
+    const amountExcludingBalance = calculateFinalAmountExcludingBalance();
+    const balancePaid = orderInfo.balance_paid || 0;
+    return parseFloat((amountExcludingBalance - balancePaid).toFixed(2));
+  }, [calculateFinalAmountExcludingBalance, orderInfo.balance_paid]);
 
   const getCustomerOrdersAndError = (customerId: string) => {
     if (rentalOrders) {
@@ -826,7 +827,10 @@ const NewOrder = () => {
             <CustomButton
               label="Delivery Challan"
               disabled={!orderInfo._id}
-              onClick={() => setShowDeliveryChallanModal(true)}
+              onClick={() => {
+                setDeliveryChallanOrderLabel('');
+                setShowDeliveryChallanModal(true);
+              }}
               icon={<ArticleIcon />}
             />
             <CustomButton
@@ -1477,11 +1481,11 @@ const NewOrder = () => {
         <table className="w-full table-auto border border-gray-300">
           <thead>
             <tr className="bg-gray-200">
-              <th className="px-1 py-1 text-left w-[15rem]">Amount</th>
-              <th className="px-1 py-1 text-left w-[15rem]">Date</th>
-              <th className="px-1 py-1 text-left w-[15rem]">Product</th>
+              <th className="px-1 py-1 text-left w-60">Amount</th>
+              <th className="px-1 py-1 text-left w-60">Date</th>
+              <th className="px-1 py-1 text-left w-60">Product</th>
               <th className="px-1 py-1 text-left w-[20rem]">Payment Mode</th>
-              <th className="px-1 py-1 text-left w-[10rem]">Options</th>
+              <th className="px-1 py-1 text-left w-40">Options</th>
             </tr>
           </thead>
           <tbody>
@@ -1806,7 +1810,7 @@ const NewOrder = () => {
                     <p>Amount after Taxes</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end">
-                    <p>₹ {Math.abs(calculateFinalAmount()).toFixed(2)}</p>
+                    <p>₹ {Math.abs(calculateFinalAmountExcludingBalance()).toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2">
@@ -1840,6 +1844,14 @@ const NewOrder = () => {
                 variant="outlined"
               />
               <CustomButton
+                label="Verify Delivery Challan"
+                disabled={createOrderDisabled}
+                onClick={() => {
+                  setDeliveryChallanOrderLabel(rentalId ? 'Update Order' : 'Create Order');
+                  setShowDeliveryChallanModal(true);
+                }}
+              />
+              <CustomButton
                 label={rentalId ? 'Update Order' : 'Create Order'}
                 disabled={createOrderDisabled}
                 onClick={createNewOrder}
@@ -1861,6 +1873,8 @@ const NewOrder = () => {
         open={showDeliveryChallanModal}
         onClose={() => setShowDeliveryChallanModal(false)}
         orderInfo={orderInfo}
+        createOrder={createNewOrder}
+        createOrderLabel={deliveryChallanOrderLabel}
       />
     </div>
   );

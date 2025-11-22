@@ -14,6 +14,11 @@ Font.register({
   src: '/Inter_18pt-Regular.ttf',
   fontWeight: 'normal',
 });
+Font.register({
+  family: 'Inter',
+  src: '/Inter_18pt-ExtraBold.ttf',
+  fontWeight: 'heavy',
+});
 
 const styles = StyleSheet.create({
   page: {
@@ -85,14 +90,13 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             >
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 18,
                   color: '#C41E3A',
                   marginTop: 4,
                   textAlign: 'center',
-                  fontFamily: 'Helvetica-Bold',
-                  letterSpacing: 0.5,
-                  lineHeight: 1.1,
-                  fontWeight: 'bold',
+                  lineHeight: 1,
+                  fontWeight: 'heavy',
+                  strokeWidth: 2,
                 }}
               >
                 MANI POWER TOOLS

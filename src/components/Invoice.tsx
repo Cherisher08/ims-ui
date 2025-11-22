@@ -10,6 +10,7 @@ import {
   RentalOrderInfo,
 } from '../types/order';
 import paidStamp from '/paid-icon.png';
+import notPaidStamp from '/not-paid-icon.png';
 
 import Logo from '/nameless-logo.jpg';
 
@@ -1169,8 +1170,21 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       // position: "absolute",
                       bottom: '2%',
                       right: '1%',
-                      width: 40,
-                      height: 40,
+                      width: 60,
+                      height: 60,
+                      // transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                )}
+                {data.status !== 'paid' && (
+                  <Image
+                    src={notPaidStamp}
+                    style={{
+                      // position: "absolute",
+                      bottom: '2%',
+                      right: '1%',
+                      width: 60,
+                      height: 60,
                       // transform: "translate(-50%, -50%)",
                     }}
                   />

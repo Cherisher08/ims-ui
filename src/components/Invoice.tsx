@@ -10,7 +10,6 @@ import {
   RentalOrderInfo,
 } from '../types/order';
 import paidStamp from '/paid-icon.png';
-import notPaidStamp from '/not-paid-icon.png';
 
 import Logo from '/nameless-logo.jpg';
 

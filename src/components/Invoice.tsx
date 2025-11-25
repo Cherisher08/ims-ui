@@ -1159,6 +1159,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     fontSize: 13,
                     textAlign: 'center',
                     fontWeight: 'bold',
+                    color: '#018f43',
                   }}
                 >
                   {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
@@ -1170,21 +1171,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       // position: "absolute",
                       bottom: '2%',
                       right: '1%',
-                      width: 60,
-                      height: 60,
-                      // transform: "translate(-50%, -50%)",
-                    }}
-                  />
-                )}
-                {data.status !== 'paid' && (
-                  <Image
-                    src={notPaidStamp}
-                    style={{
-                      // position: "absolute",
-                      bottom: '2%',
-                      right: '1%',
-                      width: 60,
-                      height: 60,
+                      width: 40,
+                      height: 40,
                       // transform: "translate(-50%, -50%)",
                     }}
                   />
@@ -1204,6 +1192,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={{
                   fontSize: 12,
                   fontWeight: 'bold',
+                  color: '#018f43',
                 }}
               >
                 Rs. {Math.abs(calcTotal()).toFixed(2)}

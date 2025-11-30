@@ -1158,7 +1158,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     fontSize: 13,
                     textAlign: 'center',
                     fontWeight: 'bold',
-                    color: '#018f43',
+                    color: data.status === PaymentStatus.PAID ? '#018f43' : 'black',
                   }}
                 >
                   {numberToWordsIndian(Math.abs(calcTotal()) || 0)}
@@ -1191,7 +1191,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={{
                   fontSize: 12,
                   fontWeight: 'bold',
-                  color: '#018f43',
+                  color: data.status === PaymentStatus.PAID ? '#018f43' : 'black',
                 }}
               >
                 Rs. {Math.abs(calcTotal()).toFixed(2)}

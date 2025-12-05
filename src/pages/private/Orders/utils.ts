@@ -852,7 +852,11 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
 
     data.push({
       'Invoice no': order.invoice_id || '',
-      Month: order.out_date ? dayjs(order.out_date).format('MMMM') : '',
+      Month: order.invoice_date
+        ? dayjs(order.invoice_date).format('MMMM')
+        : order.in_date
+        ? dayjs(order.in_date).format('MMMM')
+        : '',
       'Bill Date': order.invoice_date
         ? dayjs(order.invoice_date).format('DD-MMM-YYYY hh:mm A')
         : order.out_date
@@ -864,6 +868,8 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
       'Bill Amount': totalBeforeTax,
       'Gst no': order.billing_mode === BillingMode.B2C ? 'URP' : cust.gst || '',
       'Gst cost': gstCost,
+      'Transport Amount': order.eway_amount || 0,
+      'Discount Amount': discountAmount,
       'Amount after tax': amountAfterTax,
     });
   });

@@ -482,10 +482,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Text style={styles.fieldValue}>{data.order_id}</Text>
             </View>
             <View style={styles.tableField}>
-              <Text style={styles.fieldTitle}>Bill Date:</Text>
+              <Text style={styles.fieldTitle}>Invoice Date:</Text>
               <Text style={styles.fieldValue}>
-                {dayjs(data.in_date).isValid()
-                  ? dayjs(data.in_date).format('DD-MM-YYYY hh:mm:ss A')
+                {dayjs(data.invoice_date).isValid()
+                  ? dayjs(data.invoice_date).format('DD-MM-YYYY hh:mm:ss A')
                   : ' '}
               </Text>
             </View>

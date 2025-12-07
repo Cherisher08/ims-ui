@@ -1,4 +1,9 @@
-import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from 'ag-grid-community';
+import {
+  IDateFilterParams,
+  ValueFormatterParams,
+  ValueGetterParams,
+  ValueSetterParams,
+} from 'ag-grid-community';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -868,7 +873,7 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
       'Phone number': cust.phone,
       'Event name': order.event_name || '',
       'Bill Amount': totalBeforeTax,
-      'Gst no': order.billing_mode === BillingMode.B2C ? 'URP' : cust.gst || '',
+      'Gst no': cust.gst || '',
       'Gst cost': gstCost,
       'Transport Amount': order.eway_amount || 0,
       'Discount Amount': discountAmount,
@@ -896,9 +901,23 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
   XLSX.writeFile(wb, `invoices_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`);
 };
 
-export const parseDateFromString = (dateStr: string): Date | null => {
-  console.log('dateStr: ', dateStr);
+export const parseDateFromString = (dateStr: string | null): Date | null => {
   const parsedDate = dayjs(dateStr);
-  console.log('parsedDate: ', parsedDate);
   return parsedDate.isValid() ? parsedDate.toDate() : null;
+};
+
+export const dateFilterParams: IDateFilterParams = {
+  isValidDate: (targetCellValue: Date) => {
+    return dayjs(targetCellValue).isValid();
+  },
+  comparator: (filterLocalDateAtMidnight: Date, cellValue: Date) => {
+    const cellDate = dayjs(cellValue).startOf('day');
+    const filterDate = dayjs(filterLocalDateAtMidnight).startOf('day');
+    if (cellDate.isBefore(filterDate)) {
+      return -1;
+    } else if (cellDate.isAfter(filterDate)) {
+      return 1;
+    }
+    return 0;
+  },
 };

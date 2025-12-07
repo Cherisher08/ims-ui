@@ -43,9 +43,11 @@ import {
   calculateFinalAmount,
   calculateTotalAmount,
   currencyFormatter,
+  dateFilterParams,
   exportOrderToExcel,
   getOrderStatus,
   getOrderStatusColors,
+  parseDateFromString,
 } from './utils';
 
 type RentalOrderTableProps = {
@@ -220,6 +222,12 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const date = new Date(params.value);
         return dayjs(date).format('DD-MMM-YYYY hh:mm A');
       },
+      filterValueGetter: (tableData: ValueGetterParams<RentalType>) => {
+        const date = tableData?.data?.out_date ? tableData.data.out_date : null;
+        const formattedDate = parseDateFromString(date);
+        return formattedDate;
+      },
+      filterParams: dateFilterParams,
     },
     {
       field: 'in_date',
@@ -235,6 +243,12 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         return '';
       },
       hide: viewChallans,
+      filterValueGetter: (tableData: ValueGetterParams<RentalType>) => {
+        const date = tableData?.data?.in_date ? tableData.data.in_date : null;
+        const formattedDate = parseDateFromString(date);
+        return formattedDate;
+      },
+      filterParams: dateFilterParams,
     },
     {
       field: 'rental_duration',
@@ -605,6 +619,14 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         } else return '';
       },
+      filterValueGetter: (tableData: ValueGetterParams<RentalType>) => {
+        const date = tableData?.data?.whatsapp_notifications?.delivery_challan?.last_sent_date
+          ? tableData.data.whatsapp_notifications?.delivery_challan.last_sent_date
+          : null;
+        const formattedDate = parseDateFromString(date);
+        return formattedDate;
+      },
+      filterParams: dateFilterParams,
     },
     {
       colId: 'sent_invoice',
@@ -630,6 +652,14 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
           return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         } else return '';
       },
+      filterValueGetter: (tableData: ValueGetterParams<RentalType>) => {
+        const date = tableData?.data?.whatsapp_notifications?.invoice?.last_sent_date
+          ? tableData.data.whatsapp_notifications?.invoice.last_sent_date
+          : null;
+        const formattedDate = parseDateFromString(date);
+        return formattedDate;
+      },
+      filterParams: dateFilterParams,
     },
     {
       field: 'status',

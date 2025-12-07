@@ -19,9 +19,11 @@ import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
 import {
   calculateFinalAmount,
   currencyFormatter,
+  dateFilterParams,
   exportInvoiceToExcel,
   getOrderStatus,
   getOrderStatusColors,
+  parseDateFromString,
 } from '../Orders/utils';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { RiFileExcel2Line } from 'react-icons/ri';
@@ -120,6 +122,12 @@ const Invoices: FC = () => {
         if (date) return dayjs(date).format('DD-MMM-YYYY hh:mm A');
         return '';
       },
+      filterValueGetter: (tableData: ValueGetterParams) => {
+        const date = tableData.data.invoice_date ? tableData.data.invoice_date : null;
+        const formattedDate = parseDateFromString(date);
+        return formattedDate;
+      },
+      filterParams: dateFilterParams,
     },
     {
       headerName: 'Amount (After Taxes)',

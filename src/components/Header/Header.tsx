@@ -31,6 +31,7 @@ import { setExpiredRentalOrders } from '../../store/OrdersSlice';
 import Logo from '/New_Logo.png';
 import { MenuItems } from '../../constants/MenuItems';
 import { useMenu } from '../../contexts/MenuContext';
+import PettyCashDialog from './PettyCashDialog';
 
 type NewUserErrorType = {
   name: boolean;
@@ -47,6 +48,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const expiredRentalOrders = useSelector((state: RootState) => state.rentalOrder.data);
   const expiredOrdersCount = expiredRentalOrders.length;
+  const [pettyCashDialogOpen, setPettyCashDialogOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const { active, setActive } = useMenu();
@@ -243,6 +245,11 @@ const Header = ({ open, setOpen }: HeaderType) => {
           })}
         </ul>
         <div className="flex items-center gap-4">
+          <CustomButton
+            label={'Petty Cash'}
+            onClick={() => setPettyCashDialogOpen(true)}
+            className="bg-white text-primary font-semibold hover:bg-gray-200 max-md:hidden"
+          ></CustomButton>
           <IconButton
             onClick={toggleDrawer(true)}
             sx={{
@@ -286,7 +293,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
         >
           <div className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg p-4">
             <p className="text-primary text-xl font-semibold w-full text-start">Add User</p>
-            <div className="flex flex-col w-[30rem] px-10 gap-y-2 justify-center items-start">
+            <div className="flex flex-col w-120 px-10 gap-y-2 justify-center items-start">
               <CustomInput
                 label="User Name"
                 error={errors.name}
@@ -315,6 +322,26 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 className="w-60 rounded-lg"
                 helperText="Enter password"
               />
+              {userData.role === UserRole.Admin && (
+                <Box className="w-60 mt-2">
+                  <Typography variant="body1" className="mb-1">
+                    Select Role:
+                  </Typography>
+                  <select
+                    value={newUserData.role}
+                    onChange={(e) =>
+                      setNewUserData((prev) => ({
+                        ...prev,
+                        role: e.target.value as UserRole,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value={UserRole.User}>User</option>
+                    <option value={UserRole.Admin}>Admin</option>
+                  </select>
+                </Box>
+              )}
             </div>
             <div className="flex w-full gap-3 justify-end">
               <CustomButton
@@ -327,6 +354,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
             </div>
           </div>
         </Modal>
+        <PettyCashDialog open={pettyCashDialogOpen} onClose={() => setPettyCashDialogOpen(false)} />
       </div>
     </div>
   );

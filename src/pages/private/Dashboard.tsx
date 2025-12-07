@@ -410,6 +410,7 @@ const Dashboard = () => {
     repaymentAmount: 0,
     depositAmount: 0,
     billAmount: 0,
+    paidAmount: 0,
     mcIn: 0,
     mcOut: 0,
   });
@@ -433,6 +434,7 @@ const Dashboard = () => {
     let repaymentAmount = 0;
     let depositAmount = 0;
     let billAmount = 0;
+    let paidAmount = 0;
     let mcIn = 0;
     let mcOut = 0;
 
@@ -452,6 +454,11 @@ const Dashboard = () => {
           : calculateDiscountAmount(order.gst, finalAmount);
 
       const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
+
+      // Calculate paid amount if order status is PAID
+      if (order.status === PaymentStatus.PAID) {
+        paidAmount += finalAmount;
+      }
 
       if (showPendingAmountsOnly) {
         if (order.status === PaymentStatus.PENDING) {
@@ -509,6 +516,7 @@ const Dashboard = () => {
       billAmount,
       mcIn,
       mcOut,
+      paidAmount,
     });
   }, [filter, filterDates, orders, showPendingAmountsOnly]);
 
@@ -591,6 +599,11 @@ const Dashboard = () => {
             title="Bill Amount"
             className="grow"
             value={`₹${totalInfo.billAmount.toFixed(2)}`}
+          />
+          <CustomCard
+            title="Paid Amount"
+            className="grow"
+            value={`₹${totalInfo.paidAmount.toFixed(2)}`}
           />
           <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
           <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />

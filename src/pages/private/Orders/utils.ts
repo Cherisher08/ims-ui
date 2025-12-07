@@ -1,6 +1,7 @@
 import { ValueFormatterParams, ValueGetterParams, ValueSetterParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { DiscountType, OrderStatusType, Product, ProductType } from '../../../types/common';
 import {
   BillingMode,
@@ -21,6 +22,7 @@ import XLSX from 'xlsx-js-style';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 
 dayjs.extend(utc);
+dayjs.extend(customParseFormat);
 
 const utcString = () => dayjs().utc().format();
 
@@ -857,10 +859,10 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
         : order.in_date
         ? dayjs(order.in_date).format('MMMM')
         : '',
-      'Bill Date': order.invoice_date
+      'Invoice Date': order.invoice_date
         ? dayjs(order.invoice_date).format('DD-MMM-YYYY hh:mm A')
-        : order.out_date
-        ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A')
+        : order.in_date
+        ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
         : '',
       Customer: cust.name,
       'Phone number': cust.phone,
@@ -892,4 +894,11 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
   XLSX.writeFile(wb, `invoices_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`);
+};
+
+export const parseDateFromString = (dateStr: string): Date | null => {
+  console.log('dateStr: ', dateStr);
+  const parsedDate = dayjs(dateStr);
+  console.log('parsedDate: ', parsedDate);
+  return parsedDate.isValid() ? parsedDate.toDate() : null;
 };

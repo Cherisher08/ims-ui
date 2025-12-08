@@ -17,11 +17,14 @@ interface PettyCashDialogProps {
 const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
 
-  // Filter orders paid today
-  const today = dayjs().startOf('day');
+  // Filter orders with transactions today
+  const today = dayjs().subtract(1, 'day').startOf('day');
   const paidTodayOrders =
     rentalOrders?.filter(
-      (order) => order.invoice_date && dayjs(order.invoice_date).isSame(today, 'day')
+      (order) =>
+        (order.balance_paid_date && dayjs(order.balance_paid_date).isSame(today, 'day')) ||
+        (order.repay_date && dayjs(order.repay_date).isSame(today, 'day')) ||
+        order.deposits.some((deposit) => dayjs(deposit.date).isSame(today, 'day'))
     ) || [];
 
   // Process row data
@@ -30,6 +33,19 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       const totalDeposits = order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
       const billAmount = calculateFinalAmount(order as RentalOrderType);
       const repayAmount = totalDeposits - billAmount;
+
+      // Determine the transaction date that matched today
+      let transactionDate = null;
+      if (order.balance_paid_date && dayjs(order.balance_paid_date).isSame(today, 'day')) {
+        transactionDate = order.balance_paid_date;
+      } else if (order.repay_date && dayjs(order.repay_date).isSame(today, 'day')) {
+        transactionDate = order.repay_date;
+      } else {
+        const matchingDeposit = order.deposits.find((deposit) =>
+          dayjs(deposit.date).isSame(today, 'day')
+        );
+        transactionDate = matchingDeposit ? matchingDeposit.date : order.invoice_date;
+      }
 
       // Calculate deposits made today by mode
       const todayDeposits = order.deposits.filter((deposit) =>
@@ -46,7 +62,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         .reduce((sum, deposit) => sum + deposit.amount, 0);
 
       return {
-        dateTime: order.invoice_date,
+        dateTime: transactionDate,
         inDate: order.in_date,
         customerName: order.customer?.name || '',
         phoneNumber: order.customer?.personal_number || '',

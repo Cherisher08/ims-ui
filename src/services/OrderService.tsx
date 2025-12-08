@@ -11,8 +11,20 @@ import {
 
 export const contactApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
-    getRentalOrders: build.query<RentalOrderInfo[], void>({
-      query: () => 'orders/rentals',
+    getRentalOrders: build.query<RentalOrderInfo[], void | { limit?: number; [key: string]: any }>({
+      query: (params?: { limit?: number; [key: string]: any }) => {
+        const queryParams = new URLSearchParams();
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined) queryParams.append(key, value.toString());
+          });
+        }
+        if (!queryParams.has('limit')) {
+          queryParams.append('limit', '0');
+        }
+        const queryString = queryParams.toString();
+        return `orders/rentals${queryString ? '?' + queryString : ''}`;
+      },
       providesTags: ['Rental'],
     }),
     createRentalOrder: build.mutation<RentalOrderInfo, RentalOrderInfo>({

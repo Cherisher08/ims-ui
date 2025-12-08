@@ -18,7 +18,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
 
   // Filter orders paid today
-  const today = dayjs().startOf('day');
+  const today = dayjs().subtract(1, 'day').startOf('day');
   const paidTodayOrders =
     rentalOrders?.filter(
       (order) =>
@@ -27,29 +27,55 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         dayjs(order.invoice_date).isSame(today, 'day')
     ) || [];
 
-  console.log('paidTodayOrders: ', paidTodayOrders);
   // Process row data
-  const rowData = paidTodayOrders.map((order) => {
-    console.log(order);
-    const totalDeposits = order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
-    const billAmount = calculateFinalAmount(order as RentalOrderType);
-    const repayAmount = totalDeposits - billAmount;
-    return {
-      dateTime: order.invoice_date,
-      inDate: order.in_date,
-      customerName: order.customer?.name || '',
-      phoneNumber: order.customer?.personal_number || '',
-      cashIn: order.balance_paid_mode === PaymentMode.CASH ? order.balance_paid : 0,
-      accountIn: order.balance_paid_mode === PaymentMode.ACCOUNT ? order.balance_paid : 0,
-      upiIn: order.balance_paid_mode === PaymentMode.UPI ? order.balance_paid : 0,
-      cashLess: order.payment_mode === RepaymentMode.CASHLESS ? repayAmount : 0,
-      upiLess: order.payment_mode === RepaymentMode.UPILESS ? repayAmount : 0,
-      kvbLess: order.payment_mode === RepaymentMode.KVBLESS ? repayAmount : 0,
-    };
-  });
-  console.log('rowData: ', rowData);
+  const rowData = paidTodayOrders
+    .map((order) => {
+      const totalDeposits = order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
+      const billAmount = calculateFinalAmount(order as RentalOrderType);
+      const repayAmount = totalDeposits - billAmount;
 
-  // Column definitions
+      // Calculate deposits made today by mode
+      const todayDeposits = order.deposits.filter((deposit) =>
+        dayjs(deposit.date).isSame(today, 'day')
+      );
+      const cashDepositsToday = todayDeposits
+        .filter((deposit) => deposit.mode === PaymentMode.CASH)
+        .reduce((sum, deposit) => sum + deposit.amount, 0);
+      const accountDepositsToday = todayDeposits
+        .filter((deposit) => deposit.mode === PaymentMode.ACCOUNT)
+        .reduce((sum, deposit) => sum + deposit.amount, 0);
+      const upiDepositsToday = todayDeposits
+        .filter((deposit) => deposit.mode === PaymentMode.UPI)
+        .reduce((sum, deposit) => sum + deposit.amount, 0);
+
+      return {
+        dateTime: order.invoice_date,
+        inDate: order.in_date,
+        customerName: order.customer?.name || '',
+        phoneNumber: order.customer?.personal_number || '',
+        cashIn:
+          (order.balance_paid_mode === PaymentMode.CASH ? order.balance_paid : 0) +
+          cashDepositsToday,
+        accountIn:
+          (order.balance_paid_mode === PaymentMode.ACCOUNT ? order.balance_paid : 0) +
+          accountDepositsToday,
+        upiIn:
+          (order.balance_paid_mode === PaymentMode.UPI ? order.balance_paid : 0) + upiDepositsToday,
+        cashLess: order.payment_mode === RepaymentMode.CASHLESS ? repayAmount : 0,
+        upiLess: order.payment_mode === RepaymentMode.UPILESS ? repayAmount : 0,
+        kvbLess: order.payment_mode === RepaymentMode.KVBLESS ? repayAmount : 0,
+      };
+    })
+    .filter(
+      (row) =>
+        row.cashIn > 0 ||
+        row.accountIn > 0 ||
+        row.upiIn > 0 ||
+        row.cashLess > 0 ||
+        row.upiLess > 0 ||
+        row.kvbLess > 0
+    );
+
   const colDefs: (ColDef | ColGroupDef)[] = [
     {
       field: 'dateTime',
@@ -90,13 +116,13 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         },
         {
           field: 'accountIn',
-          headerName: 'Account In',
+          headerName: 'HDFC In',
           minWidth: 150,
           valueFormatter: (params) => `₹ ${params.value || 0}`,
         },
         {
           field: 'upiIn',
-          headerName: 'UPI In',
+          headerName: 'Gpay In',
           minWidth: 150,
           valueFormatter: (params) => `₹ ${params.value || 0}`,
         },
@@ -113,7 +139,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         },
         {
           field: 'upiLess',
-          headerName: 'UPI Less',
+          headerName: 'Gpay Less',
           minWidth: 150,
           valueFormatter: (params) => `₹ ${params.value || 0}`,
         },

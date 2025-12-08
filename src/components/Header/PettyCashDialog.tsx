@@ -18,7 +18,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
 
   // Filter orders paid today
-  const today = dayjs().subtract(1, 'day').startOf('day');
+  const today = dayjs().startOf('day');
   const paidTodayOrders =
     rentalOrders?.filter(
       (order) => order.invoice_date && dayjs(order.invoice_date).isSame(today, 'day')

@@ -6,7 +6,7 @@ import CustomTable from '../../styled/CustomTable';
 import { ColDef, ColGroupDef } from 'ag-grid-community';
 import dayjs from 'dayjs';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
-import { PaymentMode, PaymentStatus, RepaymentMode, RentalOrderType } from '../../types/order';
+import { PaymentMode, RepaymentMode, RentalOrderType } from '../../types/order';
 import { calculateFinalAmount } from '../../pages/private/Orders/utils';
 
 interface PettyCashDialogProps {
@@ -21,10 +21,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const today = dayjs().subtract(1, 'day').startOf('day');
   const paidTodayOrders =
     rentalOrders?.filter(
-      (order) =>
-        order.status === PaymentStatus.PAID &&
-        order.invoice_date &&
-        dayjs(order.invoice_date).isSame(today, 'day')
+      (order) => order.invoice_date && dayjs(order.invoice_date).isSame(today, 'day')
     ) || [];
 
   // Process row data

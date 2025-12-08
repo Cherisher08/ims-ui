@@ -16,6 +16,7 @@ import {
   ClientSideRowModelModule,
   ModuleRegistry,
   RowApiModule,
+  PaginationModule,
 } from 'ag-grid-community';
 import {
   CellSelectionModule,
@@ -37,7 +38,8 @@ ModuleRegistry.registerModules([
   MasterDetailModule,
   AllCommunityModule,
   CellSelectionModule,
-  ClipboardModule
+  ClipboardModule,
+  PaginationModule,
 ]);
 
 type CustomTableProps<T> = {
@@ -59,6 +61,7 @@ type CustomTableProps<T> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRowGroupOpened?: (params: any) => void;
   onFilterChanged?: () => void;
+  paginationPageSize?: number;
 };
 
 const CustomTable = <T,>({
@@ -82,6 +85,7 @@ const CustomTable = <T,>({
   getRowHeight = () => null,
   onRowGroupOpened = () => null,
   onFilterChanged = () => {},
+  paginationPageSize = 10,
 }: CustomTableProps<T>) => {
   const handleGridReady = useCallback(
     (params: GridReadyEvent) => {
@@ -103,8 +107,8 @@ const CustomTable = <T,>({
         pagination={pagination}
         rowModelType={rowModelType}
         headerHeight={40}
-        paginationPageSizeSelector={[10]}
-        paginationPageSize={10}
+        paginationPageSizeSelector={[10, 20, 50, 100]}
+        paginationPageSize={paginationPageSize}
         rowHeight={rowHeight}
         detailRowHeight={400}
         onRowDataUpdated={onRowDataUpdated}

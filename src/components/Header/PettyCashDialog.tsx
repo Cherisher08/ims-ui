@@ -203,22 +203,25 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         row.kvbLess > 0
     );
 
+  // Filter petty cash data for today
+  const todayPettyCashes =
+    pettyCashes?.filter((pettyCash) => dayjs(pettyCash.created_date).isSame(today, 'day')) || [];
+
   // Process petty cash data
-  const processedPettyCashData =
-    pettyCashes?.map((pettyCash) => ({
-      dateTime: pettyCash.created_date,
-      inDate: pettyCash.created_date,
-      customerName: pettyCash.customer?.name || '',
-      phoneNumber: pettyCash.customer?.personal_number || pettyCash.customer?.office_number || '',
-      cashIn: pettyCash.balance_paid_mode === PaymentMode.CASH ? pettyCash.balance_paid : 0,
-      accountIn: pettyCash.balance_paid_mode === PaymentMode.ACCOUNT ? pettyCash.balance_paid : 0,
-      upiIn: pettyCash.balance_paid_mode === PaymentMode.UPI ? pettyCash.balance_paid : 0,
-      cashLess: pettyCash.payment_mode === RepaymentMode.CASHLESS ? pettyCash.repay_amount : 0,
-      upiLess: pettyCash.payment_mode === RepaymentMode.UPILESS ? pettyCash.repay_amount : 0,
-      kvbLess: pettyCash.payment_mode === RepaymentMode.KVBLESS ? pettyCash.repay_amount : 0,
-      isPettyCash: true,
-      _id: pettyCash._id,
-    })) || [];
+  const processedPettyCashData = todayPettyCashes.map((pettyCash) => ({
+    dateTime: pettyCash.created_date,
+    inDate: pettyCash.created_date,
+    customerName: pettyCash.customer?.name || '',
+    phoneNumber: pettyCash.customer?.personal_number || pettyCash.customer?.office_number || '',
+    cashIn: pettyCash.balance_paid_mode === PaymentMode.CASH ? pettyCash.balance_paid : 0,
+    accountIn: pettyCash.balance_paid_mode === PaymentMode.ACCOUNT ? pettyCash.balance_paid : 0,
+    upiIn: pettyCash.balance_paid_mode === PaymentMode.UPI ? pettyCash.balance_paid : 0,
+    cashLess: pettyCash.payment_mode === RepaymentMode.CASHLESS ? pettyCash.repay_amount : 0,
+    upiLess: pettyCash.payment_mode === RepaymentMode.UPILESS ? pettyCash.repay_amount : 0,
+    kvbLess: pettyCash.payment_mode === RepaymentMode.KVBLESS ? pettyCash.repay_amount : 0,
+    isPettyCash: true,
+    _id: pettyCash._id,
+  }));
 
   const rowData = [...processedPettyCashData, ...processedRowData];
 

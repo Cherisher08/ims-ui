@@ -1282,9 +1282,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               }}
             >
               <Image src="/qr.jpeg" style={{ width: 100, height: 100 }} />
-              <Text style={{ fontSize: 10, marginTop: 2 }}>
-                Scan to Pay - UPI ID: manipowertools9153@hdfcbank
-              </Text>
+              <Text style={{ fontSize: 10, marginTop: 2 }}>Scan QR to Pay your bill</Text>
             </View>
             <View style={{ marginTop: 8, width: '40%' }}>
               <Text style={[styles.bankDetails, { marginBottom: 3 }]}>Terms & Conditions</Text>

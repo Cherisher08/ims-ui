@@ -59,6 +59,7 @@ export const rootApi = createApi({
     'Sales',
     'Service',
     'Expired',
+    'PettyCash',
   ],
   endpoints: (build) => ({
     getUser: build.query<User, void>({

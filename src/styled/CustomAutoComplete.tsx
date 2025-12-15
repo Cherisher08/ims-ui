@@ -15,7 +15,7 @@ export type LabelNavigation = {
 type CustomAutoCompleteProps = {
   value: string;
   options: CustomOptionProps[];
-  onChange: (value?: string) => void;
+  onChange: (value?: string, id?: string) => void;
   label: string;
   placeholder: string;
   addNewValue: (value: string) => void;
@@ -23,8 +23,9 @@ type CustomAutoCompleteProps = {
   error?: boolean;
   helperText?: string;
   className?: string;
-  disabled?:boolean;
+  disabled?: boolean;
   labelNavigation?: LabelNavigation;
+  checkId?: boolean;
 };
 
 const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
@@ -38,8 +39,9 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   helperText = '',
   className = '',
   createOption = true,
-  disabled =false,
+  disabled = false,
   labelNavigation = { label: '', link: '' },
+  checkId = false,
 }) => {
   const [inputValue, setInputValue] = useState(value);
 
@@ -66,12 +68,12 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   };
 
   const currentValue = useMemo(() => {
-    return (
-      options.find((option) => option.value === value) ?? {
-        id: '',
-        value: '',
-      }
-    );
+    return checkId
+      ? options.find((option) => option.id === value)
+      : options.find((option) => option.value === value) ?? {
+          id: '',
+          value: '',
+        };
   }, [options, value]);
 
   return (
@@ -141,7 +143,7 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
               </li>
             );
           }}
-          onChange={(_, newValue) => onChange(newValue?.value)}
+          onChange={(_, newValue) => onChange(newValue?.value, newValue?.id)}
         />
       </div>
     </div>

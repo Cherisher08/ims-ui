@@ -175,6 +175,7 @@ const NewOrder = () => {
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
   const [showDeliveryChallanModal, setShowDeliveryChallanModal] = useState<boolean>(false);
   const [deliveryChallanOrderLabel, setDeliveryChallanOrderLabel] = useState<string>('');
+  const [selectedPhone, setSelectedPhone] = useState<string>('');
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
@@ -562,6 +563,11 @@ const NewOrder = () => {
       if (isRentalOrderQueryByIdSuccess) {
         setOrderInfo(existingRentalOrder);
         setDepositData(existingRentalOrder.deposits);
+        setSelectedPhone(
+          existingRentalOrder.customer?.personal_number ||
+            existingRentalOrder.customer?.office_number ||
+            ''
+        );
       }
     } else if (isRentalOrdersQuerySuccess) {
       const orderId = '-';
@@ -900,16 +906,13 @@ const NewOrder = () => {
           addNewValue={() => {}}
           placeholder=""
           createOption={false}
-          value={
-            contacts.find(
-              (cont) =>
-                cont?.personal_number === orderInfo?.customer?.personal_number ||
-                cont?.office_number === orderInfo?.customer?.personal_number
-            )?.personal_number || ''
-          }
+          value={selectedPhone}
           label="Customer Mobile"
           onChange={(value) => {
-            const contact = contacts.find((c) => c.personal_number === value);
+            setSelectedPhone(value || '');
+            const contact = contacts.find(
+              (c) => c.personal_number === value || c.office_number === value
+            );
             if (contact) {
               handleValueChange('customer', contact);
             } else {
@@ -927,13 +930,19 @@ const NewOrder = () => {
           label="Customer"
           options={formatContacts(contacts)}
           value={
-            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
-              ?.value ?? ''
+            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)?.id ??
+            ''
           }
-          onChange={(name) => {
-            handleValueChange(
-              'customer',
-              contacts.find((option) => option.name === name)
+          onChange={(name, id) => {
+            console.log('id: ', id);
+            const contact = contacts.find((option) => option._id === id);
+            handleValueChange('customer', contact);
+            setSelectedPhone(
+              contact?.personal_number === selectedPhone
+                ? contact.personal_number
+                : contact?.office_number === selectedPhone
+                ? contact.office_number
+                : contact?.personal_number || contact?.office_number || ''
             );
           }}
           error={customerError}
@@ -942,6 +951,7 @@ const NewOrder = () => {
           //   label: 'View Past Bills',
           //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
           // }}
+          checkId={true}
         />
         {/* {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect

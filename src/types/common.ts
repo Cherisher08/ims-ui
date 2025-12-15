@@ -1,3 +1,6 @@
+import { ContactInfoType } from './contact';
+import { PaymentMode, RepaymentMode } from './order';
+
 export type ErrorResponse = {
   detail?: string;
   message?: string;
@@ -88,3 +91,13 @@ export interface PatchPayload {
   id: string;
   payload: PatchOperation[];
 }
+
+export type PettyCash = {
+  _id?: string;
+  created_date: string;
+  customer: ContactInfoType;
+  balance_paid: number;
+  balance_paid_mode: PaymentMode;
+  payment_mode: RepaymentMode;
+  repay_amount: number;
+};

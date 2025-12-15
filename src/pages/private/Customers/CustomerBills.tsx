@@ -134,12 +134,7 @@ const CustomerBills = () => {
 
   useEffect(() => {
     if (rentalOrderData && id) {
-      const filtered = rentalOrderData.filter(
-        (order) =>
-          order.customer?._id === id &&
-          order.status !== PaymentStatus.CANCELLED &&
-          order.status !== PaymentStatus.NO_BILL
-      );
+      const filtered = rentalOrderData.filter((order) => order.customer?._id === id);
 
       const orders = splitOrdersByDate(filtered);
       setCustomerOrders(orders.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date))));

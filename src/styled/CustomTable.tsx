@@ -25,6 +25,7 @@ import {
   ColumnsToolPanelModule,
   ContextMenuModule,
   MasterDetailModule,
+  SetFilterModule,
 } from 'ag-grid-enterprise';
 import { useCallback } from 'react';
 import CustomDetailRenderer from '../pages/private/Orders/CustomDetailRenderer';
@@ -40,6 +41,7 @@ ModuleRegistry.registerModules([
   CellSelectionModule,
   ClipboardModule,
   PaginationModule,
+  SetFilterModule,
 ]);
 
 type CustomTableProps<T> = {

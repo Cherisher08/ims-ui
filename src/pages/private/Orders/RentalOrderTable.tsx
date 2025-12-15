@@ -666,7 +666,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       headerName: 'Order Status',
       headerClass: 'ag-header-wrap',
       maxWidth: 250,
-      filter: 'agTextColumnFilter',
+      filter: 'agSetColumnFilter',
       pinned: 'right',
       // editable: true,
       // singleClickEdit: true,

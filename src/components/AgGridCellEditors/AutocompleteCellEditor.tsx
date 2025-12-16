@@ -41,6 +41,7 @@ export const AutocompleteCellEditor = ({
       value={selected}
       onChange={handleChange}
       onBlur={handleBlur}
+      isOptionEqualToValue={(option, value) => option._id === value._id}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -52,6 +53,11 @@ export const AutocompleteCellEditor = ({
           }}
           size="small"
         />
+      )}
+      renderOption={(props, option) => (
+        <li {...props} key={option._id}>
+          {option.name}
+        </li>
       )}
       disableClearable
       autoHighlight

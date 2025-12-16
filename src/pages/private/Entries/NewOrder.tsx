@@ -78,7 +78,7 @@ import EntryMenu from './EntryMenu';
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
     id: contact._id ?? '',
-    value: contact.name,
+    value: `${contact.name}${contact.personal_number ? ` (${contact.personal_number})` : ''}`,
   }));
 
 type ErrorType = {
@@ -166,6 +166,7 @@ const NewOrder = () => {
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalOrder);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string>('');
   const [isCancelled, setIsCancelled] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
@@ -175,7 +176,6 @@ const NewOrder = () => {
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
   const [showDeliveryChallanModal, setShowDeliveryChallanModal] = useState<boolean>(false);
   const [deliveryChallanOrderLabel, setDeliveryChallanOrderLabel] = useState<string>('');
-  const [selectedPhone, setSelectedPhone] = useState<string>('');
 
   const [depositData, setDepositData] = useState<DepositType[]>([
     {
@@ -563,11 +563,6 @@ const NewOrder = () => {
       if (isRentalOrderQueryByIdSuccess) {
         setOrderInfo(existingRentalOrder);
         setDepositData(existingRentalOrder.deposits);
-        setSelectedPhone(
-          existingRentalOrder.customer?.personal_number ||
-            existingRentalOrder.customer?.office_number ||
-            ''
-        );
       }
     } else if (isRentalOrdersQuerySuccess) {
       const orderId = '-';
@@ -906,10 +901,10 @@ const NewOrder = () => {
           addNewValue={() => {}}
           placeholder=""
           createOption={false}
-          value={selectedPhone}
+          value={selectedPhoneNumber}
           label="Customer Mobile"
           onChange={(value) => {
-            setSelectedPhone(value || '');
+            setSelectedPhoneNumber(value || '');
             const contact = contacts.find(
               (c) => c.personal_number === value || c.office_number === value
             );
@@ -930,20 +925,25 @@ const NewOrder = () => {
           label="Customer"
           options={formatContacts(contacts)}
           value={
-            formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)?.id ??
-            ''
+            orderInfo.customer && orderInfo.customer?._id
+              ? formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
+                  ?.value ?? ''
+              : ''
           }
-          onChange={(name, id) => {
-            console.log('id: ', id);
-            const contact = contacts.find((option) => option._id === id);
-            handleValueChange('customer', contact);
-            setSelectedPhone(
-              contact?.personal_number === selectedPhone
-                ? contact.personal_number
-                : contact?.office_number === selectedPhone
-                ? contact.office_number
-                : contact?.personal_number || contact?.office_number || ''
-            );
+          onChange={(selectedValue) => {
+            if (selectedValue) {
+              const selectedOption = formatContacts(contacts).find(
+                (option) => option.value === selectedValue
+              );
+              if (selectedOption) {
+                const customer = contacts.find((c) => c._id === selectedOption.id);
+                if (customer) {
+                  handleValueChange('customer', customer);
+                  // Reset to personal_number when selecting via customer name
+                  setSelectedPhoneNumber(customer.personal_number || '');
+                }
+              }
+            }
           }}
           error={customerError}
           helperText={customerErrorText}
@@ -951,7 +951,6 @@ const NewOrder = () => {
           //   label: 'View Past Bills',
           //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
           // }}
-          checkId={true}
         />
         {/* {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect

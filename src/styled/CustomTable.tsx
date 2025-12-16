@@ -29,6 +29,7 @@ import {
 } from 'ag-grid-enterprise';
 import { useCallback } from 'react';
 import CustomDetailRenderer from '../pages/private/Orders/CustomDetailRenderer';
+import { AutocompleteCellEditor } from '../components/AgGridCellEditors/AutocompleteCellEditor';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
@@ -119,6 +120,7 @@ const CustomTable = <T,>({
         getRowStyle={(params) => getRowStyle(params)}
         components={{
           customDetailRenderer: CustomDetailRenderer,
+          AutocompleteCellEditor: AutocompleteCellEditor,
         }}
         detailCellRenderer="customDetailRenderer"
         domLayout="autoHeight"

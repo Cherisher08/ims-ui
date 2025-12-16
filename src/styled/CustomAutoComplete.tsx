@@ -43,19 +43,12 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   labelNavigation = { label: '', link: '' },
   checkId = false,
 }) => {
-  const [inputValue, setInputValue] = useState(value);
-
-  const customOptions = [
-    ...options.filter((option) => {
-      return option.value?.toLowerCase().includes(inputValue.toLowerCase());
-    }),
-  ];
+  const [inputValue, setInputValue] = useState('');
 
   const customFilterOptions = (
     options: CustomOptionProps[],
     { inputValue }: { inputValue: string }
   ) => {
-    setInputValue(inputValue);
     const filteredOptions = options.filter((option) =>
       option.value.toLowerCase().includes(inputValue.toLowerCase())
     );
@@ -68,13 +61,12 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
   };
 
   const currentValue = useMemo(() => {
-    return checkId
+    const foundValue = checkId
       ? options.find((option) => option.id === value)
-      : options.find((option) => option.value === value) ?? {
-          id: '',
-          value: '',
-        };
-  }, [options, value]);
+      : options.find((option) => option.value === value);
+
+    return foundValue || null;
+  }, [checkId, options, value]);
 
   return (
     <div className="flex flex-col w-full">
@@ -98,7 +90,9 @@ const CustomAutoComplete: React.FC<CustomAutoCompleteProps> = ({
         <Autocomplete
           autoHighlight
           value={currentValue}
-          options={createOption ? customOptions : options}
+          inputValue={inputValue}
+          onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
+          options={options}
           filterOptions={customFilterOptions}
           getOptionLabel={(option) => {
             if (typeof option === 'string') return option;

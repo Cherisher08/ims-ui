@@ -14,6 +14,7 @@ import {
 } from '../../services/PettyCashService';
 import { PaymentMode, RepaymentMode, RentalOrderType } from '../../types/order';
 import { calculateFinalAmount } from '../../pages/private/Orders/utils';
+import { AutocompleteCellEditor } from '../AgGridCellEditors/AutocompleteCellEditor';
 
 interface PettyCashDialogProps {
   open: boolean;
@@ -74,38 +75,57 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
 
       // Handle different field updates
       if (params.colDef.field === 'customerName') {
-        const contact = contacts?.find((c) => c.name === params.newValue);
-        if (contact) {
-          updatedPettyCash.customer = {
-            ...updatedPettyCash.customer,
-            _id: contact._id,
-            name: params.newValue,
-            personal_number: contact.personal_number || '',
-            office_number: contact.office_number || '',
-          };
-        } else {
-          updatedPettyCash.customer = {
-            ...updatedPettyCash.customer,
-            name: params.newValue,
-          };
+        const selectedOption = params.newValue;
+        if (selectedOption && typeof selectedOption === 'object') {
+          // When selected from dropdown, it's an object with { id, name }
+          const contact = contacts?.find((c) => c._id === selectedOption.id);
+          if (contact) {
+            updatedPettyCash.customer = {
+              ...updatedPettyCash.customer,
+              _id: contact._id,
+              name: contact.name,
+              personal_number: contact.personal_number || '',
+              office_number: contact.office_number || '',
+            };
+          }
+        } else if (typeof selectedOption === 'string') {
+          // Fallback for string values
+          const contact = contacts?.find((c) => c.name === selectedOption);
+          if (contact) {
+            updatedPettyCash.customer = {
+              ...updatedPettyCash.customer,
+              _id: contact._id,
+              name: selectedOption,
+              personal_number: contact.personal_number || '',
+              office_number: contact.office_number || '',
+            };
+          } else {
+            updatedPettyCash.customer = {
+              ...updatedPettyCash.customer,
+              name: selectedOption,
+            };
+          }
         }
       } else if (params.colDef.field === 'phoneNumber') {
-        const contact = contacts?.find(
-          (c) => c.personal_number === params.newValue || c.office_number === params.newValue
-        );
-        if (contact) {
-          updatedPettyCash.customer = {
-            ...updatedPettyCash.customer,
-            _id: contact._id,
-            name: contact.name,
-            personal_number: params.newValue,
-            office_number: contact.office_number || '',
-          };
-        } else {
-          updatedPettyCash.customer = {
-            ...updatedPettyCash.customer,
-            personal_number: params.newValue,
-          };
+        const selectedOption = params.newValue;
+        if (selectedOption && typeof selectedOption === 'object') {
+          // Extract the actual contact ID (could be contactId or id depending on structure)
+          const contactId = selectedOption.contactId || selectedOption.id?.split('-')[0];
+          const contact = contacts?.find((c) => c._id === contactId);
+          if (contact) {
+            updatedPettyCash.customer = {
+              ...updatedPettyCash.customer,
+              _id: contact._id,
+              name: contact.name,
+              personal_number: selectedOption.name,
+              office_number: contact.office_number || '',
+            };
+          } else {
+            updatedPettyCash.customer = {
+              ...updatedPettyCash.customer,
+              personal_number: selectedOption.name,
+            };
+          }
         }
       } else if (params.colDef.field === 'cashIn') {
         updatedPettyCash.balance_paid = params.newValue;
@@ -226,10 +246,18 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const rowData = [...processedPettyCashData, ...processedRowData];
 
   // Create dropdown options for customer name and phone number
-  const customerNameOptions = contacts?.map((contact) => contact.name) || [];
-  const phoneNumberOptions =
+  const customerNameIdNameOptions =
+    contacts?.map((contact) => ({ id: contact._id, name: contact.name })) || [];
+  const phoneNumberIdNameOptions =
     contacts?.flatMap((contact) =>
-      [contact.personal_number, contact.office_number].filter(Boolean)
+      [
+        contact.personal_number
+          ? { id: `${contact._id}-personal`, name: contact.personal_number, contactId: contact._id }
+          : null,
+        contact.office_number
+          ? { id: `${contact._id}-office`, name: contact.office_number, contactId: contact._id }
+          : null,
+      ].filter(Boolean)
     ) || [];
 
   const colDefs: (ColDef | ColGroupDef)[] = [
@@ -256,9 +284,9 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       headerName: 'Customer name',
       minWidth: 200,
       editable: (params) => params.data?.isPettyCash || false,
-      cellEditor: 'agSelectCellEditor',
+      cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
-        values: customerNameOptions,
+        customerOptions: customerNameIdNameOptions,
       },
     },
     {
@@ -266,9 +294,9 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       headerName: 'Phone Number',
       minWidth: 150,
       editable: (params) => params.data?.isPettyCash || false,
-      cellEditor: 'agSelectCellEditor',
+      cellEditor: AutocompleteCellEditor,
       cellEditorParams: {
-        values: phoneNumberOptions,
+        customerOptions: phoneNumberIdNameOptions,
       },
     },
     {

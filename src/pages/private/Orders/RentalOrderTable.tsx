@@ -137,10 +137,24 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
 
     const sent = bill?.is_sent || false;
 
+    const tickIcon = () => {
+      if (params.data.status === PaymentStatus.PAID) {
+        return (
+          <div className="flex h-full w-full justify-center items-center">
+            <FaCheckCircle className="text-green-600 text-xl" />
+          </div>
+        );
+      } else {
+        return (
+          <div className="flex h-full w-full justify-center items-center">
+            <FaCheckCircle className="text-blue-600 text-xl" />
+          </div>
+        );
+      }
+    };
+
     return sent ? (
-      <div className="flex h-full w-full justify-center items-center">
-        <FaCheckCircle className="text-green-600 text-xl" />
-      </div>
+      tickIcon()
     ) : (
       <div className="flex h-full w-full justify-center items-center">
         <FaTimesCircle className="text-red-600 text-xl" />

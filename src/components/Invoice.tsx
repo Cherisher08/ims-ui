@@ -154,8 +154,16 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     const roundOff = data.round_off || 0;
     const ewayBillAmount = data.eway_amount || 0;
     const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount - discountAmount);
+    const damageExpenses = data.damage_expenses || 0;
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        ewayBillAmount +
+        damageExpenses
+      ).toFixed(2)
     );
   };
 

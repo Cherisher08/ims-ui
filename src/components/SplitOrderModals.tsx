@@ -83,6 +83,7 @@ const initialRentalOrder: RentalOrderInfo = {
   eway_type: TransportType.NULL,
   balance_paid: 0,
   balance_paid_mode: PaymentMode.NULL,
+  damage_expenses: 0,
   repay_amount: 0,
   balance_paid_date: '',
   repay_date: '',

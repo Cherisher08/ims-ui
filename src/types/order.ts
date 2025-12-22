@@ -134,6 +134,7 @@ export type RentalOrderInfo = OrderInfo & {
   eway_amount: number;
   eway_mode: PaymentMode;
   eway_type: TransportType;
+  damage_expenses?: number;
   balance_paid: number;
   balance_paid_mode: PaymentMode;
   balance_paid_date: string;

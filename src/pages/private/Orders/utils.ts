@@ -316,8 +316,17 @@ export const calculateFinalAmount = (
       ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
       : orderInfo.discount || 0;
   const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+  const damageExpenses = orderInfo.damage_expenses || 0;
   return parseFloat(
-    (finalAmount - discountAmount - balance_paid + gstAmount + roundOff + ewayBillAmount).toFixed(2)
+    (
+      finalAmount -
+      discountAmount -
+      balance_paid +
+      gstAmount +
+      roundOff +
+      ewayBillAmount +
+      damageExpenses
+    ).toFixed(2)
   );
 };
 

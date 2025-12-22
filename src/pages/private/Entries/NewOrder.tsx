@@ -120,6 +120,7 @@ const initialRentalOrder: RentalOrderInfo = {
   product_details: [],
   deposits: [],
   eway_amount: 0,
+  damage_expenses: 0,
   eway_mode: PaymentMode.CASH,
   eway_type: TransportType.NULL,
   balance_paid: 0,
@@ -257,13 +258,21 @@ const NewOrder = () => {
     const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
 
     return parseFloat(
-      (finalAmount - discountAmount + gstAmount + roundOff + orderInfo.eway_amount).toFixed(2)
+      (
+        finalAmount -
+        discountAmount +
+        gstAmount +
+        roundOff +
+        (orderInfo.eway_amount || 0) +
+        (orderInfo.damage_expenses || 0)
+      ).toFixed(2)
     );
   }, [
     calculateTotalAmount,
     orderInfo.discount,
     orderInfo.discount_type,
     orderInfo.eway_amount,
+    orderInfo.damage_expenses,
     orderInfo.gst,
     orderInfo.round_off,
   ]);
@@ -759,6 +768,8 @@ const NewOrder = () => {
   if (!isProductsQuerySuccess) {
     return <Loader />;
   }
+
+  const hasRepair = orderInfo.product_details.some((p) => (p.order_repair_count || 0) >= 1);
 
   const getCurrentOrderStatus = () => {
     const now = new Date();
@@ -1721,8 +1732,8 @@ const NewOrder = () => {
             value={orderInfo.repay_amount}
             onChange={(val) => {
               handlePaymentStatus("repay_amount", Number(val));
-            }}
-          /> */}
+              }}
+              /> */}
           <CustomDatePicker
             label="Repayment Details"
             value={dayjs(orderInfo.repay_date).format('DD-MMM-YYYY') || ''}
@@ -1785,6 +1796,19 @@ const NewOrder = () => {
               />
             </div>
           </Tooltip>
+        </div>
+        <div className="grid grid-cols-[2fr_2fr] gap-2">
+          <CustomInput
+            label="Damage expenses"
+            type="number"
+            wrapperClass="w-full mt-2"
+            placeholder="Enter Damage expenses"
+            value={orderInfo.damage_expenses || 0}
+            disabled={!hasRepair}
+            onChange={(val) => {
+              handleValueChange('damage_expenses', Number(val));
+            }}
+          />
         </div>
       </div>
 

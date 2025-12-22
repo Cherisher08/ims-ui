@@ -245,11 +245,13 @@ const Header = ({ open, setOpen }: HeaderType) => {
           })}
         </ul>
         <div className="flex items-center gap-4">
-          <CustomButton
-            label={'Petty Cash'}
-            onClick={() => setPettyCashDialogOpen(true)}
-            className="bg-white text-primary font-semibold hover:bg-gray-200 max-md:hidden"
-          ></CustomButton>
+          {userData.role === UserRole.Admin && (
+            <CustomButton
+              label={'Petty Cash'}
+              onClick={() => setPettyCashDialogOpen(true)}
+              className="bg-white text-primary font-semibold hover:bg-gray-200 max-md:hidden"
+            ></CustomButton>
+          )}
           <IconButton
             onClick={toggleDrawer(true)}
             sx={{

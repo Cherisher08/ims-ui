@@ -40,6 +40,7 @@ export const transformRentalOrderToUTC = (order: RentalOrderInfo) => {
     out_date: toUTCISOString(order.out_date),
     repay_date: toUTCISOString(order.repay_date),
     balance_paid_date: toUTCISOString(order.balance_paid_date),
+    invoice_date: toUTCISOString(order.invoice_date),
     customer: order.customer
       ? {
           ...order.customer,

@@ -74,6 +74,7 @@ import {
 } from '../Orders/utils';
 import DeliveryChallanDialog from './DeliveryChallanDialog';
 import EntryMenu from './EntryMenu';
+import { Tooltip } from '@mui/material';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -370,7 +371,9 @@ const NewOrder = () => {
         ? newOrderInfo.invoice_id
         : getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
       newOrderInfo.invoice_id = newInvoiceId;
-      newOrderInfo.invoice_date = new Date().toISOString();
+      newOrderInfo.invoice_date = newOrderInfo.invoice_date
+        ? newOrderInfo.invoice_date
+        : new Date().toISOString();
       if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
         const orderId = getSplitOrderId(
           newOrderInfo.order_id,
@@ -557,6 +560,17 @@ const NewOrder = () => {
       setContacts(contactsData);
     }
   }, [contactsData, isContactsQuerySuccess, isProductsQuerySuccess, productsData]);
+
+  useEffect(() => {
+    const cust = orderInfo?.customer;
+    if (cust) {
+      const phone =
+        cust.personal_number && cust.personal_number !== ''
+          ? cust.personal_number
+          : cust.office_number || '';
+      setSelectedPhoneNumber(phone);
+    }
+  }, [orderInfo?.customer]);
 
   useEffect(() => {
     if (rentalId) {
@@ -1744,6 +1758,33 @@ const NewOrder = () => {
               }}
             />
           </div>
+        </div>
+        <div className="grid grid-cols-[2fr_2fr] gap-2">
+          <Tooltip
+            title={
+              orderInfo.billing_mode === BillingMode.B2B
+                ? 'Invoice Date is disabled for B2B Billing Mode'
+                : ''
+            }
+            placement="bottom-start"
+          >
+            <div>
+              <CustomDatePicker
+                label="Invoice Date"
+                value={dayjs(orderInfo.invoice_date).format('DD-MMM-YYYY') || ''}
+                // className="w-[11rem]"
+                onChange={(val) => {
+                  const newInvoiceId = orderInfo.invoice_id
+                    ? orderInfo.invoice_id
+                    : getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
+                  handleValueChange('invoice_id', newInvoiceId);
+                  handleValueChange('invoice_date', val);
+                }}
+                format="DD/MM/YYYY"
+                disabled={orderInfo.billing_mode === BillingMode.B2B}
+              />
+            </div>
+          </Tooltip>
         </div>
       </div>
 

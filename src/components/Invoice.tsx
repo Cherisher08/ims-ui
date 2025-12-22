@@ -916,6 +916,15 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         },
                       ]
                     : []),
+                  ...(data.damage_expenses
+                    ? [
+                        {
+                          label: 'Damage Expenses',
+                          value: `Rs. ${data.damage_expenses?.toFixed(2)}`,
+                          bottom: true,
+                        },
+                      ]
+                    : []),
                 ].map((item, index) => (
                   <View
                     key={index}

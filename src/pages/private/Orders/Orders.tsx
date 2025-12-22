@@ -139,13 +139,6 @@ const Orders = () => {
             label="Add Customer"
             icon={<LuPlus color="white" />}
           />
-          <CustomButton
-            onClick={() => {
-              if (rentalOrderData) exportOrderToExcel(rentalOrderData as RentalOrderType[]);
-            }}
-            label="Export Orders"
-            icon={<RiFileExcel2Line color="white" />}
-          />
           <CustomSplitButton
             onClick={() => {
               if (rentalOrderData) exportOrderToExcel(rentalOrderData as RentalOrderType[]);

@@ -152,7 +152,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   };
 
   // Filter orders with transactions today
-  const today = dayjs().startOf('day');
+  const today = dayjs().subtract(1, 'day').startOf('day');
   const paidTodayOrders =
     rentalOrders?.filter(
       (order) =>

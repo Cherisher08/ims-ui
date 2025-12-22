@@ -16,10 +16,13 @@ import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
 import RentalOrderTable from './RentalOrderTable';
 import { exportOrderToExcel, transformRentalOrderData } from './utils';
+import CustomSplitButton from '../../../styled/CustomSplitButton';
+import { GridApi } from 'ag-grid-community';
 
 const Orders = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
   // const [customerId, setCustomerId] = useState<string>('');
   // const [customerOutstanding, setCustomerOutstanding] = useState(0);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
@@ -143,6 +146,41 @@ const Orders = () => {
             label="Export Orders"
             icon={<RiFileExcel2Line color="white" />}
           />
+          <CustomSplitButton
+            onClick={() => {
+              if (rentalOrderData) exportOrderToExcel(rentalOrderData as RentalOrderType[]);
+            }}
+            label="Export Orders"
+            icon={<RiFileExcel2Line color="white" />}
+            options={['All Orders', 'Filtered Orders']}
+            onMenuItemClick={(index) => {
+              try {
+                if (index === 0) {
+                  // All invoices
+                  if (rentalOrderData && rentalOrderData.length > 0) {
+                    exportOrderToExcel(rentalOrderData as RentalOrderType[]);
+                  }
+                } else if (index === 1) {
+                  // Filtered invoices - collect filtered rows via gridApi
+                  if (!gridApi) {
+                    // fallback to all if grid not ready
+                    if (rentalOrderData && rentalOrderData.length > 0)
+                      exportOrderToExcel(rentalOrderData as RentalOrderType[]);
+                    return;
+                  }
+                  const filtered: RentalOrderType[] = [];
+                  gridApi.forEachNodeAfterFilter((node) => {
+                    if (node && node.data) {
+                      filtered.push(node.data as RentalOrderType);
+                    }
+                  });
+                  if (filtered.length > 0) exportOrderToExcel(filtered);
+                }
+              } catch (err) {
+                console.error('Failed to export invoices', err);
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -193,6 +231,7 @@ const Orders = () => {
         <RentalOrderTable
           rentalOrders={rentalOrders}
           viewChallans={viewChallans}
+          onGridReady={(api) => setGridApi(api)}
           // setSelectedCustomerId={(selectedId) => {
           //   setCustomerId(selectedId);
           // }}

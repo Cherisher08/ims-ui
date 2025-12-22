@@ -16,6 +16,7 @@ import CustomTable from '../../../styled/CustomTable';
 
 import { IoPrintOutline } from 'react-icons/io5';
 import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
+import { GridApi } from 'ag-grid-community';
 import {
   calculateFinalAmount,
   currencyFormatter,
@@ -27,7 +28,7 @@ import {
 } from '../Orders/utils';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { RiFileExcel2Line } from 'react-icons/ri';
-import CustomButton from '../../../styled/CustomButton';
+import CustomSplitButton from '../../../styled/CustomSplitButton';
 
 const Invoices: FC = () => {
   // Set PDF.js worker once
@@ -37,6 +38,7 @@ const Invoices: FC = () => {
   ).toString();
 
   const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
 
   const [sendDcWhatsapp] = usePostOrderDcAsWhatsappMessageMutation();
   const [updateRentalOrder] = useUpdateRentalOrderMutation();
@@ -283,18 +285,47 @@ const Invoices: FC = () => {
     <div className="flex flex-col w-full h-full gap-2">
       <div className="flex justify-between">
         <p className="font-primary w-full text-center text-2xl font-bold">INVOICES</p>
-        <CustomButton
+        <CustomSplitButton
           onClick={() => {
             if (orderData) exportInvoiceToExcel(orderData as RentalOrderType[]);
           }}
           label="Export Invoices"
           icon={<RiFileExcel2Line color="white" />}
+          options={['All Invoices', 'Filtered Invoices']}
+          onMenuItemClick={(index) => {
+            try {
+              if (index === 0) {
+                // All invoices
+                if (orderData && orderData.length > 0) {
+                  exportInvoiceToExcel(orderData as RentalOrderType[]);
+                }
+              } else if (index === 1) {
+                // Filtered invoices - collect filtered rows via gridApi
+                if (!gridApi) {
+                  // fallback to all if grid not ready
+                  if (orderData && orderData.length > 0)
+                    exportInvoiceToExcel(orderData as RentalOrderType[]);
+                  return;
+                }
+                const filtered: RentalOrderType[] = [];
+                gridApi.forEachNodeAfterFilter((node) => {
+                  if (node && node.data) {
+                    filtered.push(node.data as RentalOrderType);
+                  }
+                });
+                if (filtered.length > 0) exportInvoiceToExcel(filtered);
+              }
+            } catch (err) {
+              console.error('Failed to export invoices', err);
+            }
+          }}
         />
       </div>
       <CustomTable
         isLoading={false}
         colDefs={rentalOrderColDef}
         rowData={orderData}
+        onGridReady={(api) => setGridApi(api as GridApi)}
         getRowStyle={() => {
           return {
             backgroundColor: 'white',

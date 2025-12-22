@@ -53,11 +53,13 @@ import {
 type RentalOrderTableProps = {
   rentalOrders: RentalOrderType[];
   viewChallans: boolean;
+  onGridReady?: (api: GridApi) => void;
 };
 
 const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   rentalOrders,
   viewChallans = false,
+  onGridReady,
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -75,10 +77,17 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   const orderData = rentalOrders.map((order) => ({ ...order }));
 
   // Child passes grid API up
-  const onGridReady = (api: GridApi) => {
+  const handleGridReady = (api: GridApi) => {
     gridApiRef.current = api;
     if (typeof storedPage === 'number') {
       api.paginationGoToPage(storedPage);
+    }
+    if (onGridReady) {
+      try {
+        onGridReady(api);
+      } catch (err) {
+        console.log(err);
+      }
     }
     // if (customer) {
     //   api.setFilterModel({
@@ -1020,7 +1029,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         isLoading={false}
         colDefs={rentalOrderColDef}
         rowData={orderData}
-        onGridReady={onGridReady}
+        onGridReady={handleGridReady}
         getRowStyle={() => {
           return {
             backgroundColor: 'white',

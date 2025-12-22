@@ -665,9 +665,11 @@ export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
     order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
 
   const hasRepair = order.product_details.some((p) => p.order_repair_count > 0);
-  if (hasRepair) {
+
+  if (hasRepair && order.status !== PaymentStatus.PAID) {
     return OrderStatusType.MACHINE_REPAIR;
   }
+
   const isMachineWorking = order.product_details.some((p) => {
     if (p.type !== ProductType.RENTAL || !p.out_date) return false;
 

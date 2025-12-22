@@ -23,8 +23,19 @@ export const pettyCashApi = rootApi.injectEndpoints({
       }),
       invalidatesTags: ['PettyCash'],
     }),
+    deletePettyCash: build.mutation<{ success: boolean; id: string }, string>({
+      query: (id) => ({
+        url: `petty-cash/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['PettyCash'],
+    }),
   }),
 });
 
-export const { useGetPettyCashesQuery, useCreatePettyCashMutation, useUpdatePettyCashMutation } =
-  pettyCashApi;
+export const {
+  useGetPettyCashesQuery,
+  useCreatePettyCashMutation,
+  useUpdatePettyCashMutation,
+  useDeletePettyCashMutation,
+} = pettyCashApi;

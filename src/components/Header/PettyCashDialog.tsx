@@ -11,10 +11,12 @@ import {
   useGetPettyCashesQuery,
   useCreatePettyCashMutation,
   useUpdatePettyCashMutation,
+  useDeletePettyCashMutation,
 } from '../../services/PettyCashService';
 import { PaymentMode, RepaymentMode, RentalOrderType } from '../../types/order';
 import { calculateFinalAmount } from '../../pages/private/Orders/utils';
 import { AutocompleteCellEditor } from '../AgGridCellEditors/AutocompleteCellEditor';
+import { toast } from 'react-toastify';
 
 interface PettyCashDialogProps {
   open: boolean;
@@ -42,10 +44,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const { data: pettyCashes, isSuccess: isPettyCashesQuerySuccess } = useGetPettyCashesQuery();
   const [createPettyCash] = useCreatePettyCashMutation();
   const [updatePettyCash] = useUpdatePettyCashMutation();
+  const [deletePettyCash] = useDeletePettyCashMutation();
 
   const addNewEntry = () => {
     const newPettyCash = {
-      created_date: new Date().toISOString(),
+      created_date: dayjs().subtract(1, 'day').toISOString(),
       customer: {
         _id: '',
         name: '',
@@ -148,6 +151,17 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       }
 
       updatePettyCash(updatedPettyCash);
+    }
+  };
+
+  const handleDelete = async (id?: string) => {
+    if (!id) return;
+    try {
+      await deletePettyCash(id).unwrap();
+      toast.success('Petty cash entry deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete petty cash', err);
+      toast.error('Failed to delete petty cash');
     }
   };
 
@@ -274,7 +288,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       field: 'inDate',
       headerName: 'In Date',
       minWidth: 120,
-      valueFormatter: (params) => {
+      valueFormatter: (params: { value: string }) => {
         const date = params.value ? new Date(params.value) : '';
         return date ? dayjs(date).format('DD-MMM-YYYY') : '';
       },
@@ -350,6 +364,24 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
           editable: (params) => params.data?.isPettyCash || false,
         },
       ],
+    },
+    {
+      headerName: 'Actions',
+      field: 'actions',
+      minWidth: 120,
+      cellRenderer: (params: { data: RowData }) => {
+        const data = params.data as RowData;
+        if (!data || !data.isPettyCash || !data._id) return null;
+        return (
+          <div>
+            <CustomButton
+              label="Delete"
+              onClick={() => handleDelete(data._id)}
+              variant="contained"
+            />
+          </div>
+        );
+      },
     },
   ];
 

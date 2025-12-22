@@ -56,7 +56,7 @@ export enum OrderStatusType {
   BILL_PENDING = 'Bill pending',
   REPAYMENT_PENDING = 'Repayment pending',
   PAID = 'Paid',
-  MACHINE_REPAIR = 'Machine Repair',
+  MACHINE_REPAIR = 'Repair Bill Pending',
   CANCELLED = 'Cancelled',
   NO_BILL = 'No Bill',
 }

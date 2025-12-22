@@ -1798,17 +1798,28 @@ const NewOrder = () => {
           </Tooltip>
         </div>
         <div className="grid grid-cols-[2fr_2fr] gap-2">
-          <CustomInput
-            label="Damage expenses"
-            type="number"
-            wrapperClass="w-full mt-2"
-            placeholder="Enter Damage expenses"
-            value={orderInfo.damage_expenses || 0}
-            disabled={!hasRepair}
-            onChange={(val) => {
-              handleValueChange('damage_expenses', Number(val));
-            }}
-          />
+          <Tooltip
+            title={
+              !hasRepair
+                ? 'Damage expenses is enabled only if at least one product is repaired'
+                : ''
+            }
+            placement="bottom-start"
+          >
+            <div>
+              <CustomInput
+                label="Damage expenses"
+                type="number"
+                wrapperClass="w-full mt-2"
+                placeholder="Enter Damage expenses"
+                value={orderInfo.damage_expenses || 0}
+                disabled={!hasRepair}
+                onChange={(val) => {
+                  handleValueChange('damage_expenses', Number(val));
+                }}
+              />
+            </div>
+          </Tooltip>
         </div>
       </div>
 

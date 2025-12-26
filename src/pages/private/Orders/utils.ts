@@ -383,24 +383,17 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
       };
 
       data.push({
-        'Order ID': i === 0 ? order.order_id : '',
-        Customer: i === 0 ? customerDetails().name : '',
-        'Customer Number': i === 0 ? customerDetails().phone : '',
-        'Balance Amount': i === 0 ? balanceAmount : '',
-        'Order Out Date':
-          i === 0
-            ? order.out_date
-              ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A')
-              : ''
-            : '',
+        'Order ID': order.order_id,
+        Customer: customerDetails().name,
+        'Customer Number': customerDetails().phone,
+        'Balance Amount': balanceAmount,
+        'Order Out Date': order.out_date ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') : '',
         'Order In Date':
-          i === 0
-            ? order.in_date && dayjs(order.in_date).isValid()
-              ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
-              : ''
+          order.in_date && dayjs(order.in_date).isValid()
+            ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
             : '',
-        Month: i === 0 ? dayjs(order.out_date).format('MMMM') : '',
-        'Rental Duration': i === 0 ? order.rental_duration?.toString() || '' : '',
+        Month: dayjs(order.out_date).format('MMMM'),
+        'Rental Duration': order.rental_duration?.toString() || '',
         'Deposit Amount': i < deposits.length ? deposits[i].amount : '',
         'Deposit Mode': i < deposits.length ? deposits[i].mode.toString() : '',
         Products: i < products.length ? products[i].name : '',
@@ -410,31 +403,28 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
             ? products[i].rent_per_unit * products[i].order_quantity * products[i].duration
             : '',
         'Order Quantity': i < products.length ? products[i].order_quantity.toString() : '',
-        'Amount (Before Taxes)': i === 0 ? calculateTotalAmount(order as RentalOrderType) : '',
-        'Amount (After Taxes)':
-          i === 0 ? calculateFinalAmount(order as RentalOrderType, false) : '',
-        'Repayment Amount': i === 0 ? repaymentAmount : '',
-        'Repayment Mode': i === 0 ? order.payment_mode : '',
-        GST: i === 0 ? `${order.gst} %` : '',
-        Discount: i === 0 ? order.discount?.toString() || '' : '',
-        'Discount Type': i === 0 ? order.discount_type : '',
-        'Transport Amount': i === 0 ? order.eway_amount || '' : '',
-        'Transport Payment Mode': i === 0 ? order.eway_mode : '',
-        'Transport Type': i === 0 ? order.eway_type : '',
-        'Round Off': i === 0 ? order.round_off || '' : '',
+        'Amount (Before Taxes)': calculateTotalAmount(order as RentalOrderType),
+        'Amount (After Taxes)': calculateFinalAmount(order as RentalOrderType, false),
+        'Repayment Amount': repaymentAmount,
+        'Repayment Mode': order.payment_mode,
+        GST: `${order.gst} %`,
+        Discount: order.discount?.toString() || '',
+        'Discount Type': order.discount_type,
+        'Transport Amount': order.eway_amount || '',
+        'Transport Payment Mode': order.eway_mode,
+        'Transport Type': order.eway_type,
+        'Round Off': order.round_off || '',
         'Balance Paid Date':
-          i === 0
-            ? order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
-              ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
-              : ''
+          order.balance_paid_date && dayjs(order.balance_paid_date).isValid()
+            ? dayjs(order.balance_paid_date).format('DD-MMM-YYYY hh:mm A')
             : '',
-        'Balance Paid Mode': i === 0 ? order.balance_paid_mode : '',
-        'Event Name': i === 0 ? order.event_name : '',
-        'Event Venue': i === 0 ? order.event_venue : '',
-        'Event Address': i === 0 ? order.event_address : '',
-        'Billing Mode': i === 0 ? order.billing_mode : '',
-        Status: i === 0 ? getOrderStatus(order as RentalOrderInfo) : '',
-        Remarks: i === 0 ? order.remarks : '',
+        'Balance Paid Mode': order.balance_paid_mode,
+        'Event Name': order.event_name,
+        'Event Venue': order.event_venue,
+        'Event Address': order.event_address,
+        'Billing Mode': order.billing_mode,
+        Status: getOrderStatus(order as RentalOrderInfo),
+        Remarks: order.remarks,
       });
 
       // Accumulate totals

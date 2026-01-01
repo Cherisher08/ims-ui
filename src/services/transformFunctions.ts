@@ -71,6 +71,6 @@ export const constructWhatsappFormData = (payloadData: DCWhatsappPayload) => {
   formData.append('customer_name', payloadData.messageDetails.customerName);
   formData.append('bill_type', payloadData.messageDetails.bill_type);
   formData.append('order_id', payloadData.messageDetails.orderId);
-  if (payloadData.pdf_file !== null) formData.append('pdf_file', payloadData.pdf_file);
+  if (payloadData.pdf_file !== null) formData.append('file', payloadData.pdf_file);
   return formData;
 };

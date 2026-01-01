@@ -259,6 +259,17 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
 
   const rowData = [...processedPettyCashData, ...processedRowData];
 
+  // Compute consolidated totals for numeric columns
+  const totalsRow = {
+    customerName: 'Totals',
+    cashIn: rowData.reduce((sum, r) => sum + (r.cashIn || 0), 0),
+    accountIn: rowData.reduce((sum, r) => sum + (r.accountIn || 0), 0),
+    upiIn: rowData.reduce((sum, r) => sum + (r.upiIn || 0), 0),
+    cashLess: rowData.reduce((sum, r) => sum + (r.cashLess || 0), 0),
+    upiLess: rowData.reduce((sum, r) => sum + (r.upiLess || 0), 0),
+    kvbLess: rowData.reduce((sum, r) => sum + (r.kvbLess || 0), 0),
+  };
+
   // Create dropdown options for customer name and phone number
   const customerNameIdNameOptions =
     contacts?.map((contact) => ({ id: contact._id, name: contact.name })) || [];
@@ -409,6 +420,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
               !isRentalOrdersQuerySuccess && !isContactsQuerySuccess && !isPettyCashesQuerySuccess
             }
             handleCellEditingStopped={handleCellEditingStopped}
+            pinnedBottomRowData={[totalsRow]}
           />
         </div>
         <div className="flex w-full gap-3 justify-end">

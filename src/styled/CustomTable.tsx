@@ -4,6 +4,7 @@ import type {
   GetRowIdParams,
   GridApi,
   GridReadyEvent,
+  PaginationChangedEvent,
   RowClassParams,
   RowHeightParams,
   RowModelType,
@@ -27,7 +28,7 @@ import {
   MasterDetailModule,
   SetFilterModule,
 } from 'ag-grid-enterprise';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import CustomDetailRenderer from '../pages/private/Orders/CustomDetailRenderer';
 import { AutocompleteCellEditor } from '../components/AgGridCellEditors/AutocompleteCellEditor';
 
@@ -65,6 +66,8 @@ type CustomTableProps<T> = {
   onRowGroupOpened?: (params: any) => void;
   onFilterChanged?: () => void;
   paginationPageSize?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pinnedBottomRowData?: any[];
 };
 
 const CustomTable = <T,>({
@@ -89,12 +92,44 @@ const CustomTable = <T,>({
   onRowGroupOpened = () => null,
   onFilterChanged = () => {},
   paginationPageSize = 10,
+  pinnedBottomRowData = [],
 }: CustomTableProps<T>) => {
+  const [showPinnedBottomRow, setShowPinnedBottomRow] = useState<boolean>(() => !pagination);
   const handleGridReady = useCallback(
     (params: GridReadyEvent) => {
       onGridReady(params.api);
+      // determine whether to show pinned bottom row initially
+      if (pagination) {
+        try {
+          const isLast =
+            params.api.paginationGetCurrentPage() === params.api.paginationGetTotalPages() - 1;
+          setShowPinnedBottomRow(isLast);
+        } catch (e) {
+          console.log(e);
+          setShowPinnedBottomRow(false);
+        }
+      } else {
+        setShowPinnedBottomRow(true);
+      }
     },
-    [onGridReady]
+    [onGridReady, pagination]
+  );
+  const onPaginationChanged = useCallback(
+    (params: PaginationChangedEvent) => {
+      if (!pagination) {
+        setShowPinnedBottomRow(true);
+        return;
+      }
+      try {
+        const isLast =
+          params.api.paginationGetCurrentPage() === params.api.paginationGetTotalPages() - 1;
+        setShowPinnedBottomRow(isLast);
+      } catch (e) {
+        console.log(e);
+        setShowPinnedBottomRow(false);
+      }
+    },
+    [pagination]
   );
 
   return (
@@ -105,6 +140,8 @@ const CustomTable = <T,>({
       <AgGridReact<T>
         rowData={rowData}
         columnDefs={colDefs}
+        pinnedBottomRowData={showPinnedBottomRow ? pinnedBottomRowData : []}
+        onPaginationChanged={onPaginationChanged}
         suppressMenuHide={false}
         masterDetail={masterDetail}
         pagination={pagination}

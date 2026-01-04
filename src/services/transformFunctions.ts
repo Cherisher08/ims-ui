@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { DCWhatsappPayload, RentalOrderInfo } from '../types/order';
+import { DCWhatsappPayload, PurchaseOrderInfo, RentalOrderInfo } from '../types/order';
 
 const formatLocalDateTime = (isoDateStr: string) => {
   if (!isoDateStr) return isoDateStr;
@@ -72,5 +72,25 @@ export const constructWhatsappFormData = (payloadData: DCWhatsappPayload) => {
   formData.append('bill_type', payloadData.messageDetails.bill_type);
   formData.append('order_id', payloadData.messageDetails.orderId);
   if (payloadData.pdf_file !== null) formData.append('file', payloadData.pdf_file);
+  return formData;
+};
+
+export const transformPurcharseOrderToFormData = (order: PurchaseOrderInfo) => {
+  const orderWithUtcDate = {
+    ...order,
+    purchase_date: toUTCISOString(order.purchase_date),
+  };
+  const formData = new FormData();
+  Object.entries(orderWithUtcDate).forEach(([key, value]) => {
+    if (key === 'invoice_pdf' && value instanceof File) {
+      formData.append(key, value);
+    } else if (Array.isArray(value)) {
+      formData.append(key, JSON.stringify(value));
+    } else if (typeof value === 'object' && value !== null) {
+      formData.append(key, JSON.stringify(value));
+    } else {
+      formData.append(key, String(value));
+    }
+  });
   return formData;
 };

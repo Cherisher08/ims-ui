@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PurchaseOrderInfo } from '../types/order';
 import { rootApi } from './ApiService';
+import { transformPurcharseOrderToFormData } from './transformFunctions';
 
 export const purchaseApi = rootApi.injectEndpoints({
   endpoints: (build) => ({
@@ -48,22 +49,11 @@ export const purchaseApi = rootApi.injectEndpoints({
     }),
     updatePurchase: build.mutation<PurchaseOrderInfo, PurchaseOrderInfo>({
       query: ({ _id, ...order }) => {
-        const formData = new FormData();
-        Object.entries(order).forEach(([key, value]) => {
-          if (key === 'invoice_pdf' && value instanceof File) {
-            formData.append(key, value);
-          } else if (Array.isArray(value)) {
-            formData.append(key, JSON.stringify(value));
-          } else if (typeof value === 'object' && value !== null) {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, String(value));
-          }
-        });
+        const orderData = transformPurcharseOrderToFormData(order);
         return {
           url: `orders/purchase/${_id}`,
           method: 'PUT',
-          body: formData,
+          body: orderData,
         };
       },
       invalidatesTags: ['Purchase', 'Product'],

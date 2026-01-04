@@ -1,7 +1,7 @@
 import { Modal } from '@mui/material';
-import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import type { ColDef, GridApi, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import { MdClose, MdDelete, MdEdit, MdRemoveRedEye } from 'react-icons/md';
 import { toast } from 'react-toastify';
@@ -28,6 +28,7 @@ import { DiscountType, Product, ProductType } from '../../../types/common';
 import { PurchaseOrderInfo } from '../../../types/order';
 import { transformIdNamePair, transformIdValuePair } from '../utils';
 import ViewPdfModal from './ViewPdfModal';
+import { dateFilterParams, parseDateFromString } from '../Orders/utils';
 
 interface PurchaseRow {
   _id: string;
@@ -56,6 +57,17 @@ const Purchases = () => {
     purchase_date: new Date().toISOString().split('T')[0],
     products: [],
     invoice_id: '',
+    supplier: {
+      name: '',
+      personal_number: '',
+      gstin: '',
+      office_number: '',
+      email: '',
+      address: '',
+      pincode: '',
+      address_proof: '',
+      company_name: '',
+    },
   });
   const [newProductData, setNewProductData] = useState<Partial<Product>>({
     _id: '',
@@ -81,12 +93,48 @@ const Purchases = () => {
   const [isNewProduct, setIsNewProduct] = useState<boolean>(false);
   const [pdfViewerOpen, setPdfViewerOpen] = useState<boolean>(false);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const gridApiRef = useRef<GridApi | null>(null);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [filteredData, setFilteredData] = useState<PurchaseRow[]>([]);
 
   const productTypes = [
     { id: ProductType.RENTAL, value: 'RENTAL' },
     { id: ProductType.SALES, value: 'SALES' },
     { id: ProductType.SERVICE, value: 'SERVICE' },
   ];
+
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  const years = useMemo(() => {
+    if (!purchaseData) return [];
+    const uniqueYears = new Set(purchaseData.map((p) => dayjs(p.purchase_date).year()));
+    return Array.from(uniqueYears).sort((a, b) => b - a);
+  }, [purchaseData]);
+
+  const months = useMemo(() => {
+    if (!selectedYear || !purchaseData) return [];
+    const uniqueMonths = new Set(
+      purchaseData
+        .filter((p) => dayjs(p.purchase_date).year() === parseInt(selectedYear))
+        .map((p) => dayjs(p.purchase_date).month() + 1)
+    );
+    return Array.from(uniqueMonths).sort((a, b) => a - b);
+  }, [purchaseData, selectedYear]);
 
   const rowData = useMemo<PurchaseRow[]>(() => {
     return purchaseData
@@ -105,7 +153,19 @@ const Purchases = () => {
       : [];
   }, [purchaseData]);
 
-  const [filteredData, setFilteredData] = useState<PurchaseRow[]>([]);
+  const handleGridReady = useCallback((api: GridApi) => {
+    gridApiRef.current = api;
+  }, []);
+
+  const handleFilterChanged = useCallback(() => {
+    if (gridApiRef.current) {
+      let sum = 0;
+      gridApiRef.current.forEachNodeAfterFilter((node) => {
+        sum += node.data.total_amount;
+      });
+      setTotalAmount(sum);
+    }
+  }, []);
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -141,6 +201,12 @@ const Purchases = () => {
         headerClass: 'ag-header-wrap',
         minWidth: 150,
         filter: 'agDateColumnFilter',
+        filterValueGetter: (tableData: ValueGetterParams) => {
+          const date = tableData.data.purchase_date ? tableData.data.purchase_date : null;
+          const formattedDate = parseDateFromString(date);
+          return formattedDate;
+        },
+        filterParams: dateFilterParams,
         cellRenderer: (params: ICellRendererParams<PurchaseRow>) => {
           return dayjs(params.value).format('DD-MM-YYYY HH:mm');
         },
@@ -287,11 +353,30 @@ const Purchases = () => {
     setIsNewProduct(false);
   };
 
-  const handlePurchaseChange = (
-    key: string,
-    value: string | number | Date | File | null | undefined
-  ) => {
-    setNewPurchaseData((prev) => ({ ...prev, [key]: value }));
+  const handlePurchaseChange = (key: string, value: string | number | Date | File | null) => {
+    setNewPurchaseData((prev) => {
+      if (key.startsWith('supplier.')) {
+        const supplierKey = key.split('.')[1];
+        return {
+          ...prev,
+          supplier: {
+            ...(prev.supplier || {
+              name: '',
+              personal_number: '',
+              gstin: '',
+              office_number: '',
+              email: '',
+              address: '',
+              pincode: '',
+              address_proof: '',
+              company_name: '',
+            }),
+            [supplierKey]: value != null ? value.toString() : '',
+          },
+        };
+      }
+      return { ...prev, [key]: value };
+    });
   };
 
   const handleProductChange = (
@@ -396,8 +481,19 @@ const Purchases = () => {
   }, [isUnitQuerySuccess, unitData]);
 
   useEffect(() => {
-    setFilteredData(rowData);
-  }, [rowData]);
+    let filtered = rowData;
+    if (selectedYear) {
+      filtered = filtered.filter((r) => dayjs(r.purchase_date).year() === parseInt(selectedYear));
+      if (selectedMonth) {
+        filtered = filtered.filter(
+          (r) => dayjs(r.purchase_date).month() + 1 === parseInt(selectedMonth)
+        );
+      }
+    }
+    setFilteredData(filtered);
+    const total = filtered.reduce((sum, row) => sum + row.total_amount, 0);
+    setTotalAmount(total);
+  }, [rowData, selectedYear, selectedMonth]);
 
   useEffect(() => {
     if (isPurchaseCreated) {
@@ -414,7 +510,7 @@ const Purchases = () => {
 
   return (
     <div className="h-fit">
-      <div className="flex justify-between mb-3">
+      <div className="flex justify-between items-end mb-3">
         <CustomButton
           onClick={() => {
             const newId = getNewPurchaseId(purchaseData as PurchaseOrderInfo[] | undefined);
@@ -424,13 +520,52 @@ const Purchases = () => {
           label="New Purchase"
           icon={<LuPlus color="white" />}
         />
+        <div className="flex gap-3 items-end">
+          <CustomSelect
+            label="Year"
+            options={years.map((y) => ({ id: y.toString(), value: y.toString() }))}
+            value={selectedYear}
+            onChange={(value) => {
+              setSelectedYear(value);
+              setSelectedMonth(''); // Reset month when year changes
+            }}
+          />
+          <CustomSelect
+            label="Month"
+            options={months.map((m) => ({ id: m.toString(), value: monthNames[m - 1] }))}
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            disabled={!selectedYear}
+          />
+          <CustomButton
+            onClick={() => {
+              setSelectedYear('');
+              setSelectedMonth('');
+            }}
+            label="Clear Filters"
+            variant="outlined"
+          />
+        </div>
       </div>
       <div className="w-full h-fit overflow-y-auto">
         <CustomTable<PurchaseRow>
           rowData={filteredData}
           colDefs={colDefs}
           isLoading={isPurchasesLoading}
+          onGridReady={handleGridReady}
+          onFilterChanged={handleFilterChanged}
         />
+      </div>
+      <div className="mt-4 text-right">
+        <p className="text-lg font-semibold">
+          Total Purchases
+          {selectedYear
+            ? ` for ${
+                selectedMonth ? `${monthNames[parseInt(selectedMonth) - 1]} ` : ''
+              }${selectedYear}`
+            : ''}
+          : ₹{totalAmount}.00
+        </p>
       </div>
 
       {/* Add Purchase Modal */}
@@ -476,6 +611,27 @@ const Purchases = () => {
                 helperText="Upload invoice PDF (optional)"
                 value={newPurchaseData.invoice_pdf}
                 existingFilePath={newPurchaseData.invoice_pdf_path}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+              <CustomInput
+                label="Supplier Name"
+                value={newPurchaseData.supplier?.name || ''}
+                onChange={(value) => handlePurchaseChange('supplier.name', value)}
+                placeholder="Enter Supplier Name"
+              />
+              <CustomInput
+                label="Supplier Number"
+                value={newPurchaseData.supplier?.personal_number || ''}
+                onChange={(value) => handlePurchaseChange('supplier.personal_number', value)}
+                placeholder="Enter Supplier Number"
+              />
+              <CustomInput
+                label="GST Number"
+                value={newPurchaseData.supplier?.gstin || ''}
+                onChange={(value) => handlePurchaseChange('supplier.gstin', value)}
+                placeholder="Enter GST Number"
               />
             </div>
 
@@ -696,6 +852,27 @@ const Purchases = () => {
                 helperText="Upload invoice PDF (optional)"
                 value={newPurchaseData.invoice_pdf}
                 existingFilePath={newPurchaseData.invoice_pdf_path}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+              <CustomInput
+                label="Supplier Name"
+                value={newPurchaseData.supplier?.name || ''}
+                onChange={(value) => handlePurchaseChange('supplier.name', value)}
+                placeholder="Enter Supplier Name"
+              />
+              <CustomInput
+                label="Supplier Number"
+                value={newPurchaseData.supplier?.personal_number || ''}
+                onChange={(value) => handlePurchaseChange('supplier.personal_number', value)}
+                placeholder="Enter Supplier Number"
+              />
+              <CustomInput
+                label="GST Number"
+                value={newPurchaseData.supplier?.gstin || ''}
+                onChange={(value) => handlePurchaseChange('supplier.gstin', value)}
+                placeholder="Enter GST Number"
               />
             </div>
 

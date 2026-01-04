@@ -19,6 +19,7 @@ const NewOrder = React.lazy(() => import('../pages/private/Entries/NewOrder'));
 const Invoices = React.lazy(() => import('../pages/private/Invoices/Invoices'));
 const OrderInvoice = React.lazy(() => import('../pages/private/Entries/OrderInvoice'));
 const PrivacyPolicy = React.lazy(() => import('../pages/private/PrivacyPolicy/PrivacyPollicy'));
+const Purchase = React.lazy(() => import('../pages/private/Purchase/Purchases'));
 
 type RouteType = {
   path: string;
@@ -101,6 +102,10 @@ const privateRoutes = [
       {
         path: '/privacy-policy',
         element: <PrivacyPolicy />,
+      },
+      {
+        path: '/purchases',
+        element: <Purchase />,
       },
       {
         path: '*',

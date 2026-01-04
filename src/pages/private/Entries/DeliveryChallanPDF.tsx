@@ -241,6 +241,16 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.value}>{data.event_venue || '-'}</Text>
             </View>
             <View style={styles.row}>
+              <Text style={styles.field}>Representative Name</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.representative_name || '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.field}>Representative Number</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.representative_number || '-'}</Text>
+            </View>
+            <View style={styles.row}>
               <Text style={styles.field}>No.of Working Days</Text>
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{data.rental_duration || '-'}</Text>

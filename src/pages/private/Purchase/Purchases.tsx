@@ -1,0 +1,882 @@
+import { Modal } from '@mui/material';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import dayjs from 'dayjs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LuPlus } from 'react-icons/lu';
+import { MdClose, MdDelete, MdEdit, MdRemoveRedEye } from 'react-icons/md';
+import { toast } from 'react-toastify';
+import { TOAST_IDS } from '../../../constants/constants';
+import {
+  useGetProductCategoriesQuery,
+  useGetProductsQuery,
+  useGetUnitsQuery,
+} from '../../../services/ApiService';
+import {
+  useCreatePurchaseMutation,
+  useDeletePurchaseMutation,
+  useGetPurchasesQuery,
+  useUpdatePurchaseMutation,
+} from '../../../services/PurchaseService';
+import CustomAutoComplete, { CustomOptionProps } from '../../../styled/CustomAutoComplete';
+import CustomButton from '../../../styled/CustomButton';
+import CustomDatePicker from '../../../styled/CustomDatePicker';
+import CustomFileInput from '../../../styled/CustomFileInput';
+import CustomInput from '../../../styled/CustomInput';
+import CustomSelect from '../../../styled/CustomSelect';
+import CustomTable from '../../../styled/CustomTable';
+import { DiscountType, Product, ProductType } from '../../../types/common';
+import { PurchaseOrderInfo } from '../../../types/order';
+import { transformIdNamePair, transformIdValuePair } from '../utils';
+import ViewPdfModal from './ViewPdfModal';
+
+interface PurchaseRow {
+  _id: string;
+  order_id: string;
+  purchase_date: string;
+  supplier_name: string;
+  total_products: number;
+  total_amount: number;
+  invoice_pdf_path?: string | null;
+  actions?: string;
+}
+
+const Purchases = () => {
+  const { data: purchaseData, isLoading: isPurchasesLoading } = useGetPurchasesQuery();
+  const { data: productData } = useGetProductsQuery();
+  const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
+    useGetProductCategoriesQuery();
+  const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
+
+  const [createPurchase, { isSuccess: isPurchaseCreated, isError: isPurchaseCreateError }] =
+    useCreatePurchaseMutation();
+  const [updatePurchase] = useUpdatePurchaseMutation();
+  const [deletePurchase] = useDeletePurchaseMutation();
+  const [newPurchaseData, setNewPurchaseData] = useState<Partial<PurchaseOrderInfo>>({
+    order_id: '',
+    purchase_date: new Date().toISOString().split('T')[0],
+    products: [],
+    invoice_id: '',
+  });
+  const [newProductData, setNewProductData] = useState<Partial<Product>>({
+    _id: '',
+    name: '',
+    product_code: '',
+    category: { _id: '', name: '' },
+    unit: { _id: '', name: '' },
+    type: ProductType.RENTAL,
+    quantity: 0,
+    price: 0,
+    rent_per_unit: 0,
+    available_stock: 0,
+    discount: 0,
+    discount_type: DiscountType.PERCENT,
+    purchase_date: new Date().toISOString().split('T')[0],
+  });
+
+  const [addPurchaseOpen, setAddPurchaseOpen] = useState<boolean>(false);
+  const [editPurchaseOpen, setEditPurchaseOpen] = useState<boolean>(false);
+  const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
+  const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isNewProduct, setIsNewProduct] = useState<boolean>(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState<boolean>(false);
+  const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+
+  const productTypes = [
+    { id: ProductType.RENTAL, value: 'RENTAL' },
+    { id: ProductType.SALES, value: 'SALES' },
+    { id: ProductType.SERVICE, value: 'SERVICE' },
+  ];
+
+  const rowData = useMemo<PurchaseRow[]>(() => {
+    return purchaseData
+      ? purchaseData.map((purchase) => ({
+          _id: purchase._id!,
+          order_id: purchase.order_id,
+          purchase_date: purchase.purchase_date,
+          supplier_name: purchase.supplier?.name || 'N/A',
+          total_products: purchase.products.length,
+          total_amount: purchase.products.reduce(
+            (sum, p) => sum + p.quantity * p.price - (p.discount || 0),
+            0
+          ),
+          invoice_pdf_path: purchase.invoice_pdf_path || null,
+        }))
+      : [];
+  }, [purchaseData]);
+
+  const [filteredData, setFilteredData] = useState<PurchaseRow[]>([]);
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      if (window.confirm('Are you sure you want to delete this purchase?')) {
+        try {
+          await deletePurchase(id).unwrap();
+          toast.success('Purchase deleted successfully', {
+            toastId: TOAST_IDS.SUCCESS_PURCHASE_DELETE,
+          });
+        } catch (error) {
+          console.error('Error deleting purchase:', error);
+          toast.error('Error deleting purchase', { toastId: TOAST_IDS.ERROR_PURCHASE_DELETE });
+        }
+      }
+    },
+    [deletePurchase]
+  );
+
+  const colDefs = useMemo<ColDef<PurchaseRow>[]>(
+    () => [
+      {
+        field: 'order_id',
+        headerName: 'Order ID',
+        flex: 1,
+        headerClass: 'ag-header-wrap',
+        minWidth: 150,
+        filter: 'agTextColumnFilter',
+      },
+      {
+        field: 'purchase_date',
+        headerName: 'Purchase Date',
+        flex: 1,
+        headerClass: 'ag-header-wrap',
+        minWidth: 150,
+        filter: 'agDateColumnFilter',
+        cellRenderer: (params: ICellRendererParams<PurchaseRow>) => {
+          return dayjs(params.value).format('DD-MM-YYYY HH:mm');
+        },
+      },
+      {
+        field: 'supplier_name',
+        headerName: 'Supplier',
+        flex: 1,
+        headerClass: 'ag-header-wrap',
+        minWidth: 150,
+        filter: 'agTextColumnFilter',
+      },
+      {
+        field: 'total_products',
+        headerName: 'Total Products',
+        flex: 1,
+        minWidth: 120,
+        headerClass: 'ag-header-wrap',
+        filter: 'agNumberColumnFilter',
+      },
+      {
+        field: 'total_amount',
+        headerName: 'Total Amount',
+        flex: 1,
+        minWidth: 120,
+        headerClass: 'ag-header-wrap',
+        filter: 'agNumberColumnFilter',
+        cellRenderer: (params: ICellRendererParams<PurchaseRow>) => {
+          return `₹${params.value}.00`;
+        },
+      },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        flex: 1,
+        minWidth: 150,
+        cellRenderer: (params: ICellRendererParams<PurchaseRow>) => {
+          const hasPdf = params.data?.invoice_pdf_path;
+          return (
+            <div className="flex gap-2">
+              <MdEdit
+                size={20}
+                className="cursor-pointer text-blue-500 hover:text-blue-700"
+                onClick={() => {
+                  const purchase = purchaseData?.find((p) => p._id === params.data?._id);
+                  console.log('purchase: ', purchase);
+                  console.log('params.data: ', params.data);
+                  if (purchase) handleEdit(purchase);
+                }}
+              />
+              <MdDelete
+                size={20}
+                className="cursor-pointer text-red-500 hover:text-red-700"
+                onClick={() => {
+                  const purchase = purchaseData?.find((p) => p._id === params.data?._id);
+                  if (purchase) handleDelete(purchase._id!);
+                }}
+              />
+              <MdRemoveRedEye
+                size={20}
+                className={`cursor-pointer ${
+                  hasPdf
+                    ? 'text-green-500 hover:text-green-700'
+                    : 'text-gray-400 cursor-not-allowed'
+                }`}
+                onClick={() => {
+                  if (hasPdf) {
+                    setSelectedPdf(hasPdf);
+                    setPdfViewerOpen(true);
+                  }
+                }}
+              />
+            </div>
+          );
+        },
+      },
+    ],
+    [handleDelete, purchaseData]
+  );
+
+  const addPurchase = async () => {
+    if (!newPurchaseData.products || newPurchaseData.products.length === 0) {
+      toast.error('Please add at least one product', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    try {
+      // Create purchase order
+      await createPurchase(newPurchaseData as PurchaseOrderInfo).unwrap();
+      setAddPurchaseOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error creating purchase:', error);
+      toast.error('Error creating purchase', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+    }
+  };
+
+  const getNewPurchaseId = (purchases: PurchaseOrderInfo[] | undefined) => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const startYear = month < 4 ? year - 1 : year;
+    const endYear = startYear + 1;
+    const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
+
+    const suffixes = (purchases || [])
+      .map((p) => {
+        const match = p.order_id?.match(/PO\/\d{2}-\d{2}\/(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter((n) => n > 0);
+
+    const maxSuffix = suffixes.length > 0 ? Math.max(...suffixes) : 0;
+    const nextSuffix = (maxSuffix + 1).toString().padStart(4, '0');
+
+    return `PO/${fy}/${nextSuffix}`;
+  };
+
+  const resetForm = () => {
+    setNewPurchaseData({
+      order_id: '',
+      purchase_date: new Date().toISOString().split('T')[0],
+      products: [],
+      invoice_id: '',
+      invoice_pdf: null,
+      invoice_pdf_path: null,
+    });
+    setNewProductData({
+      _id: '',
+      name: '',
+      product_code: '',
+      category: { _id: '', name: '' },
+      unit: { _id: '', name: '' },
+      type: ProductType.RENTAL,
+      quantity: 0,
+      price: 0,
+      rent_per_unit: 0,
+      available_stock: 0,
+      discount: 0,
+      discount_type: DiscountType.PERCENT,
+      purchase_date: new Date().toISOString().split('T')[0],
+    });
+    setSelectedProduct(null);
+    setIsNewProduct(false);
+  };
+
+  const handlePurchaseChange = (
+    key: string,
+    value: string | number | Date | File | null | undefined
+  ) => {
+    setNewPurchaseData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleProductChange = (
+    key: string,
+    value: string | number | { _id: string; name: string } | ProductType | DiscountType | undefined
+  ) => {
+    setNewProductData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const addProductToPurchase = () => {
+    if (!selectedProduct && !isNewProduct) {
+      toast.error('Please select a product or choose to create a new one');
+      return;
+    }
+
+    const productToAdd = selectedProduct || (newProductData as Product);
+    const purchaseProduct = {
+      _id: productToAdd._id,
+      name: productToAdd.name,
+      product_code: productToAdd.product_code,
+      category: productToAdd.category,
+      unit: productToAdd.unit,
+      type: productToAdd.type,
+      rent_per_unit: productToAdd.rent_per_unit,
+      quantity: newProductData.quantity || 0,
+      price: newProductData.price || 0,
+      discount: newProductData.discount || 0,
+      discount_type: newProductData.discount_type || DiscountType.PERCENT,
+    };
+
+    setNewPurchaseData((prev) => ({
+      ...prev,
+      products: [...(prev.products || []), purchaseProduct],
+    }));
+
+    // Reset product form
+    setNewProductData({
+      _id: '',
+      name: '',
+      product_code: '',
+      category: { _id: '', name: '' },
+      unit: { _id: '', name: '' },
+      type: ProductType.RENTAL,
+      quantity: 0,
+      price: 0,
+      rent_per_unit: 0,
+      available_stock: 0,
+      discount: 0,
+      discount_type: DiscountType.PERCENT,
+      purchase_date: new Date().toISOString().split('T')[0],
+    });
+    setSelectedProduct(null);
+    setIsNewProduct(false);
+  };
+
+  const removeProductFromPurchase = (index: number) => {
+    setNewPurchaseData((prev) => ({
+      ...prev,
+      products: prev.products?.filter((_, i) => i !== index) || [],
+    }));
+  };
+
+  const handleEdit = (purchase: PurchaseOrderInfo) => {
+    console.log('purchase: ', purchase);
+    setNewPurchaseData({
+      ...purchase,
+      products: purchase.products || [],
+    });
+    setEditPurchaseOpen(true);
+  };
+
+  const editPurchase = async () => {
+    if (!newPurchaseData.products || newPurchaseData.products.length === 0) {
+      toast.error('Please add at least one product', { toastId: TOAST_IDS.ERROR_PURCHASE_UPDATE });
+      return;
+    }
+
+    try {
+      console.log('newPurchaseData: ', newPurchaseData);
+      await updatePurchase(newPurchaseData as PurchaseOrderInfo).unwrap();
+      setEditPurchaseOpen(false);
+      resetForm();
+      toast.success('Purchase updated successfully', {
+        toastId: TOAST_IDS.SUCCESS_PURCHASE_UPDATE,
+      });
+    } catch (error) {
+      console.error('Error updating purchase:', error);
+      toast.error('Error updating purchase', { toastId: TOAST_IDS.ERROR_PURCHASE_UPDATE });
+    }
+  };
+
+  useEffect(() => {
+    if (isProductCategoryQuerySuccess) {
+      setProductCategories(transformIdNamePair(productCategoryData));
+    }
+  }, [isProductCategoryQuerySuccess, productCategoryData]);
+
+  useEffect(() => {
+    if (isUnitQuerySuccess) {
+      setProductUnits(transformIdNamePair(unitData));
+    }
+  }, [isUnitQuerySuccess, unitData]);
+
+  useEffect(() => {
+    setFilteredData(rowData);
+  }, [rowData]);
+
+  useEffect(() => {
+    if (isPurchaseCreated) {
+      toast.success('Purchase Created Successfully', {
+        toastId: TOAST_IDS.SUCCESS_PURCHASE_CREATE,
+      });
+    }
+    if (isPurchaseCreateError) {
+      toast.error('Error in Creating Purchase', {
+        toastId: TOAST_IDS.ERROR_PURCHASE_CREATE,
+      });
+    }
+  }, [isPurchaseCreateError, isPurchaseCreated]);
+
+  return (
+    <div className="h-fit">
+      <div className="flex justify-between mb-3">
+        <CustomButton
+          onClick={() => {
+            const newId = getNewPurchaseId(purchaseData as PurchaseOrderInfo[] | undefined);
+            setNewPurchaseData((prev) => ({ ...prev, order_id: newId }));
+            setAddPurchaseOpen(true);
+          }}
+          label="New Purchase"
+          icon={<LuPlus color="white" />}
+        />
+      </div>
+      <div className="w-full h-fit overflow-y-auto">
+        <CustomTable<PurchaseRow>
+          rowData={filteredData}
+          colDefs={colDefs}
+          isLoading={isPurchasesLoading}
+        />
+      </div>
+
+      {/* Add Purchase Modal */}
+      <Modal
+        open={addPurchaseOpen}
+        onClose={() => setAddPurchaseOpen(false)}
+        className="w-screen h-screen flex justify-center items-center"
+      >
+        <div className="flex flex-col gap-4 justify-center items-center max-w-6xl h-4/5 bg-white rounded-lg p-4">
+          <div className="flex justify-between w-full h-8">
+            <p className="text-primary text-2xl font-semibold w-full text-start">New Purchase</p>
+            <MdClose
+              size={25}
+              className="cursor-pointer"
+              onClick={() => setAddPurchaseOpen(false)}
+            />
+          </div>
+          <div className="flex flex-col  items-center overflow-y-auto gap-4 flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full">
+              <CustomInput
+                label="Order ID"
+                value={newPurchaseData.order_id || ''}
+                onChange={() => {}}
+                disabled
+                placeholder="Order ID (auto-generated)"
+              />
+              <CustomDatePicker
+                label="Purchase Date"
+                value={newPurchaseData.purchase_date || ''}
+                onChange={(value) => handlePurchaseChange('purchase_date', value)}
+                placeholder="Enter Purchase Date"
+              />
+              <CustomInput
+                label="Invoice ID"
+                value={newPurchaseData.invoice_id || ''}
+                onChange={(value) => handlePurchaseChange('invoice_id', value)}
+                placeholder="Enter Invoice ID"
+              />
+              <CustomFileInput
+                label="Invoice PDF"
+                accept=".pdf"
+                onChange={(file) => handlePurchaseChange('invoice_pdf', file)}
+                helperText="Upload invoice PDF (optional)"
+                value={newPurchaseData.invoice_pdf}
+                existingFilePath={newPurchaseData.invoice_pdf_path}
+              />
+            </div>
+
+            <div className="w-full border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Add Products</h3>
+
+              <div className="flex gap-4 mb-4">
+                <CustomButton
+                  onClick={() => {
+                    setIsNewProduct(false);
+                    setSelectedProduct(null);
+                  }}
+                  label="Select Existing Product"
+                  variant={!isNewProduct ? 'contained' : 'outlined'}
+                />
+                <CustomButton
+                  onClick={() => {
+                    setIsNewProduct(true);
+                    setSelectedProduct(null);
+                  }}
+                  label="Create New Product"
+                  variant={isNewProduct ? 'contained' : 'outlined'}
+                />
+              </div>
+
+              {!isNewProduct ? (
+                <CustomAutoComplete
+                  label="Select Product"
+                  error={false}
+                  placeholder="Select Product"
+                  helperText="Choose an existing product"
+                  value={selectedProduct?.name || ''}
+                  options={productData?.map((p) => ({ id: p._id!, value: p.name })) || []}
+                  onChange={(value) => {
+                    const product = productData?.find((p) => p.name === value);
+                    setSelectedProduct(product || null);
+                    if (product) {
+                      setNewProductData({
+                        ...newProductData,
+                        quantity: 1,
+                        price: product.price,
+                      });
+                    }
+                  }}
+                  addNewValue={() => {}}
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <CustomInput
+                    label="Product Name"
+                    value={newProductData.name || ''}
+                    onChange={(value) => handleProductChange('name', value)}
+                    placeholder="Enter Product Name"
+                  />
+                  <CustomInput
+                    label="HSN Code"
+                    value={newProductData.product_code || ''}
+                    onChange={(value) => handleProductChange('product_code', value)}
+                    placeholder="Enter HSN Code"
+                  />
+                  <CustomAutoComplete
+                    label="Category"
+                    error={false}
+                    placeholder="Select Category"
+                    helperText="Please Select The Category"
+                    value={newProductData.category?.name || ''}
+                    options={productCategories}
+                    addNewValue={() => {}}
+                    onChange={(value) =>
+                      handleProductChange(
+                        'category',
+                        transformIdValuePair(
+                          productCategories.find((c) => c.value === value) || productCategories[0]
+                        )
+                      )
+                    }
+                  />
+                  <CustomAutoComplete
+                    label="Unit"
+                    error={false}
+                    placeholder="Select Unit"
+                    helperText="Please Select The Unit"
+                    value={newProductData.unit?.name || ''}
+                    options={productUnits}
+                    addNewValue={() => {}}
+                    onChange={(value) =>
+                      handleProductChange(
+                        'unit',
+                        transformIdValuePair(
+                          productUnits.find((u) => u.value === value) || productUnits[0]
+                        )
+                      )
+                    }
+                  />
+                  <CustomSelect
+                    label="Type"
+                    options={productTypes}
+                    value={
+                      productTypes.find((t) => newProductData.type === t.id)?.id ||
+                      productTypes[0].id
+                    }
+                    onChange={(value) => handleProductChange('type', value)}
+                  />
+                  <CustomInput
+                    label="Rental Price"
+                    value={newProductData.rent_per_unit || 0}
+                    onChange={(value) => handleProductChange('rent_per_unit', parseInt(value))}
+                    placeholder="Enter Rental Price"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                <CustomInput
+                  label="Quantity"
+                  type="number"
+                  value={newProductData.quantity || 0}
+                  onChange={(value) => handleProductChange('quantity', parseInt(value))}
+                  placeholder="Enter Quantity"
+                />
+                <CustomInput
+                  label="Price"
+                  type="number"
+                  value={newProductData.price || 0}
+                  onChange={(value) => handleProductChange('price', parseInt(value))}
+                  placeholder="Enter Price"
+                />
+              </div>
+
+              <CustomButton
+                onClick={addProductToPurchase}
+                label="Add Product to Purchase"
+                className="mt-4"
+              />
+            </div>
+
+            {/* Products List */}
+            <div className="w-full border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
+              {newPurchaseData.products?.map((p, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                >
+                  <span className="wrap-break-word">{p.name}</span>
+                  <span className="wrap-break-word">Qty: {p.quantity}</span>
+                  <span className="wrap-break-word">Price: ₹{p.price}</span>
+                  <span className="wrap-break-word">Total: ₹{p.quantity * p.price}</span>
+                  <MdDelete
+                    size={20}
+                    className={`${
+                      editPurchaseOpen
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'cursor-pointer text-red-500 hover:text-red-700'
+                    }`}
+                    onClick={editPurchaseOpen ? undefined : () => removeProductFromPurchase(index)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex w-full gap-3 justify-end h-10">
+            <CustomButton
+              onClick={() => {
+                setAddPurchaseOpen(false);
+                resetForm();
+              }}
+              label="Discard"
+              variant="outlined"
+              className="bg-white"
+            />
+            <CustomButton onClick={addPurchase} label="Create Purchase" />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Purchase Modal */}
+      <Modal
+        open={editPurchaseOpen}
+        onClose={() => setEditPurchaseOpen(false)}
+        className="w-screen h-screen flex justify-center items-center"
+      >
+        <div className="flex flex-col gap-4 justify-center items-center max-w-6xl h-4/5 bg-white rounded-lg p-4">
+          <div className="flex justify-between w-full h-8">
+            <p className="text-primary text-2xl font-semibold w-full text-start">Edit Purchase</p>
+            <MdClose
+              size={25}
+              className="cursor-pointer"
+              onClick={() => setEditPurchaseOpen(false)}
+            />
+          </div>
+          <div className="flex flex-col  items-center overflow-y-auto gap-4 flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 w-full">
+              <CustomInput
+                label="Order ID"
+                value={newPurchaseData.order_id || ''}
+                onChange={() => {}}
+                disabled
+                placeholder="Order ID (auto-generated)"
+              />
+              <CustomDatePicker
+                label="Purchase Date"
+                value={newPurchaseData.purchase_date || ''}
+                onChange={(value) => handlePurchaseChange('purchase_date', value)}
+                placeholder="Enter Purchase Date"
+              />
+              <CustomInput
+                label="Invoice ID"
+                value={newPurchaseData.invoice_id || ''}
+                onChange={(value) => handlePurchaseChange('invoice_id', value)}
+                placeholder="Enter Invoice ID"
+              />
+              <CustomFileInput
+                label="Invoice PDF"
+                accept=".pdf"
+                onChange={(file) => handlePurchaseChange('invoice_pdf', file)}
+                helperText="Upload invoice PDF (optional)"
+                value={newPurchaseData.invoice_pdf}
+                existingFilePath={newPurchaseData.invoice_pdf_path}
+              />
+            </div>
+
+            <div className="w-full border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Edit Products</h3>
+
+              <div className="flex gap-4 mb-4">
+                <CustomButton
+                  onClick={() => {
+                    setIsNewProduct(false);
+                    setSelectedProduct(null);
+                  }}
+                  label="Select Existing Product"
+                  variant={!isNewProduct ? 'contained' : 'outlined'}
+                />
+                <CustomButton
+                  onClick={() => {
+                    setIsNewProduct(true);
+                    setSelectedProduct(null);
+                  }}
+                  label="Create New Product"
+                  variant={isNewProduct ? 'contained' : 'outlined'}
+                />
+              </div>
+
+              {!isNewProduct ? (
+                <CustomAutoComplete
+                  label="Select Product"
+                  error={false}
+                  placeholder="Select Product"
+                  helperText="Choose an existing product"
+                  value={selectedProduct?.name || ''}
+                  options={productData?.map((p) => ({ id: p._id!, value: p.name })) || []}
+                  addNewValue={() => {}}
+                  onChange={(value) => {
+                    const product = productData?.find((p) => p.name === value);
+                    setSelectedProduct(product || null);
+                    if (product) {
+                      setNewProductData({
+                        ...newProductData,
+                        quantity: 1,
+                        price: product.price,
+                      });
+                    }
+                  }}
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <CustomInput
+                    label="Product Name"
+                    value={newProductData.name || ''}
+                    onChange={(value) => handleProductChange('name', value)}
+                    placeholder="Enter Product Name"
+                  />
+                  <CustomInput
+                    label="HSN Code"
+                    value={newProductData.product_code || ''}
+                    onChange={(value) => handleProductChange('product_code', value)}
+                    placeholder="Enter HSN Code"
+                  />
+                  <CustomAutoComplete
+                    label="Category"
+                    error={false}
+                    placeholder="Select Category"
+                    helperText="Please Select The Category"
+                    value={newProductData.category?.name || ''}
+                    options={productCategories}
+                    addNewValue={() => {}}
+                    onChange={(value) =>
+                      handleProductChange(
+                        'category',
+                        transformIdValuePair(
+                          productCategories.find((c) => c.value === value) || productCategories[0]
+                        )
+                      )
+                    }
+                  />
+                  <CustomAutoComplete
+                    label="Unit"
+                    error={false}
+                    placeholder="Select Unit"
+                    helperText="Please Select The Unit"
+                    value={newProductData.unit?.name || ''}
+                    options={productUnits}
+                    addNewValue={() => {}}
+                    onChange={(value) =>
+                      handleProductChange(
+                        'unit',
+                        transformIdValuePair(
+                          productUnits.find((u) => u.value === value) || productUnits[0]
+                        )
+                      )
+                    }
+                  />
+                  <CustomSelect
+                    label="Type"
+                    options={productTypes}
+                    value={
+                      productTypes.find((t) => newProductData.type === t.id)?.id ||
+                      productTypes[0].id
+                    }
+                    onChange={(value) => handleProductChange('type', value)}
+                  />
+                  <CustomInput
+                    label="Rental Price"
+                    value={newProductData.rent_per_unit || 0}
+                    onChange={(value) => handleProductChange('rent_per_unit', parseInt(value))}
+                    placeholder="Enter Rental Price"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                <CustomInput
+                  label="Quantity"
+                  type="number"
+                  value={newProductData.quantity || 0}
+                  onChange={(value) => handleProductChange('quantity', parseInt(value))}
+                  placeholder="Enter Quantity"
+                />
+                <CustomInput
+                  label="Price"
+                  type="number"
+                  value={newProductData.price || 0}
+                  onChange={(value) => handleProductChange('price', parseInt(value))}
+                  placeholder="Enter Price"
+                />
+              </div>
+
+              <CustomButton
+                onClick={addProductToPurchase}
+                label="Add Product to Purchase"
+                className="mt-4"
+              />
+            </div>
+
+            {/* Products List */}
+            <div className="w-full border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
+              {newPurchaseData.products?.map((p, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                >
+                  <span className="wrap-break-word">{p.name}</span>
+                  <span className="wrap-break-word">Qty: {p.quantity}</span>
+                  <span className="wrap-break-word">Price: ₹{p.price}</span>
+                  <span className="wrap-break-word">Total: ₹{p.quantity * p.price}</span>
+                  <MdDelete
+                    size={20}
+                    className="cursor-pointer text-red-500 hover:text-red-700"
+                    onClick={() => removeProductFromPurchase(index)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex w-full gap-3 justify-end h-10">
+            <CustomButton
+              onClick={() => {
+                setEditPurchaseOpen(false);
+                resetForm();
+              }}
+              label="Discard"
+              variant="outlined"
+              className="bg-white"
+            />
+            <CustomButton onClick={editPurchase} label="Update Purchase" />
+          </div>
+        </div>
+      </Modal>
+
+      {/* PDF Viewer Modal */}
+      <ViewPdfModal
+        open={pdfViewerOpen}
+        onClose={() => setPdfViewerOpen(false)}
+        selectedPdf={selectedPdf}
+      />
+    </div>
+  );
+};
+
+export default Purchases;

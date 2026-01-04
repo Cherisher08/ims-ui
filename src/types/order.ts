@@ -1,5 +1,5 @@
 import { IdNamePair } from '../pages/private/Stocks';
-import { DiscountType, Product, ProductType, Unit } from './common';
+import { DiscountType, Product, ProductCategory, ProductType, Unit } from './common';
 import { ContactInfoType } from './contact';
 
 export enum BillingMode {
@@ -142,6 +142,8 @@ export type RentalOrderInfo = OrderInfo & {
   repay_date: string;
   event_name: string;
   event_venue: string;
+  representative_name: string;
+  representative_number: string;
   whatsapp_notifications?: WhatsappNotifications;
 };
 
@@ -157,7 +159,33 @@ export type ServiceOrderInfo = OrderInfo & {
   outDate: string;
 };
 
-export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo;
+export type PurchaseProduct = {
+  _id?: string;
+  name: string;
+  product_code: string;
+  category: ProductCategory;
+  unit: Unit;
+  type: ProductType;
+  rent_per_unit: number;
+  quantity: number;
+  price: number;
+  discount: number;
+  discount_type: DiscountType;
+};
+
+export type PurchaseOrderInfo = {
+  _id?: string;
+  order_id: string;
+  type: 'purchase';
+  supplier?: ContactInfoType;
+  purchase_date: string;
+  products: PurchaseProduct[];
+  invoice_pdf?: File | null;
+  invoice_pdf_path?: string | null;
+  invoice_id: string;
+};
+
+export type OrderInfoType = RentalOrderInfo | SalesOrderInfo | ServiceOrderInfo | PurchaseOrderInfo;
 
 export type MessageDetails = {
   customerName: string;

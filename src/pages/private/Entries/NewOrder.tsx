@@ -130,6 +130,8 @@ const initialRentalOrder: RentalOrderInfo = {
   repay_date: '',
   event_name: '',
   event_venue: '',
+  representative_name: '',
+  representative_number: '',
   invoice_id: '',
   invoice_date: null,
 };
@@ -173,6 +175,10 @@ const NewOrder = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [eventNameOptions, setEventNameOptions] = useState<CustomSelectOptionProps[]>([]);
   const [venueOptions, setVenueOptions] = useState<CustomSelectOptionProps[]>([]);
+  const [representativeOptions, setRepresentativeOptions] = useState<CustomSelectOptionProps[]>([]);
+  const [representativeNumberOptions, setRepresentativeNumberOptions] = useState<
+    CustomSelectOptionProps[]
+  >([]);
   const [removedProducts, setRemovedProducts] = useState<ProductDetails[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusType>(OrderStatusType.BILL_PENDING);
   const [splitOrderModal, setSplitOrderModal] = useState<boolean>(false);
@@ -693,6 +699,42 @@ const NewOrder = () => {
     setVenueOptions(unique);
   }, [rentalOrders, orderInfo.event_venue]);
 
+  useEffect(() => {
+    const options: CustomSelectOptionProps[] =
+      rentalOrders
+        ?.map((order) => ({ id: order.representative_name, value: order.representative_name }))
+        .filter(Boolean) || [];
+    const unique = options.filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i);
+    if (
+      orderInfo.representative_name &&
+      !unique.find((val) => val.id === orderInfo.representative_name)
+    ) {
+      unique.push({
+        id: orderInfo.representative_name,
+        value: orderInfo.representative_name,
+      });
+    }
+    setRepresentativeOptions(unique);
+  }, [rentalOrders, orderInfo.representative_name]);
+
+  useEffect(() => {
+    const options: CustomSelectOptionProps[] =
+      rentalOrders
+        ?.map((order) => ({ id: order.representative_number, value: order.representative_number }))
+        .filter(Boolean) || [];
+    const unique = options.filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i);
+    if (
+      orderInfo.representative_number &&
+      !unique.find((val) => val.id === orderInfo.representative_number)
+    ) {
+      unique.push({
+        id: orderInfo.representative_number,
+        value: orderInfo.representative_number,
+      });
+    }
+    setRepresentativeNumberOptions(unique);
+  }, [rentalOrders, orderInfo.representative_number]);
+
   const addEventNameOption = (value: string) => {
     if (!value) return;
     const newOption = {
@@ -716,6 +758,24 @@ const NewOrder = () => {
       setVenueOptions((prev) => [...prev, newOption]);
     }
     handleValueChange('event_venue', value);
+  };
+
+  const addRepresentativeOption = (value: string) => {
+    if (!value) return;
+    const newOption = { id: value, value };
+    if (!representativeOptions.find((v) => v.id === value)) {
+      setRepresentativeOptions((prev) => [...prev, newOption]);
+    }
+    handleValueChange('representative_name', value);
+  };
+
+  const addRepresentativeNumberOption = (value: string) => {
+    if (!value) return;
+    const newOption = { id: value, value };
+    if (!representativeNumberOptions.find((v) => v.id === value)) {
+      setRepresentativeNumberOptions((prev) => [...prev, newOption]);
+    }
+    handleValueChange('representative_number', value);
   };
 
   const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
@@ -1061,7 +1121,28 @@ const NewOrder = () => {
           type="number"
           placeholder="Enter expected days"
         />
+        <div></div>
 
+        <CustomAutoComplete
+          options={representativeOptions}
+          addNewValue={(val) => addRepresentativeOption(val)}
+          createOption={true}
+          value={orderInfo?.representative_name ?? ''}
+          onChange={(value) => handleValueChange('representative_name', value)}
+          label="Representative Name"
+          placeholder="Enter Representative Name"
+        />
+
+        <CustomAutoComplete
+          options={representativeNumberOptions}
+          addNewValue={(val) => addRepresentativeNumberOption(val)}
+          createOption={true}
+          value={orderInfo?.representative_number ?? ''}
+          onChange={(value) => handleValueChange('representative_number', value)}
+          label="Representative Number"
+          placeholder="Enter Representative Number"
+        />
+        <div></div>
         <div></div>
 
         <CustomAutoComplete

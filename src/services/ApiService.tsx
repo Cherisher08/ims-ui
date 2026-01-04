@@ -60,6 +60,7 @@ export const rootApi = createApi({
     'Service',
     'Expired',
     'PettyCash',
+    'Purchase',
   ],
   endpoints: (build) => ({
     getUser: build.query<User, void>({

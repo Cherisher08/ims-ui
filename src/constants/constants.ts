@@ -27,4 +27,10 @@ export const TOAST_IDS = {
   ERROR_PRODUCT_DELETE: 'error_product_delete',
   SUCCESS_WHATSAPP_ORDER_DC: 'success_whatsapp_order_dc',
   ERROR_WHATSAPP_ORDER_DC: 'error_whatsapp_order_dc',
+  ERROR_PURCHASE_CREATE: 'error_purchase_create',
+  SUCCESS_PURCHASE_CREATE: 'success_purchase_create',
+  ERROR_PURCHASE_UPDATE: 'error_purchase_update',
+  SUCCESS_PURCHASE_UPDATE: 'success_purchase_update',
+  ERROR_PURCHASE_DELETE: 'error_purchase_delete',
+  SUCCESS_PURCHASE_DELETE: 'success_purchase_delete',
 };

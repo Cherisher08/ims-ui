@@ -41,6 +41,12 @@ export const MenuItems: MenuItemsType[] = [
     logo: <LuShoppingBag size={30} />,
   },
   {
+    id: 7,
+    title: 'Purchases',
+    path: '/purchases',
+    logo: <LuShoppingBag size={30} />,
+  },
+  {
     id: 4,
     title: 'Customer',
     path: '/contacts',

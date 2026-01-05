@@ -167,6 +167,85 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const tableHTML = `
+      <html>
+        <head>
+          <title>Petty Cash Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .totals { background-color: #e6f3ff; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Mani Power Tools</h1>
+            <h2>Petty Cash Report</h2>
+            <p>Period: ${dayjs().startOf('month').format('DD-MMM-YYYY')} to ${dayjs().format(
+      'DD-MMM-YYYY'
+    )}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Date and Time</th>
+                <th>In Date</th>
+                <th>Customer Name</th>
+                <th>Phone Number</th>
+                <th>Cash In</th>
+                <th>HDFC In</th>
+                <th>Gpay In</th>
+                <th>Cash Less</th>
+                <th>Gpay Less</th>
+                <th>KVB Less</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowData
+                .map(
+                  (row) => `
+                <tr>
+                  <td>${row.dateTime ? dayjs(row.dateTime).format('DD-MMM-YYYY hh:mm A') : ''}</td>
+                  <td>${dayjs(row.inDate).format('DD-MMM-YYYY')}</td>
+                  <td>${row.customerName}</td>
+                  <td>${row.phoneNumber}</td>
+                  <td>₹ ${row.cashIn || 0}</td>
+                  <td>₹ ${row.accountIn || 0}</td>
+                  <td>₹ ${row.upiIn || 0}</td>
+                  <td>₹ ${row.cashLess || 0}</td>
+                  <td>₹ ${row.upiLess || 0}</td>
+                  <td>₹ ${row.kvbLess || 0}</td>
+                </tr>
+              `
+                )
+                .join('')}
+              <tr class="totals">
+                <td colspan="4">Totals</td>
+                <td>₹ ${totalsRow.cashIn}</td>
+                <td>₹ ${totalsRow.accountIn}</td>
+                <td>₹ ${totalsRow.upiIn}</td>
+                <td>₹ ${totalsRow.cashLess}</td>
+                <td>₹ ${totalsRow.upiLess}</td>
+                <td>₹ ${totalsRow.kvbLess}</td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   // Filter orders with transactions from start of month to today
   const startOfMonth = dayjs().startOf('month');
   const endOfPeriod = dayjs();
@@ -273,7 +352,9 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
     _id: pettyCash._id,
   }));
 
-  const rowData = [...processedPettyCashData, ...processedRowData];
+  const rowData = [...processedPettyCashData, ...processedRowData].sort((a, b) =>
+    dayjs(b.dateTime).isBefore(dayjs(a.dateTime)) ? -1 : 1
+  );
 
   // Compute consolidated totals for numeric columns
   const totalsRow = {
@@ -422,6 +503,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         <div className="relative w-full flex justify-center items-center">
           <p className="text-primary text-xl font-semibold">Mani Power Tools</p>
           <div className="absolute right-0 flex gap-3 items-center">
+            <CustomButton onClick={handlePrint} label="Print" variant="outlined" />
             <CustomButton onClick={addNewEntry} label="Add Entry" variant="contained" />
             <MdClose size={25} className="cursor-pointer" onClick={onClose} />
           </div>

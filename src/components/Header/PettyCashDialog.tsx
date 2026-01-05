@@ -5,6 +5,8 @@ import CustomButton from '../../styled/CustomButton';
 import CustomTable from '../../styled/CustomTable';
 import { CellEditingStoppedEvent, ColDef, ColGroupDef } from 'ag-grid-community';
 import dayjs from 'dayjs';
+import isBetween from 'dayjs/plugin/isBetween';
+dayjs.extend(isBetween);
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
 import { useGetContactsQuery } from '../../services/ContactService';
 import {
@@ -165,47 +167,58 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
     }
   };
 
-  // Filter orders with transactions today
-  const today = dayjs().subtract(1, 'day').startOf('day');
-  const paidTodayOrders =
+  // Filter orders with transactions from start of month to today
+  const startOfMonth = dayjs().startOf('month');
+  const endOfPeriod = dayjs();
+  const paidPeriodOrders =
     rentalOrders?.filter(
       (order) =>
-        (order.balance_paid_date && dayjs(order.balance_paid_date).isSame(today, 'day')) ||
-        (order.repay_date && dayjs(order.repay_date).isSame(today, 'day')) ||
-        order.deposits.some((deposit) => dayjs(deposit.date).isSame(today, 'day'))
+        (order.balance_paid_date &&
+          dayjs(order.balance_paid_date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')) ||
+        (order.repay_date &&
+          dayjs(order.repay_date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')) ||
+        order.deposits.some((deposit) =>
+          dayjs(deposit.date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')
+        )
     ) || [];
 
   // Process row data
-  const processedRowData = paidTodayOrders
+  const processedRowData = paidPeriodOrders
     .map((order) => {
       const totalDeposits = order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0);
       const billAmount = calculateFinalAmount(order as RentalOrderType);
       const repayAmount = totalDeposits - billAmount;
 
-      // Determine the transaction date that matched today
+      // Determine the transaction date that matched the period
       let transactionDate = null;
-      if (order.balance_paid_date && dayjs(order.balance_paid_date).isSame(today, 'day')) {
+      if (
+        order.balance_paid_date &&
+        dayjs(order.balance_paid_date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')
+      ) {
         transactionDate = order.balance_paid_date;
-      } else if (order.repay_date && dayjs(order.repay_date).isSame(today, 'day')) {
+      } else if (
+        order.repay_date &&
+        dayjs(order.repay_date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')
+      ) {
         transactionDate = order.repay_date;
       } else {
         const matchingDeposit = order.deposits.find((deposit) =>
-          dayjs(deposit.date).isSame(today, 'day')
+          dayjs(deposit.date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')
         );
         transactionDate = matchingDeposit ? matchingDeposit.date : order.invoice_date;
       }
 
-      // Calculate deposits made today by mode
-      const todayDeposits = order.deposits.filter((deposit) =>
-        dayjs(deposit.date).isSame(today, 'day')
+      // Calculate deposits made in the period by mode
+      const periodDeposits = order.deposits.filter((deposit) =>
+        dayjs(deposit.date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')
       );
-      const cashDepositsToday = todayDeposits
+      const cashDepositsPeriod = periodDeposits
         .filter((deposit) => deposit.mode === PaymentMode.CASH)
         .reduce((sum, deposit) => sum + deposit.amount, 0);
-      const accountDepositsToday = todayDeposits
+      const accountDepositsPeriod = periodDeposits
         .filter((deposit) => deposit.mode === PaymentMode.ACCOUNT)
         .reduce((sum, deposit) => sum + deposit.amount, 0);
-      const upiDepositsToday = todayDeposits
+      const upiDepositsPeriod = periodDeposits
         .filter((deposit) => deposit.mode === PaymentMode.UPI)
         .reduce((sum, deposit) => sum + deposit.amount, 0);
 
@@ -216,12 +229,13 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         phoneNumber: order.customer?.personal_number || '',
         cashIn:
           (order.balance_paid_mode === PaymentMode.CASH ? order.balance_paid : 0) +
-          cashDepositsToday,
+          cashDepositsPeriod,
         accountIn:
           (order.balance_paid_mode === PaymentMode.ACCOUNT ? order.balance_paid : 0) +
-          accountDepositsToday,
+          accountDepositsPeriod,
         upiIn:
-          (order.balance_paid_mode === PaymentMode.UPI ? order.balance_paid : 0) + upiDepositsToday,
+          (order.balance_paid_mode === PaymentMode.UPI ? order.balance_paid : 0) +
+          upiDepositsPeriod,
         cashLess: order.payment_mode === RepaymentMode.CASHLESS ? repayAmount : 0,
         upiLess: order.payment_mode === RepaymentMode.UPILESS ? repayAmount : 0,
         kvbLess: order.payment_mode === RepaymentMode.KVBLESS ? repayAmount : 0,
@@ -237,12 +251,14 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         row.kvbLess > 0
     );
 
-  // Filter petty cash data for today
-  const todayPettyCashes =
-    pettyCashes?.filter((pettyCash) => dayjs(pettyCash.created_date).isSame(today, 'day')) || [];
+  // Filter petty cash data from start of month to today
+  const periodPettyCashes =
+    pettyCashes?.filter((pettyCash) =>
+      dayjs(pettyCash.created_date).isBetween(startOfMonth, endOfPeriod, 'day', '[]')
+    ) || [];
 
   // Process petty cash data
-  const processedPettyCashData = todayPettyCashes.map((pettyCash) => ({
+  const processedPettyCashData = periodPettyCashes.map((pettyCash) => ({
     dateTime: pettyCash.created_date,
     inDate: pettyCash.created_date,
     customerName: pettyCash.customer?.name || '',

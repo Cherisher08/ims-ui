@@ -33,4 +33,6 @@ export const TOAST_IDS = {
   SUCCESS_PURCHASE_UPDATE: 'success_purchase_update',
   ERROR_PURCHASE_DELETE: 'error_purchase_delete',
   SUCCESS_PURCHASE_DELETE: 'success_purchase_delete',
+  OTP_VERIFY_SUCCESS: 'otp_verify_success',
+  OTP_VERIFY_ERROR: 'otp_verify_error',
 };

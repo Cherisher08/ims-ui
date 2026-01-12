@@ -182,6 +182,8 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     repay_date: '',
     invoice_id: '',
     invoice_date: null,
+    representative_name: '',
+    representative_number: '',
   };
 };
 
@@ -826,15 +828,11 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
   const data: Record<string, string | number>[] = [];
 
   const getCustomerDetails = (order: RentalOrderType | RentalOrderInfo) => {
+    console.log('order: ', order);
     if (!order.customer) return { name: '', phone: '', gst: '' };
     if ('personal_number' in order.customer) {
       const custObj = order.customer as unknown as Record<string, unknown>;
-      const gstVal =
-        typeof custObj['gst_number'] === 'string'
-          ? (custObj['gst_number'] as string)
-          : typeof custObj['gst_no'] === 'string'
-          ? (custObj['gst_no'] as string)
-          : '';
+      const gstVal = typeof custObj['gstin'] === 'string' ? (custObj['gstin'] as string) : '';
       return {
         name: order.customer.name || '',
         phone: order.customer.personal_number || '',

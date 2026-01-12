@@ -1854,8 +1854,8 @@ const NewOrder = () => {
         <div className="grid grid-cols-[2fr_2fr] gap-2">
           <Tooltip
             title={
-              orderInfo.billing_mode === BillingMode.B2B
-                ? 'Invoice Date is disabled for B2B Billing Mode'
+              orderInfo.billing_mode === BillingMode.B2C
+                ? 'Invoice Date is disabled for B2C Billing Mode'
                 : ''
             }
             placement="bottom-start"
@@ -1873,7 +1873,7 @@ const NewOrder = () => {
                   handleValueChange('invoice_date', val);
                 }}
                 format="DD/MM/YYYY"
-                disabled={orderInfo.billing_mode === BillingMode.B2B}
+                disabled={orderInfo.billing_mode === BillingMode.B2C}
               />
             </div>
           </Tooltip>

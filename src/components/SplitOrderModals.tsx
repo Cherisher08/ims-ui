@@ -91,6 +91,8 @@ const initialRentalOrder: RentalOrderInfo = {
   event_venue: '',
   invoice_id: '',
   invoice_date: null,
+  representative_name: '',
+  representative_number: '',
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {

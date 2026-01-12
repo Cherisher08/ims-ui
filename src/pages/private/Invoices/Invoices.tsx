@@ -1,5 +1,6 @@
 import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
 import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { FC, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import Invoice from '../../../components/Invoice';
@@ -16,7 +17,7 @@ import CustomTable from '../../../styled/CustomTable';
 
 import { IoPrintOutline } from 'react-icons/io5';
 import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
-import { GridApi } from 'ag-grid-community';
+
 import {
   calculateFinalAmount,
   currencyFormatter,
@@ -29,6 +30,10 @@ import {
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { RiFileExcel2Line } from 'react-icons/ri';
 import CustomSplitButton from '../../../styled/CustomSplitButton';
+import CustomDatePicker from '../../../styled/CustomDatePicker';
+import CustomSelect from '../../../styled/CustomSelect';
+
+dayjs.extend(isSameOrBefore);
 
 const Invoices: FC = () => {
   // Set PDF.js worker once
@@ -38,7 +43,8 @@ const Invoices: FC = () => {
   ).toString();
 
   const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
-  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const [filter, setFilter] = useState<string>('1');
+  const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
 
   const [sendDcWhatsapp] = usePostOrderDcAsWhatsappMessageMutation();
   const [updateRentalOrder] = useUpdateRentalOrderMutation();
@@ -50,6 +56,55 @@ const Invoices: FC = () => {
         .filter((order) => order.invoice_id)
         .sort((a, b) => (a.invoice_id < b.invoice_id ? 1 : -1))
     : [];
+
+  const filterOptions = [
+    { id: '1', value: 'All Invoices' },
+    { id: '2', value: 'Current Month' },
+    { id: '3', value: 'Custom' },
+  ];
+
+  const getValidInvoiceDates = (
+    filter: string,
+    filterDates: { start: string; end: string } | null
+  ): string[] => {
+    const today = dayjs();
+    const dates: string[] = [];
+
+    if (filter === '2') {
+      // Current month: from 1st to today
+      const start = today.startOf('month');
+      const end = today;
+      let cursor = start.clone();
+      while (cursor.isSameOrBefore(end)) {
+        dates.push(cursor.format('YYYY-MM-DD'));
+        cursor = cursor.add(1, 'day');
+      }
+    } else if (filter === '3') {
+      // Custom: from start to end
+      if (filterDates) {
+        const start = dayjs(filterDates.start);
+        const end = dayjs(filterDates.end);
+        let cursor = start.clone();
+        while (cursor.isSameOrBefore(end)) {
+          dates.push(cursor.format('YYYY-MM-DD'));
+          cursor = cursor.add(1, 'day');
+        }
+      }
+    }
+
+    return dates;
+  };
+
+  const filteredOrderData = orderData.filter((order) => {
+    if (filter === '1') {
+      // All Invoices - no filtering
+      return true;
+    }
+    if (!order.invoice_date) return false;
+    const invoiceDate = dayjs(order.invoice_date).format('YYYY-MM-DD');
+    const validDates = getValidInvoiceDates(filter, filterDates);
+    return validDates.includes(invoiceDate);
+  });
 
   const renderIcon = (params: { data: RentalOrderInfo; type: 'delivery_challan' | 'invoice' }) => {
     const bill =
@@ -284,48 +339,68 @@ const Invoices: FC = () => {
   return (
     <div className="flex flex-col w-full h-full gap-2">
       <div className="flex justify-between">
-        <p className="font-primary w-full text-center text-2xl font-bold">INVOICES</p>
-        <CustomSplitButton
-          onClick={() => {
-            if (orderData) exportInvoiceToExcel(orderData as RentalOrderType[]);
-          }}
-          label="Export Invoices"
-          icon={<RiFileExcel2Line color="white" />}
-          options={['All Invoices', 'Filtered Invoices']}
-          onMenuItemClick={(index) => {
-            try {
-              if (index === 0) {
-                // All invoices
-                if (orderData && orderData.length > 0) {
-                  exportInvoiceToExcel(orderData as RentalOrderType[]);
-                }
-              } else if (index === 1) {
-                // Filtered invoices - collect filtered rows via gridApi
-                if (!gridApi) {
-                  // fallback to all if grid not ready
-                  if (orderData && orderData.length > 0)
-                    exportInvoiceToExcel(orderData as RentalOrderType[]);
-                  return;
-                }
-                const filtered: RentalOrderType[] = [];
-                gridApi.forEachNodeAfterFilter((node) => {
-                  if (node && node.data) {
-                    filtered.push(node.data as RentalOrderType);
+        <p className="font-primary w-full text-2xl font-bold">INVOICES</p>
+        <div className="flex gap-4 mb-3">
+          {filter === '3' && (
+            <>
+              <CustomDatePicker
+                label={'Start Date'}
+                value={filterDates ? filterDates.start : ''}
+                onChange={(startDate) => {
+                  setFilterDates({ start: startDate, end: filterDates ? filterDates.end : '' });
+                }}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+              <CustomDatePicker
+                label={'End Date'}
+                value={filterDates ? filterDates.end : ''}
+                onChange={(endDate) => {
+                  setFilterDates({ start: filterDates ? filterDates.start : '', end: endDate });
+                }}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+            </>
+          )}
+          <CustomSelect
+            label=""
+            onChange={(val) => setFilter(val)}
+            className="w-[8rem]"
+            options={filterOptions}
+            value={filter}
+          />
+          <CustomSplitButton
+            onClick={() => {
+              if (orderData) exportInvoiceToExcel(orderData as RentalOrderInfo[]);
+            }}
+            label="Export Invoices"
+            icon={<RiFileExcel2Line color="white" />}
+            options={['All Invoices', 'Filtered Invoices']}
+            onMenuItemClick={(index) => {
+              try {
+                if (index === 0) {
+                  // All invoices
+                  if (orderData && orderData.length > 0) {
+                    exportInvoiceToExcel(orderData as RentalOrderInfo[]);
                   }
-                });
-                if (filtered.length > 0) exportInvoiceToExcel(filtered);
+                } else if (index === 1) {
+                  // Filtered invoices - use filteredOrderData
+                  if (filteredOrderData && filteredOrderData.length > 0) {
+                    exportInvoiceToExcel(filteredOrderData as RentalOrderInfo[]);
+                  }
+                }
+              } catch (err) {
+                console.error('Failed to export invoices', err);
               }
-            } catch (err) {
-              console.error('Failed to export invoices', err);
-            }
-          }}
-        />
+            }}
+          />
+        </div>
       </div>
       <CustomTable
         isLoading={false}
         colDefs={rentalOrderColDef}
-        rowData={orderData}
-        onGridReady={(api) => setGridApi(api as GridApi)}
+        rowData={filteredOrderData}
         getRowStyle={() => {
           return {
             backgroundColor: 'white',

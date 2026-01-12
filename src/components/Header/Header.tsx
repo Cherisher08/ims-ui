@@ -22,7 +22,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { User, UserRole } from '../../types/user';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { rootApi, useRegisterUserMutation } from '../../services/ApiService';
+import {
+  rootApi,
+  useRegisterUserMutation,
+  useSendOtpMutation,
+  useVerifyOtpMutation,
+} from '../../services/ApiService';
 import { clearUser } from '../../store/UserSlice';
 import { toast } from 'react-toastify';
 import { TOAST_IDS } from '../../constants/constants';
@@ -57,6 +62,11 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const dispatch = useDispatch();
   const [registerUser, { isLoading: isRegisteringUser, isSuccess: isUserRegisterSuccess }] =
     useRegisterUserMutation();
+  const [sendOtp, { isLoading: isSendingOtp }] = useSendOtpMutation();
+  const [
+    verifyOtp,
+    { isLoading: isVerifyingOtp, isSuccess: isOtpVerified, isError: isOtpVerifyError },
+  ] = useVerifyOtpMutation();
 
   const userData = useSelector((state: RootState) => state.user);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
@@ -78,6 +88,11 @@ const Header = ({ open, setOpen }: HeaderType) => {
     email: false,
     password: false,
   });
+  const [otpDialogOpen, setOtpDialogOpen] = useState<boolean>(false);
+  const [otpValue, setOtpValue] = useState<string>('');
+  const [otpSendDisabled, setOtpSendDisabled] = useState<boolean>(false);
+  const [otpTimer, setOtpTimer] = useState<number>(0);
+  const [otpVerifiedHandled, setOtpVerifiedHandled] = useState<boolean>(false);
 
   useEffect(() => {
     const activeMenuItem = MenuItems.find((item) => item.path === pathname);
@@ -124,6 +139,12 @@ const Header = ({ open, setOpen }: HeaderType) => {
 
   const strippedUserName = userData.name ? (userData.name[0] + userData.name[1]).toUpperCase() : '';
 
+  const handleSendOtp = () => {
+    sendOtp(userData.email);
+    setOtpSendDisabled(true);
+    setOtpTimer(30);
+  };
+
   useEffect(() => {
     const fetchExpiredOrders = async () => {
       const result = await triggerGetRentalOrder();
@@ -156,6 +177,37 @@ const Header = ({ open, setOpen }: HeaderType) => {
       });
     }
   }, [isRegisteringUser, isUserRegisterSuccess]);
+
+  useEffect(() => {
+    if (!isVerifyingOtp && isOtpVerified && !otpVerifiedHandled) {
+      toast.success('OTP verified successfully!', {
+        toastId: TOAST_IDS.OTP_VERIFY_SUCCESS,
+      });
+      setOtpDialogOpen(false);
+      setOtpVerifiedHandled(true);
+      navigate('/dashboard');
+    }
+  }, [isOtpVerified, isVerifyingOtp, navigate, otpVerifiedHandled]);
+
+  useEffect(() => {
+    if (!isVerifyingOtp && isOtpVerifyError) {
+      toast.error('OTP verification failed. Please try again.', {
+        toastId: TOAST_IDS.OTP_VERIFY_ERROR,
+      });
+    }
+  }, [isOtpVerifyError, isVerifyingOtp]);
+
+  useEffect(() => {
+    let interval: number;
+    if (otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (otpTimer === 0 && otpSendDisabled) {
+      setOtpSendDisabled(false);
+    }
+    return () => clearInterval(interval);
+  }, [otpTimer, otpSendDisabled]);
 
   const DrawerList = (
     <Box sx={{ width: 300 }} className="p-2" role="presentation" onClick={toggleDrawer(false)}>
@@ -234,7 +286,13 @@ const Header = ({ open, setOpen }: HeaderType) => {
             return (
               <li
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  if (item.title === 'Dashboard' && otpVerifiedHandled === false) {
+                    setOtpDialogOpen(true);
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
                 className={`text-lg font-semibold relative cursor-pointer flex flex-col items-center w-fit pl-3 py-2 ${
                   active === item.id ? 'text-[#0091ff]' : 'text-white'
                 } hover:rounded-md rounded-r-md hover:menu-active hover:text-[#0091ff]`}
@@ -357,6 +415,49 @@ const Header = ({ open, setOpen }: HeaderType) => {
           </div>
         </Modal>
         <PettyCashDialog open={pettyCashDialogOpen} onClose={() => setPettyCashDialogOpen(false)} />
+
+        {/* OTP Dialog */}
+        <Modal
+          open={otpDialogOpen}
+          onClose={() => setOtpDialogOpen(false)}
+          className="w-screen h-screen flex justify-center items-center"
+        >
+          <div className="flex flex-col gap-4 justify-center items-center bg-white rounded-lg p-4">
+            <p className="text-primary text-xl font-semibold w-full text-start">Protected Page</p>
+            <p className="text-gray-600">
+              This page is protected. Please verify your identity.{' '}
+              <button
+                onClick={handleSendOtp}
+                disabled={isSendingOtp || otpSendDisabled}
+                className="text-blue-500 underline hover:text-blue-700 disabled:text-gray-400 disabled:no-underline"
+              >
+                Send OTP{otpTimer > 0 ? ` (${otpTimer}s)` : ''}
+              </button>
+            </p>
+            <div className="flex w-120 px-10 justify-center items-end">
+              <CustomInput
+                label="Enter OTP"
+                placeholder="Enter OTP"
+                value={otpValue}
+                onChange={(value) => setOtpValue(value)}
+                className="w-60 rounded-lg"
+              />
+            </div>
+            <div className="flex w-full gap-3 justify-end">
+              <CustomButton
+                onClick={() => setOtpDialogOpen(false)}
+                label="Cancel"
+                variant="outlined"
+                className="bg-white"
+              />
+              <CustomButton
+                onClick={() => verifyOtp({ otp: otpValue, email: userData.email })}
+                label="Verify"
+                disabled={isVerifyingOtp}
+              />
+            </div>
+          </div>
+        </Modal>
       </div>
     </div>
   );

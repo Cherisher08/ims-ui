@@ -27,7 +27,7 @@ interface PettyCashDialogProps {
 
 interface RowData {
   dateTime: string | null;
-  inDate: string;
+  outDate: string;
   customerName: string;
   phoneNumber: string;
   cashIn: number;
@@ -196,7 +196,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
             <thead>
               <tr>
                 <th>Date and Time</th>
-                <th>In Date</th>
+                <th>Out Date</th>
                 <th>Customer Name</th>
                 <th>Phone Number</th>
                 <th>Cash In</th>
@@ -213,7 +213,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
                   (row) => `
                 <tr>
                   <td>${row.dateTime ? dayjs(row.dateTime).format('DD-MMM-YYYY hh:mm A') : ''}</td>
-                  <td>${dayjs(row.inDate).format('DD-MMM-YYYY')}</td>
+                  <td>${dayjs(row.outDate).format('DD-MMM-YYYY')}</td>
                   <td>${row.customerName}</td>
                   <td>${row.phoneNumber}</td>
                   <td>₹ ${row.cashIn || 0}</td>
@@ -303,7 +303,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
 
       return {
         dateTime: transactionDate,
-        inDate: order.in_date,
+        outDate: order.out_date,
         customerName: order.customer?.name || '',
         phoneNumber: order.customer?.personal_number || '',
         cashIn:
@@ -339,7 +339,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   // Process petty cash data
   const processedPettyCashData = periodPettyCashes.map((pettyCash) => ({
     dateTime: pettyCash.created_date,
-    inDate: pettyCash.created_date,
+    outDate: pettyCash.created_date,
     customerName: pettyCash.customer?.name || '',
     phoneNumber: pettyCash.customer?.personal_number || pettyCash.customer?.office_number || '',
     cashIn: pettyCash.balance_paid_mode === PaymentMode.CASH ? pettyCash.balance_paid : 0,
@@ -393,8 +393,8 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       },
     },
     {
-      field: 'inDate',
-      headerName: 'In Date',
+      field: 'outDate',
+      headerName: 'Out Date',
       minWidth: 120,
       valueFormatter: (params: { value: string }) => {
         const date = params.value ? new Date(params.value) : '';

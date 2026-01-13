@@ -8,7 +8,7 @@ export type ErrorResponse = {
 
 export interface VerifyOtpRequest {
   otp: string;
-  email: string;
+  email?: string;
 }
 
 export interface ProductCategory {

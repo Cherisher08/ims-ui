@@ -94,13 +94,11 @@ export const rootApi = createApi({
         },
       }),
     }),
-    sendOtp: build.mutation<GeneralResponse, string>({
-      query: (email) => ({
+    sendOtp: build.mutation<GeneralResponse, void>({
+      query: () => ({
         url: 'auth/users/generate-otp',
         method: 'POST',
-        body: {
-          email: email,
-        },
+        body: {},
       }),
     }),
     verifyOtp: build.mutation<GeneralResponse, VerifyOtpRequest>({

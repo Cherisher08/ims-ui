@@ -140,7 +140,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
   const strippedUserName = userData.name ? (userData.name[0] + userData.name[1]).toUpperCase() : '';
 
   const handleSendOtp = () => {
-    sendOtp(userData.email);
+    sendOtp();
     setOtpSendDisabled(true);
     setOtpTimer(30);
   };
@@ -451,7 +451,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 className="bg-white"
               />
               <CustomButton
-                onClick={() => verifyOtp({ otp: otpValue, email: userData.email })}
+                onClick={() => verifyOtp({ otp: otpValue })}
                 label="Verify"
                 disabled={isVerifyingOtp}
               />

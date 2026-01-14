@@ -25,6 +25,9 @@ export const initialProductData: Product = {
   repair_count: 0,
   available_stock: 0,
   price: 0,
+  gst_percentage: 0,
+  profit: 0,
+  profit_type: DiscountType.PERCENT,
   unit: {
     _id: '',
     name: '',
@@ -35,7 +38,4 @@ export const initialProductData: Product = {
   },
   type: ProductType.RENTAL,
   rent_per_unit: 0,
-  discount: 0,
-  discount_type: DiscountType.PERCENT,
 };
-

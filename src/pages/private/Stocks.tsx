@@ -27,7 +27,7 @@ import CustomDatePicker from '../../styled/CustomDatePicker';
 import CustomInput from '../../styled/CustomInput';
 import CustomSelect from '../../styled/CustomSelect';
 import CustomTable from '../../styled/CustomTable';
-import { DiscountType, discountTypeValues, Product } from '../../types/common';
+import { discountTypeValues, Product } from '../../types/common';
 import { initialProductData, transformIdNamePair, transformIdValuePair } from './utils';
 
 interface OneProduct {
@@ -162,7 +162,7 @@ const Inventory = () => {
           const rowData = params.data!;
 
           return (
-            <div className="flex gap-2 h-[2rem] items-center">
+            <div className="flex gap-2 h-8 items-center">
               <FiEdit
                 size={19}
                 className="cursor-pointer"
@@ -215,57 +215,48 @@ const Inventory = () => {
 
   const calculateTotal = useMemo(() => {
     if (addProductOpen) {
-      if (
-        newProductData?.discount_type === DiscountType.PERCENT &&
-        newProductData.price &&
-        newProductData.quantity
-      ) {
-        const totalPrice = newProductData.price * newProductData.quantity;
-        if (newProductData.discount === 0 || isNaN(newProductData.discount))
-          return `₹${totalPrice}`;
-        const value = totalPrice - +((newProductData.discount / 100) * totalPrice).toFixed(2);
-        return `₹${value}`;
+      if (newProductData.type === 'sales') {
+        const price = Number(newProductData.price || 0);
+        const gstPerc = Number(newProductData.gst_percentage || 0);
+        const profit = Number(newProductData.profit || 0);
+        const profitType = newProductData.profit_type || 'percent';
+        const actualPrice = price * (1 + gstPerc / 100);
+        const profitAmt = profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
+        const salePrice = actualPrice + profitAmt;
+        const totalPrice = salePrice * (newProductData.quantity || 0);
+        return `₹${totalPrice.toFixed(2)}`;
       }
-      if (
-        newProductData?.discount_type === DiscountType.RUPEES &&
-        newProductData.price &&
-        newProductData.quantity
-      ) {
-        const value = newProductData.price * newProductData.quantity - newProductData.discount;
-        return `₹${value}`;
-      }
+      return '₹0';
     }
     if (updateModalOpen) {
-      if (
-        updateData?.discount_type === DiscountType.PERCENT &&
-        updateData.price &&
-        updateData.quantity
-      ) {
-        const totalPrice = updateData.price * updateData.quantity;
-        if (updateData.discount === 0 || isNaN(updateData.discount)) return `₹${totalPrice}`;
-        const value = totalPrice - +((updateData.discount / 100) * totalPrice).toFixed(2);
-        return `₹${value}`;
+      if (updateData?.type === 'sales') {
+        const price = Number(updateData?.price || 0);
+        const gstPerc = Number(updateData?.gst_percentage || 0);
+        const profit = Number(updateData?.profit || 0);
+        const profitType = updateData?.profit_type || 'percent';
+        const actualPrice = price * (1 + gstPerc / 100);
+        const profitAmt = profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
+        const salePrice = actualPrice + profitAmt;
+        const totalPrice = salePrice * (updateData?.quantity || 0);
+        return `₹${totalPrice.toFixed(2)}`;
       }
-      if (
-        updateData?.discount_type === DiscountType.RUPEES &&
-        updateData.price &&
-        updateData.quantity
-      ) {
-        const value = updateData.price * updateData.quantity - updateData.discount;
-        return `₹${value}`;
-      }
+      return '₹0';
     }
     return '₹0';
   }, [
     addProductOpen,
-    newProductData.discount,
-    newProductData?.discount_type,
     newProductData.price,
     newProductData.quantity,
-    updateData?.discount,
-    updateData?.discount_type,
+    newProductData.type,
+    newProductData.gst_percentage,
+    newProductData.profit,
+    newProductData.profit_type,
     updateData?.price,
     updateData?.quantity,
+    updateData?.type,
+    updateData?.gst_percentage,
+    updateData?.profit,
+    updateData?.profit_type,
     updateModalOpen,
   ]);
 
@@ -514,10 +505,12 @@ const Inventory = () => {
                 }
               />
               <CustomInput
-                label="Rental Price"
+                label={newProductData.type === 'sales' ? 'Sales Price' : 'Rental Price'}
                 value={newProductData.rent_per_unit}
                 onChange={(value) => handleProductChange('rent_per_unit', value)}
-                placeholder="Enter Rental Price"
+                placeholder={
+                  newProductData.type === 'sales' ? 'Enter Sales Price' : 'Enter Rental Price'
+                }
               />
             </div>
 
@@ -541,15 +534,38 @@ const Inventory = () => {
                 placeholder="Enter Product Price"
               />
 
+              <CustomInput
+                label="GST %"
+                value={newProductData.gst_percentage}
+                type="number"
+                onChange={(value) =>
+                  handleProductChange('gst_percentage', value ? parseFloat(value) : '')
+                }
+                placeholder="Enter GST Percentage"
+              />
+
+              <CustomInput
+                label="Price with GST"
+                value={
+                  newProductData.price && newProductData.gst_percentage
+                    ? (
+                        Number(newProductData.price) *
+                        (1 + Number(newProductData.gst_percentage) / 100)
+                      ).toFixed(2)
+                    : newProductData.price || ''
+                }
+                onChange={() => {}}
+                disabled
+                placeholder="Calculated Price with GST"
+              />
+
               <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
                 <CustomInput
-                  label="Discount"
+                  label="Profit"
                   placeholder=""
-                  value={newProductData.discount}
+                  value={newProductData.profit}
                   type="number"
-                  onChange={(value) =>
-                    handleProductChange('discount', value ? parseInt(value) : '')
-                  }
+                  onChange={(value) => handleProductChange('profit', value ? parseInt(value) : '')}
                 />
                 <CustomSelect
                   label=""
@@ -557,10 +573,10 @@ const Inventory = () => {
                   options={discountTypeValues}
                   value={
                     discountTypeValues.find(
-                      (discountType) => newProductData.discount_type === discountType.id
+                      (discountType) => newProductData.profit_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
-                  onChange={(value) => handleProductChange('discount_type', value)}
+                  onChange={(value) => handleProductChange('profit_type', value)}
                 />
               </div>
 
@@ -569,7 +585,7 @@ const Inventory = () => {
                 value={calculateTotal}
                 onChange={() => {}}
                 placeholder="Rs. 0.0"
-                disabled
+                disabled={newProductData.type === 'sales'}
               />
             </div>
           </div>
@@ -734,7 +750,7 @@ const Inventory = () => {
                 }
               />
               <CustomInput
-                label="Rental Price"
+                label={updateData?.type === 'sales' ? 'Sales Price' : 'Rental Price'}
                 value={updateData?.rent_per_unit ?? 0}
                 onChange={(value) =>
                   setUpdateData((prev) => {
@@ -746,7 +762,9 @@ const Inventory = () => {
                     return prev;
                   })
                 }
-                placeholder="Enter Rental Price"
+                placeholder={
+                  updateData?.type === 'sales' ? 'Enter Sales Price' : 'Enter Rental Price'
+                }
               />
             </div>
 
@@ -792,18 +810,50 @@ const Inventory = () => {
                 placeholder="Enter Product Price"
               />
 
+              <CustomInput
+                label="GST %"
+                value={updateData?.gst_percentage ?? 0}
+                type="number"
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        gst_percentage: parseFloat(value),
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter GST Percentage"
+              />
+
+              <CustomInput
+                label="Price with GST"
+                value={
+                  updateData?.price && updateData?.gst_percentage
+                    ? (
+                        Number(updateData.price) *
+                        (1 + Number(updateData.gst_percentage) / 100)
+                      ).toFixed(2)
+                    : updateData?.price || ''
+                }
+                onChange={() => {}}
+                disabled
+                placeholder="Calculated Price with GST"
+              />
+
               <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
                 <CustomInput
-                  label="Discount"
+                  label="Profit"
                   placeholder=""
-                  value={updateData?.discount ?? 0}
+                  value={updateData?.profit ?? 0}
                   type="number"
                   onChange={(value) =>
                     setUpdateData((prev) => {
                       if (prev)
                         return {
                           ...prev,
-                          discount: parseInt(value),
+                          profit: parseInt(value),
                         };
                       return prev;
                     })
@@ -815,10 +865,10 @@ const Inventory = () => {
                   options={discountTypeValues}
                   value={
                     discountTypeValues.find(
-                      (discountType) => updateData?.discount_type === discountType.id
+                      (discountType) => updateData?.profit_type === discountType.id
                     )?.id ?? discountTypeValues[0].id
                   }
-                  onChange={(value) => handleUpdateProduct('discount_type', value)}
+                  onChange={(value) => handleUpdateProduct('profit_type', value)}
                 />
               </div>
 
@@ -827,7 +877,7 @@ const Inventory = () => {
                 value={calculateTotal}
                 onChange={() => {}}
                 placeholder="Rs. 0.0"
-                disabled
+                disabled={updateData?.type === 'sales'}
               />
             </div>
           </div>

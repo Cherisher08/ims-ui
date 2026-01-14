@@ -366,7 +366,7 @@ const Invoices: FC = () => {
           <CustomSelect
             label=""
             onChange={(val) => setFilter(val)}
-            className="w-[8rem]"
+            className="w-32"
             options={filterOptions}
             value={filter}
           />

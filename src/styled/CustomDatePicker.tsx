@@ -37,7 +37,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   return (
     <div className={`flex flex-col  ${wrapperClass} `}>
-      <label className={`min-w-[5rem] line-clamp-2 break-words h-fit ${labelClass}`}>{label}</label>
+      <label className={`min-w-20 line-clamp-2 break-words h-fit ${labelClass}`}>{label}</label>
       <div className="flex flex-col gap-2 w-full">
         <DateTimePicker
           value={value ? dayjs(value) : null}

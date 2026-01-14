@@ -167,10 +167,11 @@ export type PurchaseProduct = {
   unit: Unit;
   type: ProductType;
   rent_per_unit: number;
+  gst_percentage: number;
   quantity: number;
   price: number;
-  discount: number;
-  discount_type: DiscountType;
+  profit: number;
+  profit_type: DiscountType;
 };
 
 export type PurchaseOrderInfo = {

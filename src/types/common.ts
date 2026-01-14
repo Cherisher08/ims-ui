@@ -71,12 +71,13 @@ export interface Product {
   product_code: string;
   category: ProductCategory;
   price: number;
+  gst_percentage: number;
+  profit: number;
+  profit_type: DiscountType;
   type: ProductType;
   purchase_date: string;
   unit: Unit;
   rent_per_unit: number;
-  discount: number;
-  discount_type: DiscountType;
   created_by?: string;
 }
 

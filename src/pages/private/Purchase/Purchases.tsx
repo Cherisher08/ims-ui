@@ -24,7 +24,7 @@ import CustomFileInput from '../../../styled/CustomFileInput';
 import CustomInput from '../../../styled/CustomInput';
 import CustomSelect from '../../../styled/CustomSelect';
 import CustomTable from '../../../styled/CustomTable';
-import { DiscountType, Product, ProductType } from '../../../types/common';
+import { DiscountType, discountTypeValues, Product, ProductType } from '../../../types/common';
 import { PurchaseOrderInfo } from '../../../types/order';
 import { transformIdNamePair, transformIdValuePair } from '../utils';
 import ViewPdfModal from './ViewPdfModal';
@@ -78,10 +78,11 @@ const Purchases = () => {
     type: ProductType.RENTAL,
     quantity: 0,
     price: 0,
+    gst_percentage: 0,
+    profit: 0,
+    profit_type: DiscountType.PERCENT,
     rent_per_unit: 0,
     available_stock: 0,
-    discount: 0,
-    discount_type: DiscountType.PERCENT,
     purchase_date: new Date().toISOString().split('T')[0],
   });
 
@@ -143,10 +144,10 @@ const Purchases = () => {
           purchase_date: purchase.purchase_date,
           supplier_name: purchase.supplier?.name || 'N/A',
           total_products: purchase.products.length,
-          total_amount: purchase.products.reduce(
-            (sum, p) => sum + p.quantity * p.price - (p.discount || 0),
-            0
-          ),
+          total_amount: purchase.products.reduce((sum, p) => {
+            const priceWithGst = Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
+            return sum + p.quantity * priceWithGst;
+          }, 0),
           invoice_pdf_path: purchase.invoice_pdf_path || null,
         }))
       : [];
@@ -293,8 +294,18 @@ const Purchases = () => {
     }
 
     try {
+      // Check if all products have IDs; if not, remove empty IDs from products that don't have them
+      const allProductsHaveIds = newPurchaseData.products.every(
+        (p) => p._id && p._id.trim() !== ''
+      );
+      const purchaseToCreate = { ...newPurchaseData };
+      if (!allProductsHaveIds) {
+        purchaseToCreate.products = newPurchaseData.products.map((p) =>
+          !p._id || p._id.trim() === '' ? { ...p, _id: undefined } : p
+        );
+      }
       // Create purchase order
-      await createPurchase(newPurchaseData as PurchaseOrderInfo).unwrap();
+      await createPurchase(purchaseToCreate as PurchaseOrderInfo).unwrap();
       setAddPurchaseOpen(false);
       resetForm();
     } catch (error) {
@@ -342,10 +353,11 @@ const Purchases = () => {
       type: ProductType.RENTAL,
       quantity: 0,
       price: 0,
+      gst_percentage: 0,
+      profit: 0,
+      profit_type: DiscountType.PERCENT,
       rent_per_unit: 0,
       available_stock: 0,
-      discount: 0,
-      discount_type: DiscountType.PERCENT,
       purchase_date: new Date().toISOString().split('T')[0],
     });
     setSelectedProduct(null);
@@ -402,8 +414,9 @@ const Purchases = () => {
       rent_per_unit: productToAdd.rent_per_unit,
       quantity: newProductData.quantity || 0,
       price: newProductData.price || 0,
-      discount: newProductData.discount || 0,
-      discount_type: newProductData.discount_type || DiscountType.PERCENT,
+      gst_percentage: newProductData.gst_percentage || 0,
+      profit: newProductData.profit || 0,
+      profit_type: newProductData.profit_type || DiscountType.PERCENT,
     };
 
     setNewPurchaseData((prev) => ({
@@ -421,10 +434,11 @@ const Purchases = () => {
       type: ProductType.RENTAL,
       quantity: 0,
       price: 0,
+      gst_percentage: 0,
+      profit: 0,
+      profit_type: DiscountType.PERCENT,
       rent_per_unit: 0,
       available_stock: 0,
-      discount: 0,
-      discount_type: DiscountType.PERCENT,
       purchase_date: new Date().toISOString().split('T')[0],
     });
     setSelectedProduct(null);
@@ -455,7 +469,17 @@ const Purchases = () => {
 
     try {
       console.log('newPurchaseData: ', newPurchaseData);
-      await updatePurchase(newPurchaseData as PurchaseOrderInfo).unwrap();
+      // Check if all products have IDs; if not, remove empty IDs from products that don't have them
+      const allProductsHaveIds = newPurchaseData.products.every(
+        (p) => p._id && p._id.trim() !== ''
+      );
+      const purchaseToUpdate = { ...newPurchaseData };
+      if (!allProductsHaveIds) {
+        purchaseToUpdate.products = newPurchaseData.products.map((p) =>
+          !p._id || p._id.trim() === '' ? { ...p, _id: undefined } : p
+        );
+      }
+      await updatePurchase(purchaseToUpdate as PurchaseOrderInfo).unwrap();
       setEditPurchaseOpen(false);
       resetForm();
       toast.success('Purchase updated successfully', {
@@ -708,6 +732,46 @@ const Purchases = () => {
                       )
                     }
                   />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mt-4">
+                <CustomInput
+                  label="Quantity"
+                  type="number"
+                  value={newProductData.quantity || 0}
+                  onChange={(value) => handleProductChange('quantity', parseInt(value))}
+                  placeholder="Enter Quantity"
+                />
+                <CustomInput
+                  label="Price"
+                  type="number"
+                  value={newProductData.price || 0}
+                  onChange={(value) => handleProductChange('price', parseInt(value))}
+                  placeholder="Enter Price"
+                />
+                <CustomInput
+                  label="GST Percentage"
+                  type="number"
+                  value={newProductData.gst_percentage || 0}
+                  onChange={(value) => handleProductChange('gst_percentage', parseFloat(value))}
+                  placeholder="Enter GST %"
+                />
+                <CustomInput
+                  label="Actual Price"
+                  type="number"
+                  value={(
+                    (newProductData.price || 0) *
+                    (1 + (newProductData.gst_percentage || 0) / 100)
+                  ).toFixed(2)}
+                  onChange={() => {}}
+                  disabled
+                  placeholder="Calculated Price"
+                />
+              </div>
+
+              {isNewProduct && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mt-4">
                   <CustomAutoComplete
                     label="Unit"
                     error={false}
@@ -734,31 +798,62 @@ const Purchases = () => {
                     }
                     onChange={(value) => handleProductChange('type', value)}
                   />
+                  <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
+                    <CustomInput
+                      label="Profit"
+                      type="number"
+                      value={newProductData.profit || 0}
+                      onChange={(value) => handleProductChange('profit', parseFloat(value))}
+                      placeholder="Enter Profit"
+                      disabled={newProductData.type === ProductType.RENTAL}
+                    />
+                    <CustomSelect
+                      label=""
+                      wrapperClass="mt-6"
+                      options={discountTypeValues}
+                      value={
+                        discountTypeValues.find(
+                          (discountType) => newProductData?.profit_type === discountType.id
+                        )?.id ?? discountTypeValues[0].id
+                      }
+                      onChange={(value) => handleProductChange('profit_type', value)}
+                    />
+                  </div>
                   <CustomInput
-                    label="Rental Price"
-                    value={newProductData.rent_per_unit || 0}
-                    onChange={(value) => handleProductChange('rent_per_unit', parseInt(value))}
-                    placeholder="Enter Rental Price"
+                    label={
+                      newProductData.type === ProductType.RENTAL ? 'Rental Price' : 'Sales Price'
+                    }
+                    type="number"
+                    value={
+                      newProductData.type === ProductType.RENTAL
+                        ? newProductData.rent_per_unit || 0
+                        : (() => {
+                            const price = Number(newProductData.price || 0);
+                            const gstPerc = Number(newProductData.gst_percentage || 0);
+                            const profit = Number(newProductData.profit || 0);
+                            const profitType = newProductData.profit_type || DiscountType.PERCENT;
+                            const actualPrice = price * (1 + gstPerc / 100);
+                            const profitAmt =
+                              profitType === DiscountType.PERCENT
+                                ? (actualPrice * profit) / 100
+                                : profit;
+                            return (actualPrice + profitAmt).toFixed(2);
+                          })()
+                    }
+                    onChange={(value) =>
+                      newProductData.type === ProductType.RENTAL
+                        ? handleProductChange('rent_per_unit', parseFloat(value))
+                        : () => {}
+                    }
+                    disabled={newProductData.type === ProductType.SALES}
+                    placeholder={
+                      newProductData.type === ProductType.RENTAL
+                        ? 'Enter Rental Price'
+                        : 'Calculated Sales Price'
+                    }
                   />
                 </div>
               )}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                <CustomInput
-                  label="Quantity"
-                  type="number"
-                  value={newProductData.quantity || 0}
-                  onChange={(value) => handleProductChange('quantity', parseInt(value))}
-                  placeholder="Enter Quantity"
-                />
-                <CustomInput
-                  label="Price"
-                  type="number"
-                  value={newProductData.price || 0}
-                  onChange={(value) => handleProductChange('price', parseInt(value))}
-                  placeholder="Enter Price"
-                />
-              </div>
 
               <CustomButton
                 onClick={addProductToPurchase}
@@ -770,26 +865,33 @@ const Purchases = () => {
             {/* Products List */}
             <div className="w-full border-t pt-4">
               <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
-              {newPurchaseData.products?.map((p, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
-                >
-                  <span className="wrap-break-word">{p.name}</span>
-                  <span className="wrap-break-word">Qty: {p.quantity}</span>
-                  <span className="wrap-break-word">Price: ₹{p.price}</span>
-                  <span className="wrap-break-word">Total: ₹{p.quantity * p.price}</span>
-                  <MdDelete
-                    size={20}
-                    className={`${
-                      editPurchaseOpen
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'cursor-pointer text-red-500 hover:text-red-700'
-                    }`}
-                    onClick={editPurchaseOpen ? undefined : () => removeProductFromPurchase(index)}
-                  />
-                </div>
-              ))}
+              {newPurchaseData.products?.map((p, index) => {
+                const priceWithGst =
+                  Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
+                const totalAmount = p.quantity * priceWithGst;
+                return (
+                  <div
+                    key={index}
+                    className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                  >
+                    <span className="wrap-break-word">{p.name}</span>
+                    <span className="wrap-break-word">Qty: {p.quantity}</span>
+                    <span className="wrap-break-word">Price: ₹{priceWithGst.toFixed(2)}</span>
+                    <span className="wrap-break-word">Total: ₹{totalAmount.toFixed(2)}</span>
+                    <MdDelete
+                      size={20}
+                      className={`${
+                        editPurchaseOpen
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'cursor-pointer text-red-500 hover:text-red-700'
+                      }`}
+                      onClick={
+                        editPurchaseOpen ? undefined : () => removeProductFromPurchase(index)
+                      }
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -912,6 +1014,7 @@ const Purchases = () => {
                     if (product) {
                       setNewProductData({
                         ...newProductData,
+                        _id: product._id,
                         quantity: 1,
                         price: product.price,
                       });
@@ -949,6 +1052,46 @@ const Purchases = () => {
                       )
                     }
                   />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mt-4">
+                <CustomInput
+                  label="Quantity"
+                  type="number"
+                  value={newProductData.quantity || 0}
+                  onChange={(value) => handleProductChange('quantity', parseInt(value))}
+                  placeholder="Enter Quantity"
+                />
+                <CustomInput
+                  label="Price"
+                  type="number"
+                  value={newProductData.price || 0}
+                  onChange={(value) => handleProductChange('price', parseInt(value))}
+                  placeholder="Enter Price"
+                />
+                <CustomInput
+                  label="GST Percentage"
+                  type="number"
+                  value={newProductData.gst_percentage || 0}
+                  onChange={(value) => handleProductChange('gst_percentage', parseFloat(value))}
+                  placeholder="Enter GST %"
+                />
+                <CustomInput
+                  label="Actual Price"
+                  type="number"
+                  value={(
+                    (newProductData.price || 0) *
+                    (1 + (newProductData.gst_percentage || 0) / 100)
+                  ).toFixed(2)}
+                  onChange={() => {}}
+                  disabled
+                  placeholder="Calculated Price"
+                />
+              </div>
+
+              {isNewProduct && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mt-4">
                   <CustomAutoComplete
                     label="Unit"
                     error={false}
@@ -975,31 +1118,62 @@ const Purchases = () => {
                     }
                     onChange={(value) => handleProductChange('type', value)}
                   />
+                  <div className="grid grid-cols-[3fr_1fr] gap-2 w-full">
+                    <CustomInput
+                      label="Profit"
+                      type="number"
+                      value={newProductData.profit || 0}
+                      onChange={(value) => handleProductChange('profit', parseFloat(value))}
+                      placeholder="Enter Profit"
+                      disabled={newProductData.type === ProductType.RENTAL}
+                    />
+                    <CustomSelect
+                      label=""
+                      wrapperClass="mt-6"
+                      options={discountTypeValues}
+                      value={
+                        discountTypeValues.find(
+                          (discountType) => newProductData?.profit_type === discountType.id
+                        )?.id ?? discountTypeValues[0].id
+                      }
+                      onChange={(value) => handleProductChange('profit_type', value)}
+                    />
+                  </div>
                   <CustomInput
-                    label="Rental Price"
-                    value={newProductData.rent_per_unit || 0}
-                    onChange={(value) => handleProductChange('rent_per_unit', parseInt(value))}
-                    placeholder="Enter Rental Price"
+                    label={
+                      newProductData.type === ProductType.RENTAL ? 'Rental Price' : 'Sales Price'
+                    }
+                    type="number"
+                    value={
+                      newProductData.type === ProductType.RENTAL
+                        ? newProductData.rent_per_unit || 0
+                        : (() => {
+                            const price = Number(newProductData.price || 0);
+                            const gstPerc = Number(newProductData.gst_percentage || 0);
+                            const profit = Number(newProductData.profit || 0);
+                            const profitType = newProductData.profit_type || DiscountType.PERCENT;
+                            const actualPrice = price * (1 + gstPerc / 100);
+                            const profitAmt =
+                              profitType === DiscountType.PERCENT
+                                ? (actualPrice * profit) / 100
+                                : profit;
+                            return (actualPrice + profitAmt).toFixed(2);
+                          })()
+                    }
+                    onChange={(value) =>
+                      newProductData.type === ProductType.RENTAL
+                        ? handleProductChange('rent_per_unit', parseFloat(value))
+                        : () => {}
+                    }
+                    disabled={newProductData.type === ProductType.SALES}
+                    placeholder={
+                      newProductData.type === ProductType.RENTAL
+                        ? 'Enter Rental Price'
+                        : 'Calculated Sales Price'
+                    }
                   />
                 </div>
               )}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                <CustomInput
-                  label="Quantity"
-                  type="number"
-                  value={newProductData.quantity || 0}
-                  onChange={(value) => handleProductChange('quantity', parseInt(value))}
-                  placeholder="Enter Quantity"
-                />
-                <CustomInput
-                  label="Price"
-                  type="number"
-                  value={newProductData.price || 0}
-                  onChange={(value) => handleProductChange('price', parseInt(value))}
-                  placeholder="Enter Price"
-                />
-              </div>
 
               <CustomButton
                 onClick={addProductToPurchase}
@@ -1011,22 +1185,27 @@ const Purchases = () => {
             {/* Products List */}
             <div className="w-full border-t pt-4">
               <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
-              {newPurchaseData.products?.map((p, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
-                >
-                  <span className="wrap-break-word">{p.name}</span>
-                  <span className="wrap-break-word">Qty: {p.quantity}</span>
-                  <span className="wrap-break-word">Price: ₹{p.price}</span>
-                  <span className="wrap-break-word">Total: ₹{p.quantity * p.price}</span>
-                  <MdDelete
-                    size={20}
-                    className="cursor-pointer text-red-500 hover:text-red-700"
-                    onClick={() => removeProductFromPurchase(index)}
-                  />
-                </div>
-              ))}
+              {newPurchaseData.products?.map((p, index) => {
+                const priceWithGst =
+                  Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
+                const totalAmount = p.quantity * priceWithGst;
+                return (
+                  <div
+                    key={index}
+                    className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                  >
+                    <span className="wrap-break-word">{p.name}</span>
+                    <span className="wrap-break-word">Qty: {p.quantity}</span>
+                    <span className="wrap-break-word">Price: ₹{priceWithGst.toFixed(2)}</span>
+                    <span className="wrap-break-word">Total: ₹{totalAmount.toFixed(2)}</span>
+                    <MdDelete
+                      size={20}
+                      className="cursor-pointer text-red-500 hover:text-red-700"
+                      onClick={() => removeProductFromPurchase(index)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 

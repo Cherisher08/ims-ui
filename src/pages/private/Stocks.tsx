@@ -80,7 +80,6 @@ const Inventory = () => {
   const productTypes = [
     { id: 'rental', value: 'RENTAL' },
     { id: 'sales', value: 'SALES' },
-    { id: 'service', value: 'SERVICE' },
   ];
 
   const rowData = useMemo<OneProduct[]>(() => {

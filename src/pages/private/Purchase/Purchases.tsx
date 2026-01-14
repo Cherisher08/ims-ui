@@ -102,7 +102,6 @@ const Purchases = () => {
   const productTypes = [
     { id: ProductType.RENTAL, value: 'RENTAL' },
     { id: ProductType.SALES, value: 'SALES' },
-    { id: ProductType.SERVICE, value: 'SERVICE' },
   ];
 
   const monthNames = [

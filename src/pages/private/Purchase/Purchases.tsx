@@ -145,7 +145,10 @@ const Purchases = () => {
           supplier_name: purchase.supplier?.name || 'N/A',
           total_products: purchase.products.length,
           total_amount: purchase.products.reduce((sum, p) => {
-            const priceWithGst = Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
+            const priceWithGst = +(
+              Number(p.price || 0) *
+              (1 + Number(p.gst_percentage || 0) / 100)
+            ).toFixed(2);
             return sum + p.quantity * priceWithGst;
           }, 0),
           invoice_pdf_path: purchase.invoice_pdf_path || null,
@@ -404,6 +407,19 @@ const Purchases = () => {
     }
 
     const productToAdd = selectedProduct || (newProductData as Product);
+
+    // Calculate rent_per_unit for sales type products
+    let rentPerUnit = productToAdd.rent_per_unit;
+    if (productToAdd.type === ProductType.SALES) {
+      const price = Number(newProductData.price || 0);
+      const gstPerc = Number(newProductData.gst_percentage || 0);
+      const profit = Number(newProductData.profit || 0);
+      const profitType = newProductData.profit_type || DiscountType.PERCENT;
+      const actualPrice = price * (1 + gstPerc / 100);
+      const profitAmt = profitType === DiscountType.PERCENT ? (actualPrice * profit) / 100 : profit;
+      rentPerUnit = +(actualPrice + profitAmt).toFixed(2);
+    }
+
     const purchaseProduct = {
       _id: productToAdd._id,
       name: productToAdd.name,
@@ -411,7 +427,7 @@ const Purchases = () => {
       category: productToAdd.category,
       unit: productToAdd.unit,
       type: productToAdd.type,
-      rent_per_unit: productToAdd.rent_per_unit,
+      rent_per_unit: rentPerUnit,
       quantity: newProductData.quantity || 0,
       price: newProductData.price || 0,
       gst_percentage: newProductData.gst_percentage || 0,
@@ -468,7 +484,6 @@ const Purchases = () => {
     }
 
     try {
-      console.log('newPurchaseData: ', newPurchaseData);
       // Check if all products have IDs; if not, remove empty IDs from products that don't have them
       const allProductsHaveIds = newPurchaseData.products.every(
         (p) => p._id && p._id.trim() !== ''

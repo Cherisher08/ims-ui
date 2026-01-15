@@ -213,53 +213,6 @@ const Inventory = () => {
     setDeleteProductOpen(false);
   };
 
-  const calculateTotal = useMemo(() => {
-    if (addProductOpen) {
-      if (newProductData.type === 'sales') {
-        const price = Number(newProductData.price || 0);
-        const gstPerc = Number(newProductData.gst_percentage || 0);
-        const profit = Number(newProductData.profit || 0);
-        const profitType = newProductData.profit_type || 'percent';
-        const actualPrice = price * (1 + gstPerc / 100);
-        const profitAmt = profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
-        const salePrice = actualPrice + profitAmt;
-        const totalPrice = salePrice * (newProductData.quantity || 0);
-        return `₹${totalPrice.toFixed(2)}`;
-      }
-      return '₹0';
-    }
-    if (updateModalOpen) {
-      if (updateData?.type === 'sales') {
-        const price = Number(updateData?.price || 0);
-        const gstPerc = Number(updateData?.gst_percentage || 0);
-        const profit = Number(updateData?.profit || 0);
-        const profitType = updateData?.profit_type || 'percent';
-        const actualPrice = price * (1 + gstPerc / 100);
-        const profitAmt = profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
-        const salePrice = actualPrice + profitAmt;
-        const totalPrice = salePrice * (updateData?.quantity || 0);
-        return `₹${totalPrice.toFixed(2)}`;
-      }
-      return '₹0';
-    }
-    return '₹0';
-  }, [
-    addProductOpen,
-    newProductData.price,
-    newProductData.quantity,
-    newProductData.type,
-    newProductData.gst_percentage,
-    newProductData.profit,
-    newProductData.profit_type,
-    updateData?.price,
-    updateData?.quantity,
-    updateData?.type,
-    updateData?.gst_percentage,
-    updateData?.profit,
-    updateData?.profit_type,
-    updateModalOpen,
-  ]);
-
   const handleProductChange = (key: string, value: string | number | IdNamePair | undefined) => {
     setNewProductData((prev) => ({ ...prev, [key]: value }));
   };
@@ -508,6 +461,7 @@ const Inventory = () => {
                 label={newProductData.type === 'sales' ? 'Sales Price' : 'Rental Price'}
                 value={newProductData.rent_per_unit}
                 onChange={(value) => handleProductChange('rent_per_unit', value)}
+                disabled={newProductData.type === 'sales'}
                 placeholder={
                   newProductData.type === 'sales' ? 'Enter Sales Price' : 'Enter Rental Price'
                 }
@@ -579,14 +533,6 @@ const Inventory = () => {
                   onChange={(value) => handleProductChange('profit_type', value)}
                 />
               </div>
-
-              <CustomInput
-                label="Total"
-                value={calculateTotal}
-                onChange={() => {}}
-                placeholder="Rs. 0.0"
-                disabled={newProductData.type === 'sales'}
-              />
             </div>
           </div>
           <div className="flex w-full gap-3 justify-end">
@@ -762,6 +708,7 @@ const Inventory = () => {
                     return prev;
                   })
                 }
+                disabled={updateData?.type === 'sales'}
                 placeholder={
                   updateData?.type === 'sales' ? 'Enter Sales Price' : 'Enter Rental Price'
                 }
@@ -871,14 +818,6 @@ const Inventory = () => {
                   onChange={(value) => handleUpdateProduct('profit_type', value)}
                 />
               </div>
-
-              <CustomInput
-                label="Total"
-                value={calculateTotal}
-                onChange={() => {}}
-                placeholder="Rs. 0.0"
-                disabled={updateData?.type === 'sales'}
-              />
             </div>
           </div>
           <div className="flex w-full gap-3 justify-end">

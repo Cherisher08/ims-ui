@@ -238,7 +238,7 @@ const Purchases = () => {
         headerClass: 'ag-header-wrap',
         filter: 'agNumberColumnFilter',
         cellRenderer: (params: ICellRendererParams<PurchaseRow>) => {
-          return `₹${params.value}.00`;
+          return `₹${Number(params.value).toFixed(2)}`;
         },
       },
       {
@@ -602,7 +602,7 @@ const Purchases = () => {
                 selectedMonth ? `${monthNames[parseInt(selectedMonth) - 1]} ` : ''
               }${selectedYear}`
             : ''}
-          : ₹{totalAmount}.00
+          : ₹{totalAmount.toFixed(2)}
         </p>
       </div>
 

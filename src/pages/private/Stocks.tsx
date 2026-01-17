@@ -195,8 +195,21 @@ const Inventory = () => {
   );
 
   const addProduct = () => {
+    const productDataToCreate = { ...newProductData };
+
+    // Calculate rent_per_unit for sales type products
+    if (newProductData.type === 'sales') {
+      const price = Number(newProductData.price || 0);
+      const gstPerc = Number(newProductData.gst_percentage || 0);
+      const profit = Number(newProductData.profit || 0);
+      const profitType = newProductData.profit_type || 'percent';
+      const actualPrice = price * (1 + gstPerc / 100);
+      const profitAmt = profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
+      productDataToCreate.rent_per_unit = actualPrice + profitAmt;
+    }
+
     createProduct({
-      ...newProductData,
+      ...productDataToCreate,
       created_by: userEmail,
       created_at: new Date().toISOString(),
     });
@@ -204,7 +217,30 @@ const Inventory = () => {
   };
 
   const updateProductData = () => {
-    updateProduct(updateData!);
+    if (!updateData || !updateData.name) {
+      toast.error('Product name is required', {
+        toastId: TOAST_IDS.ERROR_PRODUCT_UPDATE,
+      });
+      return;
+    }
+
+    const productDataToUpdate = {
+      ...updateData,
+      name: updateData.name,
+    };
+
+    // Calculate rent_per_unit for sales type products
+    if (updateData.type === 'sales') {
+      const price = Number(updateData.price || 0);
+      const gstPerc = Number(updateData.gst_percentage || 0);
+      const profit = Number(updateData.profit || 0);
+      const profitType = updateData.profit_type || 'percent';
+      const actualPrice = price * (1 + gstPerc / 100);
+      const profitAmt = profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
+      productDataToUpdate.rent_per_unit = actualPrice + profitAmt;
+    }
+
+    updateProduct(productDataToUpdate as Product);
     setUpdateModalOpen(false);
   };
 
@@ -459,11 +495,29 @@ const Inventory = () => {
               />
               <CustomInput
                 label={newProductData.type === 'sales' ? 'Sales Price' : 'Rental Price'}
-                value={newProductData.rent_per_unit}
-                onChange={(value) => handleProductChange('rent_per_unit', value)}
+                type="number"
+                value={
+                  newProductData.type === 'sales'
+                    ? (() => {
+                        const price = Number(newProductData.price || 0);
+                        const gstPerc = Number(newProductData.gst_percentage || 0);
+                        const profit = Number(newProductData.profit || 0);
+                        const profitType = newProductData.profit_type || 'percent';
+                        const actualPrice = price * (1 + gstPerc / 100);
+                        const profitAmt =
+                          profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
+                        return (actualPrice + profitAmt).toFixed(2);
+                      })()
+                    : newProductData.rent_per_unit || 0
+                }
+                onChange={(value) =>
+                  newProductData.type === 'sales'
+                    ? () => {}
+                    : handleProductChange('rent_per_unit', value)
+                }
                 disabled={newProductData.type === 'sales'}
                 placeholder={
-                  newProductData.type === 'sales' ? 'Enter Sales Price' : 'Enter Rental Price'
+                  newProductData.type === 'sales' ? 'Calculated Sales Price' : 'Enter Rental Price'
                 }
               />
             </div>
@@ -697,20 +751,36 @@ const Inventory = () => {
               />
               <CustomInput
                 label={updateData?.type === 'sales' ? 'Sales Price' : 'Rental Price'}
-                value={updateData?.rent_per_unit ?? 0}
+                type="number"
+                value={
+                  updateData?.type === 'sales'
+                    ? (() => {
+                        const price = Number(updateData?.price || 0);
+                        const gstPerc = Number(updateData?.gst_percentage || 0);
+                        const profit = Number(updateData?.profit || 0);
+                        const profitType = updateData?.profit_type || 'percent';
+                        const actualPrice = price * (1 + gstPerc / 100);
+                        const profitAmt =
+                          profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
+                        return (actualPrice + profitAmt).toFixed(2);
+                      })()
+                    : updateData?.rent_per_unit ?? 0
+                }
                 onChange={(value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        rent_per_unit: parseInt(value),
-                      };
-                    return prev;
-                  })
+                  updateData?.type === 'sales'
+                    ? () => {}
+                    : setUpdateData((prev) => {
+                        if (prev)
+                          return {
+                            ...prev,
+                            rent_per_unit: parseInt(value),
+                          };
+                        return prev;
+                      })
                 }
                 disabled={updateData?.type === 'sales'}
                 placeholder={
-                  updateData?.type === 'sales' ? 'Enter Sales Price' : 'Enter Rental Price'
+                  updateData?.type === 'sales' ? 'Calculated Sales Price' : 'Enter Rental Price'
                 }
               />
             </div>
@@ -742,40 +812,6 @@ const Inventory = () => {
 
               <CustomInput
                 label="Price"
-                value={updateData?.price ?? 0}
-                type="number"
-                onChange={(value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        price: parseInt(value),
-                      };
-                    return prev;
-                  })
-                }
-                placeholder="Enter Product Price"
-              />
-
-              <CustomInput
-                label="GST %"
-                value={updateData?.gst_percentage ?? 0}
-                type="number"
-                onChange={(value) =>
-                  setUpdateData((prev) => {
-                    if (prev)
-                      return {
-                        ...prev,
-                        gst_percentage: parseFloat(value),
-                      };
-                    return prev;
-                  })
-                }
-                placeholder="Enter GST Percentage"
-              />
-
-              <CustomInput
-                label="Price with GST"
                 value={
                   updateData?.price && updateData?.gst_percentage
                     ? (

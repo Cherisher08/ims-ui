@@ -907,6 +907,25 @@ const Purchases = () => {
                   </div>
                 );
               })}
+              {newPurchaseData.products && newPurchaseData.products.length > 0 && (
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-t-2 border-b gap-2 font-semibold bg-gray-50">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span className="wrap-break-word">
+                    Grand Total: ₹
+                    {newPurchaseData.products
+                      .reduce((sum, p) => {
+                        const priceWithGst =
+                          Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
+                        const totalAmount = p.quantity * priceWithGst;
+                        return sum + totalAmount;
+                      }, 0)
+                      .toFixed(2)}
+                  </span>
+                  <span></span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1221,6 +1240,25 @@ const Purchases = () => {
                   </div>
                 );
               })}
+              {newPurchaseData.products && newPurchaseData.products.length > 0 && (
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-t-2 border-b gap-2 font-semibold bg-gray-50">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span className="wrap-break-word">
+                    Grand Total: ₹
+                    {newPurchaseData.products
+                      .reduce((sum, p) => {
+                        const priceWithGst =
+                          Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
+                        const totalAmount = p.quantity * priceWithGst;
+                        return sum + totalAmount;
+                      }, 0)
+                      .toFixed(2)}
+                  </span>
+                  <span></span>
+                </div>
+              )}
             </div>
           </div>
 

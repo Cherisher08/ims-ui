@@ -25,13 +25,18 @@ export const purchaseApi = rootApi.injectEndpoints({
       query: (order) => {
         const formData = new FormData();
         Object.entries(order).forEach(([key, value]) => {
-          if (key === 'invoice_pdf' && value instanceof File) {
-            formData.append(key, value);
+          if (key === 'invoice_pdf') {
+            // Only append if it's a File instance, skip otherwise
+            if (value instanceof File) {
+              formData.append(key, value);
+            }
+          } else if (key === 'invoice_pdf_path') {
+            // Skip the path field as it's for display only
           } else if (Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
           } else if (typeof value === 'object' && value !== null) {
             formData.append(key, JSON.stringify(value));
-          } else {
+          } else if (value !== undefined && value !== null) {
             formData.append(key, String(value));
           }
         });

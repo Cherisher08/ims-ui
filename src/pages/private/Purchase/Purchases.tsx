@@ -880,6 +880,18 @@ const Purchases = () => {
             {/* Products List */}
             <div className="w-full border-t pt-4">
               <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
+              {newPurchaseData.products && newPurchaseData.products.length > 0 && (
+                <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2 font-semibold bg-gray-100">
+                  <span>S. No</span>
+                  <span>Product Name</span>
+                  <span>HSN Code</span>
+                  <span>Rate (Incl. GST)</span>
+                  <span>Price</span>
+                  <span>Quantity</span>
+                  <span>Total Amount</span>
+                  <span></span>
+                </div>
+              )}
               {newPurchaseData.products?.map((p, index) => {
                 const priceWithGst =
                   Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
@@ -887,44 +899,63 @@ const Purchases = () => {
                 return (
                   <div
                     key={index}
-                    className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                    className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
                   >
+                    <span className="wrap-break-word">{index + 1}</span>
                     <span className="wrap-break-word">{p.name}</span>
-                    <span className="wrap-break-word">Qty: {p.quantity}</span>
-                    <span className="wrap-break-word">Price: ₹{priceWithGst.toFixed(2)}</span>
-                    <span className="wrap-break-word">Total: ₹{totalAmount.toFixed(2)}</span>
+                    <span className="wrap-break-word">{p.product_code || '-'}</span>
+                    <span className="wrap-break-word">₹{priceWithGst.toFixed(2)}</span>
+                    <span className="wrap-break-word">₹{Number(p.price || 0).toFixed(2)}</span>
+                    <span className="wrap-break-word">{p.quantity}</span>
+                    <span className="wrap-break-word">₹{totalAmount.toFixed(2)}</span>
                     <MdDelete
                       size={20}
-                      className={`${
-                        editPurchaseOpen
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'cursor-pointer text-red-500 hover:text-red-700'
-                      }`}
-                      onClick={
-                        editPurchaseOpen ? undefined : () => removeProductFromPurchase(index)
-                      }
+                      className="cursor-pointer text-red-500 hover:text-red-700"
+                      onClick={() => removeProductFromPurchase(index)}
                     />
                   </div>
                 );
               })}
               {newPurchaseData.products && newPurchaseData.products.length > 0 && (
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-t-2 border-b gap-2 font-semibold bg-gray-50">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span className="wrap-break-word">
-                    Grand Total: ₹
-                    {newPurchaseData.products
-                      .reduce((sum, p) => {
-                        const priceWithGst =
-                          Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
-                        const totalAmount = p.quantity * priceWithGst;
-                        return sum + totalAmount;
-                      }, 0)
-                      .toFixed(2)}
-                  </span>
-                  <span></span>
-                </div>
+                <>
+                  <div className="flex justify-end items-center p-2 border-t-2 gap-2 font-semibold bg-gray-50">
+                    <span className="wrap-break-word">
+                      Amount: ₹
+                      {newPurchaseData.products
+                        .reduce((sum, p) => {
+                          const baseAmount = p.quantity * Number(p.price || 0);
+                          return sum + baseAmount;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-end items-center p-2 border-t gap-2 font-semibold bg-gray-50">
+                    <span className="wrap-break-word">
+                      GST: ₹
+                      {newPurchaseData.products
+                        .reduce((sum, p) => {
+                          const gstAmount =
+                            p.quantity *
+                            Number(p.price || 0) *
+                            (Number(p.gst_percentage || 0) / 100);
+                          return sum + gstAmount;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-end items-center p-2 border-t border-b gap-2 font-semibold bg-gray-50">
+                    <span className="wrap-break-word">
+                      Grand Total: ₹
+                      {newPurchaseData.products
+                        .reduce((sum, p) => {
+                          const baseAmount = p.quantity * Number(p.price || 0);
+                          const gstAmount = baseAmount * (Number(p.gst_percentage || 0) / 100);
+                          return sum + baseAmount + gstAmount;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           </div>
@@ -1219,6 +1250,18 @@ const Purchases = () => {
             {/* Products List */}
             <div className="w-full border-t pt-4">
               <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
+              {newPurchaseData.products && newPurchaseData.products.length > 0 && (
+                <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2 font-semibold bg-gray-100">
+                  <span>S. No</span>
+                  <span>Product Name</span>
+                  <span>HSN Code</span>
+                  <span>Rate (Incl. GST)</span>
+                  <span>Price</span>
+                  <span>Quantity</span>
+                  <span>Total Amount</span>
+                  <span></span>
+                </div>
+              )}
               {newPurchaseData.products?.map((p, index) => {
                 const priceWithGst =
                   Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
@@ -1226,12 +1269,15 @@ const Purchases = () => {
                 return (
                   <div
                     key={index}
-                    className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                    className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
                   >
+                    <span className="wrap-break-word">{index + 1}</span>
                     <span className="wrap-break-word">{p.name}</span>
-                    <span className="wrap-break-word">Qty: {p.quantity}</span>
-                    <span className="wrap-break-word">Price: ₹{priceWithGst.toFixed(2)}</span>
-                    <span className="wrap-break-word">Total: ₹{totalAmount.toFixed(2)}</span>
+                    <span className="wrap-break-word">{p.product_code || '-'}</span>
+                    <span className="wrap-break-word">₹{priceWithGst.toFixed(2)}</span>
+                    <span className="wrap-break-word">₹{Number(p.price || 0).toFixed(2)}</span>
+                    <span className="wrap-break-word">{p.quantity}</span>
+                    <span className="wrap-break-word">₹{totalAmount.toFixed(2)}</span>
                     <MdDelete
                       size={20}
                       className="cursor-pointer text-red-500 hover:text-red-700"
@@ -1241,23 +1287,45 @@ const Purchases = () => {
                 );
               })}
               {newPurchaseData.products && newPurchaseData.products.length > 0 && (
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center p-2 border-t-2 border-b gap-2 font-semibold bg-gray-50">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span className="wrap-break-word">
-                    Grand Total: ₹
-                    {newPurchaseData.products
-                      .reduce((sum, p) => {
-                        const priceWithGst =
-                          Number(p.price || 0) * (1 + Number(p.gst_percentage || 0) / 100);
-                        const totalAmount = p.quantity * priceWithGst;
-                        return sum + totalAmount;
-                      }, 0)
-                      .toFixed(2)}
-                  </span>
-                  <span></span>
-                </div>
+                <>
+                  <div className="flex justify-end items-center p-2 border-t-2 gap-2 font-semibold bg-gray-50">
+                    <span className="wrap-break-word">
+                      Amount: ₹
+                      {newPurchaseData.products
+                        .reduce((sum, p) => {
+                          const baseAmount = p.quantity * Number(p.price || 0);
+                          return sum + baseAmount;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-end items-center p-2 border-t gap-2 font-semibold bg-gray-50">
+                    <span className="wrap-break-word">
+                      GST: ₹
+                      {newPurchaseData.products
+                        .reduce((sum, p) => {
+                          const gstAmount =
+                            p.quantity *
+                            Number(p.price || 0) *
+                            (Number(p.gst_percentage || 0) / 100);
+                          return sum + gstAmount;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-end items-center p-2 border-t border-b gap-2 font-semibold bg-gray-50">
+                    <span className="wrap-break-word">
+                      Grand Total: ₹
+                      {newPurchaseData.products
+                        .reduce((sum, p) => {
+                          const baseAmount = p.quantity * Number(p.price || 0);
+                          const gstAmount = baseAmount * (Number(p.gst_percentage || 0) / 100);
+                          return sum + baseAmount + gstAmount;
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           </div>

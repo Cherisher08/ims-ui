@@ -193,9 +193,7 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
           <div class="header">
             <h1>Mani Power Tools</h1>
             <h2>Petty Cash Report</h2>
-            <p>Period: ${dayjs().startOf('month').format('DD-MMM-YYYY')} to ${dayjs().format(
-      'DD-MMM-YYYY'
-    )}</p>
+            <p>Period: ${dayjs(date).format('DD-MMM-YYYY')}</p>
           </div>
           <table>
             <thead>
@@ -242,6 +240,28 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
               </tr>
             </tbody>
           </table>
+          <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+            <table style="width: 50%; margin: 0 auto; border-collapse: collapse;">
+              <tbody>
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 8px; font-weight: bold; text-align: left;">Date</td>
+                  <td style="padding: 8px;">${dayjs(date).format('DD-MMM-YYYY')}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 8px; font-weight: bold; text-align: left;">Cash (Cash In - Less)</td>
+                  <td style="padding: 8px;">₹ ${totalsRow.cashIn - totalsRow.cashLess}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 8px; font-weight: bold; text-align: left;">HDFC (HDFC In + GPAY In - GPAY Less)</td>
+                  <td style="padding: 8px;">₹ ${totalsRow.accountIn + totalsRow.upiIn - totalsRow.upiLess}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; font-weight: bold; text-align: left;">KVB Less</td>
+                  <td style="padding: 8px;">₹ ${totalsRow.kvbLess}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </body>
       </html>
     `;
@@ -513,6 +533,34 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
             handleCellEditingStopped={handleCellEditingStopped}
             pinnedBottomRowData={[totalsRow]}
           />
+        </div>
+        <div className="flex justify-center w-full mt-6">
+          <table style={{ width: '50%', borderCollapse: 'collapse', textAlign: 'center' }}>
+            <tbody>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'left' }}>Date</td>
+                <td style={{ padding: '8px' }}>{dayjs(date).format('DD-MMM-YYYY')}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'left' }}>
+                  Cash (Cash In - Less)
+                </td>
+                <td style={{ padding: '8px' }}>₹ {totalsRow.cashIn - totalsRow.cashLess}</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'left' }}>
+                  HDFC (HDFC In + GPAY In - GPAY Less)
+                </td>
+                <td style={{ padding: '8px' }}>
+                  ₹ {totalsRow.accountIn + totalsRow.upiIn - totalsRow.upiLess}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'left' }}>KVB Less</td>
+                <td style={{ padding: '8px' }}>₹ {totalsRow.kvbLess}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div className="flex w-full gap-3 justify-end">
           <CustomButton onClick={onClose} label="Back" variant="outlined" className="bg-white" />

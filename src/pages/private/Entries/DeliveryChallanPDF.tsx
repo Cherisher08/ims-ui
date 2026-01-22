@@ -166,63 +166,26 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{data.customer?.personal_number || '-'}</Text>
             </View>
-            {/* <View style={{ paddingHorizontal: 20, paddingVertical: 5}}>
-              <View style={styles.row}>
-                <Text style={[styles.field, { fontSize: 11 }]}>Product Name</Text>
-                <Text style={[styles.value, { fontSize: 11 }]}>Per Day Rent</Text>
-              </View>
-              {data.product_details.map((prod) => (
-                <View style={styles.row}>
-                  <Text style={[styles.field, { fontSize: 11 }]}>{prod.name || '-'}</Text>
-                  <Text style={styles.colon}>-</Text>
-                  <Text style={[styles.value, { fontSize: 11 }]}>
-                    {prod.rent_per_unit ? `Rs. ${prod.rent_per_unit}` : '-'}
-                  </Text>
-                </View>
-              ))}
-            </View> */}
-            <View>
-              {data.product_details.slice(0, 1).map((prod) => (
-                <View style={styles.row} key={prod._id}>
-                  <Text style={styles.field}>Product Name - Quantity / Rent per Duration</Text>
-                  <Text style={styles.colon}>:</Text>
-                  <Text style={styles.value}>
-                    {prod.name +
-                      ' - ' +
-                      prod.order_quantity +
-                      ' / ' +
-                      `Rs. ${prod.rent_per_unit} per ${formatBillingUnit(prod.billing_unit)}`}
-                  </Text>
-                </View>
-              ))}
-              {data.product_details.slice(1).map((prod) => (
-                <View style={styles.row} key={prod._id}>
-                  <Text style={[styles.field]}></Text>
-                  <Text style={styles.colon}></Text>
-                  <Text style={[styles.value]}>
-                    {prod.name +
-                      ' - ' +
-                      prod.order_quantity +
-                      ' / ' +
-                      `Rs. ${prod.rent_per_unit} per ${formatBillingUnit(prod.billing_unit)}`}
-                  </Text>
-                </View>
-              ))}
-            </View>
-            {/* <View style={styles.row}>
-              <Text style={styles.field}>Product Name</Text>
+            <View style={styles.row}>
+              <Text style={styles.field}>Representative Name</Text>
               <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{data.product_details[0].name || '-'}</Text>
+              <Text style={styles.value}>{data.representative_name || '-'}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.field}>Per day Rent</Text>
+              <Text style={styles.field}>Representative Number</Text>
               <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>
-                {data.product_details[0].rent_per_unit
-                  ? `Rs. ${data.product_details[0].rent_per_unit}`
-                  : '-'}
-              </Text>
-            </View> */}
+              <Text style={styles.value}>{data.representative_number || '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.field}>Working Place</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.event_venue || '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.field}>No.of Working Days</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.rental_duration || '-'}</Text>
+            </View>
             <View style={styles.row}>
               <Text style={styles.field}>Deposit</Text>
               <Text style={styles.colon}>:</Text>
@@ -235,25 +198,25 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{data.eway_amount || '-'}</Text>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.field}>Working Place</Text>
-              <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{data.event_venue || '-'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.field}>Representative Name</Text>
-              <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{data.representative_name || '-'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.field}>Representative Number</Text>
-              <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{data.representative_number || '-'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.field}>No.of Working Days</Text>
-              <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{data.rental_duration || '-'}</Text>
+            <View>
+              {/* Header Row */}
+              <View style={{ ...styles.row, justifyContent: 'center', marginBottom: 4 }}>
+                <Text style={{ fontSize: 10, fontWeight: 'bold', textAlign: 'center' }}>
+                  Product Name - Quantity / Rent per Duration
+                </Text>
+              </View>
+              {/* Product Details */}
+              {data.product_details.map((prod) => (
+                <View style={styles.row} key={prod._id}>
+                  <Text style={styles.field}>{prod.name}</Text>
+                  <Text style={styles.colon}>-</Text>
+                  <Text style={styles.value}>
+                    {prod.order_quantity +
+                      ' / ' +
+                      `Rs. ${prod.rent_per_unit} per ${formatBillingUnit(prod.billing_unit)}`}
+                  </Text>
+                </View>
+              ))}
             </View>
           </View>
           <View style={styles.footer}>

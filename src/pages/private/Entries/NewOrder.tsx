@@ -957,7 +957,7 @@ const NewOrder = () => {
                 'billing_mode',
                 e.target.checked ? BillingMode.B2B : BillingMode.B2C
               );
-              handleValueChange('gst', e.target.checked ? 0 : orderInfo.gst);
+              handleValueChange('gst', e.target.checked ? 18 : 0);
             }}
           />
           <p>B2B</p>
@@ -1011,8 +1011,8 @@ const NewOrder = () => {
           options={formatContacts(contacts)}
           value={
             orderInfo.customer && orderInfo.customer?._id
-              ? formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
-                  ?.value ?? ''
+              ? (formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
+                  ?.value ?? '')
               : ''
           }
           onChange={(selectedValue) => {
@@ -1916,7 +1916,7 @@ const NewOrder = () => {
                     <p>Amount before Taxes</p>
                     <p>Discount</p>
                     <p>Transport</p>
-                    <p>GST</p>
+                    {orderInfo.billing_mode === BillingMode.B2B && <p>GST (%)</p>}
                     <p>Round Off</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
@@ -1932,29 +1932,34 @@ const NewOrder = () => {
                         : `₹ ${orderInfo.discount.toFixed(2)}`}
                     </p>
                     <p>{`₹ ${Number(orderInfo.eway_amount)?.toFixed(2)}`}</p>
-                    <div className="flex justify-end gap-1">
-                      <input
-                        className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                        max={100}
-                        min={0}
-                        type="number"
-                        value={orderInfo.gst}
-                        onChange={(e) => {
-                          if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-                            let percent = parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
-                            if (percent >= 100) {
-                              percent = 100;
-                            }
+                    {orderInfo.billing_mode === BillingMode.B2B && (
+                      <div className="flex justify-end gap-1">
+                        <input
+                          className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                          max={100}
+                          min={0}
+                          type="number"
+                          value={orderInfo.gst}
+                          onChange={(e) => {
+                            if (
+                              orderInfo.type === ProductType.RENTAL &&
+                              orderInfo.product_details
+                            ) {
+                              let percent = parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
+                              if (percent >= 100) {
+                                percent = 100;
+                              }
 
-                            setOrderInfo((prev) => ({
-                              ...prev,
-                              gst: percent,
-                            }));
-                          }
-                        }}
-                      />
-                      <span className="w-2">%</span>
-                    </div>
+                              setOrderInfo((prev) => ({
+                                ...prev,
+                                gst: percent,
+                              }));
+                            }
+                          }}
+                        />
+                        <span className="w-2">%</span>
+                      </div>
+                    )}
                     <div className="flex pr-3 justify-end">
                       {'₹ '}
                       <input

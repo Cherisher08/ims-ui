@@ -233,7 +233,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
           <View style={styles.footer}>
             <Text
               style={{
-                fontSize: 8,
+                fontSize: 9,
                 fontWeight: 'bold',
                 textAlign: 'center',
                 color: '#DC2626',

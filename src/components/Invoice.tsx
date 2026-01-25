@@ -192,24 +192,15 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   const gstPercentage = data.gst && data.gst !== 0 ? data.gst : 18;
   const calcTotalAmtColumnSum = () => {
     return updatedProducts.reduce((sum, product) => {
-      const exclusiveAmount =
+      const totalAmt =
         data.billing_mode === BillingMode.B2B
           ? parseFloat(calculateProductRent(product).toFixed(2))
-          : parseFloat((calculateProductRent(product) * (1 - gstPercentage / 100)).toFixed(2));
-      return sum + exclusiveAmount;
+          : parseFloat((calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2));
+      return sum + totalAmt;
     }, 0);
   };
   const totalAmtSum = calcTotalAmtColumnSum();
-  const gstAmount =
-    data.billing_mode === BillingMode.B2B
-      ? (totalAmtSum * gstPercentage * 0.01).toFixed(2)
-      : data.product_details
-          .reduce((sum, product) => {
-            const fullAmount = parseFloat(calculateProductRent(product).toFixed(2));
-            const exclusiveAmount = parseFloat((fullAmount * (1 - gstPercentage / 100)).toFixed(2));
-            return sum + (fullAmount - exclusiveAmount);
-          }, 0)
-          .toFixed(2);
+  const gstAmount = (totalAmtSum * gstPercentage * 0.01).toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -880,7 +871,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   {data.billing_mode === BillingMode.B2B
                     ? parseFloat(calculateProductRent(product).toFixed(2))
                     : parseFloat(
-                        (calculateProductRent(product) * (1 - gstPercentage / 100)).toFixed(2)
+                        (calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2)
                       )}
                 </Text>
               </View>

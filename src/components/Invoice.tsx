@@ -178,8 +178,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   const balanceOrRepayDate = getValidDate(data.repay_date)
     ? getValidDate(data.repay_date)
     : getValidDate(data.balance_paid_date)
-    ? getValidDate(data.balance_paid_date)
-    : '';
+      ? getValidDate(data.balance_paid_date)
+      : '';
 
   const depositTotal = () => {
     return parseFloat(
@@ -189,7 +189,27 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     );
   };
 
-  const gstAmount = ((calcFinalAmount() - discountAmount) * data.gst * 0.01).toFixed(2);
+  const gstPercentage = data.gst && data.gst !== 0 ? data.gst : 18;
+  const calcTotalAmtColumnSum = () => {
+    return updatedProducts.reduce((sum, product) => {
+      const exclusiveAmount =
+        data.billing_mode === BillingMode.B2B
+          ? parseFloat(calculateProductRent(product).toFixed(2))
+          : parseFloat((calculateProductRent(product) * (1 - gstPercentage / 100)).toFixed(2));
+      return sum + exclusiveAmount;
+    }, 0);
+  };
+  const totalAmtSum = calcTotalAmtColumnSum();
+  const gstAmount =
+    data.billing_mode === BillingMode.B2B
+      ? (totalAmtSum * gstPercentage * 0.01).toFixed(2)
+      : data.product_details
+          .reduce((sum, product) => {
+            const fullAmount = parseFloat(calculateProductRent(product).toFixed(2));
+            const exclusiveAmount = parseFloat((fullAmount * (1 - gstPercentage / 100)).toFixed(2));
+            return sum + (fullAmount - exclusiveAmount);
+          }, 0)
+          .toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -854,9 +874,14 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 <Text style={[styles.productColumn, { width: 60 }]}>
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
-                <Text style={[styles.productColumn, { width: 60 }]}>{data.gst}</Text>
+                <Text style={[styles.productColumn, { width: 60 }]}>{gstPercentage}%</Text>
                 <Text style={[styles.productColumn, { width: 60, borderRight: '0px' }]}>
-                  Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
+                  Rs.{' '}
+                  {data.billing_mode === BillingMode.B2B
+                    ? parseFloat(calculateProductRent(product).toFixed(2))
+                    : parseFloat(
+                        (calculateProductRent(product) * (1 - gstPercentage / 100)).toFixed(2)
+                      )}
                 </Text>
               </View>
             ))}
@@ -886,7 +911,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 {[
                   {
                     label: 'Total Amount',
-                    value: `Rs. ${calcFinalAmount().toFixed(2)}`,
+                    value: `Rs. ${totalAmtSum.toFixed(2)}`,
                     bottom: false,
                   },
                   ...(data.discount
@@ -903,7 +928,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       ]
                     : []),
                   {
-                    label: `GST - ${data.gst}%`,
+                    label: `GST - ${gstPercentage}%`,
                     value: `Rs. ${gstAmount}`,
                     bottom: true,
                   },
@@ -987,7 +1012,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 >
                   <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Net Total</Text>
                   <Text style={[styles.valueText, { fontWeight: 'bold' }]}>
-                    {`Rs. ${Math.abs(calcTotal()).toFixed(2)}`}
+                    {`Rs. ${(totalAmtSum + parseFloat(gstAmount)).toFixed(2)}`}
                   </Text>
                 </View>
                 <View
@@ -1075,8 +1100,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                               0
                                 ? 'red'
                                 : data.status === PaymentStatus.PAID
-                                ? 'green'
-                                : 'black',
+                                  ? 'green'
+                                  : 'black',
                           },
                         ]}
                       >
@@ -1093,8 +1118,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                             0
                               ? 'red'
                               : data.status === PaymentStatus.PAID
-                              ? 'green'
-                              : 'black',
+                                ? 'green'
+                                : 'black',
                           fontWeight: 'bold',
                         }}
                       >
@@ -1103,8 +1128,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         0
                           ? 'Return Payment'
                           : data.status === PaymentStatus.PAID
-                          ? 'Paid'
-                          : 'Balance'}
+                            ? 'Paid'
+                            : 'Balance'}
                       </Text>
                     </View>
                   </View>
@@ -1125,8 +1150,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           0
                             ? 'red'
                             : data.status === PaymentStatus.PAID
-                            ? 'green'
-                            : 'black',
+                              ? 'green'
+                              : 'black',
                         fontWeight: 'bold',
                       }}
                     >

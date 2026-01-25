@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     // flexGrow: 1,
     borderBottom: 2,
-    fontSize: 10,
+    fontSize: 9,
     borderColor: 'black',
     gap: 2,
   },
@@ -77,7 +77,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
 
   return (
     <Document>
-      <Page size="A6" style={styles.page}>
+      <Page size={[297.64, Infinity]} style={styles.page}>
         <View style={styles.container}>
           <View style={styles.header}>
             <Image src={Logo} style={{ width: 65, height: 65, objectFit: 'contain' }} />
@@ -145,9 +145,9 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
           </View>
           <View style={styles.content}>
             <View style={styles.row}>
-              <Text style={styles.field}>Entry Date</Text>
+              <Text style={styles.field}>Entry Date & Time</Text>
               <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{dayjs(data.out_date).format('DD-MM-YYYY')}</Text>
+              <Text style={styles.value}>{dayjs(data.out_date).format('DD-MM-YYYY HH:mm')}</Text>
             </View>
 
             <View style={styles.row}>
@@ -167,6 +167,11 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.value}>{data.customer?.personal_number || '-'}</Text>
             </View>
             <View style={styles.row}>
+              <Text style={styles.field}>Customer Native Place</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.customer?.address}</Text>
+            </View>
+            <View style={styles.row}>
               <Text style={styles.field}>Representative Name</Text>
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{data.representative_name || '-'}</Text>
@@ -182,15 +187,21 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.value}>{data.event_venue || '-'}</Text>
             </View>
             <View style={styles.row}>
+              <Text style={styles.field}>Event Place</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{data.event_address || '-'}</Text>
+            </View>
+            <View style={styles.row}>
               <Text style={styles.field}>No.of Working Days</Text>
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{data.rental_duration || '-'}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.field}>Deposit</Text>
+              <Text style={styles.field}>Deposit with Mode</Text>
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>
                 {data.deposits.reduce((total, dep) => total + dep.amount, 0) || '-'}
+                {` - ${data.deposits.length > 0 ? data.deposits[0].mode : ''}`}
               </Text>
             </View>
             <View style={styles.row}>

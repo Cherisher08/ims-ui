@@ -570,7 +570,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['-', 'cash', 'account', 'upi'],
+        options: ['-', 'Cash', 'HDFC', 'KVB', 'Indian Bank'],
       },
       hide: viewChallans,
     },
@@ -612,7 +612,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       singleClickEdit: true,
       cellEditor: SelectCellEditor,
       cellEditorParams: {
-        options: ['-', 'cash', 'account', 'upi'],
+        options: ['-', 'Cash', 'HDFC', 'KVB', 'Indian Bank'],
       },
       hide: viewChallans,
     },

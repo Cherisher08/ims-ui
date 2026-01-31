@@ -23,9 +23,10 @@ export enum PaymentStatus {
 
 export enum PaymentMode {
   NULL = '-',
-  CASH = 'cash',
-  UPI = 'upi',
-  ACCOUNT = 'account',
+  CASH = 'Cash',
+  UPI = 'HDFC',
+  ACCOUNT = 'KVB',
+  INDIAN_BANK = 'Indian Bank',
 }
 export enum RepaymentMode {
   NULL = '-',

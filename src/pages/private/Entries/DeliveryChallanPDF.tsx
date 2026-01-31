@@ -19,6 +19,7 @@ Font.register({
   src: '/Inter_18pt-ExtraBold.ttf',
   fontWeight: 'heavy',
 });
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: {
@@ -167,9 +168,14 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.value}>{data.customer?.personal_number || '-'}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.field}>Customer Native Place</Text>
-              <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{data.customer?.address}</Text>
+              <Text style={{ flex: 1, fontSize: 10, fontWeight: 'bold', textAlign: 'center' }}>
+                Customer Native Place
+              </Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={{ flex: 1, textAlign: 'left' }}>
+                {data.customer?.address?.replace(/\n/g, ' ')}
+              </Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.field}>Representative Name</Text>

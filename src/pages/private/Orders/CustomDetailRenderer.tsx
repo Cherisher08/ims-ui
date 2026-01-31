@@ -488,7 +488,7 @@ const CustomDetailRenderer = (
               singleClickEdit: true,
               cellEditor: SelectCellEditor,
               cellEditorParams: {
-                options: ['cash', 'account', 'upi'],
+                options: ['Cash', 'HDFC', 'KVB', 'Indian Bank'],
               },
             },
             {

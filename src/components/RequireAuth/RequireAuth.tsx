@@ -1,11 +1,11 @@
 // components/RequireAuth.tsx
-import { useGetUserQuery } from "../../services/ApiService";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
-import { useEffect } from "react";
-import { updateUser } from "../../store/UserSlice";
-import { useDispatch } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { useGetUserQuery } from '../../services/ApiService';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import { useEffect } from 'react';
+import { updateUser } from '../../store/UserSlice';
+import { useDispatch } from 'react-redux';
+import { Navigate } from 'react-router-dom';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -42,8 +42,8 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   if (
     !user &&
     error &&
-    "status" in error &&
-    typeof error.status === "number" &&
+    'status' in error &&
+    typeof error.status === 'number' &&
     [401, 403].includes(error.status)
   ) {
     return <Navigate to="/auth/login" replace />;

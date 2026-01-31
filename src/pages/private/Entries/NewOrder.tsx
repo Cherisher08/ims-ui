@@ -261,7 +261,10 @@ const NewOrder = () => {
       orderInfo.discount_type === DiscountType.PERCENT
         ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
         : orderInfo.discount || 0;
-    const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+    const gstAmount = calculateDiscountAmount(
+      orderInfo.gst || 0,
+      finalAmount + orderInfo.eway_amount - discountAmount
+    );
 
     return parseFloat(
       (

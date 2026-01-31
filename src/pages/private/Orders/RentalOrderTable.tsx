@@ -469,7 +469,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const gstPercent = parseFloat(params.data.gst ?? 0);
         const totalAmount = calculateTotalAmount(params.data);
         if (isNaN(gstPercent) || isNaN(totalAmount)) return 0;
-        return (gstPercent / 100) * totalAmount;
+        return (gstPercent / 100) * (totalAmount + params.data.eway_amount);
       },
       hide: viewChallans,
     },

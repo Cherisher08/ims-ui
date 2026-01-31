@@ -317,7 +317,10 @@ export const calculateFinalAmount = (
     orderInfo.discount_type === DiscountType.PERCENT
       ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
       : orderInfo.discount || 0;
-  const gstAmount = calculateDiscountAmount(orderInfo.gst || 0, finalAmount - discountAmount);
+  const gstAmount = calculateDiscountAmount(
+    orderInfo.gst || 0,
+    finalAmount - discountAmount + ewayBillAmount
+  );
   const damageExpenses = orderInfo.damage_expenses || 0;
   return parseFloat(
     (
@@ -861,13 +864,13 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
       Month: order.invoice_date
         ? dayjs(order.invoice_date).format('MMMM')
         : order.in_date
-        ? dayjs(order.in_date).format('MMMM')
-        : '',
+          ? dayjs(order.in_date).format('MMMM')
+          : '',
       'Invoice Date': order.invoice_date
         ? dayjs(order.invoice_date).format('DD-MMM-YYYY hh:mm A')
         : order.in_date
-        ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
-        : '',
+          ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
+          : '',
       Customer: cust.name,
       'Phone number': cust.phone,
       'Event name': order.event_name || '',

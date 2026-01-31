@@ -153,7 +153,10 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     const finalAmount = calcFinalAmount();
     const roundOff = data.round_off || 0;
     const ewayBillAmount = data.eway_amount || 0;
-    const gstAmount = calculateDiscountAmount(data.gst || 0, finalAmount - discountAmount);
+    const gstAmount = calculateDiscountAmount(
+      data.gst || 0,
+      finalAmount - discountAmount + ewayBillAmount
+    );
     const damageExpenses = data.damage_expenses || 0;
     return parseFloat(
       (
@@ -200,7 +203,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     }, 0);
   };
   const totalAmtSum = calcTotalAmtColumnSum();
-  const gstAmount = (totalAmtSum * gstPercentage * 0.01).toFixed(2);
+  const gstAmount = ((totalAmtSum + data.eway_amount) * gstPercentage * 0.01).toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -1003,7 +1006,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 >
                   <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Net Total</Text>
                   <Text style={[styles.valueText, { fontWeight: 'bold' }]}>
-                    {`Rs. ${(totalAmtSum + parseFloat(gstAmount)).toFixed(2)}`}
+                    {`Rs. ${calcTotal().toFixed(2)}`}
                   </Text>
                 </View>
                 <View

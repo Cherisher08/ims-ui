@@ -155,7 +155,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
     const ewayBillAmount = data.eway_amount || 0;
     const gstAmount = calculateDiscountAmount(
       data.gst || 0,
-      finalAmount - discountAmount + ewayBillAmount
+      finalAmount - discountAmount + (data.billing_mode === BillingMode.B2B ? ewayBillAmount : 0)
     );
     const damageExpenses = data.damage_expenses || 0;
     return parseFloat(
@@ -902,12 +902,58 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             <View style={styles.calculationContainer}>
               <View style={styles.section}>
                 {/* Grid Columns */}
+                <View key={'total-amount-field'} style={[styles.row]}>
+                  <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Total Amount</Text>
+                  <Text style={[styles.valueText, { fontWeight: 'bold' }]}>
+                    Rs. {totalAmtSum.toFixed(2)}
+                  </Text>
+                </View>
+                {data.eway_amount ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      borderBottom: '1px solid black',
+                    }}
+                  >
+                    <View
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        flexDirection: 'column',
+                        width: '100%',
+                        gap: 4,
+                      }}
+                    >
+                      <View
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          flexDirection: 'row',
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={[styles.selectSim, { paddingLeft: 50, paddingTop: 5 }]}>
+                          {'( Mode of Payment : ' + data.eway_mode.toUpperCase() + ')'}
+                        </Text>
+                        <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Transport</Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: 'column',
+                        width: 80,
+                        alignItems: 'flex-end',
+                      }}
+                    >
+                      <Text style={[styles.valueText, { fontWeight: 'bold' }]}>
+                        {`Rs. ${data.eway_amount?.toFixed(2)}`}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
                 {[
-                  {
-                    label: 'Total Amount',
-                    value: `Rs. ${totalAmtSum.toFixed(2)}`,
-                    bottom: false,
-                  },
                   ...(data.discount
                     ? [
                         {
@@ -953,50 +999,6 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     <Text style={[styles.valueText, { fontWeight: 'bold' }]}>{item.value}</Text>
                   </View>
                 ))}
-                {data.eway_amount ? (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      borderBottom: '1px solid black',
-                    }}
-                  >
-                    <View
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        flexDirection: 'column',
-                        width: '100%',
-                        gap: 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          flexDirection: 'row',
-                          gap: 4,
-                        }}
-                      >
-                        <Text style={[styles.selectSim, { paddingLeft: 50, paddingTop: 5 }]}>
-                          {'( Mode of Payment : ' + data.eway_mode.toUpperCase() + ')'}
-                        </Text>
-                        <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Transport</Text>
-                      </View>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: 'column',
-                        width: 80,
-                        alignItems: 'flex-end',
-                      }}
-                    >
-                      <Text style={[styles.valueText, { fontWeight: 'bold' }]}>
-                        {`Rs. ${data.eway_amount?.toFixed(2)}`}
-                      </Text>
-                    </View>
-                  </View>
-                ) : null}
 
                 <View
                   style={{

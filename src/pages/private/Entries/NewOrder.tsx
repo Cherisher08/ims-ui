@@ -263,7 +263,9 @@ const NewOrder = () => {
         : orderInfo.discount || 0;
     const gstAmount = calculateDiscountAmount(
       orderInfo.gst || 0,
-      finalAmount + orderInfo.eway_amount - discountAmount
+      finalAmount +
+        (orderInfo.billing_mode === BillingMode.B2B ? orderInfo.eway_amount : 0) -
+        discountAmount
     );
 
     return parseFloat(

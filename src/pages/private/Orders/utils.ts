@@ -319,7 +319,7 @@ export const calculateFinalAmount = (
       : orderInfo.discount || 0;
   const gstAmount = calculateDiscountAmount(
     orderInfo.gst || 0,
-    finalAmount - discountAmount + ewayBillAmount
+    finalAmount - discountAmount + (orderInfo.billing_mode === BillingMode.B2B ? ewayBillAmount : 0)
   );
   const damageExpenses = orderInfo.damage_expenses || 0;
   return parseFloat(

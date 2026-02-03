@@ -30,6 +30,7 @@ import { RootState } from '../../../store/store';
 import CustomTable from '../../../styled/CustomTable';
 import { EventNameType, OrderStatusType, PatchOperation, ProductType } from '../../../types/common';
 import {
+  BillingMode,
   DepositType,
   PaymentStatus,
   ProductDetails,
@@ -469,7 +470,11 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         const gstPercent = parseFloat(params.data.gst ?? 0);
         const totalAmount = calculateTotalAmount(params.data);
         if (isNaN(gstPercent) || isNaN(totalAmount)) return 0;
-        return (gstPercent / 100) * (totalAmount + params.data.eway_amount);
+        return (
+          (gstPercent / 100) *
+          (totalAmount +
+            (params.data.billing_mode === BillingMode.B2B ? params.data.eway_amount : 0))
+        );
       },
       hide: viewChallans,
     },

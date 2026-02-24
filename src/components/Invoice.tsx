@@ -165,7 +165,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         discountAmount +
         parseFloat(gstAmount) +
         roundOff +
-        transportForTax +
+        data.eway_amount +
         damageExpenses
       ).toFixed(2)
     );

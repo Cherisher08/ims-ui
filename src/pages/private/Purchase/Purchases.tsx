@@ -255,8 +255,6 @@ const Purchases = () => {
                 className="cursor-pointer text-blue-500 hover:text-blue-700"
                 onClick={() => {
                   const purchase = purchaseData?.find((p) => p._id === params.data?._id);
-                  console.log('purchase: ', purchase);
-                  console.log('params.data: ', params.data);
                   if (purchase) handleEdit(purchase);
                 }}
               />
@@ -484,16 +482,25 @@ const Purchases = () => {
     }
 
     try {
-      // Check if all products have IDs; if not, remove empty IDs from products that don't have them
-      const allProductsHaveIds = newPurchaseData.products.every(
-        (p) => p._id && p._id.trim() !== ''
-      );
-      const purchaseToUpdate = { ...newPurchaseData };
-      if (!allProductsHaveIds) {
-        purchaseToUpdate.products = newPurchaseData.products.map((p) =>
-          !p._id || p._id.trim() === '' ? { ...p, _id: undefined } : p
+      // Ensure product `_id`s are preserved when updating.
+      // If a product is missing an `_id`, try to find an existing product
+      // by `name` or `product_code` from `productData` and assign its `_id`.
+      const purchaseToUpdate = { ...newPurchaseData } as PurchaseOrderInfo;
+      purchaseToUpdate.products = (newPurchaseData.products || []).map((p) => {
+        // Keep existing id if present
+        if (p._id && String(p._id).trim() !== '') return p;
+
+        // Try to find a matching product in productData
+        const matched = productData?.find(
+          (prod) =>
+            prod._id === p._id || prod.name === p.name || prod.product_code === p.product_code
         );
-      }
+        if (matched) return { ...p, _id: matched._id };
+
+        // If no match, set _id to undefined so backend can decide (no empty-string ids)
+        return { ...p, _id: undefined };
+      });
+
       await updatePurchase(purchaseToUpdate as PurchaseOrderInfo).unwrap();
       setEditPurchaseOpen(false);
       resetForm();

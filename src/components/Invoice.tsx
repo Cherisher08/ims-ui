@@ -133,38 +133,39 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         }))
       : data.product_details;
 
-  const calcFinalAmount = () => {
-    if (data.type === ProductType.RENTAL && updatedProducts.length > 0) {
-      const total = updatedProducts.reduce((sum, prod) => {
-        return sum + calculateProductRent(prod);
-      }, 0);
-
-      return parseFloat(total.toFixed(2));
-    }
-    return 0;
+  const gstPercentage = data.gst && data.gst !== 0 ? data.gst : 18;
+  const calcTotalAmtColumnSum = () => {
+    return updatedProducts.reduce((sum, product) => {
+      const totalAmt =
+        data.billing_mode === BillingMode.B2B
+          ? parseFloat(calculateProductRent(product).toFixed(2))
+          : parseFloat((calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2));
+      return sum + totalAmt;
+    }, 0);
   };
+  const totalAmtSum = calcTotalAmtColumnSum();
+  const transportForTax = data.billing_mode === BillingMode.B2B ? data.eway_amount || 0 : 0;
+  const gstAmount = (
+    (totalAmtSum + transportForTax - data.discount) *
+    gstPercentage *
+    0.01
+  ).toFixed(2);
 
   const discountAmount =
     data.discount_type === DiscountType.PERCENT
-      ? calculateDiscountAmount(data.discount, calcFinalAmount())
+      ? calculateDiscountAmount(data.discount, totalAmtSum)
       : data.discount || 0;
 
   const calcTotal = () => {
-    const finalAmount = calcFinalAmount();
     const roundOff = data.round_off || 0;
-    const ewayBillAmount = data.eway_amount || 0;
-    const gstAmount = calculateDiscountAmount(
-      data.gst || 0,
-      finalAmount - discountAmount + (data.billing_mode === BillingMode.B2B ? ewayBillAmount : 0)
-    );
     const damageExpenses = data.damage_expenses || 0;
     return parseFloat(
       (
-        finalAmount -
+        totalAmtSum -
         discountAmount +
-        gstAmount +
+        parseFloat(gstAmount) +
         roundOff +
-        ewayBillAmount +
+        transportForTax +
         damageExpenses
       ).toFixed(2)
     );
@@ -191,19 +192,6 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
         .toFixed(2)
     );
   };
-
-  const gstPercentage = data.gst && data.gst !== 0 ? data.gst : 18;
-  const calcTotalAmtColumnSum = () => {
-    return updatedProducts.reduce((sum, product) => {
-      const totalAmt =
-        data.billing_mode === BillingMode.B2B
-          ? parseFloat(calculateProductRent(product).toFixed(2))
-          : parseFloat((calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2));
-      return sum + totalAmt;
-    }, 0);
-  };
-  const totalAmtSum = calcTotalAmtColumnSum();
-  const gstAmount = ((totalAmtSum + data.eway_amount) * gstPercentage * 0.01).toFixed(2);
 
   const styles = StyleSheet.create({
     page: {
@@ -902,8 +890,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
             <View style={styles.calculationContainer}>
               <View style={styles.section}>
                 {/* Grid Columns */}
-                <View key={'total-amount-field'} style={[styles.row]}>
-                  <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Total Amount</Text>
+                <View key={'amount-field'} style={[styles.row]}>
+                  <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Amount</Text>
                   <Text style={[styles.valueText, { fontWeight: 'bold' }]}>
                     Rs. {totalAmtSum.toFixed(2)}
                   </Text>
@@ -952,7 +940,6 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                     </View>
                   </View>
                 ) : null}
-
                 {[
                   ...(data.discount
                     ? [
@@ -963,6 +950,15 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           } ${data.discount?.toFixed(2)} ${
                             data.discount_type === DiscountType.PERCENT ? '%' : ''
                           }`,
+                          bottom: true,
+                        },
+                      ]
+                    : []),
+                  ...(data.discount || data.eway_amount
+                    ? [
+                        {
+                          label: 'Amount before tax',
+                          value: `Rs. ${(totalAmtSum + data.eway_amount - data.discount).toFixed(2)}`,
                           bottom: true,
                         },
                       ]

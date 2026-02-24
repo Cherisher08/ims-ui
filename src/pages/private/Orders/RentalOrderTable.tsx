@@ -467,14 +467,16 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
       filter: 'agTextColumnFilter',
       valueFormatter: currencyFormatter,
       valueGetter: (params: ValueGetterParams) => {
-        const gstPercent = parseFloat(params.data.gst ?? 0);
-        const totalAmount = calculateTotalAmount(params.data);
-        if (isNaN(gstPercent) || isNaN(totalAmount)) return 0;
-        return (
-          (gstPercent / 100) *
-          (totalAmount +
-            (params.data.billing_mode === BillingMode.B2B ? params.data.eway_amount : 0))
-        );
+        const data = params.data as RentalOrderType;
+        const gstPct = data.gst && data.gst !== 0 ? Number(data.gst) : 18;
+        const totalAmtSum = calculateTotalAmount(data);
+        const transportForTax = data.billing_mode === BillingMode.B2B ? data.eway_amount || 0 : 0;
+        const discountAmount =
+          data.discount_type === 'percent'
+            ? (Number(data.discount || 0) * totalAmtSum) / 100
+            : Number(data.discount || 0);
+        if (isNaN(gstPct) || isNaN(totalAmtSum)) return 0;
+        return ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPct) / 100;
       },
       hide: viewChallans,
     },

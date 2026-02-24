@@ -193,6 +193,7 @@ const NewOrder = () => {
       mode: PaymentMode.CASH,
     },
   ]);
+  const [roundOffManuallyChanged, setRoundOffManuallyChanged] = useState<boolean>(false);
 
   useEffect(() => {
     if (isCancelled) {
@@ -239,7 +240,8 @@ const NewOrder = () => {
       if (orderInfo.billing_mode === BillingMode.B2C) {
         total = orderInfo.product_details.reduce((sum, prod) => {
           const rent_per_unit = calculateProductRent(prod);
-          const exclusiveAmount = rent_per_unit / (1 + orderInfo.gst / 100);
+          const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
+          const exclusiveAmount = rent_per_unit / (1 + gstPercentage / 100);
           return sum + exclusiveAmount;
         }, 0);
       } else {
@@ -255,37 +257,41 @@ const NewOrder = () => {
 
   // Calculate final amount excluding any balancePaid value
   const calculateFinalAmountExcludingBalance = useCallback(() => {
-    const finalAmount = calculateTotalAmount;
-    const roundOff = orderInfo.round_off || 0;
+    const totalAmtSum = calculateTotalAmount;
+    const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
+    const transportForTax =
+      orderInfo.billing_mode === BillingMode.B2B ? orderInfo.eway_amount || 0 : 0;
     const discountAmount =
       orderInfo.discount_type === DiscountType.PERCENT
-        ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
+        ? calculateDiscountAmount(orderInfo.discount || 0, totalAmtSum)
         : orderInfo.discount || 0;
-    const gstAmount = calculateDiscountAmount(
-      orderInfo.gst || 0,
-      finalAmount +
-        (orderInfo.billing_mode === BillingMode.B2B ? orderInfo.eway_amount : 0) -
-        discountAmount
+    const gstAmount = parseFloat(
+      ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(2)
     );
+    const roundOff = orderInfo.round_off || 0;
+    const damageExpenses = orderInfo.damage_expenses || 0;
 
-    return parseFloat(
+    const netTotal = parseFloat(
       (
-        finalAmount -
+        totalAmtSum -
         discountAmount +
         gstAmount +
         roundOff +
-        (orderInfo.eway_amount || 0) +
-        (orderInfo.damage_expenses || 0)
+        orderInfo.eway_amount +
+        damageExpenses
       ).toFixed(2)
     );
+
+    return netTotal;
   }, [
     calculateTotalAmount,
-    orderInfo.discount,
-    orderInfo.discount_type,
-    orderInfo.eway_amount,
-    orderInfo.damage_expenses,
     orderInfo.gst,
+    orderInfo.billing_mode,
+    orderInfo.eway_amount,
+    orderInfo.discount_type,
+    orderInfo.discount,
     orderInfo.round_off,
+    orderInfo.damage_expenses,
   ]);
 
   // Final amount that subtracts any balance paid
@@ -654,6 +660,13 @@ const NewOrder = () => {
     orderInfo.product_details,
     orderInfo.repay_date,
     orderInfo.deposits,
+    orderInfo.gst,
+    orderInfo.billing_mode,
+    orderInfo.discount_type,
+    orderInfo.discount,
+    orderInfo.round_off,
+    orderInfo.damage_expenses,
+    orderInfo.balance_paid,
     calculateFinalAmount,
     isRentalOrdersQuerySuccess,
     existingRentalOrder?.status,
@@ -830,10 +843,6 @@ const NewOrder = () => {
     }
   }, [orderInfo.product_details, orderInfo.in_date]);
 
-  if (!isProductsQuerySuccess) {
-    return <Loader />;
-  }
-
   const hasRepair = orderInfo.product_details.some((p) => (p.order_repair_count || 0) >= 1);
 
   const getCurrentOrderStatus = () => {
@@ -866,6 +875,72 @@ const NewOrder = () => {
       </p>
     );
   };
+
+  // Calculations for display
+  const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
+  const calcTotalAmtColumnSum = () => {
+    return orderInfo.product_details.reduce((sum, product) => {
+      const totalAmt =
+        orderInfo.billing_mode === BillingMode.B2B
+          ? parseFloat(calculateProductRent(product).toFixed(2))
+          : parseFloat((calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2));
+      return sum + totalAmt;
+    }, 0);
+  };
+  const totalAmtSum = calcTotalAmtColumnSum();
+  const transportForTax =
+    orderInfo.billing_mode === BillingMode.B2B ? orderInfo.eway_amount || 0 : 0;
+  const discountAmount =
+    orderInfo.discount_type === DiscountType.PERCENT
+      ? calculateDiscountAmount(orderInfo.discount, totalAmtSum)
+      : orderInfo.discount || 0;
+  const gstAmount = parseFloat(
+    ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(2)
+  );
+  const amountBeforeTax = totalAmtSum + orderInfo.eway_amount;
+  const netTotal = parseFloat(
+    (
+      totalAmtSum -
+      discountAmount +
+      gstAmount +
+      (orderInfo.round_off || 0) +
+      orderInfo.eway_amount +
+      (orderInfo.damage_expenses || 0)
+    ).toFixed(2)
+  );
+  const depositSum = depositData.reduce((t, d) => t + d.amount, 0);
+  const balanceAmount = Math.max(0, netTotal - depositSum);
+
+  useEffect(() => {
+    if (roundOffManuallyChanged) return;
+
+    const subtotalWithoutRound =
+      totalAmtSum -
+      (discountAmount || 0) +
+      orderInfo.eway_amount +
+      (orderInfo.damage_expenses || 0);
+    const netBeforeRound = +(subtotalWithoutRound + gstAmount).toFixed(2);
+    const autoRound = parseFloat((Math.ceil(netBeforeRound) - netBeforeRound).toFixed(2));
+
+    if (Number.isFinite(autoRound) && Math.abs((orderInfo.round_off || 0) - autoRound) > 0.001) {
+      setOrderInfo((prev) => ({
+        ...prev,
+        round_off: autoRound,
+      }));
+    }
+  }, [
+    totalAmtSum,
+    gstPercentage,
+    orderInfo.eway_amount,
+    discountAmount,
+    orderInfo.damage_expenses,
+    roundOffManuallyChanged,
+    orderInfo.round_off,
+  ]);
+
+  if (!isProductsQuerySuccess) {
+    return <Loader />;
+  }
 
   return (
     <div className="w-full flex flex-col ">
@@ -1221,10 +1296,11 @@ const NewOrder = () => {
                 <th className="px-1 py-1 text-left w-[6rem]">Order Quantity</th>
                 <th className="px-1 py-1 text-left w-[11rem]">Out Date</th>
                 <th className="px-1 py-1 text-left w-[11rem]">In Date</th>
-                <th className="px-1 py-1 text-left w-[8rem]">Duration</th>
-                <th className="px-1 py-1 text-left w-[8rem]">Order Repair Quantity</th>
+                <th className="px-1 py-1 text-left w-32">Duration</th>
+                <th className="px-1 py-1 text-left w-32">Order Repair Quantity</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Amount Per Unit</th>
-                <th className="px-1 py-1 text-left w-[10rem]">Final Amount</th>
+                <th className="px-1 py-1 text-left w-[10rem]">Total Amount</th>
+                <th className="px-1 py-1 text-left w-[10rem]">Amount without Taxes</th>
                 <th className="px-1 py-1 text-left w-[20rem]">Damage</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Options</th>
               </tr>
@@ -1268,7 +1344,7 @@ const NewOrder = () => {
                                 )
                             )
                           )}
-                          className="w-[14rem]"
+                          className="w-56"
                           value={product.name}
                           onChange={(name) => {
                             const data = products.find((prod) => prod.name === name);
@@ -1313,7 +1389,7 @@ const NewOrder = () => {
                       <td className="px-1 py-2 content-start">
                         <CustomSelect
                           label=""
-                          className="w-[8rem]"
+                          className="w-32"
                           options={billingUnitOptions}
                           value={
                             billingUnitOptions.find((unit) => product.billing_unit === unit.value)
@@ -1346,7 +1422,7 @@ const NewOrder = () => {
                           disabled
                           value={newQuantity}
                           type="number"
-                          className="w-[8rem] p-2"
+                          className="w-32 p-2"
                           onChange={() => {}}
                           label=""
                           placeholder=""
@@ -1403,7 +1479,7 @@ const NewOrder = () => {
                             ) || ''
                           }
                           disabled={product.type !== ProductType.RENTAL}
-                          className="w-[15rem]"
+                          className="w-60"
                           onChange={(val) => {
                             const newProducts = [...orderInfo.product_details];
                             if (
@@ -1440,7 +1516,7 @@ const NewOrder = () => {
                               : ''
                           }
                           disabled={product.type !== ProductType.RENTAL || !product._id}
-                          className="w-[15rem]"
+                          className="w-60"
                           onChange={(val) => {
                             if (val !== undefined && dayjs(val).diff(product.out_date) < 0) {
                               val = product.out_date;
@@ -1471,7 +1547,7 @@ const NewOrder = () => {
                           type="number"
                           label=""
                           placeholder=""
-                          className="w-[5rem] p-2"
+                          className="w-20 p-2"
                           disabled={product.type !== ProductType.RENTAL}
                           value={orderInfo.product_details[index].duration || 0}
                           onChange={(val) => {
@@ -1492,7 +1568,7 @@ const NewOrder = () => {
                           type="number"
                           label=""
                           placeholder=""
-                          className="w-[8rem] p-2"
+                          className="w-32 p-2"
                           value={orderInfo.product_details[index].order_repair_count || 0}
                           onChange={(val) => {
                             const newProducts = [...orderInfo.product_details];
@@ -1515,7 +1591,7 @@ const NewOrder = () => {
                           type="number"
                           label=""
                           placeholder=""
-                          className="w-[8rem] p-2"
+                          className="w-32 p-2"
                           value={product.rent_per_unit}
                           onChange={(val) => {
                             const newProducts = [...orderInfo.product_details];
@@ -1536,8 +1612,31 @@ const NewOrder = () => {
                           type="number"
                           label=""
                           placeholder=""
-                          className="w-[8rem] p-2"
+                          className="w-32 p-2"
                           value={product.rent_per_unit * product.order_quantity * product.duration}
+                          onChange={() => {}}
+                        />
+                      </td>
+                      <td className="px-1 py-2 content-start">
+                        <CustomInput
+                          disabled
+                          type="number"
+                          label=""
+                          placeholder=""
+                          className="w-32 p-2"
+                          value={Number(
+                            (() => {
+                              const gstProductPercentage =
+                                products.find((p) => p._id === product._id)?.gst_percentage ?? 18;
+                              const rate = gstProductPercentage !== 0 ? gstProductPercentage : 18;
+                              const net =
+                                (product.rent_per_unit *
+                                  product.order_quantity *
+                                  product.duration) /
+                                (1 + rate / 100);
+                              return net.toFixed(2);
+                            })()
+                          )}
                           onChange={() => {}}
                         />
                       </td>
@@ -1910,6 +2009,7 @@ const NewOrder = () => {
       </div>
 
       {/* === Order Info Form === */}
+
       <div className="max-w-full flex flex-col gap-2">
         {orderInfo.type === ProductType.RENTAL && orderInfo.product_details && (
           <div className="w-full flex flex-col px-3">
@@ -1917,26 +2017,21 @@ const NewOrder = () => {
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1 text-gray-500">
-                    <p>Deposit</p>
-                    <p>Amount before Taxes</p>
-                    <p>Discount</p>
+                    <p>Amount</p>
                     <p>Transport</p>
+                    <p>Amount before Tax</p>
+                    <p>Discount</p>
                     {orderInfo.billing_mode === BillingMode.B2B && <p>GST (%)</p>}
+                    <p>GST Amount</p>
+                    <p>Net Total</p>
                     <p>Round Off</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 text-end">
-                    <p>
-                      ₹{' '}
-                      {depositData.reduce((total, deposit) => total + deposit.amount, 0).toFixed(2)}
-                    </p>
-                    <p>₹ {calculateTotalAmount.toFixed(2)}</p>
+                    <p>₹ {totalAmtSum.toFixed(2)}</p>
+                    <p>₹ {orderInfo.eway_amount.toFixed(2)}</p>
+                    <p>₹ {amountBeforeTax.toFixed(2)}</p>
+                    <p>₹ {discountAmount.toFixed(2)}</p>
 
-                    <p>
-                      {orderInfo.discount_type === DiscountType.PERCENT
-                        ? `${orderInfo.discount}%`
-                        : `₹ ${orderInfo.discount.toFixed(2)}`}
-                    </p>
-                    <p>{`₹ ${Number(orderInfo.eway_amount)?.toFixed(2)}`}</p>
                     {orderInfo.billing_mode === BillingMode.B2B && (
                       <div className="flex justify-end gap-1">
                         <input
@@ -1965,18 +2060,21 @@ const NewOrder = () => {
                         <span className="w-2">%</span>
                       </div>
                     )}
+                    <p>₹ {gstAmount.toFixed(2)}</p>
+                    <p className="font-semibold">₹ {(netTotal - orderInfo.round_off).toFixed(2)}</p>
                     <div className="flex pr-3 justify-end">
                       {'₹ '}
                       <input
                         className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
                         type="number"
                         value={orderInfo.round_off}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          setRoundOffManuallyChanged(true);
                           setOrderInfo((prev) => ({
                             ...prev,
                             round_off: parseFloat(parseFloat(e.target.value).toFixed(2)),
-                          }))
-                        }
+                          }));
+                        }}
                       />
                     </div>
                   </div>
@@ -1986,7 +2084,7 @@ const NewOrder = () => {
                     <p>Amount after Taxes</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end">
-                    <p>₹ {Math.abs(calculateFinalAmountExcludingBalance()).toFixed(2)}</p>
+                    <p>₹ {netTotal.toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2">
@@ -1994,14 +2092,7 @@ const NewOrder = () => {
                     <p>Balance Amount</p>
                   </div>
                   <div className="flex flex-col gap-1 text-gray-500 items-end text-end pb-2">
-                    <p>
-                      ₹{' '}
-                      {Math.max(
-                        0,
-                        calculateFinalAmount() -
-                          depositData.reduce((total, deposit) => total + deposit.amount, 0)
-                      ).toFixed(2)}
-                    </p>
+                    <p>₹ {balanceAmount.toFixed(2)}</p>
                   </div>
                 </div>
               </div>

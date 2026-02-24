@@ -268,8 +268,9 @@ export const calculateTotalAmount = (orderInfo: RentalOrderType) => {
     let total = 0;
     if (orderInfo.billing_mode === BillingMode.B2C) {
       total = orderInfo.product_details.reduce((sum, prod) => {
-        const rent_per_unit = calculateProductRent(prod);
-        const exclusiveAmount = rent_per_unit / (1 + orderInfo.gst / 100);
+        const productRent = calculateProductRent(prod);
+        const gstPct = orderInfo.gst && orderInfo.gst !== 0 ? Number(orderInfo.gst) : 18;
+        const exclusiveAmount = productRent / (1 + gstPct / 100);
         return sum + exclusiveAmount;
       }, 0);
     } else {
@@ -309,30 +310,37 @@ export const calculateFinalAmount = (
   orderInfo: RentalOrderType,
   isBalancePaidIncluded: boolean = true
 ) => {
-  const finalAmount = calculateTotalAmount(orderInfo);
-  const roundOff = orderInfo.round_off || 0;
-  const ewayBillAmount = orderInfo.eway_amount || 0;
-  const balance_paid = isBalancePaidIncluded ? orderInfo.balance_paid || 0 : 0;
+  const totalAmtSum = calculateTotalAmount(orderInfo);
+  const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
+  const transportForTax =
+    orderInfo.billing_mode === BillingMode.B2B ? orderInfo.eway_amount || 0 : 0;
   const discountAmount =
     orderInfo.discount_type === DiscountType.PERCENT
-      ? calculateDiscountAmount(orderInfo.discount || 0, finalAmount)
+      ? calculateDiscountAmount(orderInfo.discount || 0, totalAmtSum)
       : orderInfo.discount || 0;
-  const gstAmount = calculateDiscountAmount(
-    orderInfo.gst || 0,
-    finalAmount - discountAmount + (orderInfo.billing_mode === BillingMode.B2B ? ewayBillAmount : 0)
+  const gstAmount = parseFloat(
+    ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(2)
   );
+  const roundOff = orderInfo.round_off || 0;
   const damageExpenses = orderInfo.damage_expenses || 0;
-  return parseFloat(
+  const balance_paid = isBalancePaidIncluded ? orderInfo.balance_paid || 0 : 0;
+
+  const netTotal = parseFloat(
     (
-      finalAmount -
-      discountAmount -
-      balance_paid +
-      gstAmount +
-      roundOff +
-      ewayBillAmount +
-      damageExpenses
+      parseFloat(
+        (
+          totalAmtSum -
+          discountAmount +
+          gstAmount +
+          roundOff +
+          orderInfo.eway_amount +
+          damageExpenses
+        ).toFixed(2)
+      ) - balance_paid
     ).toFixed(2)
   );
+
+  return netTotal;
 };
 
 export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]) => {
@@ -831,7 +839,6 @@ export const exportInvoiceToExcel = (orders: RentalOrderType[] | RentalOrderInfo
   const data: Record<string, string | number>[] = [];
 
   const getCustomerDetails = (order: RentalOrderType | RentalOrderInfo) => {
-    console.log('order: ', order);
     if (!order.customer) return { name: '', phone: '', gst: '' };
     if ('personal_number' in order.customer) {
       const custObj = order.customer as unknown as Record<string, unknown>;

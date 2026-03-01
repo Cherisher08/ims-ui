@@ -554,7 +554,9 @@ const CustomerBills = () => {
                         : 'bg-red-400'
                     } font-semibold px-1 py-1`}
                   >
-                    {Math.abs(calculateTotalBillAmount() - calculateTotalReceivedAmount())}
+                    {Math.abs(calculateTotalBillAmount() - calculateTotalReceivedAmount()).toFixed(
+                      2
+                    )}
                   </td>
                 </tr>
               </>

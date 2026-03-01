@@ -880,10 +880,7 @@ const NewOrder = () => {
   const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
   const calcTotalAmtColumnSum = () => {
     return orderInfo.product_details.reduce((sum, product) => {
-      const totalAmt =
-        orderInfo.billing_mode === BillingMode.B2B
-          ? parseFloat(calculateProductRent(product).toFixed(2))
-          : parseFloat((calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2));
+      const totalAmt = parseFloat(calculateProductRent(product).toFixed(2));
       return sum + totalAmt;
     }, 0);
   };
@@ -894,9 +891,14 @@ const NewOrder = () => {
     orderInfo.discount_type === DiscountType.PERCENT
       ? calculateDiscountAmount(orderInfo.discount, totalAmtSum)
       : orderInfo.discount || 0;
-  const gstAmount = parseFloat(
-    ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(2)
-  );
+  const gstAmount =
+    orderInfo.billing_mode === BillingMode.B2B
+      ? parseFloat(
+          ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(
+            2
+          )
+        )
+      : 0;
   const amountBeforeTax = totalAmtSum + orderInfo.eway_amount;
   const netTotal = parseFloat(
     (
@@ -936,6 +938,7 @@ const NewOrder = () => {
     orderInfo.damage_expenses,
     roundOffManuallyChanged,
     orderInfo.round_off,
+    gstAmount,
   ]);
 
   if (!isProductsQuerySuccess) {
@@ -1300,7 +1303,6 @@ const NewOrder = () => {
                 <th className="px-1 py-1 text-left w-32">Order Repair Quantity</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Amount Per Unit</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Total Amount</th>
-                <th className="px-1 py-1 text-left w-[10rem]">Amount without Taxes</th>
                 <th className="px-1 py-1 text-left w-[20rem]">Damage</th>
                 <th className="px-1 py-1 text-left w-[10rem]">Options</th>
               </tr>
@@ -1614,29 +1616,6 @@ const NewOrder = () => {
                           placeholder=""
                           className="w-32 p-2"
                           value={product.rent_per_unit * product.order_quantity * product.duration}
-                          onChange={() => {}}
-                        />
-                      </td>
-                      <td className="px-1 py-2 content-start">
-                        <CustomInput
-                          disabled
-                          type="number"
-                          label=""
-                          placeholder=""
-                          className="w-32 p-2"
-                          value={Number(
-                            (() => {
-                              const gstProductPercentage =
-                                products.find((p) => p._id === product._id)?.gst_percentage ?? 18;
-                              const rate = gstProductPercentage !== 0 ? gstProductPercentage : 18;
-                              const net =
-                                (product.rent_per_unit *
-                                  product.order_quantity *
-                                  product.duration) /
-                                (1 + rate / 100);
-                              return net.toFixed(2);
-                            })()
-                          )}
                           onChange={() => {}}
                         />
                       </td>
@@ -2021,8 +2000,12 @@ const NewOrder = () => {
                     <p>Transport</p>
                     <p>Amount before Tax</p>
                     <p>Discount</p>
-                    {orderInfo.billing_mode === BillingMode.B2B && <p>GST (%)</p>}
-                    <p>GST Amount</p>
+                    {orderInfo.billing_mode === BillingMode.B2B && (
+                      <>
+                        <p>GST (%)</p>
+                        <p>GST Amount</p>
+                      </>
+                    )}
                     <p>Net Total</p>
                     <p>Round Off</p>
                   </div>
@@ -2033,34 +2016,37 @@ const NewOrder = () => {
                     <p>₹ {discountAmount.toFixed(2)}</p>
 
                     {orderInfo.billing_mode === BillingMode.B2B && (
-                      <div className="flex justify-end gap-1">
-                        <input
-                          className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
-                          max={100}
-                          min={0}
-                          type="number"
-                          value={orderInfo.gst}
-                          onChange={(e) => {
-                            if (
-                              orderInfo.type === ProductType.RENTAL &&
-                              orderInfo.product_details
-                            ) {
-                              let percent = parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
-                              if (percent >= 100) {
-                                percent = 100;
-                              }
+                      <>
+                        <div className="flex justify-end gap-1">
+                          <input
+                            className="w-[5rem] ml-1 bg-gray-200 border-b-2 text-right pr-2 outline-none"
+                            max={100}
+                            min={0}
+                            type="number"
+                            value={orderInfo.gst}
+                            onChange={(e) => {
+                              if (
+                                orderInfo.type === ProductType.RENTAL &&
+                                orderInfo.product_details
+                              ) {
+                                let percent =
+                                  parseFloat(parseFloat(e.target.value).toFixed(0)) || 0;
+                                if (percent >= 100) {
+                                  percent = 100;
+                                }
 
-                              setOrderInfo((prev) => ({
-                                ...prev,
-                                gst: percent,
-                              }));
-                            }
-                          }}
-                        />
-                        <span className="w-2">%</span>
-                      </div>
+                                setOrderInfo((prev) => ({
+                                  ...prev,
+                                  gst: percent,
+                                }));
+                              }
+                            }}
+                          />
+                          <span className="w-2">%</span>
+                        </div>
+                        <p>₹ {gstAmount.toFixed(2)}</p>
+                      </>
                     )}
-                    <p>₹ {gstAmount.toFixed(2)}</p>
                     <p className="font-semibold">₹ {(netTotal - orderInfo.round_off).toFixed(2)}</p>
                     <div className="flex pr-3 justify-end">
                       {'₹ '}

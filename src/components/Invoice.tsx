@@ -136,21 +136,16 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   const gstPercentage = data.gst && data.gst !== 0 ? data.gst : 18;
   const calcTotalAmtColumnSum = () => {
     return updatedProducts.reduce((sum, product) => {
-      const totalAmt =
-        data.billing_mode === BillingMode.B2B
-          ? parseFloat(calculateProductRent(product).toFixed(2))
-          : parseFloat((calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2));
+      const totalAmt = parseFloat(calculateProductRent(product).toFixed(2));
       return sum + totalAmt;
     }, 0);
   };
   const totalAmtSum = calcTotalAmtColumnSum();
   const transportForTax = data.billing_mode === BillingMode.B2B ? data.eway_amount || 0 : 0;
-  const gstAmount = (
-    (totalAmtSum + transportForTax - data.discount) *
-    gstPercentage *
-    0.01
-  ).toFixed(2);
-
+  const gstAmount =
+    data.billing_mode === BillingMode.B2B
+      ? ((totalAmtSum + transportForTax - data.discount) * gstPercentage * 0.01).toFixed(2)
+      : '0';
   const discountAmount =
     data.discount_type === DiscountType.PERCENT
       ? calculateDiscountAmount(data.discount, totalAmtSum)
@@ -751,7 +746,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 40,
+                    width: data.billing_mode === BillingMode.B2B ? 40 : 70,
                   },
                 ]}
               >
@@ -761,7 +756,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 70,
+                    width: data.billing_mode === BillingMode.B2B ? 70 : 100,
                   },
                 ]}
               >
@@ -771,7 +766,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 80,
+                    width: data.billing_mode === BillingMode.B2B ? 80 : 100,
                   },
                 ]}
               >
@@ -781,36 +776,40 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 style={[
                   styles.tableColumn,
                   {
-                    width: 60,
+                    width: data.billing_mode === BillingMode.B2B ? 60 : 80,
                   },
                 ]}
               >
                 AMOUNT
               </Text>
-              <Text
-                style={[
-                  styles.tableColumn,
-                  {
-                    width: 60,
-                  },
-                ]}
-              >
-                GST(%)
-              </Text>
-              <Text
-                style={[
-                  styles.tableColumn,
-                  {
-                    width: 60,
-                    borderRight: '0px',
-                    alignContent: 'center',
-                    paddingVertical: 2,
-                    alignItems: 'center',
-                  },
-                ]}
-              >
-                TOTAL AMT
-              </Text>
+              {data.billing_mode === BillingMode.B2B && (
+                <>
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 60,
+                      },
+                    ]}
+                  >
+                    GST(%)
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableColumn,
+                      {
+                        width: 60,
+                        borderRight: '0px',
+                        alignContent: 'center',
+                        paddingVertical: 2,
+                        alignItems: 'center',
+                      },
+                    ]}
+                  >
+                    TOTAL AMT
+                  </Text>
+                </>
+              )}
             </View>
             {updatedProducts.map((product: ProductDetails, index: number) => (
               <View
@@ -842,29 +841,53 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   {product.product_code || ''}
                 </Text>
                 <Text style={[styles.productColumn, { width: 40 }]}>{product.order_quantity} </Text>
-                <Text style={[styles.productColumn, { width: 40 }]}>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 40 : 70 },
+                  ]}
+                >
                   {product.product_unit.name || 'Unit(s)'}
                 </Text>
-                <Text style={[styles.productColumn, { width: 70 }]}>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 70 : 100 },
+                  ]}
+                >
                   Rs. {product.rent_per_unit}
                 </Text>
-                <Text style={[styles.productColumn, { width: 80 }]}>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 80 : 100 },
+                  ]}
+                >
                   {product.type && product.type === ProductType.SALES
                     ? '-'
                     : product.duration + ' ' + product.billing_unit}
                 </Text>
-                <Text style={[styles.productColumn, { width: 60 }]}>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 60 : 80 },
+                  ]}
+                >
                   Rs. {parseFloat(calculateProductRent(product).toFixed(2))}
                 </Text>
-                <Text style={[styles.productColumn, { width: 60 }]}>{gstPercentage}%</Text>
-                <Text style={[styles.productColumn, { width: 60, borderRight: '0px' }]}>
-                  Rs.{' '}
-                  {data.billing_mode === BillingMode.B2B
-                    ? parseFloat(calculateProductRent(product).toFixed(2))
-                    : parseFloat(
-                        (calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2)
-                      )}
-                </Text>
+                {data.billing_mode === BillingMode.B2B && (
+                  <>
+                    <Text style={[styles.productColumn, { width: 60 }]}>{gstPercentage}%</Text>
+                    <Text style={[styles.productColumn, { width: 60, borderRight: '0px' }]}>
+                      Rs.{' '}
+                      {data.billing_mode === BillingMode.B2B
+                        ? parseFloat(calculateProductRent(product).toFixed(2))
+                        : parseFloat(
+                            (calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2)
+                          )}
+                    </Text>
+                  </>
+                )}
               </View>
             ))}
             {Array.from({
@@ -877,12 +900,36 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 </View>
                 <Text style={[styles.productColumn, { width: 55 }]}></Text>
                 <Text style={[styles.productColumn, { width: 40 }]}></Text>
-                <Text style={[styles.productColumn, { width: 40 }]}></Text>
-                <Text style={[styles.productColumn, { width: 70 }]}></Text>
-                <Text style={[styles.productColumn, { width: 80 }]}></Text>
-                <Text style={[styles.productColumn, { width: 60 }]}></Text>
-                <Text style={[styles.productColumn, { width: 60 }]}></Text>
-                <Text style={[styles.productColumn, { width: 60, borderRight: '0px' }]}></Text>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 40 : 70 },
+                  ]}
+                ></Text>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 70 : 100 },
+                  ]}
+                ></Text>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 80 : 100 },
+                  ]}
+                ></Text>
+                <Text
+                  style={[
+                    styles.productColumn,
+                    { width: data.billing_mode === BillingMode.B2B ? 60 : 80 },
+                  ]}
+                ></Text>
+                {data.billing_mode === BillingMode.B2B && (
+                  <>
+                    <Text style={[styles.productColumn, { width: 60 }]}></Text>
+                    <Text style={[styles.productColumn, { width: 60, borderRight: '0px' }]}></Text>
+                  </>
+                )}
               </View>
             ))}
           </View>
@@ -963,11 +1010,15 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         },
                       ]
                     : []),
-                  {
-                    label: `GST - ${gstPercentage}%`,
-                    value: `Rs. ${gstAmount}`,
-                    bottom: true,
-                  },
+                  ...(data.billing_mode === BillingMode.B2B
+                    ? [
+                        {
+                          label: `GST - ${gstPercentage}%`,
+                          value: `Rs. ${gstAmount}`,
+                          bottom: true,
+                        },
+                      ]
+                    : []),
                   ...(data.round_off
                     ? [
                         {

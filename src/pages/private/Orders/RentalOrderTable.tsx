@@ -475,6 +475,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
           data.discount_type === 'percent'
             ? (Number(data.discount || 0) * totalAmtSum) / 100
             : Number(data.discount || 0);
+        if (data.billing_mode === BillingMode.B2C && data.gst === 0) return 0;
         if (isNaN(gstPct) || isNaN(totalAmtSum)) return 0;
         return ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPct) / 100;
       },

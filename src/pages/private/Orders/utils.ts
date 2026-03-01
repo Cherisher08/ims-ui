@@ -265,20 +265,9 @@ export const formatProducts = (products: Product[] | ProductDetails[]) => {
 
 export const calculateTotalAmount = (orderInfo: RentalOrderType) => {
   if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-    let total = 0;
-    if (orderInfo.billing_mode === BillingMode.B2C) {
-      total = orderInfo.product_details.reduce((sum, prod) => {
-        const productRent = calculateProductRent(prod);
-        const gstPct = orderInfo.gst && orderInfo.gst !== 0 ? Number(orderInfo.gst) : 18;
-        const exclusiveAmount = productRent / (1 + gstPct / 100);
-        return sum + exclusiveAmount;
-      }, 0);
-    } else {
-      total = orderInfo.product_details.reduce((sum, prod) => {
-        return sum + calculateProductRent(prod);
-      }, 0);
-    }
-
+    const total = orderInfo.product_details.reduce((sum, prod) => {
+      return sum + calculateProductRent(prod);
+    }, 0);
     return parseFloat(total.toFixed(2));
   }
   return 0;
@@ -318,9 +307,14 @@ export const calculateFinalAmount = (
     orderInfo.discount_type === DiscountType.PERCENT
       ? calculateDiscountAmount(orderInfo.discount || 0, totalAmtSum)
       : orderInfo.discount || 0;
-  const gstAmount = parseFloat(
-    ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(2)
-  );
+  const gstAmount =
+    orderInfo.billing_mode === BillingMode.B2B
+      ? parseFloat(
+          ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(
+            2
+          )
+        )
+      : 0;
   const roundOff = orderInfo.round_off || 0;
   const damageExpenses = orderInfo.damage_expenses || 0;
   const balance_paid = isBalancePaidIncluded ? orderInfo.balance_paid || 0 : 0;

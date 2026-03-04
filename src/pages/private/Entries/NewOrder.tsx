@@ -234,30 +234,24 @@ const NewOrder = () => {
     }));
   };
 
-  const calculateTotalAmount = useMemo(() => {
-    if (orderInfo.type === ProductType.RENTAL && orderInfo.product_details) {
-      let total = 0;
-      if (orderInfo.billing_mode === BillingMode.B2C) {
-        total = orderInfo.product_details.reduce((sum, prod) => {
-          const rent_per_unit = calculateProductRent(prod);
-          const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
-          const exclusiveAmount = rent_per_unit / (1 + gstPercentage / 100);
-          return sum + exclusiveAmount;
-        }, 0);
-      } else {
-        total = orderInfo.product_details.reduce((sum, prod) => {
-          return sum + calculateProductRent(prod);
-        }, 0);
-      }
-
-      return parseFloat(total.toFixed(2));
-    }
-    return 0;
-  }, [orderInfo.type, orderInfo.product_details, orderInfo.billing_mode, orderInfo.gst]);
+  // previously we calculated a separate total amount with GST adjustments for B2C
+  // but the displayed and actual netTotal calculations rely on the raw rent
+  // sum (see `calcTotalAmtColumnSum` below).  The old memo produced a
+  // different value and led to mismatches when computing final amounts.
+  // It's no longer needed, so we keep the logic inline in the helper below.
+  // const calculateTotalAmount = useMemo(() => { /* removed */ }, []);
 
   // Calculate final amount excluding any balancePaid value
   const calculateFinalAmountExcludingBalance = useCallback(() => {
-    const totalAmtSum = calculateTotalAmount;
+    // mirror the `netTotal` computation used for display further down in the
+    // component.  This ensures both values stay in sync.
+
+    // calculate raw rent total (same as `calcTotalAmtColumnSum()` below)
+    const totalAmtSum = orderInfo.product_details.reduce((sum, product) => {
+      const totalAmt = parseFloat(calculateProductRent(product).toFixed(2));
+      return sum + totalAmt;
+    }, 0);
+
     const gstPercentage = orderInfo.gst && orderInfo.gst !== 0 ? orderInfo.gst : 18;
     const transportForTax =
       orderInfo.billing_mode === BillingMode.B2B ? orderInfo.eway_amount || 0 : 0;
@@ -265,9 +259,18 @@ const NewOrder = () => {
       orderInfo.discount_type === DiscountType.PERCENT
         ? calculateDiscountAmount(orderInfo.discount || 0, totalAmtSum)
         : orderInfo.discount || 0;
-    const gstAmount = parseFloat(
-      ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(2)
-    );
+
+    const gstAmount =
+      orderInfo.billing_mode === BillingMode.B2B
+        ? parseFloat(
+            (
+              (totalAmtSum + transportForTax - (discountAmount || 0)) *
+              gstPercentage *
+              0.01
+            ).toFixed(2)
+          )
+        : 0;
+
     const roundOff = orderInfo.round_off || 0;
     const damageExpenses = orderInfo.damage_expenses || 0;
 
@@ -283,16 +286,7 @@ const NewOrder = () => {
     );
 
     return netTotal;
-  }, [
-    calculateTotalAmount,
-    orderInfo.gst,
-    orderInfo.billing_mode,
-    orderInfo.eway_amount,
-    orderInfo.discount_type,
-    orderInfo.discount,
-    orderInfo.round_off,
-    orderInfo.damage_expenses,
-  ]);
+  }, [orderInfo]);
 
   // Final amount that subtracts any balance paid
   const calculateFinalAmount = useCallback(() => {
@@ -911,7 +905,7 @@ const NewOrder = () => {
     ).toFixed(2)
   );
   const depositSum = depositData.reduce((t, d) => t + d.amount, 0);
-  const balanceAmount = Math.max(0, netTotal - depositSum);
+  const balanceAmount = Math.max(0, netTotal - depositSum - (orderInfo.balance_paid || 0));
 
   useEffect(() => {
     if (roundOffManuallyChanged) return;

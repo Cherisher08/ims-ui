@@ -2,7 +2,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import BadgeIcon from '@mui/icons-material/Badge';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import { MdAssignmentAdd } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
@@ -286,7 +286,16 @@ const NewOrder = () => {
     );
 
     return netTotal;
-  }, [orderInfo]);
+  }, [
+    orderInfo.product_details,
+    orderInfo.gst,
+    orderInfo.billing_mode,
+    orderInfo.eway_amount,
+    orderInfo.discount,
+    orderInfo.discount_type,
+    orderInfo.round_off,
+    orderInfo.damage_expenses,
+  ]);
 
   // Final amount that subtracts any balance paid
   const calculateFinalAmount = useCallback(() => {

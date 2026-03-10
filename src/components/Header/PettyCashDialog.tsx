@@ -43,7 +43,21 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
   const fromDate = dayjs(filterDates.start);
   const toDate = dayjs(filterDates.end);
 
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
+  // Compute ISO start/end datetimes for the selected filter range
+  const rentalStartISO = dayjs(filterDates.start).startOf('day').format('YYYY-MM-DDTHH:mm:ss');
+  const rentalEndISO = dayjs(filterDates.end).endOf('day').format('YYYY-MM-DDTHH:mm:ss');
+
+  // Filter orders by any transaction date within the range: balance_paid_date, repay_date, or deposit dates
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery(
+    {
+      filter: [
+        `or:balance_paid_date:gte:${rentalStartISO},or:balance_paid_date:lte:${rentalEndISO}`,
+        `or:repay_date:gte:${rentalStartISO},or:repay_date:lte:${rentalEndISO}`,
+        `or:deposits.date:gte:${rentalStartISO},or:deposits.date:lte:${rentalEndISO}`,
+      ],
+    },
+    { skip: !(dayjs(filterDates.start).isValid() && dayjs(filterDates.end).isValid()) }
+  );
   const { data: pettyCashes, isSuccess: isPettyCashesQuerySuccess } = useGetPettyCashesQuery();
 
   const handlePrint = () => {

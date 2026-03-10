@@ -1,16 +1,25 @@
-import { Box, Tab, Tabs } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Tabs,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { LuPlus } from 'react-icons/lu';
 import { MdOutlineMail } from 'react-icons/md';
 import { RiFileExcel2Line } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import NewProductModal from '../../../components/NewProductModal.';
 import { useGetProductCategoriesQuery, useGetUnitsQuery } from '../../../services/ApiService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
 import CustomButton from '../../../styled/CustomButton';
-import AntSwitch from '../../../styled/CustomSwitch';
 import { RentalOrderType } from '../../../types/order';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
@@ -21,18 +30,79 @@ import { GridApi } from 'ag-grid-community';
 
 const Orders = () => {
   const navigate = useNavigate();
+
+  // Month and Year Filter State - declare early so it can be used in useState defaults
+  const currentDate = dayjs();
+
   const [activeTab, setActiveTab] = useState(1);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
-  // const [customerId, setCustomerId] = useState<string>('');
-  // const [customerOutstanding, setCustomerOutstanding] = useState(0);
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
   const [viewChallans, setViewChallans] = useState(false);
+  const [displaySettingsOpen, setDisplaySettingsOpen] = useState<boolean>(false);
+  const [showOnlyUnpaidOrders, setShowOnlyUnpaidOrders] = useState<boolean>(false);
+  const [viewSelectiveOrders, setViewSelectiveOrders] = useState<boolean>(true);
+
+  // Pending settings (before Save is clicked)
+  const [pendingViewChallans, setPendingViewChallans] = useState<boolean>(viewChallans);
+  const [pendingShowOnlyUnpaidOrders, setPendingShowOnlyUnpaidOrders] =
+    useState<boolean>(showOnlyUnpaidOrders);
+  const [pendingViewSelectiveOrders, setPendingViewSelectiveOrders] =
+    useState<boolean>(viewSelectiveOrders);
+  const [pendingSelectedMonth, setPendingSelectedMonth] = useState<number>(currentDate.month());
+  const [pendingSelectedYear, setPendingSelectedYear] = useState<number>(currentDate.year());
+
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.month());
+  const [selectedYear, setSelectedYear] = useState<number>(currentDate.year());
+
+  // Generate month options
+  const monthOptions: CustomOptionProps[] = Array.from({ length: 12 }, (_, i) => ({
+    id: i.toString(),
+    value: i.toString(),
+    description: dayjs().month(i).format('MMMM'),
+  }));
+
+  // Generate year options (current year and previous 2 years)
+  const yearOptions: CustomOptionProps[] = Array.from({ length: 3 }, (_, i) => ({
+    id: (currentDate.year() - i).toString(),
+    value: (currentDate.year() - i).toString(),
+    description: (currentDate.year() - i).toString(),
+  }));
+
   const { data: productCategoryData, isSuccess: isProductCategoryQuerySuccess } =
     useGetProductCategoriesQuery();
-  const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
-    useGetRentalOrdersQuery();
+
+  // Build start/end ISO strings for the selected month to filter by `out_date`
+  const selectedStartDate = dayjs()
+    .year(selectedYear)
+    .month(selectedMonth)
+    .startOf('month')
+    .format('YYYY-MM-DDTHH:mm:ss');
+
+  const selectedEndDate = dayjs()
+    .year(selectedYear)
+    .month(selectedMonth)
+    .endOf('month')
+    .format('YYYY-MM-DDTHH:mm:ss');
+
+  // Build conditional filter based on view mode
+  const filterArray: string[] = [];
+
+  // If showing only unpaid orders, add status filter to exclude paid orders
+  if (showOnlyUnpaidOrders) {
+    filterArray.push('status:pending');
+  }
+
+  // If filtering by date range, add date filters
+  if (viewSelectiveOrders) {
+    filterArray.push(`out_date:gte:${selectedStartDate}`);
+    filterArray.push(`out_date:lte:${selectedEndDate}`);
+  }
+
+  const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery({
+    filter: filterArray,
+  });
 
   const { data: unitData, isSuccess: isUnitQuerySuccess } = useGetUnitsQuery();
   const [productCategories, setProductCategories] = useState<CustomOptionProps[]>([]);
@@ -174,25 +244,22 @@ const Orders = () => {
               }
             }}
           />
+          <CustomButton
+            onClick={() => {
+              setPendingViewChallans(viewChallans);
+              setPendingShowOnlyUnpaidOrders(showOnlyUnpaidOrders);
+              setPendingViewSelectiveOrders(viewSelectiveOrders);
+              setPendingSelectedMonth(selectedMonth);
+              setPendingSelectedYear(selectedYear);
+              setDisplaySettingsOpen(true);
+            }}
+            label="Display Settings"
+            icon={<LuPlus color="white" />}
+          />
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <div className="flex items-center gap-2 py-4 min-[1169px]:py-0">
-          <p>View Orders</p>
-          <AntSwitch
-            checked={viewChallans}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setViewChallans(true);
-              } else {
-                setViewChallans(false);
-              }
-            }}
-          />
-          <p>Whatsapp Notifications</p>
-        </div>
-      </div>
+      <div className="flex justify-end"></div>
 
       {/* Tabs */}
       <Box
@@ -224,6 +291,7 @@ const Orders = () => {
         <RentalOrderTable
           rentalOrders={rentalOrders}
           viewChallans={viewChallans}
+          showOnlyUnpaidOrders={showOnlyUnpaidOrders}
           onGridReady={(api) => setGridApi(api)}
           // setSelectedCustomerId={(selectedId) => {
           //   setCustomerId(selectedId);
@@ -248,6 +316,131 @@ const Orders = () => {
         key="New Product"
         setAddProductOpen={setAddProductOpen}
       />
+
+      <Dialog
+        open={displaySettingsOpen}
+        onClose={() => setDisplaySettingsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Display Settings</DialogTitle>
+        <DialogContent className="space-y-6">
+          {/* Whatsapp Notifications Checkbox */}
+          <div className="flex items-center gap-2 pt-4">
+            <input
+              type="checkbox"
+              id="viewWhatsappNotifications"
+              checked={pendingViewChallans}
+              onChange={(e) => setPendingViewChallans(e.target.checked)}
+              className="w-4 h-4 cursor-pointer"
+            />
+            <label htmlFor="viewWhatsappNotifications" className="cursor-pointer">
+              View Whatsapp Notifications
+            </label>
+          </div>
+
+          {/* Show Only Unpaid Orders Checkbox */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="showOnlyUnpaidOrders"
+              checked={pendingShowOnlyUnpaidOrders}
+              onChange={(e) => setPendingShowOnlyUnpaidOrders(e.target.checked)}
+              className="w-4 h-4 cursor-pointer"
+            />
+            <label htmlFor="showOnlyUnpaidOrders" className="cursor-pointer">
+              Show Only Unpaid Orders
+            </label>
+          </div>
+
+          {/* Filter by Date Range Checkbox */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="filterByDateRange"
+              checked={pendingViewSelectiveOrders}
+              onChange={(e) => {
+                setPendingViewSelectiveOrders(e.target.checked);
+                // If unchecking and "Show Only Unpaid Orders" is also unchecked, force it to be checked
+                if (!e.target.checked && !pendingShowOnlyUnpaidOrders) {
+                  setPendingViewSelectiveOrders(true);
+                }
+              }}
+              disabled={!pendingShowOnlyUnpaidOrders}
+              className="w-4 h-4 cursor-pointer"
+            />
+            <label
+              htmlFor="filterByDateRange"
+              className={`cursor-pointer ${!pendingShowOnlyUnpaidOrders ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Filter by Date Range
+            </label>
+          </div>
+
+          {/* Month/Year Filter Controls */}
+          <div
+            className={`flex items-center gap-2 ${pendingViewSelectiveOrders ? '' : 'opacity-50 cursor-not-allowed'}`}
+          >
+            <label className="whitespace-nowrap">Month & Year:</label>
+            <select
+              value={pendingSelectedMonth.toString()}
+              onChange={(e) => setPendingSelectedMonth(parseInt(e.target.value))}
+              disabled={!pendingViewSelectiveOrders}
+              className={`px-3 py-2 border rounded bg-white cursor-pointer ${
+                !pendingViewSelectiveOrders ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {monthOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.description}
+                </option>
+              ))}
+            </select>
+            <select
+              value={pendingSelectedYear.toString()}
+              onChange={(e) => setPendingSelectedYear(parseInt(e.target.value))}
+              disabled={!pendingViewSelectiveOrders}
+              className={`px-3 py-2 border rounded bg-white cursor-pointer ${
+                !pendingViewSelectiveOrders ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {yearOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.description}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Info Alert */}
+          <Alert severity="info" className="mt-4">
+            Filter by Date Range is mandatory when "Show Only Unpaid Orders" is unchecked. You can
+            only disable the date range filter when viewing unpaid orders.
+          </Alert>
+        </DialogContent>
+        <DialogActions className="gap-2 p-4">
+          <button
+            onClick={() => setDisplaySettingsOpen(false)}
+            className="px-4 py-2 border rounded bg-white cursor-pointer hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              // Apply all pending settings
+              setViewChallans(pendingViewChallans);
+              setShowOnlyUnpaidOrders(pendingShowOnlyUnpaidOrders);
+              setViewSelectiveOrders(pendingViewSelectiveOrders);
+              setSelectedMonth(pendingSelectedMonth);
+              setSelectedYear(pendingSelectedYear);
+              setDisplaySettingsOpen(false);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700"
+          >
+            Save
+          </button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

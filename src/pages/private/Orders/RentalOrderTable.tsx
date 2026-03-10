@@ -54,12 +54,14 @@ import {
 type RentalOrderTableProps = {
   rentalOrders: RentalOrderType[];
   viewChallans: boolean;
+  showOnlyUnpaidOrders?: boolean;
   onGridReady?: (api: GridApi) => void;
 };
 
 const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   rentalOrders,
   viewChallans = false,
+  showOnlyUnpaidOrders = false,
   onGridReady,
 }) => {
   const navigate = useNavigate();
@@ -120,19 +122,30 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
     if (!gridApiRef.current) return;
     const api = gridApiRef.current;
 
+    const filterModel: any = {};
+
+    // Apply "sent" filter for viewChallans
     if (viewChallans) {
-      api.setFilterModel({
-        sent: {
-          filterType: 'text',
-          type: 'equals',
-          filter: 'Yes',
-        },
-      });
-    } else {
-      api.setFilterModel(null);
+      filterModel.sent = {
+        filterType: 'text',
+        type: 'equals',
+        filter: 'Yes',
+      };
     }
+
+    // Apply status filter to exclude paid orders when showOnlyUnpaidOrders is true
+    if (showOnlyUnpaidOrders) {
+      filterModel.status = {
+        filterType: 'text',
+        type: 'notEqual',
+        filter: 'paid',
+      };
+    }
+
+    // Set the combined filter model
+    api.setFilterModel(Object.keys(filterModel).length > 0 ? filterModel : null);
     api.onFilterChanged();
-  }, [viewChallans]);
+  }, [viewChallans, showOnlyUnpaidOrders]);
 
   const eventOptions: IdNamePair[] = Object.values(EventNameType).map((val, index) => ({
     id: `event-${index}`,

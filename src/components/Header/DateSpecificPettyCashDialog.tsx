@@ -46,7 +46,21 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
   onClose,
   date,
 }) => {
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
+  // Compute ISO start/end datetimes for the specific date
+  const specificStartISO = dayjs(date).startOf('day').format('YYYY-MM-DDTHH:mm:ss');
+  const specificEndISO = dayjs(date).endOf('day').format('YYYY-MM-DDTHH:mm:ss');
+
+  // Filter orders by transaction dates on the specific date using OR logic
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery(
+    {
+      filter: [
+        `or:balance_paid_date:gte:${specificStartISO},or:balance_paid_date:lte:${specificEndISO}`,
+        `or:repay_date:gte:${specificStartISO},or:repay_date:lte:${specificEndISO}`,
+        `or:deposits.date:gte:${specificStartISO},or:deposits.date:lte:${specificEndISO}`,
+      ],
+    },
+    { skip: !(dayjs(specificStartISO).isValid() && dayjs(specificEndISO).isValid()) }
+  );
   const { data: contacts, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
   const { data: pettyCashes, isSuccess: isPettyCashesQuerySuccess } = useGetPettyCashesQuery();
   const [createPettyCash] = useCreatePettyCashMutation();

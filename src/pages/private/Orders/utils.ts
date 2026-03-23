@@ -122,18 +122,25 @@ export const isValidOrder = (order: RentalOrderInfo): boolean => {
   return true;
 };
 
-export const getLatestInvoiceId = (orders: OrderInfo[]): string => {
-  const invoiceIds = orders
+export const getLatestInvoiceId = (orders: OrderInfo[] | undefined): string => {
+  // Handle undefined/null input gracefully
+  const validOrders = orders || [];
+  const invoiceIds = validOrders
     .map((order) => order.invoice_id)
     .filter((id): id is string => Boolean(id) && id.startsWith('INV/'));
 
   if (invoiceIds.length === 0) {
-    const fy = new Date().getFullYear();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const startYear = month < 4 ? year - 1 : year;
+    const endYear = startYear + 1;
+    const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
     return `INV/${fy}/0001`;
   }
 
   let latestNum = 0;
-  let latestFy = new Date().getFullYear();
+  let latestFy = '';
 
   invoiceIds.forEach((id) => {
     const parts = id.split('/');
@@ -142,13 +149,20 @@ export const getLatestInvoiceId = (orders: OrderInfo[]): string => {
 
     if (!isNaN(num) && num > latestNum) {
       latestNum = num;
-      latestFy = parseInt(fy, 10);
+      latestFy = fy;
     }
   });
 
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const startYear = month < 4 ? year - 1 : year;
+  const endYear = startYear + 1;
+  const currentFy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
+
   const nextNum = (latestNum + 1).toString().padStart(4, '0');
 
-  return `INV/${latestFy}/${nextNum}`;
+  return `INV/${latestFy || currentFy}/${nextNum}`;
 };
 
 export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {

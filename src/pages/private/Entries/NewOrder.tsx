@@ -395,10 +395,16 @@ const NewOrder = () => {
       return;
     }
 
+    // Ensure rental orders are loaded before generating invoice ID
+    if (!isRentalOrdersQuerySuccess || !rentalOrders) {
+      toast.error('Please wait while orders are loading...');
+      return;
+    }
+
     if (newOrderInfo.status === PaymentStatus.PAID) {
       const newInvoiceId = newOrderInfo.invoice_id
         ? newOrderInfo.invoice_id
-        : getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
+        : getLatestInvoiceId(rentalOrders as OrderInfo[]);
       newOrderInfo.invoice_id = newInvoiceId;
       newOrderInfo.invoice_date = newOrderInfo.invoice_date
         ? newOrderInfo.invoice_date

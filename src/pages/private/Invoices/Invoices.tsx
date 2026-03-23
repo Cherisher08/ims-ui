@@ -58,8 +58,8 @@ const Invoices: FC = () => {
     : [];
 
   const filterOptions = [
-    { id: '1', value: 'All Invoices' },
-    { id: '2', value: 'Current Month' },
+    { id: '1', value: 'Current Month' },
+    { id: '2', value: 'All Invoices' },
     { id: '3', value: 'Custom' },
   ];
 

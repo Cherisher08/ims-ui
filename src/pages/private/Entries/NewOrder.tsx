@@ -21,6 +21,7 @@ import {
   useCreateRentalOrderMutation,
   useGetRentalOrderByIdQuery,
   useGetRentalOrdersQuery,
+  useLazyGetLatestInvoiceIdQuery,
   useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
 } from '../../../services/OrderService';
@@ -45,7 +46,6 @@ import {
   BillingMode,
   BillingUnit,
   DepositType,
-  OrderInfo,
   PaymentMode,
   PaymentStatus,
   ProductDetails,
@@ -62,7 +62,6 @@ import {
   getDefaultDeposit,
   getDefaultProduct,
   getDuration,
-  getLatestInvoiceId,
   getNewOrderId,
   getOrderStatus,
   getOrderStatusColors,
@@ -165,6 +164,7 @@ const NewOrder = () => {
     updateRentalOrder,
     { isSuccess: isRentalOrderUpdateSuccess, isError: isRentalOrderUpdateError },
   ] = useUpdateRentalOrderMutation();
+  const [triggerGetLatestInvoiceId] = useLazyGetLatestInvoiceIdQuery();
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalOrder);
@@ -395,27 +395,21 @@ const NewOrder = () => {
       return;
     }
 
-    // Ensure rental orders are loaded before generating invoice ID
-    if (!isRentalOrdersQuerySuccess || !rentalOrders) {
-      toast.error('Please wait while orders are loading...');
-      return;
+    // Backend will auto-generate invoice_id and invoice_date for PAID status
+    if (
+      newOrderInfo.status === PaymentStatus.PAID &&
+      !newOrderInfo.invoice_id &&
+      !newOrderInfo.invoice_date
+    ) {
+      newOrderInfo.invoice_date = new Date().toISOString();
     }
 
-    if (newOrderInfo.status === PaymentStatus.PAID) {
-      const newInvoiceId = newOrderInfo.invoice_id
-        ? newOrderInfo.invoice_id
-        : getLatestInvoiceId(rentalOrders as OrderInfo[]);
-      newOrderInfo.invoice_id = newInvoiceId;
-      newOrderInfo.invoice_date = newOrderInfo.invoice_date
-        ? newOrderInfo.invoice_date
-        : new Date().toISOString();
-      if (/\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
-        const orderId = getSplitOrderId(
-          newOrderInfo.order_id,
-          (rentalOrders as RentalOrderInfo[]) || []
-        );
-        newOrderInfo.order_id = orderId;
-      }
+    if (newOrderInfo.status === PaymentStatus.PAID && /\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
+      const orderId = getSplitOrderId(
+        newOrderInfo.order_id,
+        (rentalOrders as RentalOrderInfo[]) || []
+      );
+      newOrderInfo.order_id = orderId;
     }
 
     // if (newOrderInfo.status === PaymentStatus.CANCELLED) {
@@ -1957,12 +1951,17 @@ const NewOrder = () => {
                 label="Invoice Date"
                 value={dayjs(orderInfo.invoice_date).format('DD-MMM-YYYY') || ''}
                 // className="w-[11rem]"
-                onChange={(val) => {
-                  const newInvoiceId = orderInfo.invoice_id
-                    ? orderInfo.invoice_id
-                    : getLatestInvoiceId((rentalOrders as OrderInfo[]) || []);
-                  handleValueChange('invoice_id', newInvoiceId);
-                  handleValueChange('invoice_date', val);
+                onChange={async (val) => {
+                  try {
+                    const newInvoiceId = orderInfo.invoice_id
+                      ? orderInfo.invoice_id
+                      : await triggerGetLatestInvoiceId().unwrap().then((response) => response.invoice_id);
+                    handleValueChange('invoice_id', newInvoiceId);
+                    handleValueChange('invoice_date', val);
+                  } catch {
+                    toast.error('Failed to generate invoice ID');
+                    handleValueChange('invoice_date', val);
+                  }
                 }}
                 format="DD/MM/YYYY"
                 disabled={orderInfo.billing_mode === BillingMode.B2C}

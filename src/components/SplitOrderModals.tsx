@@ -10,7 +10,6 @@ import {
   extractOrder,
   formatProducts,
   getDuration,
-  getLatestInvoiceId,
   getOrderStatus,
   getSplitOrderId,
   isValidOrder,
@@ -22,6 +21,7 @@ import { useLazyGetProductByIdQuery, useUpdateProductMutation } from '../service
 import {
   useCreateRentalOrderMutation,
   useGetRentalOrdersQuery,
+  useLazyGetLatestInvoiceIdQuery,
   useUpdateRentalOrderMutation,
 } from '../services/OrderService';
 import CustomButton from '../styled/CustomButton';
@@ -99,6 +99,7 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
   const navigate = useNavigate();
   const [triggerGetProduct] = useLazyGetProductByIdQuery();
   const [updateProductData] = useUpdateProductMutation();
+  const [triggerGetLatestInvoiceId] = useLazyGetLatestInvoiceIdQuery();
   const [newOrder, setNewOrder] = useState(initialRentalOrder);
   const { data: orders } = useGetRentalOrdersQuery();
   const [
@@ -154,13 +155,11 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
   const handleCreate = async () => {
     const oldOrder = extractOrder(orderInfo, newOrder);
     const validOldOrder = isValidOrder(oldOrder);
-    const newInvoiceId = getLatestInvoiceId(orders as OrderInfo[]);
     const newOrderId = getSplitOrderId(orderInfo.order_id, orders as OrderInfo[]);
     const newOrderStatus = getOrderStatus(newOrder);
 
     if (newOrderStatus === OrderStatusType.PAID) {
       newOrder.status = PaymentStatus.PAID;
-      newOrder.invoice_id = newInvoiceId;
       newOrder.invoice_date = new Date().toISOString();
       for (const product of newOrder.product_details) {
         const currentProductDetail = await triggerGetProduct(product._id).unwrap();

@@ -121,6 +121,13 @@ export const contactApi = rootApi.injectEndpoints({
         };
       },
     }),
+
+    getLatestInvoiceId: build.query<{ invoice_id: string }, void>({
+      query: () => ({
+        url: 'orders/invoice/latest-id',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -131,6 +138,8 @@ export const {
   useUpdateRentalOrderMutation,
   useDeleteRentalOrderMutation,
   useLazyGetExpiredRentalOrdersQuery,
+  useGetLatestInvoiceIdQuery,
+  useLazyGetLatestInvoiceIdQuery,
   usePatchRentalOrderMutation,
   usePostOrderDcAsWhatsappMessageMutation,
 } = contactApi;

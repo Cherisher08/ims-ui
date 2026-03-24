@@ -43,19 +43,11 @@ const Invoices: FC = () => {
   ).toString();
 
   const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
-  const [filter, setFilter] = useState<string>('1');
+  const [filter, setFilter] = useState<string>('2');
   const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
 
   const [sendDcWhatsapp] = usePostOrderDcAsWhatsappMessageMutation();
   const [updateRentalOrder] = useUpdateRentalOrderMutation();
-
-  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
-
-  const orderData = isRentalOrdersQuerySuccess
-    ? rentalOrders
-        .filter((order) => order.invoice_id)
-        .sort((a, b) => (a.invoice_id < b.invoice_id ? 1 : -1))
-    : [];
 
   const filterOptions = [
     { id: '1', value: 'Current Month' },
@@ -63,48 +55,39 @@ const Invoices: FC = () => {
     { id: '3', value: 'Custom' },
   ];
 
-  const getValidInvoiceDates = (
-    filter: string,
-    filterDates: { start: string; end: string } | null
-  ): string[] => {
-    const today = dayjs();
-    const dates: string[] = [];
+  // Build filter array based on current selected filter option
+  const filterArray: string[] = [];
+  const today = dayjs();
 
-    if (filter === '2') {
-      // Current month: from 1st to today
-      const start = today.startOf('month');
-      const end = today;
-      let cursor = start.clone();
-      while (cursor.isSameOrBefore(end)) {
-        dates.push(cursor.format('YYYY-MM-DD'));
-        cursor = cursor.add(1, 'day');
-      }
-    } else if (filter === '3') {
-      // Custom: from start to end
-      if (filterDates) {
-        const start = dayjs(filterDates.start);
-        const end = dayjs(filterDates.end);
-        let cursor = start.clone();
-        while (cursor.isSameOrBefore(end)) {
-          dates.push(cursor.format('YYYY-MM-DD'));
-          cursor = cursor.add(1, 'day');
-        }
-      }
+  if (filter === '2') {
+    // Current Month - filter by invoice_date from start of month to today
+    const startOfMonth = today.startOf('month').format('YYYY-MM-DDT00:00:00');
+    const endOfMonth = today.format('YYYY-MM-DDT23:59:59');
+    filterArray.push(`invoice_date:gte:${startOfMonth}`);
+    filterArray.push(`invoice_date:lte:${endOfMonth}`);
+    filterArray.push('invoice_id:exists:true');
+  } else if (filter === '3') {
+    // Custom - use provided date range
+    if (filterDates) {
+      const startDate = dayjs(filterDates.start).format('YYYY-MM-DDT00:00:00');
+      const endDate = dayjs(filterDates.end).format('YYYY-MM-DDT23:59:59');
+      filterArray.push(`invoice_date:gte:${startDate}`);
+      filterArray.push(`invoice_date:lte:${endDate}`);
+      filterArray.push('invoice_id:exists:true');
     }
+  } else if (filter === '1') {
+    // All Invoices - just filter by invoice_id existence
+    filterArray.push('invoice_id:exists:true');
+  }
 
-    return dates;
-  };
-
-  const filteredOrderData = orderData.filter((order) => {
-    if (filter === '1') {
-      // All Invoices - no filtering
-      return true;
-    }
-    if (!order.invoice_date) return false;
-    const invoiceDate = dayjs(order.invoice_date).format('YYYY-MM-DD');
-    const validDates = getValidInvoiceDates(filter, filterDates);
-    return validDates.includes(invoiceDate);
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery({
+    filter: filterArray.length > 0 ? filterArray : ['invoice_id:exists:true'],
   });
+
+  const orderData =
+    isRentalOrdersQuerySuccess && rentalOrders.length > 0
+      ? [...rentalOrders].sort((a, b) => (a.invoice_id < b.invoice_id ? 1 : -1))
+      : [];
 
   const renderIcon = (params: { data: RentalOrderInfo; type: 'delivery_challan' | 'invoice' }) => {
     const bill =
@@ -376,18 +359,13 @@ const Invoices: FC = () => {
             }}
             label="Export Invoices"
             icon={<RiFileExcel2Line color="white" />}
-            options={['All Invoices', 'Filtered Invoices']}
+            options={['All Invoices']}
             onMenuItemClick={(index) => {
               try {
                 if (index === 0) {
                   // All invoices
                   if (orderData && orderData.length > 0) {
                     exportInvoiceToExcel(orderData as RentalOrderInfo[]);
-                  }
-                } else if (index === 1) {
-                  // Filtered invoices - use filteredOrderData
-                  if (filteredOrderData && filteredOrderData.length > 0) {
-                    exportInvoiceToExcel(filteredOrderData as RentalOrderInfo[]);
                   }
                 }
               } catch (err) {
@@ -400,7 +378,7 @@ const Invoices: FC = () => {
       <CustomTable
         isLoading={false}
         colDefs={rentalOrderColDef}
-        rowData={filteredOrderData}
+        rowData={orderData}
         getRowStyle={() => {
           return {
             backgroundColor: 'white',

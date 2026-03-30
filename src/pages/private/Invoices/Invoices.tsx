@@ -2,21 +2,27 @@ import { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-communit
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { FC, useState } from 'react';
+import { useSelector } from 'react-redux';
 import * as pdfjsLib from 'pdfjs-dist';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import Invoice from '../../../components/Invoice';
 import { pdfElementToPngFile, sendImageViaWhatsapp } from '../Entries/pdfWhatsappUtils';
 import { toast } from 'react-toastify';
 import { TOAST_IDS } from '../../../constants/constants';
 import { IoLogoWhatsapp } from 'react-icons/io5';
+import { LuPlus } from 'react-icons/lu';
 import {
   usePostOrderDcAsWhatsappMessageMutation,
   useUpdateRentalOrderMutation,
 } from '../../../services/OrderService';
 import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import CustomTable from '../../../styled/CustomTable';
+import CustomButton from '../../../styled/CustomButton';
 
 import { IoPrintOutline } from 'react-icons/io5';
 import { RentalOrderInfo, RentalOrderType } from '../../../types/order';
+import { Branch, UserRole } from '../../../types/user';
+import { RootState } from '../../../store/store';
 
 import {
   calculateFinalAmount,
@@ -32,6 +38,7 @@ import { RiFileExcel2Line } from 'react-icons/ri';
 import CustomSplitButton from '../../../styled/CustomSplitButton';
 import CustomDatePicker from '../../../styled/CustomDatePicker';
 import CustomSelect from '../../../styled/CustomSelect';
+import { addBranchFilterToArray } from '../../../utils/branchFilterUtils';
 
 dayjs.extend(isSameOrBefore);
 
@@ -42,9 +49,15 @@ const Invoices: FC = () => {
     import.meta.url
   ).toString();
 
+  const userData = useSelector((state: RootState) => state.user);
+  const isAdmin = userData.role === UserRole.Admin;
+
   const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
   const [filter, setFilter] = useState<string>('2');
   const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
+  const [showAllBranches, setShowAllBranches] = useState<boolean>(false);
+  const [displaySettingsOpen, setDisplaySettingsOpen] = useState<boolean>(false);
+  const [pendingShowAllBranches, setPendingShowAllBranches] = useState<boolean>(showAllBranches);
 
   const [sendDcWhatsapp] = usePostOrderDcAsWhatsappMessageMutation();
   const [updateRentalOrder] = useUpdateRentalOrderMutation();
@@ -56,7 +69,7 @@ const Invoices: FC = () => {
   ];
 
   // Build filter array based on current selected filter option
-  const filterArray: string[] = [];
+  let filterArray: string[] = [];
   const today = dayjs();
 
   if (filter === '2') {
@@ -79,6 +92,9 @@ const Invoices: FC = () => {
     // All Invoices - just filter by invoice_id existence
     filterArray.push('invoice_id:exists:true');
   }
+
+  // Add branch filter (only applies if user is not admin or admin chooses to filter by branch)
+  filterArray = addBranchFilterToArray(filterArray, userData.branch as Branch, showAllBranches);
 
   const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery({
     filter: filterArray.length > 0 ? filterArray : ['invoice_id:exists:true'],
@@ -353,6 +369,14 @@ const Invoices: FC = () => {
             options={filterOptions}
             value={filter}
           />
+          <CustomButton
+            onClick={() => {
+              setPendingShowAllBranches(showAllBranches);
+              setDisplaySettingsOpen(true);
+            }}
+            label="Display Settings"
+            icon={<LuPlus color="white" />}
+          />
           <CustomSplitButton
             onClick={() => {
               if (orderData) exportInvoiceToExcel(orderData as RentalOrderInfo[]);
@@ -385,6 +409,56 @@ const Invoices: FC = () => {
           };
         }}
       />
+
+      {/* Display Settings Modal */}
+      <Dialog
+        open={displaySettingsOpen}
+        onClose={() => setDisplaySettingsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Display Settings</DialogTitle>
+        <DialogContent className="space-y-6">
+          {/* View All Branches Checkbox (Admin Only) */}
+          {isAdmin && (
+            <div className="flex items-center gap-2 pt-4">
+              <input
+                type="checkbox"
+                id="viewAllBranchesInvoices"
+                checked={pendingShowAllBranches}
+                onChange={(e) => setPendingShowAllBranches(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="viewAllBranchesInvoices" className="cursor-pointer">
+                View All Branches
+              </label>
+            </div>
+          )}
+
+          {!isAdmin && (
+            <p className="text-gray-600 pt-4">
+              You are viewing invoices from your assigned branch only.
+            </p>
+          )}
+        </DialogContent>
+        <DialogActions className="gap-2 p-4">
+          <button
+            onClick={() => setDisplaySettingsOpen(false)}
+            className="px-4 py-2 border rounded bg-white cursor-pointer hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setShowAllBranches(pendingShowAllBranches);
+              setDisplaySettingsOpen(false);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700"
+          >
+            Save
+          </button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

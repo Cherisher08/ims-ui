@@ -1,32 +1,39 @@
-export enum UserRole{
-  Admin = "admin",
-  User = "user",
-  Guest = "guest",
+export enum UserRole {
+  Admin = 'admin',
+  User = 'user',
+  Guest = 'guest',
 }
 
-export interface User{
-    email: string
-    name: string
-    password: string
-    role: UserRole
-    _id?: string
+export enum Branch {
+  PADUR = 'PADUR-1',
+  KELAMBAKKAM = 'KLMBK-1',
+  PUDUPAKKAM = 'PUDPK-1',
 }
 
-export interface UserRequest{
-    email: string
-    password: string
+export interface User {
+  email: string;
+  name: string;
+  password: string;
+  role: UserRole;
+  branch: Branch;
+  _id?: string;
 }
 
-export interface AuthorizeUserResponse{
-    access_token: string
-    token_type: string
+export interface UserRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthorizeUserResponse {
+  access_token: string;
+  token_type: string;
 }
 
 export interface GeneralResponse {
-    detail: string
+  detail: string;
 }
 
 export interface UpdateUserPasswordRequest {
-    email: string
-    password: string
+  email: string;
+  password: string;
 }

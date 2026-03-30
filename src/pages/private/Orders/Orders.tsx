@@ -9,6 +9,7 @@ import {
   Alert,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { FaWhatsapp } from 'react-icons/fa';
 import { LuPlus } from 'react-icons/lu';
 import { MdOutlineMail } from 'react-icons/md';
@@ -21,15 +22,20 @@ import { useGetRentalOrdersQuery } from '../../../services/OrderService';
 import { CustomOptionProps } from '../../../styled/CustomAutoComplete';
 import CustomButton from '../../../styled/CustomButton';
 import { RentalOrderType } from '../../../types/order';
+import { Branch, UserRole } from '../../../types/user';
+import { RootState } from '../../../store/store';
 import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
 import RentalOrderTable from './RentalOrderTable';
 import { exportOrderToExcel, transformRentalOrderData } from './utils';
 import CustomSplitButton from '../../../styled/CustomSplitButton';
 import { GridApi } from 'ag-grid-community';
+import { addBranchFilterToArray } from '../../../utils/branchFilterUtils';
 
 const Orders = () => {
   const navigate = useNavigate();
+  const userData = useSelector((state: RootState) => state.user);
+  const isAdmin = userData.role === UserRole.Admin;
 
   // Month and Year Filter State - declare early so it can be used in useState defaults
   const currentDate = dayjs();
@@ -43,6 +49,7 @@ const Orders = () => {
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState<boolean>(false);
   const [showOnlyUnpaidOrders, setShowOnlyUnpaidOrders] = useState<boolean>(false);
   const [viewSelectiveOrders, setViewSelectiveOrders] = useState<boolean>(true);
+  const [showAllBranches, setShowAllBranches] = useState<boolean>(false);
 
   // Pending settings (before Save is clicked)
   const [pendingViewChallans, setPendingViewChallans] = useState<boolean>(viewChallans);
@@ -50,6 +57,7 @@ const Orders = () => {
     useState<boolean>(showOnlyUnpaidOrders);
   const [pendingViewSelectiveOrders, setPendingViewSelectiveOrders] =
     useState<boolean>(viewSelectiveOrders);
+  const [pendingShowAllBranches, setPendingShowAllBranches] = useState<boolean>(showAllBranches);
   const [pendingSelectedMonth, setPendingSelectedMonth] = useState<number>(currentDate.month());
   const [pendingSelectedYear, setPendingSelectedYear] = useState<number>(currentDate.year());
 
@@ -87,7 +95,7 @@ const Orders = () => {
     .format('YYYY-MM-DDTHH:mm:ss');
 
   // Build conditional filter based on view mode
-  const filterArray: string[] = [];
+  let filterArray: string[] = [];
 
   // If showing only unpaid orders, add status filter to exclude paid orders
   if (showOnlyUnpaidOrders) {
@@ -99,6 +107,9 @@ const Orders = () => {
     filterArray.push(`out_date:gte:${selectedStartDate}`);
     filterArray.push(`out_date:lte:${selectedEndDate}`);
   }
+
+  // Add branch filter (only applies if user is not admin or admin chooses to filter by branch)
+  filterArray = addBranchFilterToArray(filterArray, userData.branch as Branch, showAllBranches);
 
   const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery({
     filter: filterArray,
@@ -251,6 +262,7 @@ const Orders = () => {
               setPendingViewSelectiveOrders(viewSelectiveOrders);
               setPendingSelectedMonth(selectedMonth);
               setPendingSelectedYear(selectedYear);
+              setPendingShowAllBranches(showAllBranches);
               setDisplaySettingsOpen(true);
             }}
             label="Display Settings"
@@ -412,6 +424,22 @@ const Orders = () => {
             </select>
           </div>
 
+          {/* View All Branches Checkbox (Admin Only) */}
+          {isAdmin && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="viewAllBranches"
+                checked={pendingShowAllBranches}
+                onChange={(e) => setPendingShowAllBranches(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="viewAllBranches" className="cursor-pointer">
+                View All Branches
+              </label>
+            </div>
+          )}
+
           {/* Info Alert */}
           <Alert severity="info" className="mt-4">
             Filter by Date Range is mandatory when "Show Only Unpaid Orders" is unchecked. You can
@@ -433,6 +461,7 @@ const Orders = () => {
               setViewSelectiveOrders(pendingViewSelectiveOrders);
               setSelectedMonth(pendingSelectedMonth);
               setSelectedYear(pendingSelectedYear);
+              setShowAllBranches(pendingShowAllBranches);
               setDisplaySettingsOpen(false);
             }}
             className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700"

@@ -5,9 +5,10 @@ import dayjs from 'dayjs';
 import { useCallback, useEffect, useState } from 'react';
 import { LuPlus } from 'react-icons/lu';
 import { MdAssignmentAdd } from 'react-icons/md';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { RootState } from '../../../store/store';
 import Loader from '../../../components/Loader';
 import SplitOrdermodal from '../../../components/SplitOrderModals';
 import { TOAST_IDS } from '../../../constants/constants';
@@ -62,7 +63,6 @@ import {
   getDefaultDeposit,
   getDefaultProduct,
   getDuration,
-  getNewOrderId,
   getOrderStatus,
   getOrderStatusColors,
   getSplitOrderId,
@@ -74,6 +74,7 @@ import {
 import DeliveryChallanDialog from './DeliveryChallanDialog';
 import EntryMenu from './EntryMenu';
 import { Tooltip } from '@mui/material';
+import { Branch } from '../../../types/user';
 
 const formatContacts = (contacts: ContactInfoType[]): CustomSelectOptionProps[] =>
   contacts.map((contact) => ({
@@ -132,6 +133,7 @@ const initialRentalOrder: RentalOrderInfo = {
   representative_name: '',
   representative_number: '',
   invoice_id: '',
+  branch: Branch.PADUR,
   invoice_date: null,
 };
 
@@ -139,6 +141,8 @@ const NewOrder = () => {
   const navigate = useNavigate();
   const { rentalId } = useParams();
   const dispatch = useDispatch();
+  const userBranch = useSelector((state: RootState) => state.user.branch);
+  console.log('userBranch: ', userBranch);
 
   const [triggerGetRentalOrder] = useLazyGetExpiredRentalOrdersQuery();
   const [triggerGetProduct] = useLazyGetProductByIdQuery();
@@ -146,11 +150,7 @@ const NewOrder = () => {
   // const isAllOrdersAllowed: boolean = false;
   const { data: productsData, isSuccess: isProductsQuerySuccess } = useGetProductsQuery();
   const { data: contactsData, isSuccess: isContactsQuerySuccess } = useGetContactsQuery();
-  const {
-    data: rentalOrders,
-    isSuccess: isRentalOrdersQuerySuccess,
-    refetch: getRefetchRentalOrders,
-  } = useGetRentalOrdersQuery();
+  const { data: rentalOrders, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery();
   const { data: existingRentalOrder, isSuccess: isRentalOrderQueryByIdSuccess } =
     useGetRentalOrderByIdQuery(rentalId!, {
       skip: !rentalId,
@@ -404,7 +404,10 @@ const NewOrder = () => {
       newOrderInfo.invoice_date = new Date().toISOString();
     }
 
-    if (newOrderInfo.status === PaymentStatus.PAID && /\/[A-Z]$/.test(newOrderInfo.order_id) === false) {
+    if (
+      newOrderInfo.status === PaymentStatus.PAID &&
+      /\/[A-Z]$/.test(newOrderInfo.order_id) === false
+    ) {
       const orderId = getSplitOrderId(
         newOrderInfo.order_id,
         (rentalOrders as RentalOrderInfo[]) || []
@@ -464,16 +467,10 @@ const NewOrder = () => {
       }
     } else {
       try {
-        const latestOrders = await getRefetchRentalOrders();
-        const orderId = getNewOrderId(latestOrders.data || []);
-        const newOrderId =
-          newOrderInfo.status === PaymentStatus.PAID
-            ? getSplitOrderId(orderId, (rentalOrders as RentalOrderInfo[]) || [])
-            : orderId;
-
         const orderResponse = await createRentalOrder({
           ...newOrderInfo,
-          order_id: newOrderId,
+          order_id: '',
+          branch: userBranch,
         }).unwrap();
         console.log('Order created successfully', orderResponse);
 
@@ -613,13 +610,7 @@ const NewOrder = () => {
     } else {
       handleValueChange('order_id', `RO/${getCurrentFY()}/0001`);
     }
-  }, [
-    existingRentalOrder,
-    isRentalOrderQueryByIdSuccess,
-    isRentalOrdersQuerySuccess,
-    rentalId,
-    rentalOrders,
-  ]);
+  }, [existingRentalOrder, isRentalOrdersQuerySuccess, rentalId, rentalOrders]);
 
   useEffect(() => {
     const notReturnedProducts =
@@ -813,13 +804,6 @@ const NewOrder = () => {
       handleValueChange('status', PaymentStatus.PENDING);
     }
   };
-
-  // useEffect(() => {
-  //   if (orderInfo.product_details.length > 0) {
-  //     updateProductStock(orderInfo.status);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [orderInfo.status]);
 
   useEffect(() => {
     if (!orderInfo.product_details || orderInfo.product_details.length === 0) return;
@@ -1955,7 +1939,9 @@ const NewOrder = () => {
                   try {
                     const newInvoiceId = orderInfo.invoice_id
                       ? orderInfo.invoice_id
-                      : await triggerGetLatestInvoiceId().unwrap().then((response) => response.invoice_id);
+                      : await triggerGetLatestInvoiceId({ branch: userBranch })
+                          .unwrap()
+                          .then((response) => response.invoice_id);
                     handleValueChange('invoice_id', newInvoiceId);
                     handleValueChange('invoice_date', val);
                   } catch {

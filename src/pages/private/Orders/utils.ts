@@ -25,6 +25,7 @@ import { IdNamePair } from '../Stocks';
 import XLSX from 'xlsx-js-style';
 
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
+import { Branch } from '../../../types/user';
 
 dayjs.extend(utc);
 dayjs.extend(customParseFormat);
@@ -70,27 +71,6 @@ export const currencyFormatter = (params: ValueFormatterParams) => {
   return `₹${value.toFixed(2)}`;
 };
 
-export const getNewOrderId = (orders: OrderInfo[]) => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const startYear = month < 4 ? year - 1 : year;
-  const endYear = startYear + 1;
-  const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
-
-  const suffixes = orders
-    .map((order) => {
-      const match = order.order_id?.match(/RO\/\d{2}-\d{2}\/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    })
-    .filter((num) => num > 0);
-
-  const maxSuffix = suffixes.length > 0 ? Math.max(...suffixes) : 0;
-  const nextSuffix = (maxSuffix + 1).toString().padStart(4, '0');
-
-  return `RO/${fy}/${nextSuffix}`;
-};
-
 export const getSplitOrderId = (orderId: string, orders: OrderInfo[]): string => {
   const relatedOrders = orders.map((o) => o.order_id).filter((id) => id.startsWith(orderId));
 
@@ -120,49 +100,6 @@ export const isValidOrder = (order: RentalOrderInfo): boolean => {
     return false;
   }
   return true;
-};
-
-export const getLatestInvoiceId = (orders: OrderInfo[] | undefined): string => {
-  // Handle undefined/null input gracefully
-  const validOrders = orders || [];
-  const invoiceIds = validOrders
-    .map((order) => order.invoice_id)
-    .filter((id): id is string => Boolean(id) && id.startsWith('INV/'));
-
-  if (invoiceIds.length === 0) {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const startYear = month < 4 ? year - 1 : year;
-    const endYear = startYear + 1;
-    const fy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
-    return `INV/${fy}/0001`;
-  }
-
-  let latestNum = 0;
-  let latestFy = '';
-
-  invoiceIds.forEach((id) => {
-    const parts = id.split('/');
-    const fy = parts[1];
-    const num = parseInt(parts[2], 10);
-
-    if (!isNaN(num) && num > latestNum) {
-      latestNum = num;
-      latestFy = fy;
-    }
-  });
-
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-  const startYear = month < 4 ? year - 1 : year;
-  const endYear = startYear + 1;
-  const currentFy = `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
-
-  const nextNum = (latestNum + 1).toString().padStart(4, '0');
-
-  return `INV/${latestFy || currentFy}/${nextNum}`;
 };
 
 export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
@@ -197,6 +134,7 @@ export const getDefaultRentalOrder = (orderId: string): RentalOrderInfo => {
     invoice_id: '',
     invoice_date: null,
     representative_name: '',
+    branch: Branch.PADUR,
     representative_number: '',
   };
 };

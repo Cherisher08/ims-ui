@@ -27,6 +27,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
           id: user._id,
           role: user.role,
           name: user.name,
+          branch: user.branch,
         })
       );
     }

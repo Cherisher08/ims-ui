@@ -20,7 +20,7 @@ import CustomInput from '../../styled/CustomInput';
 import CustomButton from '../../styled/CustomButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { User, UserRole } from '../../types/user';
+import { User, UserRole, Branch } from '../../types/user';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   rootApi,
@@ -82,6 +82,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
     email: '',
     password: '',
     role: UserRole.User,
+    branch: Branch.PADUR,
   });
   const [errors] = useState<NewUserErrorType>({
     name: false,
@@ -163,9 +164,12 @@ const Header = ({ open, setOpen }: HeaderType) => {
     fetchExpiredOrders();
 
     // every 30 min
-    const interval = setInterval(() => {
-      fetchExpiredOrders();
-    }, 15 * 60 * 1000);
+    const interval = setInterval(
+      () => {
+        fetchExpiredOrders();
+      },
+      15 * 60 * 1000
+    );
 
     return () => clearInterval(interval);
   }, [triggerGetRentalOrder, dispatch]);
@@ -362,6 +366,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 onChange={(name) => setNewUserData((prev) => ({ ...prev, name: name }))}
                 className="w-60 rounded-lg"
                 helperText="Enter User Name"
+                wrapperClass="w-full"
               />
 
               <CustomInput
@@ -370,8 +375,9 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 placeholder="Enter Email"
                 value={newUserData.email}
                 onChange={(email) => setNewUserData((prev) => ({ ...prev, email: email }))}
-                className="w-60 rounded-lg"
+                className="w-full rounded-lg"
                 helperText="Enter Valid Email"
+                wrapperClass="w-full"
               />
               <CustomInput
                 label="Password"
@@ -379,11 +385,12 @@ const Header = ({ open, setOpen }: HeaderType) => {
                 placeholder="Enter Password"
                 value={newUserData.password}
                 onChange={(password) => setNewUserData((prev) => ({ ...prev, password: password }))}
-                className="w-60 rounded-lg"
+                className="w-full rounded-lg"
                 helperText="Enter password"
+                wrapperClass="w-full"
               />
               {userData.role === UserRole.Admin && (
-                <Box className="w-60 mt-2">
+                <Box className="w-full mt-2">
                   <Typography variant="body1" className="mb-1">
                     Select Role:
                   </Typography>
@@ -399,6 +406,27 @@ const Header = ({ open, setOpen }: HeaderType) => {
                   >
                     <option value={UserRole.User}>User</option>
                     <option value={UserRole.Admin}>Admin</option>
+                  </select>
+                </Box>
+              )}
+              {userData.role === UserRole.Admin && (
+                <Box className="w-full mt-2">
+                  <Typography variant="body1" className="mb-1">
+                    Select Branch:
+                  </Typography>
+                  <select
+                    value={newUserData.branch}
+                    onChange={(e) =>
+                      setNewUserData((prev) => ({
+                        ...prev,
+                        branch: e.target.value as Branch,
+                      }))
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value={Branch.PADUR}>PADUR-1 (PADUR Main shop)</option>
+                    <option value={Branch.KELAMBAKKAM}>KELAMBAKKAM-1 (KELAMBAKKAM Branch)</option>
+                    <option value={Branch.PUDUPAKKAM}>PUDUPAKKAM-1 (PUDUPAKKAM Branch)</option>
                   </select>
                 </Box>
               )}

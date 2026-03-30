@@ -12,6 +12,7 @@ import {
   RentalOrderInfo,
   RentalOrderType,
 } from '../../../types/order';
+import { Branch } from '../../../types/user';
 import { calculateFinalAmount, calculateTotalAmount } from '../Orders/utils';
 import CustomButton from '../../../styled/CustomButton';
 import { LuPlus } from 'react-icons/lu';
@@ -26,6 +27,19 @@ const CustomerBills = () => {
   const { data: customer } = useGetContactByIdQuery(id!, {
     skip: !id,
   });
+
+  // Branch mapping for display names
+  const branchMapping: Record<Branch, string> = {
+    [Branch.PADUR]: 'PADUR Main Shop',
+    [Branch.KELAMBAKKAM]: 'KELAMBAKKAM Branch',
+    [Branch.PUDUPAKKAM]: 'PUDUPAKKAM Branch',
+  };
+
+  const branches = [
+    { code: Branch.PADUR, name: branchMapping[Branch.PADUR] },
+    { code: Branch.KELAMBAKKAM, name: branchMapping[Branch.KELAMBAKKAM] },
+    { code: Branch.PUDUPAKKAM, name: branchMapping[Branch.PUDUPAKKAM] },
+  ];
 
   const [customerOrders, setCustomerOrders] = useState<RentalOrderInfo[]>([]);
   const [customerDetails, setCustomerDetails] = useState<ContactInfoType>();
@@ -304,6 +318,26 @@ const CustomerBills = () => {
     return totalDeposits + totalReceivedAmount - totalRepayment;
   };
 
+  const getBranchBillAmount = (branchCode: string): number => {
+    const total = customerOrders
+      .filter((order) => order.branch === branchCode)
+      .reduce((total, order) => total + calculateFinalAmount(order as RentalOrderType), 0);
+    return total;
+  };
+
+  const getBranchReceivedAmount = (branchCode: string): number => {
+    const branchOrders = customerOrders.filter((order) => order.branch === branchCode);
+    const totalDeposits = branchOrders.reduce(
+      (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
+      0
+    );
+    const totalBalancePaid =
+      branchOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
+    const totalRepayment =
+      branchOrders.reduce((total, order) => total + order.repay_amount, 0) || 0;
+    return totalDeposits + totalBalancePaid - totalRepayment;
+  };
+
   // const calculateTotalOutstandingAmount = () => {
   //   const total = transactionRows.reduce(
   //     (sum, row) =>
@@ -489,7 +523,7 @@ const CustomerBills = () => {
           <tbody>
             {customerOrders.length > 0 ? (
               customerOrders.map((order, index) => (
-                <tr key={index} className="border-b min-h-[2.5rem] border-gray-200">
+                <tr key={index} className="border-b min-h-10 border-gray-200">
                   <td className="px-1 py-1">{order.order_id}</td>
                   <td className="px-1 py-1">{dayjs(order.out_date).format('DD-MM-YYYY')}</td>
                   <td className="px-1 py-1">{findOrderType(order as RentalOrderType)}</td>
@@ -518,14 +552,14 @@ const CustomerBills = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={10} className="h-[5rem] text-center py-4">
+                <td colSpan={10} className="h-20 text-center py-4">
                   No Bills Available...
                 </td>
               </tr>
             )}
             {customerOrders.length > 0 && (
               <>
-                <tr className="border-b border-gray-200 h-[2.5rem] bg-gray-100">
+                <tr className="border-b border-gray-200 h-10 bg-gray-100">
                   <td></td>
                   <td></td>
                   <td></td>
@@ -535,7 +569,7 @@ const CustomerBills = () => {
                   <td className="px-1 py-1 font-semibold">{calculateTotalBillAmount()}</td>
                   <td className="px-1 py-1 font-semibold">{calculateTotalReceivedAmount()}</td>
                 </tr>
-                <tr className="border-b border-gray-200 h-[2.5rem] bg-gray-100">
+                <tr className="border-b border-gray-200 h-10 bg-gray-100">
                   <td></td>
                   <td></td>
                   <td></td>
@@ -559,6 +593,34 @@ const CustomerBills = () => {
                     )}
                   </td>
                 </tr>
+                {branches.map((branch) => {
+                  const totalBill = getBranchBillAmount(branch.code);
+                  const totalReceived = getBranchReceivedAmount(branch.code);
+                  const difference = totalBill - totalReceived;
+
+                  return (
+                    <tr key={branch.code} className="border-b border-gray-200 h-10 bg-gray-100">
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td className="font-medium">{branch.name}</td>
+
+                      <td className="font-semibold">
+                        {difference >= 0 ? 'Balance Amount' : 'Repay Amount'}
+                      </td>
+
+                      <td
+                        className={`${
+                          Number(difference) === 0 ? 'bg-green-400' : 'bg-red-400'
+                        } font-semibold px-1 py-1`}
+                      >
+                        {Math.abs(difference).toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </>
             )}
           </tbody>

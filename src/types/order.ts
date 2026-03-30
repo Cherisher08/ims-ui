@@ -1,6 +1,7 @@
 import { IdNamePair } from '../pages/private/Stocks';
 import { DiscountType, Product, ProductCategory, ProductType, Unit } from './common';
 import { ContactInfoType } from './contact';
+import { Branch } from './user';
 
 export enum BillingMode {
   B2B = 'B2B',
@@ -112,6 +113,7 @@ export type OrderInfo = {
   gst: number;
   invoice_id: string;
   invoice_date: string | null;
+  branch: Branch;
 };
 
 export type DocumentNotification = {

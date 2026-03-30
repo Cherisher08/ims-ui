@@ -2,6 +2,7 @@
 import { setExpiredRentalOrders } from '../store/OrdersSlice';
 import { PatchPayload } from '../types/common';
 import { DCWhatsappPayload, RentalOrderInfo } from '../types/order';
+import { Branch } from '../types/user';
 import { rootApi } from './ApiService';
 import {
   constructWhatsappFormData,
@@ -122,11 +123,31 @@ export const contactApi = rootApi.injectEndpoints({
       },
     }),
 
-    getLatestInvoiceId: build.query<{ invoice_id: string }, void>({
-      query: () => ({
-        url: 'orders/invoice/latest-id',
-        method: 'GET',
-      }),
+    getLatestInvoiceId: build.query<{ invoice_id: string }, { branch?: Branch }>({
+      query: ({ branch }) => {
+        const queryParams = new URLSearchParams();
+        if (branch) {
+          queryParams.append('branch', branch);
+        }
+        const queryString = queryParams.toString();
+        return {
+          url: `orders/invoice/latest-id${queryString ? '?' + queryString : ''}`,
+          method: 'GET',
+        };
+      },
+    }),
+    getLatestOrderId: build.query<{ order_id: string }, { branch?: Branch }>({
+      query: ({ branch }) => {
+        const queryParams = new URLSearchParams();
+        if (branch) {
+          queryParams.append('branch', branch);
+        }
+        const queryString = queryParams.toString();
+        return {
+          url: `orders/order/latest-id${queryString ? '?' + queryString : ''}`,
+          method: 'GET',
+        };
+      },
     }),
   }),
 });
@@ -140,6 +161,8 @@ export const {
   useLazyGetExpiredRentalOrdersQuery,
   useGetLatestInvoiceIdQuery,
   useLazyGetLatestInvoiceIdQuery,
+  useGetLatestOrderIdQuery,
+  useLazyGetLatestOrderIdQuery,
   usePatchRentalOrderMutation,
   usePostOrderDcAsWhatsappMessageMutation,
 } = contactApi;

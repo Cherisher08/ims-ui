@@ -13,7 +13,7 @@ import {
   RentalOrderType,
 } from '../../../types/order';
 import { Branch } from '../../../types/user';
-import { calculateFinalAmount, calculateTotalAmount } from '../Orders/utils';
+import { calculateFinalAmount } from '../Orders/utils';
 import CustomButton from '../../../styled/CustomButton';
 import { LuPlus } from 'react-icons/lu';
 import AddBalanceModal, { BalanceData } from '../Entries/AddBalanceModal';
@@ -299,7 +299,7 @@ const CustomerBills = () => {
 
   const calculateTotalBillAmount = () => {
     const total = customerOrders.reduce(
-      (total, order) => total + calculateTotalAmount(order as RentalOrderType),
+      (total, order) => total + calculateFinalAmount(order as RentalOrderType),
       0
     );
     return total;
@@ -321,7 +321,9 @@ const CustomerBills = () => {
   const getBranchBillAmount = (branchCode: string): number => {
     const total = customerOrders
       .filter((order) => order.branch === branchCode)
-      .reduce((total, order) => total + calculateFinalAmount(order as RentalOrderType), 0);
+      .reduce((total, order) => {
+        return total + calculateFinalAmount(order as RentalOrderType);
+      }, 0);
     return total;
   };
 

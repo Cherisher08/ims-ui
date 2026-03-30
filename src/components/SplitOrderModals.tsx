@@ -21,7 +21,6 @@ import { useLazyGetProductByIdQuery, useUpdateProductMutation } from '../service
 import {
   useCreateRentalOrderMutation,
   useGetRentalOrdersQuery,
-  useLazyGetLatestInvoiceIdQuery,
   useUpdateRentalOrderMutation,
 } from '../services/OrderService';
 import CustomButton from '../styled/CustomButton';
@@ -42,6 +41,7 @@ import {
   RepaymentMode,
   TransportType,
 } from '../types/order';
+import { Branch } from '../types/user';
 
 type Props = {
   open: boolean;
@@ -93,15 +93,18 @@ const initialRentalOrder: RentalOrderInfo = {
   invoice_date: null,
   representative_name: '',
   representative_number: '',
+  branch: Branch.PADUR,
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
   const navigate = useNavigate();
   const [triggerGetProduct] = useLazyGetProductByIdQuery();
   const [updateProductData] = useUpdateProductMutation();
-  const [triggerGetLatestInvoiceId] = useLazyGetLatestInvoiceIdQuery();
   const [newOrder, setNewOrder] = useState(initialRentalOrder);
-  const { data: orders } = useGetRentalOrdersQuery();
+  const { data: orders } = useGetRentalOrdersQuery({
+    filter: `order_id:regex:^${orderInfo.order_id}`,
+    limit: 1000,
+  });
   const [
     createRentalOrder,
     { isSuccess: isRentalOrderCreateSuccess, isError: isRentalOrderCreateError },

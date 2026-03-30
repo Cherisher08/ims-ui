@@ -101,10 +101,14 @@ const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {
   const [triggerGetProduct] = useLazyGetProductByIdQuery();
   const [updateProductData] = useUpdateProductMutation();
   const [newOrder, setNewOrder] = useState(initialRentalOrder);
-  const { data: orders } = useGetRentalOrdersQuery({
-    filter: `order_id:regex:^${orderInfo.order_id}`,
-    limit: 1000,
-  });
+  const { data: orders } = useGetRentalOrdersQuery(
+    {
+      filter: `order_id:regex:^${orderInfo.order_id}`,
+      limit: 1000,
+    },
+    { skip: !orderInfo.order_id || orderInfo.order_id === '-' }
+  );
+  console.log('orderInfo.order_id: ', orderInfo.order_id);
   const [
     createRentalOrder,
     { isSuccess: isRentalOrderCreateSuccess, isError: isRentalOrderCreateError },

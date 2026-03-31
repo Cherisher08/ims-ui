@@ -79,7 +79,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         </head>
         <body>
           <div class="header">
-            <h1>Mani Power Tools</h1>
+            <h1>Mani Construction Equipments</h1>
             <h2>Petty Cash Report</h2>
             <p>Period: ${fromDate.format('DD-MMM-YYYY')} to ${toDate.format('DD-MMM-YYYY')}</p>
           </div>
@@ -320,7 +320,7 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       >
         <div className="flex flex-col gap-4 justify-center items-center w-1/2 h-5/6 max-w-none max-h-none bg-white rounded-lg p-4">
           <div className="relative w-full flex justify-center items-center">
-            <p className="text-primary text-xl font-semibold">Mani Power Tools</p>
+            <p className="text-primary text-xl font-semibold">Mani Construction Equipments</p>
             <div className="absolute right-0 flex gap-3 items-center">
               <CustomButton onClick={handlePrint} label="Print" variant="outlined" />
               <MdClose size={25} className="cursor-pointer" onClick={onClose} />

@@ -2378,7 +2378,8 @@ const PrivacyPolicy = () => {
                                                                               }}
                                                                             >
                                                                               <span data-custom-class="body_text">
-                                                                                Mani Power Tools
+                                                                                Mani Construction
+                                                                                Equipments
                                                                               </span>
                                                                             </span>
                                                                           </span>

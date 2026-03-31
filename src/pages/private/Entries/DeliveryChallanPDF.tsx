@@ -91,7 +91,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             >
               <Text
                 style={{
-                  fontSize: 18,
+                  fontSize: 16,
                   color: '#C41E3A',
                   marginTop: 4,
                   textAlign: 'center',
@@ -100,7 +100,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   strokeWidth: 2,
                 }}
               >
-                MANI POWER TOOLS
+                MANI CONSTRUCTION EQUIPMENTS
               </Text>
               <Text
                 style={{

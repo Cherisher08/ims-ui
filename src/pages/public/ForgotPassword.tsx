@@ -39,13 +39,13 @@ const ForgotPassword = () => {
         <img src={NamedLogo} width={400} height={400} />
         <Typography
           className="mt-1 text-red-700 font-medium leading-none"
-          variant="h2"
+          variant="h3"
           sx={{
             fontFamily: '"Impact", "Arial Black", sans-serif',
             WebkitTextStroke: '0.5px rgba(0,0,0,0.5)',
           }}
         >
-          MANI POWER TOOLS
+          MANI CONSTRUCTION EQUIPMENTS
         </Typography>
       </div>
       <div className="flex flex-col gap-5 w-3/5">

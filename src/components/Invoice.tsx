@@ -1,6 +1,7 @@
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
 import { calculateDiscountAmount, calculateProductRent } from '../services/utility_functions';
+import { getAddressByBranch } from '../utils/branchAddressConfig';
 import { DiscountType, ProductType } from '../types/common';
 import {
   BillingMode,
@@ -9,6 +10,7 @@ import {
   ProductDetails,
   RentalOrderInfo,
 } from '../types/order';
+import { Branch } from '../types/user';
 import paidStamp from '/paid-icon.png';
 
 import Logo from '/nameless-logo.jpg';
@@ -214,7 +216,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
       flexDirection: 'column',
     },
     title: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: 'bold',
       marginBottom: 4,
     },
@@ -553,17 +555,18 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               <Image src={Logo} style={styles.image} />
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 12,
                   color: '#C41E3A',
                   marginTop: 4,
                   textAlign: 'center',
                   fontFamily: 'Helvetica-Bold',
-                  letterSpacing: 0.5,
+                  letterSpacing: 0.2,
                   lineHeight: 1.1,
                   fontWeight: 'bold',
+                  left: -25,
                 }}
               >
-                MANI POWER TOOLS
+                MANI CONSTRUCTION EQUIPMENTS
               </Text>
               <Text
                 style={{
@@ -595,9 +598,16 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
           <View style={[styles.detailContainer, { justifyContent: 'space-between' }]}>
             <View>
               <View style={styles.ownerDetails}>
-                <Text style={styles.title}>MANI POWER TOOLS</Text>
-                <Text style={styles.ownerAddress}>No. 1/290, Angalamman Koil Street, Padur,</Text>
-                <Text style={styles.ownerAddress}>Chengalpattu, Chennai - 603103, Tamil Nadu</Text>
+                <Text style={styles.title}>MANI CONSTRUCTION EQUIPMENTS</Text>
+                {(() => {
+                  const address = getAddressByBranch(data.branch as Branch);
+                  return (
+                    <>
+                      <Text style={styles.ownerAddress}>{address.line1}</Text>
+                      <Text style={styles.ownerAddress}>{address.line2}</Text>
+                    </>
+                  );
+                })()}
                 <Text style={[styles.ownerAddress, { color: '#DC2626', fontWeight: 900 }]}>
                   Mobile No - 8428429153 , 9042439153
                 </Text>

@@ -283,7 +283,7 @@ const Header = ({ open, setOpen }: HeaderType) => {
             color="white"
             onClick={() => setOpen(!open)}
           />
-          <span className="text-white text-2xl hidden md:block">Mani Power Tools</span>
+          <span className="text-white text-2xl hidden md:block">Mani Construction Equipments</span>
         </div>
         <ul className="px-2 gap-4 h-fit max-md:hidden flex">
           {MenuItems.map((item) => {

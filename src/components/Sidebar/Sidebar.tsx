@@ -55,14 +55,14 @@ const SideBar = ({ open, setOpen }: SideBar) => {
               <img src={Logo} className="w-12 h-12" />
             </div>
             <p
-              className={`text-2xl text-white text-center text-wrap absolute w-3/4 right-0 ease-in-out
+              className={`text-lg text-white text-center text-wrap absolute w-3/4 right-0 ease-in-out
     ${
       open
         ? 'opacity-100 visible transition-opacity duration-700'
         : 'opacity-0 invisible transition-none'
     }`}
             >
-              Mani Power Tools
+              Mani Construction Equipments
             </p>
           </div>
 

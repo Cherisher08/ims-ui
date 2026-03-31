@@ -53,7 +53,7 @@ const Invoices: FC = () => {
   const isAdmin = userData.role === UserRole.Admin;
 
   const [sendingMap, setSendingMap] = useState<Record<string, boolean>>({});
-  const [filter, setFilter] = useState<string>('2');
+  const [filter, setFilter] = useState<string>('1');
   const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
   const [showAllBranches, setShowAllBranches] = useState<boolean>(false);
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState<boolean>(false);
@@ -72,7 +72,7 @@ const Invoices: FC = () => {
   let filterArray: string[] = [];
   const today = dayjs();
 
-  if (filter === '2') {
+  if (filter === '1') {
     // Current Month - filter by invoice_date from start of month to today
     const startOfMonth = today.startOf('month').format('YYYY-MM-DDT00:00:00');
     const endOfMonth = today.format('YYYY-MM-DDT23:59:59');
@@ -88,7 +88,7 @@ const Invoices: FC = () => {
       filterArray.push(`invoice_date:lte:${endDate}`);
       filterArray.push('invoice_id:exists:true');
     }
-  } else if (filter === '1') {
+  } else if (filter === '2') {
     // All Invoices - just filter by invoice_id existence
     filterArray.push('invoice_id:exists:true');
   }

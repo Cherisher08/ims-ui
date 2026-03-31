@@ -80,7 +80,7 @@ export const rootApi = createApi({
     registerUser: build.mutation<User, User>({
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       query: ({ _id, ...user }) => ({
-        url: 'auth/users/',
+        url: 'auth/users',
         method: 'POST',
         body: user,
       }),

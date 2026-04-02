@@ -1,6 +1,7 @@
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
 import { RentalOrderInfo } from '../../../types/order';
+import { Branch } from '../../../types/user';
 import Logo from '/New_Logo.png';
 import { formatBillingUnit } from '../../../services/utility_functions';
 
@@ -20,6 +21,13 @@ Font.register({
   fontWeight: 'heavy',
 });
 Font.registerHyphenationCallback((word) => [word]);
+
+// Branch-specific phone numbers
+const BRANCH_PHONE_NUMBERS: Record<Branch, string> = {
+  [Branch.PADUR]: '9042439153, 8428429153',
+  [Branch.KELAMBAKKAM]: '9042439153, 8428429153',
+  [Branch.PUDUPAKKAM]: '9677309153, 7358739153',
+};
 
 const styles = StyleSheet.create({
   page: {
@@ -75,7 +83,6 @@ const styles = StyleSheet.create({
 
 const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
   if (!data) return null;
-
   return (
     <Document>
       <Page size={[297.64, Infinity]} style={styles.page}>
@@ -91,12 +98,13 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             >
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 12,
                   color: '#C41E3A',
                   marginTop: 4,
                   textAlign: 'center',
                   lineHeight: 1,
-                  fontWeight: 'heavy',
+                  letterSpacing: -0.4,
+                  fontWeight: 'bold',
                   strokeWidth: 2,
                 }}
               >
@@ -116,7 +124,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                 }}
               >
                 Power Tools, Garden Tools, Generator, Dewatering Pumps, Scaffolding and all
-                construction equipment for Rent
+                construction equipment for Rental
               </Text>
               <Text
                 style={{
@@ -127,7 +135,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   lineHeight: 1.4,
                 }}
               >
-                9042439153, 8428429153
+                {BRANCH_PHONE_NUMBERS[data.branch as Branch]}
               </Text>
             </View>
           </View>

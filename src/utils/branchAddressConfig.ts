@@ -20,8 +20,8 @@ const branchAddresses: Record<Branch, BranchAddress> = {
     line2: 'Chengalpattu, Chennai - 603103, Tamil Nadu',
   },
   [Branch.PUDUPAKKAM]: {
-    line1: 'M.R. Radha Street Echangadu,',
-    line2: 'Pudupakkam - 603 103',
+    line1: 'No. 1/290, Angalamman Koil Street, Padur,',
+    line2: 'Chengalpattu, Chennai - 603103, Tamil Nadu',
   },
 };
 

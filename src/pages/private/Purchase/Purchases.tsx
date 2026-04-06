@@ -768,8 +768,9 @@ const Purchases = () => {
                 <CustomInput
                   label="Price"
                   type="number"
+                  step="0.01"
                   value={newProductData.price || 0}
-                  onChange={(value) => handleProductChange('price', parseInt(value))}
+                  onChange={(value) => handleProductChange('price', parseFloat(value))}
                   placeholder="Enter Price"
                 />
                 <CustomInput
@@ -1138,8 +1139,9 @@ const Purchases = () => {
                 <CustomInput
                   label="Price"
                   type="number"
+                  step="0.01"
                   value={newProductData.price || 0}
-                  onChange={(value) => handleProductChange('price', parseInt(value))}
+                  onChange={(value) => handleProductChange('price', parseFloat(value))}
                   placeholder="Enter Price"
                 />
                 <CustomInput

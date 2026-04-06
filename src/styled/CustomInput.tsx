@@ -16,6 +16,7 @@ interface CustomInputProps {
   disabled?: boolean;
   wrapperClass?: string;
   labelClass?: string;
+  step?: string | number;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -34,6 +35,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   disabled = false,
   wrapperClass = '',
   labelClass = '',
+  step,
 }) => {
   return (
     <div className={`flex flex-col min-w-fit ${wrapperClass}`}>
@@ -59,6 +61,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
           },
           htmlInput: {
             min: type === 'number' ? 0 : undefined,
+            step: step,
             maxLength: maxLength,
             className: `${
               multiline ? 'h-fit p-0 box-border' : 'h-[2.5rem]'

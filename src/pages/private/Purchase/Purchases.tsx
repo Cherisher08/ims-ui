@@ -948,10 +948,11 @@ const Purchases = () => {
             <div className="w-full border-t pt-4">
               <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
               {newPurchaseData.products && newPurchaseData.products.length > 0 && (
-                <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2 font-semibold bg-gray-100">
+                <div className="grid grid-cols-[0.5fr_2fr_1fr_0.8fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2 font-semibold bg-gray-100">
                   <span>S. No</span>
                   <span>Product Name</span>
                   <span>HSN Code</span>
+                  <span>Unit</span>
                   <span>Rate (Incl. GST)</span>
                   <span>Price</span>
                   <span>Quantity</span>
@@ -966,11 +967,12 @@ const Purchases = () => {
                 return (
                   <div
                     key={index}
-                    className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                    className="grid grid-cols-[0.5fr_2fr_1fr_0.8fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
                   >
                     <span className="wrap-break-word">{index + 1}</span>
                     <span className="wrap-break-word">{p.name}</span>
                     <span className="wrap-break-word">{p.product_code || '-'}</span>
+                    <span className="wrap-break-word">{p.unit?.name || '-'}</span>
                     <span className="wrap-break-word">₹{priceWithGst.toFixed(2)}</span>
                     <span className="wrap-break-word">₹{Number(p.price || 0).toFixed(2)}</span>
                     <span className="wrap-break-word">{p.quantity}</span>
@@ -1319,10 +1321,11 @@ const Purchases = () => {
             <div className="w-full border-t pt-4">
               <h3 className="text-lg font-semibold mb-4">Products in Purchase</h3>
               {newPurchaseData.products && newPurchaseData.products.length > 0 && (
-                <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2 font-semibold bg-gray-100">
+                <div className="grid grid-cols-[0.5fr_2fr_1fr_0.8fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2 font-semibold bg-gray-100">
                   <span>S. No</span>
                   <span>Product Name</span>
                   <span>HSN Code</span>
+                  <span>Unit</span>
                   <span>Rate (Incl. GST)</span>
                   <span>Price</span>
                   <span>Quantity</span>
@@ -1337,11 +1340,12 @@ const Purchases = () => {
                 return (
                   <div
                     key={index}
-                    className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
+                    className="grid grid-cols-[0.5fr_2fr_1fr_0.8fr_1fr_1fr_1fr_1fr_auto] items-center p-2 border-b gap-2"
                   >
                     <span className="wrap-break-word">{index + 1}</span>
                     <span className="wrap-break-word">{p.name}</span>
                     <span className="wrap-break-word">{p.product_code || '-'}</span>
+                    <span className="wrap-break-word">{p.unit?.name || '-'}</span>
                     <span className="wrap-break-word">₹{priceWithGst.toFixed(2)}</span>
                     <span className="wrap-break-word">₹{Number(p.price || 0).toFixed(2)}</span>
                     <span className="wrap-break-word">{p.quantity}</span>

@@ -406,10 +406,60 @@ const Purchases = () => {
 
     const productToAdd = selectedProduct || (newProductData as Product);
 
+    // Validation: Check required fields
+    if (!productToAdd.name || productToAdd.name.trim() === '') {
+      toast.error('Please enter product name', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    if (!productToAdd.product_code || productToAdd.product_code.trim() === '') {
+      toast.error('Please enter product code', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    // Validation: Check category
+    if (!productToAdd.category?._id || String(productToAdd.category._id).trim() === '') {
+      toast.error('Please select a valid category', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    if (!productToAdd.category?.name || productToAdd.category.name.trim() === '') {
+      toast.error('Category must have a valid name', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    // Validation: Check unit
+    if (!productToAdd.unit?._id || String(productToAdd.unit._id).trim() === '') {
+      toast.error('Please select a valid unit', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    if (!productToAdd.unit?.name || productToAdd.unit.name.trim() === '') {
+      toast.error('Unit must have a valid name', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    // Validation: Check quantity
+    const quantity = Number(newProductData.quantity || 0);
+    if (quantity <= 0) {
+      toast.error('Quantity must be greater than 0', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    // Validation: Check price
+    const price = Number(newProductData.price || 0);
+    if (price < 0) {
+      toast.error('Price cannot be negative', { toastId: TOAST_IDS.ERROR_PURCHASE_CREATE });
+      return;
+    }
+
+    // Type conversion: Ensure _id fields are strings for proper serialization
+    const categoryId = String(productToAdd.category._id);
+    const unitId = String(productToAdd.unit._id);
+
     // Calculate rent_per_unit for sales type products
     let rentPerUnit = productToAdd.rent_per_unit;
     if (productToAdd.type === ProductType.SALES) {
-      const price = Number(newProductData.price || 0);
       const gstPerc = Number(newProductData.gst_percentage || 0);
       const profit = Number(newProductData.profit || 0);
       const profitType = newProductData.profit_type || DiscountType.PERCENT;
@@ -418,18 +468,25 @@ const Purchases = () => {
       rentPerUnit = +(actualPrice + profitAmt).toFixed(2);
     }
 
+    // Build purchase product with validated and converted types
     const purchaseProduct = {
-      _id: productToAdd._id,
+      _id: productToAdd._id || undefined,
       name: productToAdd.name,
       product_code: productToAdd.product_code,
-      category: productToAdd.category,
-      unit: productToAdd.unit,
+      category: {
+        _id: categoryId,
+        name: productToAdd.category.name,
+      },
+      unit: {
+        _id: unitId,
+        name: productToAdd.unit.name,
+      },
       type: productToAdd.type,
       rent_per_unit: rentPerUnit,
-      quantity: newProductData.quantity || 0,
-      price: newProductData.price || 0,
-      gst_percentage: newProductData.gst_percentage || 0,
-      profit: newProductData.profit || 0,
+      quantity: quantity,
+      price: price,
+      gst_percentage: Number(newProductData.gst_percentage || 0),
+      profit: Number(newProductData.profit || 0),
       profit_type: newProductData.profit_type || DiscountType.PERCENT,
     };
 
@@ -457,6 +514,8 @@ const Purchases = () => {
     });
     setSelectedProduct(null);
     setIsNewProduct(false);
+
+    toast.success('Product added to purchase', { toastId: TOAST_IDS.SUCCESS_PURCHASE_CREATE });
   };
 
   const removeProductFromPurchase = (index: number) => {

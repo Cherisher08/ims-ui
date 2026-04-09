@@ -1398,16 +1398,27 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               )}
               <View style={styles.signatureContainer}>
                 <View style={styles.signatureHeader}>
-                  <Text style={{ fontSize: 12 }}>For</Text>
-                  <Text
-                    style={{
-                      color: 'black',
-                      fontWeight: 'bold',
-                      fontSize: 12,
-                    }}
-                  >
-                    MANI POWER TOOLS
-                  </Text>
+                  <Text style={{ fontSize: 11 }}>For</Text>
+                  <View>
+                    <Text
+                      style={{
+                        color: 'black',
+                        fontWeight: 'bold',
+                        fontSize: 11,
+                      }}
+                    >
+                      MANI CONSTRUCTION
+                    </Text>
+                    <Text
+                      style={{
+                        color: 'black',
+                        fontWeight: 'bold',
+                        fontSize: 11,
+                      }}
+                    >
+                      EQUIPMENTS
+                    </Text>
+                  </View>
                 </View>
                 <View style={{ position: 'relative', width: 150, height: 30 }}>
                   <Image src="/sign.png" style={styles.signImage} />

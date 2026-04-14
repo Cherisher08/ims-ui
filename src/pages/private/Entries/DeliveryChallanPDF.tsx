@@ -2,6 +2,7 @@ import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/
 import dayjs from 'dayjs';
 import { RentalOrderInfo } from '../../../types/order';
 import { Branch } from '../../../types/user';
+import { ProductType } from '../../../types/common';
 import Logo from '/New_Logo.png';
 import { formatBillingUnit } from '../../../services/utility_functions';
 
@@ -227,7 +228,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               {/* Header Row */}
               <View style={{ ...styles.row, justifyContent: 'center', marginBottom: 4 }}>
                 <Text style={{ fontSize: 10, fontWeight: 'bold', textAlign: 'center' }}>
-                  Product Name - Quantity / Rent per Duration
+                  Product Name - Quantity @ Rent per Duration
                 </Text>
               </View>
               {/* Product Details */}
@@ -236,9 +237,9 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                   <Text style={styles.field}>{prod.name}</Text>
                   <Text style={styles.colon}>-</Text>
                   <Text style={styles.value}>
-                    {prod.order_quantity +
-                      ' / ' +
-                      `Rs. ${prod.rent_per_unit} per ${formatBillingUnit(prod.billing_unit)}`}
+                    {prod.type === ProductType.SALES
+                      ? `${prod.order_quantity} @ Rs. ${prod.rent_per_unit * prod.order_quantity}`
+                      : `${prod.order_quantity} @ Rs. ${prod.rent_per_unit * prod.order_quantity} per ${formatBillingUnit(prod.billing_unit)}`}
                   </Text>
                 </View>
               ))}

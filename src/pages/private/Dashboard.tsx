@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
 import { calculateDiscountAmount } from '../../services/utility_functions';
 import CustomCard from '../../styled/CustomCard';
@@ -13,6 +14,7 @@ import { BillingMode, PaymentStatus, RentalOrderInfo, RentalOrderType } from '..
 import { getOrderStatus, calculateFinalAmount } from './Orders/utils';
 import CustomPieChart from '../../styled/CustomPieChart';
 import CustomDatePicker from '../../styled/CustomDatePicker';
+import BranchSelector from '../../components/BranchSelector';
 
 export const OrderStatusValues: string[] = Object.values(OrderStatusType);
 
@@ -388,8 +390,16 @@ const getDetailsData = (
 };
 
 const Dashboard = () => {
-  const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } =
-    useGetRentalOrdersQuery();
+  const userBranch = useSelector((state: { user: { branch: string } }) => state.user.branch);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(() => {
+    const saved = localStorage.getItem('dashboardSelectedBranch');
+    return saved || userBranch;
+  });
+
+  const branchFilter = selectedBranch ? [`branch:${selectedBranch}`] : [];
+  const { data: rentalOrderData, isSuccess: isRentalOrdersQuerySuccess } = useGetRentalOrdersQuery({
+    filter: branchFilter.length > 0 ? branchFilter : undefined,
+  });
   const [filter, setFilter] = useState<string>('3');
   const [filterDates, setFilterDates] = useState<{ start: string; end: string } | null>(null);
   const [orders, setOrders] = useState<RentalOrderInfo[]>([]);
@@ -414,6 +424,10 @@ const Dashboard = () => {
     mcIn: 0,
     mcOut: 0,
   });
+
+  useEffect(() => {
+    localStorage.setItem('dashboardSelectedBranch', selectedBranch || '');
+  }, [selectedBranch]);
 
   useEffect(() => {
     if (isRentalOrdersQuerySuccess) {
@@ -534,9 +548,9 @@ const Dashboard = () => {
   return (
     <div className="h-auto w-full overflow-y-auto">
       {/* Header */}
-      <div className="w-full flex justify-between items-start mb-3">
+      <div className="w-full flex justify-between mb-3">
         <p className="text-primary font-bold">Overview</p>
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-end">
           {filter === '4' && (
             <>
               <CustomDatePicker
@@ -560,13 +574,14 @@ const Dashboard = () => {
             </>
           )}
           <CustomSelect
-            label=""
+            label="Date Filter"
             onChange={(val) => setFilter(val)}
             className="w-[8rem]"
             options={filterOptions}
             value={filter}
           />
-          <div className="flex pt-2 gap-2">
+          <BranchSelector selectedBranch={selectedBranch} onChange={setSelectedBranch} />
+          <div className="flex pb-2 gap-2 h-fit">
             <p>All</p>
             <AntSwitch
               checked={showPendingAmountsOnly}

@@ -1892,8 +1892,16 @@ const NewOrder = () => {
             onChange={(val) => {
               if (!val && orderInfo.payment_mode === RepaymentMode.NULL) {
                 handleValueChange('status', PaymentStatus.PENDING);
+                handleValueChange('repay_amount', 0);
               } else {
                 handleValueChange('status', PaymentStatus.PAID);
+                // Calculate repay_amount when date is set
+                if (val) {
+                  const totalDeposits = depositData.reduce((sum, dep) => sum + dep.amount, 0);
+                  const billAmount = calculateFinalAmount();
+                  const repayAmount = Math.max(0, totalDeposits - billAmount);
+                  handleValueChange('repay_amount', repayAmount);
+                }
               }
               handleValueChange('repay_date', val);
             }}

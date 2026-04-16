@@ -301,6 +301,17 @@ const CustomerBills = () => {
     }
   }, [customer]);
 
+  // Helper function to calculate effective repay_amount for historical orders
+  const getEffectiveRepayAmount = (order: RentalOrderInfo): number => {
+    // If repay_date exists but repay_amount is 0, calculate it dynamically
+    if (order.repay_date && !order.repay_amount) {
+      const totalDeposits = order.deposits.reduce((sum, dep) => sum + dep.amount, 0);
+      const billAmount = calculateFinalAmount(order as RentalOrderType);
+      return Math.max(0, totalDeposits - billAmount);
+    }
+    return order.repay_amount || 0;
+  };
+
   const calculateTotalBillAmount = () => {
     const total = originalCustomerOrders.reduce((total, order) => {
       return total + calculateFinalAmount(order as RentalOrderType, false);
@@ -317,7 +328,8 @@ const CustomerBills = () => {
       originalCustomerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
 
     const totalRepayment =
-      originalCustomerOrders.reduce((total, order) => total + order.repay_amount, 0) || 0;
+      originalCustomerOrders.reduce((total, order) => total + getEffectiveRepayAmount(order), 0) ||
+      0;
     return totalDeposits + totalReceivedAmount - totalRepayment;
   };
 
@@ -339,7 +351,7 @@ const CustomerBills = () => {
     const totalBalancePaid =
       branchOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
     const totalRepayment =
-      branchOrders.reduce((total, order) => total + order.repay_amount, 0) || 0;
+      branchOrders.reduce((total, order) => total + getEffectiveRepayAmount(order), 0) || 0;
     return totalDeposits + totalBalancePaid - totalRepayment;
   };
 
@@ -534,10 +546,7 @@ const CustomerBills = () => {
                   <td className="px-1 py-1">
                     {order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || '-'}
                   </td>
-                  <td className="px-1 py-1">
-                    {order.repay_amount}
-                    {/* {calculateRepayAmount(order as RentalOrderType) || '-'} */}
-                  </td>
+                  <td className="px-1 py-1">{getEffectiveRepayAmount(order) || '-'}</td>
                   <td
                     className={`px-1 py-1 ${
                       calculateFinalAmount(order as RentalOrderType) !== 0 &&

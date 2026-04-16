@@ -42,6 +42,7 @@ const CustomerBills = () => {
   ];
 
   const [customerOrders, setCustomerOrders] = useState<RentalOrderInfo[]>([]);
+  const [originalCustomerOrders, setOriginalCustomerOrders] = useState<RentalOrderInfo[]>([]);
   const [customerDetails, setCustomerDetails] = useState<ContactInfoType>();
   const [showAddBalanceModal, setShowAddBalanceModal] = useState<boolean>(false);
 
@@ -146,17 +147,7 @@ const CustomerBills = () => {
 
   // const transactionRows = getTransactionRows(customerOrders);
 
-  useEffect(() => {
-    if (rentalOrderData && id) {
-      const filtered = rentalOrderData.filter((order) => order.customer?._id === id);
-
-      const orders = splitOrdersByDate(filtered);
-      setCustomerOrders(orders.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date))));
-      // setCustomerOrders(filtered);
-    }
-  }, [id, rentalOrderData]);
-
-  function splitOrdersByDate(orders: RentalOrderInfo[]) {
+  const splitOrdersByDate = (orders: RentalOrderInfo[]) => {
     const formatDate = (date: string | null) => {
       if (!date) return null;
       return new Date(date).toISOString().split('T')[0];
@@ -289,7 +280,20 @@ const CustomerBills = () => {
     });
 
     return splitOrders;
-  }
+  };
+
+  useEffect(() => {
+    if (rentalOrderData && id) {
+      const filtered = rentalOrderData.filter((order) => order.customer?._id === id);
+
+      // Store original orders for total calculations
+      setOriginalCustomerOrders(filtered.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date))));
+
+      // Create split orders for table display
+      const orders = splitOrdersByDate(filtered);
+      setCustomerOrders(orders.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date))));
+    }
+  }, [id, rentalOrderData]);
 
   useEffect(() => {
     if (customer) {
@@ -298,37 +302,36 @@ const CustomerBills = () => {
   }, [customer]);
 
   const calculateTotalBillAmount = () => {
-    const total = customerOrders.reduce(
-      (total, order) => total + calculateFinalAmount(order as RentalOrderType),
-      0
-    );
+    const total = originalCustomerOrders.reduce((total, order) => {
+      return total + calculateFinalAmount(order as RentalOrderType, false);
+    }, 0);
     return total;
   };
 
   const calculateTotalReceivedAmount = () => {
-    const totalDeposits = customerOrders.reduce(
+    const totalDeposits = originalCustomerOrders.reduce(
       (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
       0
     );
     const totalReceivedAmount =
-      customerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
+      originalCustomerOrders.reduce((total, order) => total + order.balance_paid, 0) || 0;
 
     const totalRepayment =
-      customerOrders.reduce((total, order) => total + order.repay_amount, 0) || 0;
+      originalCustomerOrders.reduce((total, order) => total + order.repay_amount, 0) || 0;
     return totalDeposits + totalReceivedAmount - totalRepayment;
   };
 
   const getBranchBillAmount = (branchCode: string): number => {
-    const total = customerOrders
+    const total = originalCustomerOrders
       .filter((order) => order.branch === branchCode)
       .reduce((total, order) => {
-        return total + calculateFinalAmount(order as RentalOrderType);
+        return total + calculateFinalAmount(order as RentalOrderType, false);
       }, 0);
     return total;
   };
 
   const getBranchReceivedAmount = (branchCode: string): number => {
-    const branchOrders = customerOrders.filter((order) => order.branch === branchCode);
+    const branchOrders = originalCustomerOrders.filter((order) => order.branch === branchCode);
     const totalDeposits = branchOrders.reduce(
       (total, order) => total + order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0),
       0
@@ -398,10 +401,8 @@ const CustomerBills = () => {
   const setBalancePaidToOrders = async (balanceData: BalanceData) => {
     let remainingAmount = balanceData.amount;
 
-    // Filter rental orders for the current customer
-    const rentalOrders = rentalOrderData?.filter(
-      (order) => order.customer?._id === id
-    ) as RentalOrderType[];
+    // Use original (unsplit) orders to avoid duplication
+    const rentalOrders = originalCustomerOrders as RentalOrderType[];
 
     // Sort orders by out_date to process in chronological order
     const sortedOrders = rentalOrders.sort((a, b) => dayjs(a.out_date).diff(dayjs(b.out_date)));

@@ -33,7 +33,7 @@ import { toast } from 'react-toastify';
 import { TOAST_IDS } from '../../constants/constants';
 import { useLazyGetExpiredRentalOrdersQuery } from '../../services/OrderService';
 import { setExpiredRentalOrders } from '../../store/OrdersSlice';
-import Logo from '/New_Logo.png';
+import Logo from '/Logo.jpeg';
 import { MenuItems } from '../../constants/MenuItems';
 import { useMenu } from '../../contexts/MenuContext';
 import PettyCashDialog from './PettyCashDialog';

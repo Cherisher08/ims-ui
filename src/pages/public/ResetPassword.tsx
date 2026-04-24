@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import NamedLogo from '/nameless-logo.jpg';
+import NamedLogo from '/Logo.jpeg';
 import { useEffect, useState } from 'react';
 import { Button, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';

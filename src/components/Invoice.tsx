@@ -13,7 +13,7 @@ import {
 import { Branch } from '../types/user';
 import paidStamp from '/paid-icon.png';
 
-import Logo from '/nameless-logo.jpg';
+import Logo from '/Logo.jpeg';
 
 Font.register({
   family: 'Inter',

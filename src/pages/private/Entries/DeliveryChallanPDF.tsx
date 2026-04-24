@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { RentalOrderInfo } from '../../../types/order';
 import { Branch } from '../../../types/user';
 import { ProductType } from '../../../types/common';
-import Logo from '/New_Logo.png';
+import Logo from '/Logo.jpeg';
 import { formatBillingUnit } from '../../../services/utility_functions';
 
 Font.register({

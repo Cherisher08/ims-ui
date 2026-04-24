@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import NamedLogo from '/nameless-logo.jpg';
+import NamedLogo from '/Logo.jpeg';
 
 import Button from '@mui/material/Button';
 import { rootApi, useAuthorizeUserMutation } from '../../services/ApiService';

@@ -457,17 +457,8 @@ const Dashboard = () => {
       const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
 
       const finalAmount = calculateFinalAmount(order as RentalOrderType, false);
-      const roundOff = order.round_off || 0;
-      const discountAmount =
-        order.discount_type === DiscountType.PERCENT
-          ? calculateDiscountAmount(order.discount || 0, finalAmount)
-          : order.discount || 0;
-      const gstAmount =
-        order.billing_mode === BillingMode.B2B
-          ? 0
-          : calculateDiscountAmount(order.gst, finalAmount);
 
-      const pendingAmount = finalAmount - depositSum - discountAmount + gstAmount + roundOff;
+      const pendingAmount = finalAmount - depositSum;
 
       // Calculate paid amount if order status is PAID
       if (order.status === PaymentStatus.PAID) {
@@ -632,7 +623,7 @@ const Dashboard = () => {
                 }`}
                 onClick={() => setGraphFilter('incoming_pending')}
               >
-                Balance Pending
+                Balance Amount
               </li>
               <li
                 className={`cursor-pointer ${
@@ -640,7 +631,7 @@ const Dashboard = () => {
                 }`}
                 onClick={() => setGraphFilter('repayment_pending')}
               >
-                Return Pending
+                Repayment Amount
               </li>
               <li
                 className={`cursor-pointer ${

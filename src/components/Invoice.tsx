@@ -609,7 +609,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   );
                 })()}
                 <Text style={[styles.ownerAddress, { color: '#DC2626', fontWeight: 900 }]}>
-                  Mobile No - 8428429153 , 9042439153
+                  Mobile No - 9042439153, 8428429153
                 </Text>
                 <Text style={[styles.ownerAddress, { fontWeight: 'bold' }]}>
                   manipowertools9153@gmail.com

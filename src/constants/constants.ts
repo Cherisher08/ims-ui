@@ -35,4 +35,7 @@ export const TOAST_IDS = {
   SUCCESS_PURCHASE_DELETE: 'success_purchase_delete',
   OTP_VERIFY_SUCCESS: 'otp_verify_success',
   OTP_VERIFY_ERROR: 'otp_verify_error',
+  INFO_SYNC_PRODUCTS: 'info_sync_products',
+  SUCCESS_SYNC_PRODUCTS: 'success_sync_products',
+  ERROR_SYNC_PRODUCTS: 'error_sync_products',
 };

@@ -4,7 +4,7 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
-import { calculateDiscountAmount } from '../../services/utility_functions';
+import { calculateDiscountAmount, calculateProductRent } from '../../services/utility_functions';
 import CustomCard from '../../styled/CustomCard';
 import CustomLineChart from '../../styled/CustomLineChart';
 import CustomSelect from '../../styled/CustomSelect';
@@ -406,6 +406,9 @@ const Dashboard = () => {
   const [showPendingAmountsOnly, setShowPendingAmountsOnly] = useState<boolean>(false);
   const [chartData, setChartData] = useState<PendingAmount[]>([]);
   const [graphFilter, setGraphFilter] = useState<ChartType>('incoming_pending');
+  const [paidAmountFilter, setPaidAmountFilter] = useState<'rental' | 'sales' | 'combined'>(
+    'combined'
+  );
   const detailsData = getDetailsData(orders, graphFilter, filter, filterDates);
   const filterOptions = [
     { id: '1', value: 'Today' },
@@ -421,6 +424,9 @@ const Dashboard = () => {
     depositAmount: 0,
     billAmount: 0,
     paidAmount: 0,
+    paidAmountRental: 0,
+    paidAmountSales: 0,
+    paidAmountCombined: 0,
     mcIn: 0,
     mcOut: 0,
   });
@@ -449,6 +455,9 @@ const Dashboard = () => {
     let depositAmount = 0;
     let billAmount = 0;
     let paidAmount = 0;
+    let paidAmountRental = 0;
+    let paidAmountSales = 0;
+    let paidAmountCombined = 0;
     let mcIn = 0;
     let mcOut = 0;
 
@@ -463,6 +472,17 @@ const Dashboard = () => {
       // Calculate paid amount if order status is PAID
       if (order.status === PaymentStatus.PAID) {
         paidAmount += finalAmount;
+        paidAmountCombined += finalAmount;
+
+        order.product_details.forEach((product) => {
+          const productAmount = calculateProductRent(product);
+
+          if (product.type === ProductType.RENTAL) {
+            paidAmountRental += productAmount;
+          } else if (product.type === ProductType.SALES) {
+            paidAmountSales += productAmount;
+          }
+        });
       }
 
       if (showPendingAmountsOnly) {
@@ -519,9 +539,12 @@ const Dashboard = () => {
       repaymentAmount,
       depositAmount,
       billAmount,
+      paidAmount,
+      paidAmountRental,
+      paidAmountSales,
+      paidAmountCombined,
       mcIn,
       mcOut,
-      paidAmount,
     });
   }, [filter, filterDates, orders, showPendingAmountsOnly]);
 
@@ -609,7 +632,21 @@ const Dashboard = () => {
           <CustomCard
             title="Paid Amount"
             className="grow"
-            value={`₹${totalInfo.paidAmount.toFixed(2)}`}
+            value={`₹${(paidAmountFilter === 'rental'
+              ? totalInfo.paidAmountRental
+              : paidAmountFilter === 'sales'
+                ? totalInfo.paidAmountSales
+                : totalInfo.paidAmountCombined
+            ).toFixed(2)}`}
+            dropdownOptions={[
+              { value: 'combined', label: 'Combined' },
+              { value: 'rental', label: 'Rental' },
+              { value: 'sales', label: 'Sales' },
+            ]}
+            selectedDropdownValue={paidAmountFilter}
+            onDropdownChange={(value) =>
+              setPaidAmountFilter(value as 'rental' | 'sales' | 'combined')
+            }
           />
           <CustomCard title="Machine Out" className="grow" value={`${totalInfo.mcOut}`} />
           <CustomCard title="Machine In" className="grow" value={`${totalInfo.mcIn}`} />

@@ -233,14 +233,29 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               </View>
               {/* Product Details */}
               {data.product_details.map((prod) => (
-                <View style={styles.row} key={prod._id}>
-                  <Text style={styles.field}>{prod.name}</Text>
-                  <Text style={styles.colon}>-</Text>
-                  <Text style={styles.value}>
-                    {prod.type === ProductType.SALES
-                      ? `${prod.order_quantity} @ Rs. ${prod.rent_per_unit * prod.order_quantity}`
-                      : `${prod.order_quantity} @ Rs. ${prod.rent_per_unit * prod.order_quantity} per ${formatBillingUnit(prod.billing_unit)}`}
-                  </Text>
+                <View key={prod._id}>
+                  <View style={styles.row}>
+                    <Text style={styles.field}>{prod.name}</Text>
+                    <Text style={styles.colon}>-</Text>
+                    <Text style={styles.value}>
+                      {prod.type === ProductType.SALES
+                        ? `${prod.order_quantity} @ Rs. ${prod.rent_per_unit * prod.order_quantity}`
+                        : `${prod.order_quantity} @ Rs. ${prod.rent_per_unit * prod.order_quantity} per ${formatBillingUnit(prod.billing_unit)}`}
+                    </Text>
+                  </View>
+                  {prod.description && (
+                    <View style={{ ...styles.row, marginBottom: 3 }}>
+                      <Text
+                        style={{
+                          ...styles.field,
+                          fontSize: 8,
+                          color: '#666666',
+                        }}
+                      >
+                        {prod.description}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               ))}
             </View>

@@ -619,6 +619,14 @@ export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
     return OrderStatusType.MACHINE_REPAIR;
   }
 
+  // Check if order is prebooking (start date is in future)
+  if (order.out_date) {
+    const outDate = new Date(order.out_date);
+    if (now < outDate) {
+      return OrderStatusType.PREBOOKING;
+    }
+  }
+
   const isMachineWorking = order.product_details.some((p) => {
     if (p.type !== ProductType.RENTAL || !p.out_date) return false;
 
@@ -658,6 +666,7 @@ export const getOrderStatus = (order: RentalOrderInfo): OrderStatusType => {
 
 export const getOrderStatusColors = (status: OrderStatusType): { bg: string; text: string } => {
   const statusColors: Record<OrderStatusType, { bg: string; text: string }> = {
+    [OrderStatusType.PREBOOKING]: { bg: '#87CEEB', text: '#000000' },
     [OrderStatusType.MACHINE_WORKING]: { bg: '#800080', text: '#FFFFFF' },
     [OrderStatusType.MACHINE_NOT_RETURN]: { bg: '#FFFF00', text: '#000000' },
     [OrderStatusType.BILL_PENDING]: { bg: '#0000FF', text: '#FFFFFF' },

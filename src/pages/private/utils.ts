@@ -38,4 +38,5 @@ export const initialProductData: Product = {
   },
   type: ProductType.RENTAL,
   rent_per_unit: 0,
+  description: '',
 };

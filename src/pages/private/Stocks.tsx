@@ -410,8 +410,8 @@ const Inventory = () => {
                       'unit',
                       transformIdValuePair(
                         value
-                          ? productUnits.find((productUnit) => productUnit.value === value) ??
-                              productUnits[0]
+                          ? (productUnits.find((productUnit) => productUnit.value === value) ??
+                              productUnits[0])
                           : productUnits[0]
                       )
                     );
@@ -422,8 +422,8 @@ const Inventory = () => {
                     'unit',
                     transformIdValuePair(
                       value
-                        ? productUnits.find((productUnit) => productUnit.value === value) ??
-                            productUnits[0]
+                        ? (productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0])
                         : productUnits[0]
                     )
                   )
@@ -485,9 +485,9 @@ const Inventory = () => {
                     'category',
                     transformIdValuePair(
                       value
-                        ? productCategories.find(
+                        ? (productCategories.find(
                             (productCategory) => productCategory.value === value
-                          ) ?? productCategories[0]
+                          ) ?? productCategories[0])
                         : productCategories[0]
                     )
                   )
@@ -587,6 +587,13 @@ const Inventory = () => {
                   onChange={(value) => handleProductChange('profit_type', value)}
                 />
               </div>
+
+              <CustomInput
+                label="Description"
+                value={newProductData.description ?? ''}
+                onChange={(value) => handleProductChange('description', value)}
+                placeholder="Enter Product Description"
+              />
             </div>
           </div>
           <div className="flex w-full gap-3 justify-end">
@@ -658,8 +665,8 @@ const Inventory = () => {
                     'unit',
                     transformIdValuePair(
                       value
-                        ? productUnits.find((productUnit) => productUnit.value === value) ??
-                            productUnits[0]
+                        ? (productUnits.find((productUnit) => productUnit.value === value) ??
+                            productUnits[0])
                         : productUnits[0]
                     )
                   )
@@ -741,9 +748,9 @@ const Inventory = () => {
                     'category',
                     transformIdValuePair(
                       value
-                        ? productCategories.find(
+                        ? (productCategories.find(
                             (productCategory) => productCategory.value === value
-                          ) ?? productCategories[0]
+                          ) ?? productCategories[0])
                         : productCategories[0]
                     )
                   )
@@ -764,7 +771,7 @@ const Inventory = () => {
                           profitType === 'percent' ? (actualPrice * profit) / 100 : profit;
                         return (actualPrice + profitAmt).toFixed(2);
                       })()
-                    : updateData?.rent_per_unit ?? 0
+                    : (updateData?.rent_per_unit ?? 0)
                 }
                 onChange={(value) =>
                   updateData?.type === 'sales'
@@ -854,6 +861,22 @@ const Inventory = () => {
                   onChange={(value) => handleUpdateProduct('profit_type', value)}
                 />
               </div>
+
+              <CustomInput
+                label="Description"
+                value={updateData?.description ?? ''}
+                onChange={(value) =>
+                  setUpdateData((prev) => {
+                    if (prev)
+                      return {
+                        ...prev,
+                        description: value,
+                      };
+                    return prev;
+                  })
+                }
+                placeholder="Enter Product Description"
+              />
             </div>
           </div>
           <div className="flex w-full gap-3 justify-end">

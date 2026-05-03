@@ -61,6 +61,7 @@ export type ProductDetails = {
   rent_per_unit: number;
   product_code: string;
   damage: string;
+  description?: string;
 };
 
 export type ContactSelectionType = {

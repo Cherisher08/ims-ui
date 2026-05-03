@@ -51,6 +51,7 @@ export enum EventNameType {
 }
 
 export enum OrderStatusType {
+  PREBOOKING = 'Prebooking',
   MACHINE_WORKING = 'Machine working',
   MACHINE_NOT_RETURN = 'Machine not return',
   BILL_PENDING = 'Bill pending',
@@ -79,6 +80,7 @@ export interface Product {
   unit: Unit;
   rent_per_unit: number;
   created_by?: string;
+  description?: string;
 }
 
 export interface PatchOperation {

@@ -747,6 +747,59 @@ const NewOrder = () => {
     setRepresentativeNumberOptions(unique);
   }, [rentalOrders, orderInfo.representative_number]);
 
+  const syncProductsWithLatestDetails = () => {
+    if (!orderInfo.product_details || orderInfo.product_details.length === 0) {
+      toast.info('No products to sync', {
+        toastId: TOAST_IDS.INFO_SYNC_PRODUCTS,
+      });
+      return;
+    }
+
+    if (!productsData || productsData.length === 0) {
+      toast.error('No products available to sync from', {
+        toastId: TOAST_IDS.ERROR_SYNC_PRODUCTS,
+      });
+      return;
+    }
+
+    const updatedProductDetails = orderInfo.product_details.map((productDetail) => {
+      const latestProduct = productsData.find((product) => product._id === productDetail._id);
+
+      if (latestProduct) {
+        return {
+          ...productDetail,
+          name: latestProduct.name,
+          rent_per_unit: latestProduct.rent_per_unit,
+          product_code: latestProduct.product_code,
+          product_unit: latestProduct.unit,
+          type: latestProduct.type,
+          category: latestProduct.category?.name || productDetail.category,
+          description: latestProduct.description || productDetail.description,
+        };
+      }
+      return productDetail;
+    });
+
+    const syncedCount = updatedProductDetails.filter((_, index) => {
+      const originalProduct = orderInfo.product_details[index];
+      const updatedProduct = updatedProductDetails[index];
+      return (
+        originalProduct.name !== updatedProduct.name ||
+        originalProduct.rent_per_unit !== updatedProduct.rent_per_unit ||
+        originalProduct.description !== updatedProduct.description
+      );
+    }).length;
+
+    setOrderInfo((prev) => ({
+      ...prev,
+      product_details: updatedProductDetails,
+    }));
+
+    toast.success(`Synced ${syncedCount} product(s) with latest details`, {
+      toastId: TOAST_IDS.SUCCESS_SYNC_PRODUCTS,
+    });
+  };
+
   const addEventNameOption = (value: string) => {
     if (!value) return;
     const newOption = {
@@ -1260,19 +1313,28 @@ const NewOrder = () => {
       <div className="w-full h-fit flex flex-col">
         <div className="w-full flex justify-between my-2">
           <label className="text-xl font-bold underline">Products:</label>
-          <CustomButton
-            label="Add Product"
-            disabled={
-              orderInfo.product_details?.filter((current) => current._id === '').length > 0 || false
-            }
-            onClick={() => {
-              const newProduct = getDefaultProduct(orderInfo?.out_date);
-              setOrderInfo((prev) => ({
-                ...prev,
-                product_details: [...(prev.product_details || []), newProduct],
-              }));
-            }}
-          />
+          <div className="flex gap-2">
+            <CustomButton
+              label="Sync Products"
+              variant="outlined"
+              onClick={syncProductsWithLatestDetails}
+              disabled={orderInfo.product_details?.length === 0}
+            />
+            <CustomButton
+              label="Add Product"
+              disabled={
+                orderInfo.product_details?.filter((current) => current._id === '').length > 0 ||
+                false
+              }
+              onClick={() => {
+                const newProduct = getDefaultProduct(orderInfo?.out_date);
+                setOrderInfo((prev) => ({
+                  ...prev,
+                  product_details: [...(prev.product_details || []), newProduct],
+                }));
+              }}
+            />
+          </div>
         </div>
 
         <div className="w-full overflow-x-auto">

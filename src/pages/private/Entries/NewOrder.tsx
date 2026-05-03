@@ -25,6 +25,7 @@ import {
   useLazyGetLatestInvoiceIdQuery,
   useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
+  useSyncRentalOrderProductsMutation,
 } from '../../../services/OrderService';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
@@ -747,7 +748,10 @@ const NewOrder = () => {
     setRepresentativeNumberOptions(unique);
   }, [rentalOrders, orderInfo.representative_number]);
 
-  const syncProductsWithLatestDetails = () => {
+  const [syncRentalOrderProducts, { isLoading: isSyncingProducts }] =
+    useSyncRentalOrderProductsMutation();
+
+  const syncProductsWithLatestDetails = async () => {
     if (!orderInfo.product_details || orderInfo.product_details.length === 0) {
       toast.info('No products to sync', {
         toastId: TOAST_IDS.INFO_SYNC_PRODUCTS,
@@ -755,49 +759,25 @@ const NewOrder = () => {
       return;
     }
 
-    if (!productsData || productsData.length === 0) {
-      toast.error('No products available to sync from', {
+    if (!orderInfo._id) {
+      toast.error('Order ID not found. Please save the order first.', {
         toastId: TOAST_IDS.ERROR_SYNC_PRODUCTS,
       });
       return;
     }
 
-    const updatedProductDetails = orderInfo.product_details.map((productDetail) => {
-      const latestProduct = productsData.find((product) => product._id === productDetail._id);
-
-      if (latestProduct) {
-        return {
-          ...productDetail,
-          name: latestProduct.name,
-          rent_per_unit: latestProduct.rent_per_unit,
-          product_code: latestProduct.product_code,
-          product_unit: latestProduct.unit,
-          type: latestProduct.type,
-          category: latestProduct.category?.name || productDetail.category,
-          description: latestProduct.description || productDetail.description,
-        };
-      }
-      return productDetail;
-    });
-
-    const syncedCount = updatedProductDetails.filter((_, index) => {
-      const originalProduct = orderInfo.product_details[index];
-      const updatedProduct = updatedProductDetails[index];
-      return (
-        originalProduct.name !== updatedProduct.name ||
-        originalProduct.rent_per_unit !== updatedProduct.rent_per_unit ||
-        originalProduct.description !== updatedProduct.description
-      );
-    }).length;
-
-    setOrderInfo((prev) => ({
-      ...prev,
-      product_details: updatedProductDetails,
-    }));
-
-    toast.success(`Synced ${syncedCount} product(s) with latest details`, {
-      toastId: TOAST_IDS.SUCCESS_SYNC_PRODUCTS,
-    });
+    try {
+      const syncedOrder = await syncRentalOrderProducts(orderInfo._id).unwrap();
+      setOrderInfo(syncedOrder);
+      toast.success('Products synced with latest details', {
+        toastId: TOAST_IDS.SUCCESS_SYNC_PRODUCTS,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error?.data?.detail || 'Failed to sync products', {
+        toastId: TOAST_IDS.ERROR_SYNC_PRODUCTS,
+      });
+    }
   };
 
   const addEventNameOption = (value: string) => {
@@ -1318,7 +1298,9 @@ const NewOrder = () => {
               label="Sync Products"
               variant="outlined"
               onClick={syncProductsWithLatestDetails}
-              disabled={orderInfo.product_details?.length === 0}
+              disabled={
+                orderInfo.product_details?.length === 0 || !orderInfo._id || isSyncingProducts
+              }
             />
             <CustomButton
               label="Add Product"

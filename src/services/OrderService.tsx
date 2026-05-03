@@ -122,6 +122,16 @@ export const contactApi = rootApi.injectEndpoints({
         };
       },
     }),
+    syncRentalOrderProducts: build.mutation<RentalOrderInfo, string>({
+      query: (orderId) => {
+        return {
+          url: `orders/rentals/${orderId}/sync-products`,
+          method: 'POST',
+        };
+      },
+      transformResponse: (response: RentalOrderInfo) => transformRentalOrderResponse(response),
+      invalidatesTags: ['Rental'],
+    }),
 
     getLatestInvoiceId: build.query<{ invoice_id: string }, { branch?: Branch }>({
       query: ({ branch }) => {
@@ -165,4 +175,5 @@ export const {
   useLazyGetLatestOrderIdQuery,
   usePatchRentalOrderMutation,
   usePostOrderDcAsWhatsappMessageMutation,
+  useSyncRentalOrderProductsMutation,
 } = contactApi;

@@ -27,6 +27,8 @@ interface RowData {
   cashLess: number;
   upiLess: number;
   kvbLess: number;
+  indianBankIn: number;
+  indianLess: number;
 }
 
 const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
@@ -90,9 +92,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
                 <th>Cash In</th>
                 <th>HDFC In</th>
                 <th>Gpay In</th>
+                <th>Indian Bank In</th>
                 <th>Cash Less</th>
                 <th>Gpay Less</th>
                 <th>KVB Less</th>
+                <th>Indian Less</th>
               </tr>
             </thead>
             <tbody>
@@ -104,9 +108,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
                   <td>₹ ${row.cashIn || 0}</td>
                   <td>₹ ${row.accountIn || 0}</td>
                   <td>₹ ${row.upiIn || 0}</td>
+                  <td>₹ ${row.indianBankIn || 0}</td>
                   <td>₹ ${row.cashLess || 0}</td>
                   <td>₹ ${row.upiLess || 0}</td>
                   <td>₹ ${row.kvbLess || 0}</td>
+                  <td>₹ ${row.indianLess || 0}</td>
                 </tr>
               `
                 )
@@ -116,9 +122,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
                 <td>₹ ${totalsRow.cashIn}</td>
                 <td>₹ ${totalsRow.accountIn}</td>
                 <td>₹ ${totalsRow.upiIn}</td>
+                <td>₹ ${totalsRow.indianBankIn}</td>
                 <td>₹ ${totalsRow.cashLess}</td>
                 <td>₹ ${totalsRow.upiLess}</td>
                 <td>₹ ${totalsRow.kvbLess}</td>
+                <td>₹ ${totalsRow.indianLess}</td>
               </tr>
             </tbody>
           </table>
@@ -158,9 +166,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         cashIn: order.balance_paid_mode === PaymentMode.CASH ? order.balance_paid : 0,
         accountIn: order.balance_paid_mode === PaymentMode.ACCOUNT ? order.balance_paid : 0,
         upiIn: order.balance_paid_mode === PaymentMode.UPI ? order.balance_paid : 0,
+        indianBankIn: order.balance_paid_mode === PaymentMode.INDIAN_BANK ? order.balance_paid : 0,
         cashLess: 0,
         upiLess: 0,
         kvbLess: 0,
+        indianLess: 0,
       });
     }
 
@@ -171,9 +181,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         cashIn: 0,
         accountIn: 0,
         upiIn: 0,
+        indianBankIn: 0,
         cashLess: order.payment_mode === RepaymentMode.CASHLESS ? repayAmount : 0,
         upiLess: order.payment_mode === RepaymentMode.UPILESS ? repayAmount : 0,
         kvbLess: order.payment_mode === RepaymentMode.KVBLESS ? repayAmount : 0,
+        indianLess: order.payment_mode === RepaymentMode.INDIANLESS ? repayAmount : 0,
       });
     }
 
@@ -185,9 +197,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
           cashIn: deposit.mode === PaymentMode.CASH ? deposit.amount : 0,
           accountIn: deposit.mode === PaymentMode.ACCOUNT ? deposit.amount : 0,
           upiIn: deposit.mode === PaymentMode.UPI ? deposit.amount : 0,
+          indianBankIn: deposit.mode === PaymentMode.INDIAN_BANK ? deposit.amount : 0,
           cashLess: 0,
           upiLess: 0,
           kvbLess: 0,
+          indianLess: 0,
         });
       }
     });
@@ -201,9 +215,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         cashIn: pettyCash.balance_paid_mode === PaymentMode.CASH ? pettyCash.balance_paid : 0,
         accountIn: pettyCash.balance_paid_mode === PaymentMode.ACCOUNT ? pettyCash.balance_paid : 0,
         upiIn: pettyCash.balance_paid_mode === PaymentMode.UPI ? pettyCash.balance_paid : 0,
+        indianBankIn: pettyCash.balance_paid_mode === PaymentMode.INDIAN_BANK ? pettyCash.balance_paid : 0,
         cashLess: pettyCash.payment_mode === RepaymentMode.CASHLESS ? pettyCash.repay_amount : 0,
         upiLess: pettyCash.payment_mode === RepaymentMode.UPILESS ? pettyCash.repay_amount : 0,
         kvbLess: pettyCash.payment_mode === RepaymentMode.KVBLESS ? pettyCash.repay_amount : 0,
+        indianLess: pettyCash.payment_mode === RepaymentMode.INDIANLESS ? pettyCash.repay_amount : 0,
       });
     }
   });
@@ -216,9 +232,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
       cashIn: dayTransactions.reduce((sum, t) => sum + t.cashIn, 0),
       accountIn: dayTransactions.reduce((sum, t) => sum + t.accountIn, 0),
       upiIn: dayTransactions.reduce((sum, t) => sum + t.upiIn, 0),
+      indianBankIn: dayTransactions.reduce((sum, t) => sum + t.indianBankIn, 0),
       cashLess: dayTransactions.reduce((sum, t) => sum + t.cashLess, 0),
       upiLess: dayTransactions.reduce((sum, t) => sum + t.upiLess, 0),
       kvbLess: dayTransactions.reduce((sum, t) => sum + t.kvbLess, 0),
+      indianLess: dayTransactions.reduce((sum, t) => sum + t.indianLess, 0),
     };
   });
 
@@ -230,9 +248,11 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
     cashIn: rowData.reduce((sum, r) => sum + (r.cashIn || 0), 0),
     accountIn: rowData.reduce((sum, r) => sum + (r.accountIn || 0), 0),
     upiIn: rowData.reduce((sum, r) => sum + (r.upiIn || 0), 0),
+    indianBankIn: rowData.reduce((sum, r) => sum + (r.indianBankIn || 0), 0),
     cashLess: rowData.reduce((sum, r) => sum + (r.cashLess || 0), 0),
     upiLess: rowData.reduce((sum, r) => sum + (r.upiLess || 0), 0),
     kvbLess: rowData.reduce((sum, r) => sum + (r.kvbLess || 0), 0),
+    indianLess: rowData.reduce((sum, r) => sum + (r.indianLess || 0), 0),
   };
 
   const colDefs: (ColDef | ColGroupDef)[] = [
@@ -266,6 +286,12 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
           minWidth: 150,
           valueFormatter: (params) => `₹ ${params.value || 0}`,
         },
+        {
+          field: 'indianBankIn',
+          headerName: 'Indian Bank In',
+          minWidth: 150,
+          valueFormatter: (params) => `₹ ${params.value || 0}`,
+        },
       ],
     },
     {
@@ -286,6 +312,12 @@ const PettyCashDialog: FC<PettyCashDialogProps> = ({ open, onClose }) => {
         {
           field: 'kvbLess',
           headerName: 'KVB Less',
+          minWidth: 150,
+          valueFormatter: (params) => `₹ ${params.value || 0}`,
+        },
+        {
+          field: 'indianLess',
+          headerName: 'Indian Less',
           minWidth: 150,
           valueFormatter: (params) => `₹ ${params.value || 0}`,
         },

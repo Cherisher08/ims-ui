@@ -348,8 +348,12 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
         'Balance Amount': balanceAmount,
         'Order Out Date': order.out_date ? dayjs(order.out_date).format('DD-MMM-YYYY hh:mm A') : '',
         'Order In Date':
-          order.in_date && dayjs(order.in_date).isValid()
-            ? dayjs(order.in_date).format('DD-MMM-YYYY hh:mm A')
+          i < products.length
+            ? products[i].in_date && dayjs(products[i].in_date).isValid()
+              ? dayjs(products[i].in_date).format('DD-MMM-YYYY hh:mm A')
+              : products[i].type === ProductType.RENTAL
+              ? 'Not Returned'
+              : ''
             : '',
         Month: dayjs(order.out_date).format('MMMM'),
         'Rental Duration': order.rental_duration?.toString() || '',

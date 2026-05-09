@@ -37,6 +37,8 @@ interface RowData {
   cashLess: number;
   upiLess: number;
   kvbLess: number;
+  indianBankIn: number;
+  indianLess: number;
   isPettyCash?: boolean;
   _id?: string;
 }
@@ -169,6 +171,12 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
       } else if (params.colDef.field === 'kvbLess') {
         updatedPettyCash.repay_amount = params.newValue;
         updatedPettyCash.payment_mode = RepaymentMode.KVBLESS;
+      } else if (params.colDef.field === 'indianBankIn') {
+        updatedPettyCash.balance_paid = params.newValue;
+        updatedPettyCash.balance_paid_mode = PaymentMode.INDIAN_BANK;
+      } else if (params.colDef.field === 'indianLess') {
+        updatedPettyCash.repay_amount = params.newValue;
+        updatedPettyCash.payment_mode = RepaymentMode.INDIANLESS;
       }
 
       updatePettyCash(updatedPettyCash);
@@ -219,15 +227,17 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
                 <th>Cash In</th>
                 <th>HDFC In</th>
                 <th>Gpay In</th>
+                <th>Indian Bank In</th>
                 <th>Cash Less</th>
                 <th>Gpay Less</th>
                 <th>KVB Less</th>
+                <th>Indian Less</th>
               </tr>
             </thead>
             <tbody>
               ${rowData
-                .map(
-                  (row) => `
+        .map(
+          (row) => `
                 <tr>
                   <td>${row.dateTime ? dayjs(row.dateTime).format('DD-MMM-YYYY hh:mm A') : ''}</td>
                   <td>${dayjs(row.outDate).format('DD-MMM-YYYY')}</td>
@@ -236,21 +246,25 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
                   <td>₹ ${row.cashIn || 0}</td>
                   <td>₹ ${row.accountIn || 0}</td>
                   <td>₹ ${row.upiIn || 0}</td>
+                  <td>₹ ${row.indianBankIn || 0}</td>
                   <td>₹ ${row.cashLess || 0}</td>
                   <td>₹ ${row.upiLess || 0}</td>
                   <td>₹ ${row.kvbLess || 0}</td>
+                  <td>₹ ${row.indianLess || 0}</td>
                 </tr>
               `
-                )
-                .join('')}
+        )
+        .join('')}
               <tr class="totals">
                 <td colspan="4">Totals</td>
                 <td>₹ ${totalsRow.cashIn}</td>
                 <td>₹ ${totalsRow.accountIn}</td>
                 <td>₹ ${totalsRow.upiIn}</td>
+                <td>₹ ${totalsRow.indianBankIn}</td>
                 <td>₹ ${totalsRow.cashLess}</td>
                 <td>₹ ${totalsRow.upiLess}</td>
                 <td>₹ ${totalsRow.kvbLess}</td>
+                <td>₹ ${totalsRow.indianLess}</td>
               </tr>
             </tbody>
           </table>
@@ -268,6 +282,10 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
                 <tr style="border-bottom: 1px solid #ddd;">
                   <td style="padding: 8px; font-weight: bold; text-align: left;">HDFC (HDFC In + GPAY In - GPAY Less)</td>
                   <td style="padding: 8px;">₹ ${totalsRow.accountIn + totalsRow.upiIn - totalsRow.upiLess}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 8px; font-weight: bold; text-align: left;">Indian Bank (Indian Bank In - Indian Less)</td>
+                  <td style="padding: 8px;">₹ ${totalsRow.indianBankIn - totalsRow.indianLess}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px; font-weight: bold; text-align: left;">KVB Less</td>
@@ -328,6 +346,9 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
       const upiDepositsPeriod = periodDeposits
         .filter((deposit) => deposit.mode === PaymentMode.UPI)
         .reduce((sum, deposit) => sum + deposit.amount, 0);
+      const indianBankDepositsPeriod = periodDeposits
+        .filter((deposit) => deposit.mode === PaymentMode.INDIAN_BANK)
+        .reduce((sum, deposit) => sum + deposit.amount, 0);
 
       return {
         dateTime: transactionDate,
@@ -343,9 +364,13 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
         upiIn:
           (order.balance_paid_mode === PaymentMode.UPI ? order.balance_paid : 0) +
           upiDepositsPeriod,
+        indianBankIn:
+          (order.balance_paid_mode === PaymentMode.INDIAN_BANK ? order.balance_paid : 0) +
+          indianBankDepositsPeriod,
         cashLess: order.payment_mode === RepaymentMode.CASHLESS ? repayAmount : 0,
         upiLess: order.payment_mode === RepaymentMode.UPILESS ? repayAmount : 0,
         kvbLess: order.payment_mode === RepaymentMode.KVBLESS ? repayAmount : 0,
+        indianLess: order.payment_mode === RepaymentMode.INDIANLESS ? repayAmount : 0,
       };
     })
     .filter(
@@ -353,9 +378,11 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
         row.cashIn > 0 ||
         row.accountIn > 0 ||
         row.upiIn > 0 ||
+        row.indianBankIn > 0 ||
         row.cashLess > 0 ||
         row.upiLess > 0 ||
-        row.kvbLess > 0
+        row.kvbLess > 0 ||
+        row.indianLess > 0
     );
 
   // Filter petty cash data for the specific date
@@ -372,9 +399,11 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
     cashIn: pettyCash.balance_paid_mode === PaymentMode.CASH ? pettyCash.balance_paid : 0,
     accountIn: pettyCash.balance_paid_mode === PaymentMode.ACCOUNT ? pettyCash.balance_paid : 0,
     upiIn: pettyCash.balance_paid_mode === PaymentMode.UPI ? pettyCash.balance_paid : 0,
+    indianBankIn: pettyCash.balance_paid_mode === PaymentMode.INDIAN_BANK ? pettyCash.balance_paid : 0,
     cashLess: pettyCash.payment_mode === RepaymentMode.CASHLESS ? pettyCash.repay_amount : 0,
     upiLess: pettyCash.payment_mode === RepaymentMode.UPILESS ? pettyCash.repay_amount : 0,
     kvbLess: pettyCash.payment_mode === RepaymentMode.KVBLESS ? pettyCash.repay_amount : 0,
+    indianLess: pettyCash.payment_mode === RepaymentMode.INDIANLESS ? pettyCash.repay_amount : 0,
     isPettyCash: true,
     _id: pettyCash._id,
   }));
@@ -389,9 +418,11 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
     cashIn: rowData.reduce((sum, r) => sum + (r.cashIn || 0), 0),
     accountIn: rowData.reduce((sum, r) => sum + (r.accountIn || 0), 0),
     upiIn: rowData.reduce((sum, r) => sum + (r.upiIn || 0), 0),
+    indianBankIn: rowData.reduce((sum, r) => sum + (r.indianBankIn || 0), 0),
     cashLess: rowData.reduce((sum, r) => sum + (r.cashLess || 0), 0),
     upiLess: rowData.reduce((sum, r) => sum + (r.upiLess || 0), 0),
     kvbLess: rowData.reduce((sum, r) => sum + (r.kvbLess || 0), 0),
+    indianLess: rowData.reduce((sum, r) => sum + (r.indianLess || 0), 0),
   };
 
   // Create dropdown options for customer name and phone number
@@ -472,6 +503,13 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
           valueFormatter: (params) => `₹ ${params.value || 0}`,
           editable: (params) => params.data?.isPettyCash || false,
         },
+        {
+          field: 'indianBankIn',
+          headerName: 'Indian Bank In',
+          minWidth: 150,
+          valueFormatter: (params) => `₹ ${params.value || 0}`,
+          editable: (params) => params.data?.isPettyCash || false,
+        },
       ],
     },
     {
@@ -494,6 +532,13 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
         {
           field: 'kvbLess',
           headerName: 'KVB Less',
+          minWidth: 150,
+          valueFormatter: (params) => `₹ ${params.value || 0}`,
+          editable: (params) => params.data?.isPettyCash || false,
+        },
+        {
+          field: 'indianLess',
+          headerName: 'Indian Less',
           minWidth: 150,
           valueFormatter: (params) => `₹ ${params.value || 0}`,
           editable: (params) => params.data?.isPettyCash || false,
@@ -567,6 +612,14 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
                 </td>
                 <td style={{ padding: '8px' }}>
                   ₹ {totalsRow.accountIn + totalsRow.upiIn - totalsRow.upiLess}
+                </td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid #ddd' }}>
+                <td style={{ padding: '8px', fontWeight: 'bold', textAlign: 'left' }}>
+                  Indian Bank (Indian Bank In - Indian Less)
+                </td>
+                <td style={{ padding: '8px' }}>
+                  ₹ {totalsRow.indianBankIn - totalsRow.indianLess}
                 </td>
               </tr>
               <tr>

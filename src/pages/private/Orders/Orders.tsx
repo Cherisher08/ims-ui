@@ -2,11 +2,6 @@ import {
   Box,
   Tab,
   Tabs,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -28,9 +23,23 @@ import AddContactModal from '../Customers/modals/AddContactModal';
 import { transformIdNamePair } from '../utils';
 import RentalOrderTable from './RentalOrderTable';
 import { exportOrderToExcel, transformRentalOrderData } from './utils';
+import DisplaySettingsDialog from './modals/DisplaySettingsDialog';
 import CustomSplitButton from '../../../styled/CustomSplitButton';
 import { GridApi } from 'ag-grid-community';
 import { addBranchFilterToArray } from '../../../utils/branchFilterUtils';
+
+const getInitialSetting = <T,>(key: string, defaultValue: T): T => {
+  const stored = sessionStorage.getItem(`orders_${key}`);
+  if (stored !== null) {
+    try {
+      return JSON.parse(stored) as T;
+    } catch {
+      return defaultValue;
+    }
+  }
+  return defaultValue;
+};
+
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -45,24 +54,14 @@ const Orders = () => {
   const [addContactOpen, setAddContactOpen] = useState<boolean>(false);
   const [addProductOpen, setAddProductOpen] = useState<boolean>(false);
   const [productUnits, setProductUnits] = useState<CustomOptionProps[]>([]);
-  const [viewChallans, setViewChallans] = useState(false);
+  const [viewChallans, setViewChallans] = useState<boolean>(getInitialSetting('viewChallans', false));
   const [displaySettingsOpen, setDisplaySettingsOpen] = useState<boolean>(false);
-  const [showOnlyUnpaidOrders, setShowOnlyUnpaidOrders] = useState<boolean>(false);
-  const [viewSelectiveOrders, setViewSelectiveOrders] = useState<boolean>(true);
-  const [showAllBranches, setShowAllBranches] = useState<boolean>(false);
+  const [showOnlyUnpaidOrders, setShowOnlyUnpaidOrders] = useState<boolean>(getInitialSetting('showOnlyUnpaidOrders', false));
+  const [viewSelectiveOrders, setViewSelectiveOrders] = useState<boolean>(getInitialSetting('viewSelectiveOrders', true));
+  const [showAllBranches, setShowAllBranches] = useState<boolean>(getInitialSetting('showAllBranches', false));
 
-  // Pending settings (before Save is clicked)
-  const [pendingViewChallans, setPendingViewChallans] = useState<boolean>(viewChallans);
-  const [pendingShowOnlyUnpaidOrders, setPendingShowOnlyUnpaidOrders] =
-    useState<boolean>(showOnlyUnpaidOrders);
-  const [pendingViewSelectiveOrders, setPendingViewSelectiveOrders] =
-    useState<boolean>(viewSelectiveOrders);
-  const [pendingShowAllBranches, setPendingShowAllBranches] = useState<boolean>(showAllBranches);
-  const [pendingSelectedMonth, setPendingSelectedMonth] = useState<number>(currentDate.month());
-  const [pendingSelectedYear, setPendingSelectedYear] = useState<number>(currentDate.year());
-
-  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.month());
-  const [selectedYear, setSelectedYear] = useState<number>(currentDate.year());
+  const [selectedMonth, setSelectedMonth] = useState<number>(getInitialSetting('selectedMonth', currentDate.month()));
+  const [selectedYear, setSelectedYear] = useState<number>(getInitialSetting('selectedYear', currentDate.year()));
 
   // Generate month options
   const monthOptions: CustomOptionProps[] = Array.from({ length: 12 }, (_, i) => ({
@@ -257,12 +256,6 @@ const Orders = () => {
           />
           <CustomButton
             onClick={() => {
-              setPendingViewChallans(viewChallans);
-              setPendingShowOnlyUnpaidOrders(showOnlyUnpaidOrders);
-              setPendingViewSelectiveOrders(viewSelectiveOrders);
-              setPendingSelectedMonth(selectedMonth);
-              setPendingSelectedYear(selectedYear);
-              setPendingShowAllBranches(showAllBranches);
               setDisplaySettingsOpen(true);
             }}
             label="Display Settings"
@@ -329,147 +322,29 @@ const Orders = () => {
         setAddProductOpen={setAddProductOpen}
       />
 
-      <Dialog
+      <DisplaySettingsDialog
         open={displaySettingsOpen}
         onClose={() => setDisplaySettingsOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Display Settings</DialogTitle>
-        <DialogContent className="space-y-6">
-          {/* Whatsapp Notifications Checkbox */}
-          <div className="flex items-center gap-2 pt-4">
-            <input
-              type="checkbox"
-              id="viewWhatsappNotifications"
-              checked={pendingViewChallans}
-              onChange={(e) => setPendingViewChallans(e.target.checked)}
-              className="w-4 h-4 cursor-pointer"
-            />
-            <label htmlFor="viewWhatsappNotifications" className="cursor-pointer">
-              View Whatsapp Notifications
-            </label>
-          </div>
+        isAdmin={isAdmin}
+        initialViewChallans={viewChallans}
+        initialShowOnlyUnpaidOrders={showOnlyUnpaidOrders}
+        initialViewSelectiveOrders={viewSelectiveOrders}
+        initialSelectedMonth={selectedMonth}
+        initialSelectedYear={selectedYear}
+        initialShowAllBranches={showAllBranches}
+        monthOptions={monthOptions}
+        yearOptions={yearOptions}
+        onSave={(settings) => {
+          setViewChallans(settings.viewChallans);
+          setShowOnlyUnpaidOrders(settings.showOnlyUnpaidOrders);
+          setViewSelectiveOrders(settings.viewSelectiveOrders);
+          setSelectedMonth(settings.selectedMonth);
+          setSelectedYear(settings.selectedYear);
+          setShowAllBranches(settings.showAllBranches);
 
-          {/* Show Only Unpaid Orders Checkbox */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="showOnlyUnpaidOrders"
-              checked={pendingShowOnlyUnpaidOrders}
-              onChange={(e) => setPendingShowOnlyUnpaidOrders(e.target.checked)}
-              className="w-4 h-4 cursor-pointer"
-            />
-            <label htmlFor="showOnlyUnpaidOrders" className="cursor-pointer">
-              Show Only Unpaid Orders
-            </label>
-          </div>
-
-          {/* Filter by Date Range Checkbox */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="filterByDateRange"
-              checked={pendingViewSelectiveOrders}
-              onChange={(e) => {
-                setPendingViewSelectiveOrders(e.target.checked);
-                // If unchecking and "Show Only Unpaid Orders" is also unchecked, force it to be checked
-                if (!e.target.checked && !pendingShowOnlyUnpaidOrders) {
-                  setPendingViewSelectiveOrders(true);
-                }
-              }}
-              disabled={!pendingShowOnlyUnpaidOrders}
-              className="w-4 h-4 cursor-pointer"
-            />
-            <label
-              htmlFor="filterByDateRange"
-              className={`cursor-pointer ${!pendingShowOnlyUnpaidOrders ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              Filter by Date Range
-            </label>
-          </div>
-
-          {/* Month/Year Filter Controls */}
-          <div
-            className={`flex items-center gap-2 ${pendingViewSelectiveOrders ? '' : 'opacity-50 cursor-not-allowed'}`}
-          >
-            <label className="whitespace-nowrap">Month & Year:</label>
-            <select
-              value={pendingSelectedMonth.toString()}
-              onChange={(e) => setPendingSelectedMonth(parseInt(e.target.value))}
-              disabled={!pendingViewSelectiveOrders}
-              className={`px-3 py-2 border rounded bg-white cursor-pointer ${
-                !pendingViewSelectiveOrders ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {monthOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.description}
-                </option>
-              ))}
-            </select>
-            <select
-              value={pendingSelectedYear.toString()}
-              onChange={(e) => setPendingSelectedYear(parseInt(e.target.value))}
-              disabled={!pendingViewSelectiveOrders}
-              className={`px-3 py-2 border rounded bg-white cursor-pointer ${
-                !pendingViewSelectiveOrders ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {yearOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.description}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* View All Branches Checkbox (Admin Only) */}
-          {isAdmin && (
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="viewAllBranches"
-                checked={pendingShowAllBranches}
-                onChange={(e) => setPendingShowAllBranches(e.target.checked)}
-                className="w-4 h-4 cursor-pointer"
-              />
-              <label htmlFor="viewAllBranches" className="cursor-pointer">
-                View All Branches
-              </label>
-            </div>
-          )}
-
-          {/* Info Alert */}
-          <Alert severity="info" className="mt-4">
-            Filter by Date Range is mandatory when "Show Only Unpaid Orders" is unchecked. You can
-            only disable the date range filter when viewing unpaid orders.
-          </Alert>
-        </DialogContent>
-        <DialogActions className="gap-2 p-4">
-          <button
-            onClick={() => setDisplaySettingsOpen(false)}
-            className="px-4 py-2 border rounded bg-white cursor-pointer hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              // Apply all pending settings
-              setViewChallans(pendingViewChallans);
-              setShowOnlyUnpaidOrders(pendingShowOnlyUnpaidOrders);
-              setViewSelectiveOrders(pendingViewSelectiveOrders);
-              setSelectedMonth(pendingSelectedMonth);
-              setSelectedYear(pendingSelectedYear);
-              setShowAllBranches(pendingShowAllBranches);
-              setDisplaySettingsOpen(false);
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700"
-          >
-            Save
-          </button>
-        </DialogActions>
-      </Dialog>
+          setDisplaySettingsOpen(false);
+        }}
+      />
     </div>
   );
 };

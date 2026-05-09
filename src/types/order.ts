@@ -34,6 +34,7 @@ export enum RepaymentMode {
   CASHLESS = 'cash less',
   UPILESS = 'upi less',
   KVBLESS = 'kvb less',
+  INDIANLESS = 'indian less',
 }
 
 export enum TransportType {

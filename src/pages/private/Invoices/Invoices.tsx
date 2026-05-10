@@ -74,16 +74,16 @@ const Invoices: FC = () => {
 
   if (filter === '1') {
     // Current Month - filter by invoice_date from start of month to today
-    const startOfMonth = today.startOf('month').format('YYYY-MM-DDT00:00:00');
-    const endOfMonth = today.format('YYYY-MM-DDT23:59:59');
+    const startOfMonth = today.startOf('month').format();
+    const endOfMonth = today.endOf('day').format();
     filterArray.push(`invoice_date:gte:${startOfMonth}`);
     filterArray.push(`invoice_date:lte:${endOfMonth}`);
     filterArray.push('invoice_id:exists:true');
   } else if (filter === '3') {
     // Custom - use provided date range
     if (filterDates) {
-      const startDate = dayjs(filterDates.start).format('YYYY-MM-DDT00:00:00');
-      const endDate = dayjs(filterDates.end).format('YYYY-MM-DDT23:59:59');
+      const startDate = dayjs(filterDates.start).startOf('day').format();
+      const endDate = dayjs(filterDates.end).endOf('day').format();
       filterArray.push(`invoice_date:gte:${startDate}`);
       filterArray.push(`invoice_date:lte:${endDate}`);
       filterArray.push('invoice_id:exists:true');

@@ -329,15 +329,15 @@ const NewOrder = () => {
       const hasPositiveAmount = customerTotalBalanceAmount > 0;
 
       const isError =
-        hasPositiveAmount || (customerId !== '' && orderInfo.customer?.address_proof === '');
+        hasPositiveAmount || (customerId !== '' && !!orderInfo.customer?.remarks);
       let errorText = hasPositiveAmount
         ? `Balance Amount: ₹${customerTotalBalanceAmount.toFixed(2)}`
         : '';
 
-      if (orderInfo.customer?.address_proof === '') {
+      if (orderInfo.customer?.remarks) {
         errorText = errorText
-          ? errorText + ' | Address proof is missing for selected customer'
-          : 'Address proof is missing for this customer.';
+          ? errorText + ' | ' + orderInfo.customer.remarks
+          : orderInfo.customer.remarks;
       }
 
       return {

@@ -2,7 +2,15 @@ import { Modal } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { MdClose } from 'react-icons/md';
 import CustomInput from '../../../../styled/CustomInput';
+import CustomSelect from '../../../../styled/CustomSelect';
+import { Branch } from '../../../../types/user';
 import { FaTimesCircle } from 'react-icons/fa';
+
+const branchOptions = [
+  { id: Branch.PADUR, value: 'Padur' },
+  { id: Branch.PUDUPAKKAM, value: 'Pudupakkam' },
+  { id: Branch.KELAMBAKKAM, value: 'Kelambakkam' },
+];
 import { LuUpload } from 'react-icons/lu';
 import CustomButton from '../../../../styled/CustomButton';
 import { ContactInfoType, ContactWithFile, initialContactType } from '../../../../types/contact';
@@ -158,7 +166,7 @@ const UpdateContactModal = ({
               onChange={(value) => handleContactChange('gstin', value)}
               placeholder="Enter GSTIN"
             />
-            <div className="flex flex-col lg:col-span-2">
+            <div className="flex flex-col lg:col-span-2 justify-start h-full">
               <CustomInput
                 label="Address"
                 multiline
@@ -166,17 +174,11 @@ const UpdateContactModal = ({
                 onChange={(value) => handleContactChange('address', value)}
                 placeholder="Enter Address"
               />
-
-              <CustomInput
-                label="Pincode"
-                value={updateContactData?.pincode ?? ''}
-                onChange={(value) => handleContactChange('pincode', value)}
-                placeholder="Enter Pincode"
-              />
             </div>
-            <div className="flex flex-col sm:h-4/5 w-full gap-1">
+
+            <div className="flex flex-col w-full gap-1 justify-start h-[8.25rem]">
               <label className="w-full line-clamp-2 break-words h-auto min-h-6">Upload Proof</label>
-              <div className="h-full min-h-[10rem] max-w-[12rem] w-full relative">
+              <div className="h-full w-full relative">
                 {addressProof === null ? (
                   <>
                     {updateContactData.address_proof ? (
@@ -189,7 +191,7 @@ const UpdateContactModal = ({
                         />
                         <img
                           src={updateContactData.address_proof}
-                          className="rounded-sm h-full min-h-[10rem] max-w-[12rem] w-full object-cover"
+                          className="rounded-sm h-full w-full object-cover"
                         />
                       </>
                     ) : (
@@ -227,6 +229,25 @@ const UpdateContactModal = ({
                 )}
               </div>
             </div>
+
+            <CustomInput
+              label="Pincode"
+              value={updateContactData?.pincode ?? ''}
+              onChange={(value) => handleContactChange('pincode', value)}
+              placeholder="Enter Pincode"
+            />
+            <CustomSelect
+              label="Branch"
+              options={branchOptions}
+              value={updateContactData?.branch ?? Branch.PADUR}
+              onChange={(value) => handleContactChange('branch', value)}
+            />
+            <CustomInput
+              label="Remarks"
+              value={updateContactData?.remarks ?? ''}
+              onChange={(value) => handleContactChange('remarks', value)}
+              placeholder="Enter Remarks"
+            />
           </div>
 
           {/* <div className="grid grid-cols-1 w-1/2 lg:w-full lg:grid-cols-3">

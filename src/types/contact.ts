@@ -1,3 +1,5 @@
+import { Branch } from './user';
+
 export type ContactInfoType = {
   _id?: string;
   name: string;
@@ -9,6 +11,8 @@ export type ContactInfoType = {
   pincode: string;
   company_name?: string;
   address_proof?: string;
+  remarks?: string;
+  branch?: Branch;
 };
 
 export interface ContactWithFile extends ContactInfoType {
@@ -28,4 +32,6 @@ export const initialContactType: ContactInfoType = {
   pincode: '',
   company_name: '',
   address_proof: '',
+  remarks: '',
+  branch: Branch.PADUR,
 };

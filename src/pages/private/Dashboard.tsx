@@ -15,6 +15,8 @@ import { getOrderStatus, calculateFinalAmount } from './Orders/utils';
 import CustomPieChart from '../../styled/CustomPieChart';
 import CustomDatePicker from '../../styled/CustomDatePicker';
 import BranchSelector from '../../components/BranchSelector';
+import { RiFileExcel2Line } from 'react-icons/ri';
+import XLSX from 'xlsx-js-style';
 
 export const OrderStatusValues: string[] = Object.values(OrderStatusType);
 
@@ -250,9 +252,9 @@ const getDetailsData = (
   filterDates: DateFilter
 ):
   | {
-      pending: { name: string; amount: number }[];
-      paid: { name: string; amount: number }[];
-    }
+    pending: { name: string; amount: number }[];
+    paid: { name: string; amount: number }[];
+  }
   | { name: string; amount: number }[] => {
   const validGroupKeys = getValidGroupKeys(filter, filterDates);
   if (chartType === 'incoming_pending' || chartType === 'repayment_pending') {
@@ -559,6 +561,51 @@ const Dashboard = () => {
     setChartData(pendingData);
   }, [filter, filterDates, graphFilter, orders, showPendingAmountsOnly]);
 
+  const handleExportExcel = () => {
+    let exportDetailsData: Record<string, string | number>[] = [];
+    if ('pending' in detailsData) {
+      exportDetailsData = [
+        ...detailsData.pending.map((d) => ({
+          Customer: d.name,
+          Amount: d.amount,
+          Status: 'Pending',
+        })),
+        ...detailsData.paid.map((d) => ({
+          Customer: d.name,
+          Amount: d.amount,
+          Status: 'Paid',
+        })),
+      ];
+    } else {
+      exportDetailsData = detailsData.map((d) => ({
+        'Product (or) Status': d.name,
+        Nos: d.amount,
+      }));
+    }
+
+    if (exportDetailsData.length === 0) {
+      alert('No data available to export');
+      return;
+    }
+
+    const tabTitles: Record<ChartType, string> = {
+      incoming_pending: 'Balance Amount',
+      repayment_pending: 'Repayment Amount',
+      machines_in: 'Machines In',
+      machines_out: 'Machines Out',
+      machines_repair: 'Machines Repair',
+      machines_overdue: 'Machines Overdue',
+      order_status_summary: 'Order Status Summary',
+    };
+    const tabTitle = tabTitles[graphFilter] || 'Details';
+
+    const wb = XLSX.utils.book_new();
+    const wsDetails = XLSX.utils.json_to_sheet(exportDetailsData);
+    XLSX.utils.book_append_sheet(wb, wsDetails, tabTitle.substring(0, 31));
+
+    XLSX.writeFile(wb, `${tabTitle.replace(/\s+/g, '_')}_${dayjs().format('YYYYMMDD_HHmmss')}.xlsx`);
+  };
+
   return (
     <div className="h-auto w-full overflow-y-auto">
       {/* Header */}
@@ -655,57 +702,50 @@ const Dashboard = () => {
           <div className="flex flex-col bg-gray-50 rounded-xl gap-1 px-3 max-h-[26rem] py-2 h-full">
             <ul className="flex flex-row text-sm gap-3">
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'incoming_pending' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'incoming_pending' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('incoming_pending')}
               >
                 Balance Amount
               </li>
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'repayment_pending' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'repayment_pending' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('repayment_pending')}
               >
                 Repayment Amount
               </li>
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'machines_in' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'machines_in' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('machines_in')}
               >
                 Machines In
               </li>
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'machines_out' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'machines_out' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('machines_out')}
               >
                 Machines Out
               </li>
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'machines_repair' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'machines_repair' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('machines_repair')}
               >
                 Machines Repair
               </li>
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'machines_overdue' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'machines_overdue' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('machines_overdue')}
               >
                 Machines Overdue
               </li>
               <li
-                className={`cursor-pointer ${
-                  graphFilter == 'order_status_summary' ? 'text-black' : 'text-gray-500'
-                }`}
+                className={`cursor-pointer ${graphFilter == 'order_status_summary' ? 'text-black' : 'text-gray-500'
+                  }`}
                 onClick={() => setGraphFilter('order_status_summary')}
               >
                 Order Status Summary
@@ -718,7 +758,19 @@ const Dashboard = () => {
             )}
           </div>
           <div className="rounded-xl p-4 bg-gray-50 flex flex-col gap-1 max-h-[26rem] overflow-y-auto">
-            <p className="text-lg font-semibold">Details</p>
+            <div className="flex justify-between items-center w-full mb-2">
+              <p className="text-lg font-semibold">Details</p>
+              <div
+                className="cursor-pointer bg-blue-100 hover:bg-blue-200 p-2 rounded-md transition-colors flex items-center justify-center"
+                onClick={handleExportExcel}
+                title="Export Data"
+              >
+                <RiFileExcel2Line
+                  size={20}
+                  className="text-blue-700"
+                />
+              </div>
+            </div>
             <ul className="flex flex-col gap-3 px-4 h-full overflow-y-auto">
               {'pending' in detailsData ? (
                 <>

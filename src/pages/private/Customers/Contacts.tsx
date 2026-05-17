@@ -1,4 +1,4 @@
-import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import type { ColDef, ICellRendererParams, ValueFormatterParams } from 'ag-grid-community';
 import { useEffect, useState } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { BsSearch } from 'react-icons/bs';
@@ -20,6 +20,7 @@ import AddContactModal from './modals/AddContactModal';
 import DeleteContactModal from './modals/DeleteContactModal';
 import UpdateContactModal from './modals/UpdateContactModal';
 import ViewImageModal from './modals/ViewImageModal';
+import { Branch } from '../../../types/user';
 
 const renderIcon = (params: { data: ContactInfoType }) => {
   const hasProof = !!params.data?.address_proof;
@@ -76,6 +77,16 @@ const Contacts = () => {
       filter: 'agTextColumnFilter',
     },
     { field: 'gstin', headerName: 'GSTIN', minWidth: 100, flex: 1 },
+    {
+      field: 'branch',
+      headerName: 'Branch',
+      minWidth: 100,
+      flex: 1,
+      filter: 'agTextColumnFilter',
+      valueFormatter: (params: ValueFormatterParams) => {
+        return params.value === Branch.PADUR ? 'Padur' : params.value === Branch.PUDUPAKKAM ? 'Pudupakkam' : 'Kelambakkam';
+      },
+    },
     {
       field: 'email',
       headerName: 'Email',

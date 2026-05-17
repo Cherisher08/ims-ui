@@ -3,7 +3,15 @@ import CustomButton from '../../../../styled/CustomButton';
 import { FaTimesCircle } from 'react-icons/fa';
 import { LuUpload } from 'react-icons/lu';
 import CustomInput from '../../../../styled/CustomInput';
+import CustomSelect from '../../../../styled/CustomSelect';
+import { Branch } from '../../../../types/user';
 import { Modal } from '@mui/material';
+
+const branchOptions = [
+  { id: Branch.PADUR, value: 'Padur' },
+  { id: Branch.PUDUPAKKAM, value: 'Pudupakkam' },
+  { id: Branch.KELAMBAKKAM, value: 'Kelambakkam' },
+];
 import {
   ContactWithFile,
   initialContactType,
@@ -162,30 +170,19 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
               onChange={(value) => handleContactChange('gstin', value)}
               placeholder="Enter GSTIN"
             />
-            <div className="flex flex-col lg:col-span-2">
-              <div className="">
-                <CustomInput
-                  label="Address"
-                  multiline
-                  value={newContactData?.address ?? ''}
-                  onChange={(value) => handleContactChange('address', value)}
-                  placeholder="Enter Address"
-                />
-              </div>
-
-              <div className="">
-                <CustomInput
-                  label="Pincode"
-                  value={newContactData?.pincode ?? ''}
-                  onChange={(value) => handleContactChange('pincode', value)}
-                  placeholder="Enter Pincode"
-                />
-              </div>
+            <div className="flex flex-col lg:col-span-2 justify-start h-full">
+              <CustomInput
+                label="Address"
+                multiline
+                value={newContactData?.address ?? ''}
+                onChange={(value) => handleContactChange('address', value)}
+                placeholder="Enter Address"
+              />
             </div>
 
-            <div className="flex flex-col sm:h-4/5 w-full gap-1">
+            <div className="flex flex-col w-full gap-1 justify-start h-[8.25rem]">
               <label className="w-full line-clamp-2 break-words h-auto min-h-6">Upload Proof</label>
-              <div className="h-full min-h-[10rem] max-w-[12rem] w-full relative">
+              <div className="h-full w-full relative">
                 {addressProof === null ? (
                   <>
                     <input
@@ -219,6 +216,25 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
                 )}
               </div>
             </div>
+
+            <CustomInput
+              label="Pincode"
+              value={newContactData?.pincode ?? ''}
+              onChange={(value) => handleContactChange('pincode', value)}
+              placeholder="Enter Pincode"
+            />
+            <CustomSelect
+              label="Branch"
+              options={branchOptions}
+              value={newContactData?.branch ?? Branch.PADUR}
+              onChange={(value) => handleContactChange('branch', value)}
+            />
+            <CustomInput
+              label="Remarks"
+              value={newContactData?.remarks ?? ''}
+              onChange={(value) => handleContactChange('remarks', value)}
+              placeholder="Enter Remarks"
+            />
           </div>
         </div>
 

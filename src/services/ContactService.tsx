@@ -11,7 +11,9 @@ const constructContactFormData = (contactWithFile: ContactWithFile) => {
   formData.append('email', contactWithFile.email);
   formData.append('address', contactWithFile.address);
   formData.append('pincode', contactWithFile.pincode);
-  formData.append('address_proof', contactWithFile.address_proof!);
+  formData.append('address_proof', contactWithFile.address_proof || '');
+  formData.append('remarks', contactWithFile.remarks || '');
+  if (contactWithFile.branch) formData.append('branch', contactWithFile.branch);
   if (contactWithFile.file !== null) formData.append('file', contactWithFile.file);
   return formData;
 };

@@ -130,9 +130,9 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
   const updatedProducts =
     data.billing_mode === BillingMode.B2C && data.product_details
       ? data.product_details.map((product: ProductDetails) => ({
-          ...product,
-          rent_per_unit: calculateRentAfterGST(product.rent_per_unit, data.gst),
-        }))
+        ...product,
+        rent_per_unit: calculateRentAfterGST(product.rent_per_unit, data.gst),
+      }))
       : data.product_details;
 
   const gstPercentage = data.gst && data.gst !== 0 ? data.gst : 18;
@@ -629,7 +629,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 >
                   {data.customer
                     ? data.customer.name.slice(0, 1).toUpperCase() +
-                      data.customer.name.slice(1).toLowerCase()
+                    data.customer.name.slice(1).toLowerCase()
                     : ''}
                 </Text>
                 <Text
@@ -828,7 +828,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   styles.tableRow,
                   (data.product_details.length > 7 - emptySpaces &&
                     index === data.product_details.length - 1) ||
-                  (maxProducts === 1 && index === data.product_details.length - 1)
+                    (maxProducts === 1 && index === data.product_details.length - 1)
                     ? {}
                     : { borderBottom: '1px solid #000' },
                 ]}
@@ -893,8 +893,8 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       {data.billing_mode === BillingMode.B2B
                         ? parseFloat(calculateProductRent(product).toFixed(2))
                         : parseFloat(
-                            (calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2)
-                          )}
+                          (calculateProductRent(product) / (1 + gstPercentage / 100)).toFixed(2)
+                        )}
                     </Text>
                   </>
                 )}
@@ -1000,52 +1000,50 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                 {[
                   ...(data.discount
                     ? [
-                        {
-                          label: 'Discount',
-                          value: `${
-                            data.discount_type === DiscountType.RUPEES ? 'Rs.' : ''
-                          } ${data.discount?.toFixed(2)} ${
-                            data.discount_type === DiscountType.PERCENT ? '%' : ''
+                      {
+                        label: 'Discount',
+                        value: `${data.discount_type === DiscountType.RUPEES ? 'Rs.' : ''
+                          } ${data.discount?.toFixed(2)} ${data.discount_type === DiscountType.PERCENT ? '%' : ''
                           }`,
-                          bottom: true,
-                        },
-                      ]
+                        bottom: true,
+                      },
+                    ]
                     : []),
                   ...(data.discount || data.eway_amount
                     ? [
-                        {
-                          label: 'Amount before tax',
-                          value: `Rs. ${(totalAmtSum + data.eway_amount - data.discount).toFixed(2)}`,
-                          bottom: true,
-                        },
-                      ]
+                      {
+                        label: 'Amount before tax',
+                        value: `Rs. ${(totalAmtSum + data.eway_amount - data.discount).toFixed(2)}`,
+                        bottom: true,
+                      },
+                    ]
                     : []),
                   ...(data.billing_mode === BillingMode.B2B
                     ? [
-                        {
-                          label: `GST - ${gstPercentage}%`,
-                          value: `Rs. ${gstAmount}`,
-                          bottom: true,
-                        },
-                      ]
+                      {
+                        label: `GST - ${gstPercentage}%`,
+                        value: `Rs. ${gstAmount}`,
+                        bottom: true,
+                      },
+                    ]
                     : []),
                   ...(data.round_off
                     ? [
-                        {
-                          label: 'Round Off',
-                          value: `Rs. ${data.round_off?.toFixed(2)}`,
-                          bottom: true,
-                        },
-                      ]
+                      {
+                        label: 'Round Off',
+                        value: `Rs. ${data.round_off?.toFixed(2)}`,
+                        bottom: true,
+                      },
+                    ]
                     : []),
                   ...(data.damage_expenses
                     ? [
-                        {
-                          label: 'Damage Expenses',
-                          value: `Rs. ${data.damage_expenses?.toFixed(2)}`,
-                          bottom: true,
-                        },
-                      ]
+                      {
+                        label: 'Damage Expenses',
+                        value: `Rs. ${data.damage_expenses?.toFixed(2)}`,
+                        bottom: true,
+                      },
+                    ]
                     : []),
                 ].map((item, index) => (
                   <View
@@ -1150,7 +1148,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                                   (total, deposit) => total + deposit.amount,
                                   0
                                 ) <
-                              0
+                                0
                                 ? 'red'
                                 : data.status === PaymentStatus.PAID
                                   ? 'green'
@@ -1168,7 +1166,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                           color:
                             calcTotal() -
                               data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                            0
+                              0
                               ? 'red'
                               : data.status === PaymentStatus.PAID
                                 ? 'green'
@@ -1178,7 +1176,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       >
                         {calcTotal() -
                           data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                        0
+                          0
                           ? 'Return Payment'
                           : data.status === PaymentStatus.PAID
                             ? 'Paid'
@@ -1200,7 +1198,7 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                         color:
                           calcTotal() -
                             data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
-                          0
+                            0
                             ? 'red'
                             : data.status === PaymentStatus.PAID
                               ? 'green'
@@ -1211,22 +1209,22 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                       Rs.{' '}
                       {data.status === PaymentStatus.PAID
                         ? calcTotal() -
-                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
+                          data.deposits.reduce((total, deposit) => total + deposit.amount, 0) <
                           0
                           ? Math.abs(
-                              calcTotal() -
-                                data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-                            ).toFixed(2)
+                            calcTotal() -
+                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+                          ).toFixed(2)
                           : calcTotal().toFixed(2)
                         : (
-                            Math.abs(
-                              calcTotal() -
-                                data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
-                            ) -
-                            (data.balance_paid && data.balance_paid !== 0
-                              ? data.balance_paid
-                              : data.repay_amount)
-                          ).toFixed(2)}
+                          Math.abs(
+                            calcTotal() -
+                            data.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+                          ) -
+                          (data.balance_paid && data.balance_paid !== 0
+                            ? data.balance_paid
+                            : data.repay_amount)
+                        ).toFixed(2)}
                     </Text>
                   </View>
                 </View>
@@ -1314,56 +1312,53 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
               >
                 <Text style={styles.bankDetails}>Bank Information</Text>
                 <Text style={styles.selectSim}>Kindly make the payment in favour of</Text>
-                <View
-                  style={{
-                    width: '80%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text style={{ width: 90 }}>Account No</Text>
-                  <Text>50200080502830</Text>
-                </View>
-                <View
-                  style={{
-                    width: '80%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text style={{ width: 125 }}>Account Name</Text>
-                  <Text>MANI POWER TOOLS</Text>
-                </View>
-                <View
-                  style={{
-                    width: '80%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text style={{ width: 100 }}>Bank Name</Text>
-                  <Text>HDFC BANK LTD</Text>
-                </View>
-                <View
-                  style={{
-                    width: '80%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text style={{ width: 105 }}>Branch</Text>
-                  <Text>KELAMBAKKAM</Text>
-                </View>
-                <View
-                  style={{
-                    width: '80%',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text style={{ width: 80 }}>IFSC Code</Text>
-                  <Text>HDFC0002075</Text>
-                </View>
+                {data.branch === Branch.PUDUPAKKAM ? (
+                  <>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 75 }}>Account No</Text>
+                      <Text>8108407212</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 132 }}>Account Name</Text>
+                      <Text>MANI POWER TOOLS</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 90 }}>Bank Name</Text>
+                      <Text>INDIAN BANK</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 75 }}>Branch</Text>
+                      <Text>SIRUSERI</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 76 }}>IFSC Code</Text>
+                      <Text>IDIB000S146</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 90 }}>Account No</Text>
+                      <Text>50200080502830</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 125 }}>Account Name</Text>
+                      <Text>MANI POWER TOOLS</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 100 }}>Bank Name</Text>
+                      <Text>HDFC BANK LTD</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 105 }}>Branch</Text>
+                      <Text>KELAMBAKKAM</Text>
+                    </View>
+                    <View style={{ width: '80%', display: 'flex', flexDirection: 'row' }}>
+                      <Text style={{ width: 80 }}>IFSC Code</Text>
+                      <Text>HDFC0002075</Text>
+                    </View>
+                  </>
+                )}
               </View>
             </View>
             <View

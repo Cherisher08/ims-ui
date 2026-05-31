@@ -23,12 +23,32 @@ import ViewImageModal from './modals/ViewImageModal';
 import { Branch } from '../../../types/user';
 
 const renderIcon = (params: { data: ContactInfoType }) => {
-  const hasProof = !!params.data?.address_proof;
+  const isAadhaarVerified = !!params.data?.aadhaar_verified;
+  const hasLegacyProof = !!params.data?.address_proof;
 
-  return hasProof ? (
-    <FaCheckCircle className="text-green-600 text-xl" />
-  ) : (
-    <FaTimesCircle className="text-red-600 text-xl" />
+  if (isAadhaarVerified) {
+    return (
+      <div className="flex items-center gap-1 text-green-600 font-semibold h-full">
+        <FaCheckCircle className="text-green-600 text-lg" />
+        <span className="text-xs">Aadhaar</span>
+      </div>
+    );
+  }
+
+  if (hasLegacyProof) {
+    return (
+      <div className="flex items-center gap-1 text-blue-600 font-semibold h-full">
+        <FaCheckCircle className="text-blue-500 text-lg" />
+        <span className="text-xs">Image</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 text-red-500 font-semibold h-full">
+      <FaTimesCircle className="text-red-500 text-lg" />
+      <span className="text-xs">None</span>
+    </div>
   );
 };
 
@@ -116,14 +136,20 @@ const Contacts = () => {
       headerClass: 'ag-header-wrap',
       cellRenderer: (params: ICellRendererParams) => {
         const rowData = params.data;
+        if (!rowData?.address_proof) {
+          return <span className="text-gray-400 font-semibold text-sm">-</span>;
+        }
 
         return (
-          <IoEyeOutline
-            size={25}
-            onClick={() => {
-              setImageUrl(rowData.address_proof);
-            }}
-          />
+          <div className="flex items-center h-full">
+            <IoEyeOutline
+              size={22}
+              className="cursor-pointer text-primary hover:text-blue-600 transition-colors"
+              onClick={() => {
+                setImageUrl(rowData.address_proof);
+              }}
+            />
+          </div>
         );
       },
     },

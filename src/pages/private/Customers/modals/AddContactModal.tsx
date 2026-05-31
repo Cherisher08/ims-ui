@@ -21,6 +21,7 @@ import { MdClose } from 'react-icons/md';
 import { useCreateContactMutation, useGetContactsQuery } from '../../../../services/ContactService';
 import { toast } from 'react-toastify';
 import { TOAST_IDS } from '../../../../constants/constants';
+import AadhaarOtpModal from './AadhaarOtpModal';
 
 export type AddContactModalType = {
   addContactOpen: boolean;
@@ -31,7 +32,7 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
   const [newContactData, setNewContactData] = useState<ContactInfoType>(initialContactType);
   const [
     createNewContact,
-    { isSuccess: isCreateContactSuccess, isError: isCreateContactError, reset },
+    { isSuccess: isCreateContactSuccess, isError: isCreateContactError, reset, data: createdContact },
   ] = useCreateContactMutation();
   const [addressProof, setAddressProof] = useState<File | null>(null);
   const { data: contacts } = useGetContactsQuery();
@@ -39,6 +40,8 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
     personal: null,
     office: null,
   });
+  const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false);
+  const [savedContactId, setSavedContactId] = useState<string>('');
 
   const handleAddContact = () => {
     const contactWithFile: ContactWithFile = {
@@ -68,12 +71,15 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
   };
 
   useEffect(() => {
-    if (isCreateContactSuccess) {
+    if (isCreateContactSuccess && createdContact) {
       toast.success('Contact created successfully', {
         toastId: TOAST_IDS.SUCCESS_CONTACT_CREATE,
       });
-      reset();
+      // Capture new ID and auto-open Aadhaar modal
+      setSavedContactId(createdContact._id ?? '');
       setAddContactOpen(false);
+      setAadhaarModalOpen(true);
+      reset();
     }
     if (isCreateContactError) {
       toast.error('Error in creating contact', {
@@ -82,9 +88,10 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
       reset();
       setAddContactOpen(false);
     }
-  }, [isCreateContactError, isCreateContactSuccess, reset, setAddContactOpen]);
+  }, [isCreateContactError, isCreateContactSuccess, reset, setAddContactOpen, createdContact]);
 
   return (
+    <>
     <Modal
       open={addContactOpen}
       onClose={() => {
@@ -115,24 +122,28 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
               onChange={(value) => handleContactChange('name', value)}
               placeholder="Enter Name"
             />
-            <CustomInput
-              type="number"
-              label="Personal Number"
-              error={errors.personal !== null && newContactData.personal_number !== ''}
-              helperText={errors.personal || ''}
-              value={newContactData?.personal_number ?? ''}
-              onChange={(value) => {
-                const exists = contacts?.find(
-                  (contact) => contact.personal_number === value || contact.office_number === value
-                );
-                setErrors((prev) => ({
-                  ...prev,
-                  personal: !exists || value === '' ? null : 'Contact already exists',
-                }));
-                handleContactChange('personal_number', value);
-              }}
-              placeholder="Enter Personal Number"
-            />
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <CustomInput
+                  type="number"
+                  label="Personal Number"
+                  error={errors.personal !== null && newContactData.personal_number !== ''}
+                  helperText={errors.personal || ''}
+                  value={newContactData?.personal_number ?? ''}
+                  onChange={(value) => {
+                    const exists = contacts?.find(
+                      (contact) => contact.personal_number === value || contact.office_number === value
+                    );
+                    setErrors((prev) => ({
+                      ...prev,
+                      personal: !exists || value === '' ? null : 'Contact already exists',
+                    }));
+                    handleContactChange('personal_number', value);
+                  }}
+                  placeholder="Enter Personal Number"
+                />
+              </div>
+            </div>
             <CustomInput
               label="Email"
               value={newContactData?.email ?? ''}
@@ -257,11 +268,24 @@ const AddContactModal = ({ addContactOpen, setAddContactOpen }: AddContactModalT
               newContactData.name === '' ||
               newContactData.personal_number === ''
             }
-            label="Add Contact"
+            label="Save & Verify Aadhaar"
           />
         </div>
       </div>
     </Modal>
+
+    {/* Aadhaar OTP modal – opens automatically after contact is saved */}
+    <AadhaarOtpModal
+      open={aadhaarModalOpen}
+      contactId={savedContactId}
+      onClose={() => {
+        setAadhaarModalOpen(false);
+        setSavedContactId('');
+        setNewContactData(initialContactType);
+        setAddressProof(null);
+      }}
+    />
+    </>
   );
 };
 

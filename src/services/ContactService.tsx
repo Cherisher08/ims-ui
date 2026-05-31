@@ -1,6 +1,35 @@
 import { ContactInfoType, ContactWithFile } from '../types/contact';
 import { rootApi } from './ApiService';
 
+// ---------------------------------------------------------------------------
+// Aadhaar eKYC Types
+// ---------------------------------------------------------------------------
+export type RequestOtpPayload = {
+  aadhaar_number: string;
+  contact_id: string;
+};
+
+export type RequestOtpResponse = {
+  client_id: string;
+  message: string;
+};
+
+export type VerifyOtpPayload = {
+  client_id: string;
+  otp: string;
+  contact_id: string;
+};
+
+export type VerifyOtpResponse = {
+  success: boolean;
+  message: string;
+  aadhaar_masked_uid?: string;
+  aadhaar_name?: string;
+  aadhaar_dob?: string;
+  aadhaar_gender?: string;
+  aadhaar_address?: string;
+};
+
 const constructContactFormData = (contactWithFile: ContactWithFile) => {
   const formData = new FormData();
   formData.append('name', contactWithFile.name);
@@ -56,6 +85,22 @@ export const contactApi = rootApi.injectEndpoints({
       }),
       invalidatesTags: ['Contact'],
     }),
+    // --- Aadhaar eKYC ---
+    requestAadhaarOtp: build.mutation<RequestOtpResponse, RequestOtpPayload>({
+      query: (body) => ({
+        url: 'aadhaar/request-otp',
+        method: 'POST',
+        body,
+      }),
+    }),
+    verifyAadhaarOtp: build.mutation<VerifyOtpResponse, VerifyOtpPayload>({
+      query: (body) => ({
+        url: 'aadhaar/verify-otp',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Contact'],
+    }),
   }),
 });
 
@@ -65,4 +110,6 @@ export const {
   useCreateContactMutation,
   useUpdateContactMutation,
   useDeleteContactMutation,
+  useRequestAadhaarOtpMutation,
+  useVerifyAadhaarOtpMutation,
 } = contactApi;

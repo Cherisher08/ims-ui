@@ -1,6 +1,6 @@
 import { Modal } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdVerified } from 'react-icons/md';
 import CustomInput from '../../../../styled/CustomInput';
 import CustomSelect from '../../../../styled/CustomSelect';
 import { Branch } from '../../../../types/user';
@@ -18,6 +18,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useGetContactsQuery, useUpdateContactMutation } from '../../../../services/ContactService';
 import { toast } from 'react-toastify';
 import { TOAST_IDS } from '../../../../constants/constants';
+import AadhaarOtpModal from './AadhaarOtpModal';
+
 
 export type UpdateContactModalType = {
   updateContactOpen: boolean;
@@ -39,6 +41,7 @@ const UpdateContactModal = ({
   ] = useUpdateContactMutation();
   const { data: contacts } = useGetContactsQuery();
   const [error, setError] = useState<string | null>(null);
+  const [aadhaarModalOpen, setAadhaarModalOpen] = useState(false);
 
   const handleUpdateContact = () => {
     const contactWithFile: ContactWithFile = {
@@ -86,6 +89,7 @@ const UpdateContactModal = ({
   }, [IsUpdateContactError, isUpdateContactSuccess, reset, setUpdateContactOpen]);
 
   return (
+    <>
     <Modal
       open={updateContactOpen}
       onClose={() => {
@@ -117,29 +121,49 @@ const UpdateContactModal = ({
               onChange={(value) => handleContactChange('name', value)}
               placeholder="Enter Name"
             />
-            <CustomInput
-              label="Personal Number"
-              error={error !== null && updateContactData.personal_number !== ''}
-              helperText={error || ''}
-              value={updateContactData?.personal_number ?? ''}
-              onChange={(value) => {
-                const normalizedValue = value.trim();
-                handleContactChange('personal_number', normalizedValue);
-                if (!normalizedValue) {
-                  setError(null);
-                  return;
-                }
+            <div className="flex items-end gap-2 col-span-1">
+              <div className="flex-1">
+                <CustomInput
+                  label="Personal Number"
+                  error={error !== null && updateContactData.personal_number !== ''}
+                  helperText={error || ''}
+                  value={updateContactData?.personal_number ?? ''}
+                  onChange={(value) => {
+                    const normalizedValue = value.trim();
+                    handleContactChange('personal_number', normalizedValue);
+                    if (!normalizedValue) {
+                      setError(null);
+                      return;
+                    }
 
-                const exists = contacts?.find(
-                  (contact) =>
-                    contact.personal_number === normalizedValue &&
-                    contact._id !== updateContactData._id
-                );
+                    const exists = contacts?.find(
+                      (contact) =>
+                        contact.personal_number === normalizedValue &&
+                        contact._id !== updateContactData._id
+                    );
 
-                setError(exists ? 'Contact already exists' : null);
-              }}
-              placeholder="Enter Personal Number"
-            />
+                    setError(exists ? 'Contact already exists' : null);
+                  }}
+                  placeholder="Enter Personal Number"
+                />
+              </div>
+              {updateContactData?.aadhaar_verified ? (
+                <div className="flex items-center gap-1 text-green-600 text-xs font-semibold h-[2.5rem] pb-2">
+                  <MdVerified size={18} />
+                  <span>Verified</span>
+                </div>
+              ) : (
+                updateContactData?._id && (
+                  <CustomButton
+                    onClick={() => setAadhaarModalOpen(true)}
+                    label="Verify Aadhaar"
+                    variant="outlined"
+                    className="bg-white flex-shrink-0 mb-[6px]"
+                    style={{ height: '2.5rem' }}
+                  />
+                )
+              )}
+            </div>
             <CustomInput
               label="Email"
               value={updateContactData?.email ?? ''}
@@ -276,6 +300,23 @@ const UpdateContactModal = ({
         </div>
       </div>
     </Modal>
+    <AadhaarOtpModal
+      open={aadhaarModalOpen}
+      contactId={updateContactData?._id ?? ''}
+      onClose={() => setAadhaarModalOpen(false)}
+      onVerified={(data) => {
+        setUpdateContactData((prev) => ({
+          ...prev,
+          aadhaar_verified: true,
+          aadhaar_masked_uid: data.aadhaar_masked_uid,
+          aadhaar_name: data.aadhaar_name,
+          aadhaar_dob: data.aadhaar_dob,
+          aadhaar_gender: data.aadhaar_gender,
+          aadhaar_address: data.aadhaar_address,
+        }));
+      }}
+    />
+    </>
   );
 };
 

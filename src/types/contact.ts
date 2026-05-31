@@ -13,6 +13,13 @@ export type ContactInfoType = {
   address_proof?: string;
   remarks?: string;
   branch?: Branch;
+  // Aadhaar eKYC fields
+  aadhaar_verified?: boolean;
+  aadhaar_masked_uid?: string;
+  aadhaar_name?: string;
+  aadhaar_dob?: string;
+  aadhaar_gender?: string;
+  aadhaar_address?: string;
 };
 
 export interface ContactWithFile extends ContactInfoType {

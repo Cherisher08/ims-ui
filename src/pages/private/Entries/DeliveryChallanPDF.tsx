@@ -84,6 +84,18 @@ const styles = StyleSheet.create({
 
 const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
   if (!data) return null;
+
+  const outDate = dayjs(data.out_date);
+  const isBeforeNoon = outDate.isValid() ? outDate.hour() < 12 : true;
+
+  const englishMessage = isBeforeNoon
+    ? "You should return equipment on or before 7.00 PM. Customers are responsible for equipment's Damage"
+    : "You should return equipment today before 7.00 PM or the next day morning before 7.00 AM. Customers are responsible for equipment's Damage";
+
+  const tamilMessage = isBeforeNoon
+    ? "நீங்கள் உபகரணங்களை மாலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். உபகரண சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு."
+    : "நீங்கள் உபகரணங்களை இன்று மாலை 7.00 மணிக்குள் அல்லது மறுநாள் காலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். உபகரண சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு.";
+
   return (
     <Document>
       <Page size={[297.64, Infinity]} style={styles.page}>
@@ -270,8 +282,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                 lineHeight: 1.4,
               }}
             >
-              You should generally return equipment within business hours (7.00 AM to 7.00 PM) &
-              Customers are responsible for equipment's Damage
+              {englishMessage}
             </Text>
             <Text
               style={{
@@ -284,8 +295,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
                 lineHeight: 1.4,
               }}
             >
-              நீங்கள் வழக்கமாக வணிக நேரங்களுக்குள் (காலை 7.00 மணி முதல் மாலை 7.00 மணி வரை)
-              உபகரணங்களைத் திருப்பித் தர வேண்டும் & உபகரண சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு.
+              {tamilMessage}
             </Text>
           </View>
         </View>

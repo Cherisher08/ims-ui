@@ -39,6 +39,13 @@ export const contactApi = rootApi.injectEndpoints({
       },
       invalidatesTags: ['Rental'],
     }),
+    uploadSiteImages: build.mutation<{ urls: string[] }, FormData>({
+      query: (formData) => ({
+        url: 'orders/rentals/upload-site-images',
+        method: 'POST',
+        body: formData,
+      }),
+    }),
     getRentalOrderById: build.query<RentalOrderInfo, string>({
       query: (id) => `orders/rentals/${id}`,
       transformResponse: (response: RentalOrderInfo) => transformRentalOrderResponse(response),
@@ -176,4 +183,5 @@ export const {
   usePatchRentalOrderMutation,
   usePostOrderDcAsWhatsappMessageMutation,
   useSyncRentalOrderProductsMutation,
+  useUploadSiteImagesMutation,
 } = contactApi;

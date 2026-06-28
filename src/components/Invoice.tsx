@@ -612,10 +612,13 @@ const Invoice = ({ data, invoiceId }: InvoiceRentalOrder) => {
                   Mobile No - 9042439153, 8428429153
                 </Text>
                 <Text style={[styles.ownerAddress, { fontWeight: 'bold' }]}>
-                  manipowertools9153@gmail.com
+                  maniconstructionequipments9153@gmail.com
                 </Text>
                 <Text style={[styles.ownerAddress, { fontWeight: 'bold' }]}>
                   GST No - 33FGDPP7447A1ZI
+                </Text>
+                <Text style={[styles.ownerAddress, { fontWeight: 'bold' }]}>
+                  UDYAM No - UDYAM-TN-34-0024568
                 </Text>
               </View>
               <View style={[styles.tableField, { marginTop: 5 }]}>

@@ -3,7 +3,8 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import Box from '@mui/material/Box';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useState } from 'react';
-import { LuPlus } from 'react-icons/lu';
+import { LuPlus, LuUpload } from 'react-icons/lu';
+import { FaTimesCircle } from 'react-icons/fa';
 import { MdAssignmentAdd } from 'react-icons/md';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -11,6 +12,7 @@ import { toast } from 'react-toastify';
 import { RootState } from '../../../store/store';
 import Loader from '../../../components/Loader';
 import SplitOrdermodal from '../../../components/SplitOrderModals';
+import ViewImageModal from '../Customers/modals/ViewImageModal';
 import { TOAST_IDS } from '../../../constants/constants';
 import {
   useGetProductsQuery,
@@ -26,6 +28,7 @@ import {
   useLazyGetExpiredRentalOrdersQuery,
   useUpdateRentalOrderMutation,
   useSyncRentalOrderProductsMutation,
+  useUploadSiteImagesMutation,
 } from '../../../services/OrderService';
 import { calculateDiscountAmount, calculateProductRent } from '../../../services/utility_functions';
 import { setExpiredRentalOrders } from '../../../store/OrdersSlice';
@@ -122,7 +125,7 @@ const initialRentalOrder: RentalOrderInfo = {
   deposits: [],
   eway_amount: 0,
   damage_expenses: 0,
-  eway_mode: PaymentMode.CASH,
+  eway_mode: PaymentMode.NULL,
   eway_type: TransportType.NULL,
   balance_paid: 0,
   balance_paid_mode: PaymentMode.NULL,
@@ -136,6 +139,8 @@ const initialRentalOrder: RentalOrderInfo = {
   invoice_id: '',
   branch: Branch.PADUR,
   invoice_date: null,
+  delivery_site_location: '',
+  delivery_site_images: [],
 };
 
 const NewOrder = () => {
@@ -169,6 +174,9 @@ const NewOrder = () => {
 
   const [createOrderDisabled, setCreateOrderDisabled] = useState<boolean>(true);
   const [orderInfo, setOrderInfo] = useState<RentalOrderInfo>(initialRentalOrder);
+  const [uploadSiteImages, { isLoading: isUploadingImages }] = useUploadSiteImagesMutation();
+  const [selectedSiteImageFiles, setSelectedSiteImageFiles] = useState<File[]>([]);
+  const [viewingImageUrl, setViewingImageUrl] = useState<string | null>(null);
   const [contacts, setContacts] = useState<ContactInfoType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<string>('');
@@ -264,12 +272,12 @@ const NewOrder = () => {
     const gstAmount =
       orderInfo.billing_mode === BillingMode.B2B
         ? parseFloat(
-            (
-              (totalAmtSum + transportForTax - (discountAmount || 0)) *
-              gstPercentage *
-              0.01
-            ).toFixed(2)
-          )
+          (
+            (totalAmtSum + transportForTax - (discountAmount || 0)) *
+            gstPercentage *
+            0.01
+          ).toFixed(2)
+        )
         : 0;
 
     const roundOff = orderInfo.round_off || 0;
@@ -386,7 +394,31 @@ const NewOrder = () => {
   };
 
   const createNewOrder = async () => {
-    const newOrderInfo = { ...orderInfo, deposits: depositData };
+    let uploadedUrls: string[] = [];
+    if (selectedSiteImageFiles.length > 0) {
+      const formData = new FormData();
+      selectedSiteImageFiles.forEach((file) => {
+        formData.append('files', file);
+      });
+      try {
+        const uploadRes = await uploadSiteImages(formData).unwrap();
+        uploadedUrls = uploadRes.urls;
+      } catch (err) {
+        toast.error('Failed to upload site images');
+        return;
+      }
+    }
+
+    const finalImages = [
+      ...(orderInfo.delivery_site_images || []),
+      ...uploadedUrls,
+    ];
+
+    const newOrderInfo = {
+      ...orderInfo,
+      deposits: depositData,
+      delivery_site_images: finalImages,
+    };
 
     const productWithZeroQty = newOrderInfo.product_details.find(
       (product) => product.order_quantity === 0
@@ -508,6 +540,7 @@ const NewOrder = () => {
         });
 
         setOrderInfo(initialRentalOrder);
+        setSelectedSiteImageFiles([]);
       } catch (error) {
         console.error('Failed to create rental order:', error);
       }
@@ -515,6 +548,7 @@ const NewOrder = () => {
   };
 
   useEffect(() => {
+    setSelectedSiteImageFiles([]);
     if (!rentalId) {
       setOrderInfo(initialRentalOrder);
       setDepositData([]);
@@ -826,7 +860,7 @@ const NewOrder = () => {
   const handlePaymentStatus = (type: 'balance_paid' | 'repay_amount', value: number) => {
     const amountDue = Math.abs(
       calculateFinalAmount() -
-        orderInfo.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+      orderInfo.deposits.reduce((total, deposit) => total + deposit.amount, 0)
     );
 
     if (value === amountDue) {
@@ -879,7 +913,7 @@ const NewOrder = () => {
     });
     const newStatus =
       isMachineWorking &&
-      (orderStatus === OrderStatusType.NO_BILL || orderStatus === OrderStatusType.CANCELLED)
+        (orderStatus === OrderStatusType.NO_BILL || orderStatus === OrderStatusType.CANCELLED)
         ? `${orderStatus} & Machine Not Returned`
         : orderStatus;
 
@@ -914,10 +948,10 @@ const NewOrder = () => {
   const gstAmount =
     orderInfo.billing_mode === BillingMode.B2B
       ? parseFloat(
-          ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(
-            2
-          )
+        ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(
+          2
         )
+      )
       : 0;
   const amountBeforeTax = totalAmtSum + orderInfo.eway_amount;
   const netTotal = parseFloat(
@@ -1071,7 +1105,7 @@ const NewOrder = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {orderInfo.type === ProductType.RENTAL && (
           <CustomInput
-            onChange={() => {}}
+            onChange={() => { }}
             label="Order Id"
             placeholder="Enter Order Id"
             value={orderInfo?.order_id ?? ''}
@@ -1086,7 +1120,7 @@ const NewOrder = () => {
             }
             return options;
           })}
-          addNewValue={() => {}}
+          addNewValue={() => { }}
           placeholder=""
           createOption={false}
           value={selectedPhoneNumber}
@@ -1107,7 +1141,7 @@ const NewOrder = () => {
           }}
         />
         <CustomAutoComplete
-          addNewValue={() => {}}
+          addNewValue={() => { }}
           placeholder=""
           createOption={false}
           label="Customer"
@@ -1115,7 +1149,7 @@ const NewOrder = () => {
           value={
             orderInfo.customer && orderInfo.customer?._id
               ? (formatContacts(contacts).find((option) => option.id === orderInfo.customer?._id)
-                  ?.value ?? '')
+                ?.value ?? '')
               : ''
           }
           onChange={(selectedValue) => {
@@ -1135,10 +1169,10 @@ const NewOrder = () => {
           }}
           error={customerError}
           helperText={customerErrorText}
-          // labelNavigation={{
-          //   label: 'View Past Bills',
-          //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
-          // }}
+        // labelNavigation={{
+        //   label: 'View Past Bills',
+        //   link: selectedCustomerId ? `/contacts/${selectedCustomerId}` : '',
+        // }}
         />
         {/* {orderInfo.type === ProductType.RENTAL && (
           <CustomSelect
@@ -1287,6 +1321,93 @@ const NewOrder = () => {
           multiline
           minRows={5}
         />
+
+        {/* Delivery Site Location */}
+        <CustomInput
+          value={orderInfo?.delivery_site_location ?? ''}
+          onChange={(value) => handleValueChange('delivery_site_location', value)}
+          label="Delivery Site Location"
+          placeholder="Enter location or paste Google Maps link"
+          multiline
+          minRows={3}
+        />
+
+        {/* Delivery Site Images */}
+        <div className="flex flex-col gap-1 col-span-2">
+          <label className="w-full line-clamp-2 break-words">Delivery Site Images</label>
+          {/* Existing uploaded images */}
+          {(orderInfo.delivery_site_images ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {(orderInfo.delivery_site_images ?? []).map((url, idx) => (
+                <div key={`existing-${idx}`} className="relative w-24 h-24">
+                  <FaTimesCircle
+                    size={18}
+                    color="red"
+                    className="absolute top-1 right-1 cursor-pointer z-10 drop-shadow"
+                    onClick={() => {
+                      const updated = (orderInfo.delivery_site_images ?? []).filter((_, i) => i !== idx);
+                      handleValueChange('delivery_site_images', updated);
+                    }}
+                  />
+                  <img
+                    src={url}
+                    className="w-full h-full object-cover rounded border cursor-pointer"
+                    onClick={() => setViewingImageUrl(url)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Newly selected files (not yet uploaded) */}
+          {selectedSiteImageFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {selectedSiteImageFiles.map((file, idx) => (
+                <div key={`new-${idx}`} className="relative w-24 h-24">
+                  <FaTimesCircle
+                    size={18}
+                    color="red"
+                    className="absolute top-1 right-1 cursor-pointer z-10 drop-shadow"
+                    onClick={() =>
+                      setSelectedSiteImageFiles((prev) => prev.filter((_, i) => i !== idx))
+                    }
+                  />
+                  <img
+                    src={URL.createObjectURL(file)}
+                    className="w-full h-full object-cover rounded border cursor-pointer"
+                    onClick={() => setViewingImageUrl(URL.createObjectURL(file))}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Upload drop zone */}
+          <div className="relative">
+            <input
+              id="site-image-upload"
+              name="site-image-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = e.target.files;
+                if (files) {
+                  setSelectedSiteImageFiles((prev) => [...prev, ...Array.from(files)]);
+                }
+                e.target.value = '';
+              }}
+            />
+            <label
+              htmlFor="site-image-upload"
+              className="border-2 border-dashed rounded flex flex-col items-center justify-center h-20 w-full cursor-pointer hover:border-blue-400 transition-colors"
+            >
+              <LuUpload size={20} />
+              <p className="text-xs text-center px-2 mt-1 text-gray-500">
+                Click to upload site images
+              </p>
+            </label>
+          </div>
+        </div>
       </div>
 
       {/* Products */}
@@ -1347,11 +1468,11 @@ const NewOrder = () => {
                   //   0;
                   const newQuantity = currentProduct
                     ? getAvailableStockQuantity(
-                        currentProduct.available_stock,
-                        product,
-                        orderInfo,
-                        existingRentalOrder
-                      )
+                      currentProduct.available_stock,
+                      product,
+                      orderInfo,
+                      existingRentalOrder
+                    )
                     : 0;
                   // let availableStock = 0;
                   // const oldStock =
@@ -1365,7 +1486,7 @@ const NewOrder = () => {
                     <tr key={product._id} className="border-b border-gray-200">
                       <td className="px-1 py-2 content-start">
                         <CustomAutoComplete
-                          addNewValue={() => {}}
+                          addNewValue={() => { }}
                           placeholder=""
                           createOption={false}
                           label=""
@@ -1416,7 +1537,7 @@ const NewOrder = () => {
                           disabled
                           className="w-[7rem] p-2"
                           value={orderInfo.product_details[index].product_unit.name || ''}
-                          onChange={() => {}}
+                          onChange={() => { }}
                         />
                       </td>
                       <td className="px-1 py-2 content-start">
@@ -1456,7 +1577,7 @@ const NewOrder = () => {
                           value={newQuantity}
                           type="number"
                           className="w-32 p-2"
-                          onChange={() => {}}
+                          onChange={() => { }}
                           label=""
                           placeholder=""
                         />
@@ -1473,22 +1594,22 @@ const NewOrder = () => {
                             const newProducts = [...orderInfo.product_details];
                             const currentProductStock = existingRentalOrder
                               ? getAvailableStockQuantity(
-                                  currentProduct?.available_stock || 0,
-                                  product,
-                                  orderInfo,
-                                  existingRentalOrder
-                                )
+                                currentProduct?.available_stock || 0,
+                                product,
+                                orderInfo,
+                                existingRentalOrder
+                              )
                               : currentProduct?.available_stock || 0;
 
                             const newQuantity = existingRentalOrder
                               ? Math.max(
-                                  0,
-                                  Math.min(
-                                    Number(val),
-                                    currentProductStock +
-                                      orderInfo.product_details[index].order_quantity
-                                  )
+                                0,
+                                Math.min(
+                                  Number(val),
+                                  currentProductStock +
+                                  orderInfo.product_details[index].order_quantity
                                 )
+                              )
                               : Math.max(0, Math.min(Number(val), currentProductStock));
 
                             newProducts[index] = {
@@ -1535,7 +1656,7 @@ const NewOrder = () => {
                               });
                             }
                           }}
-                          // format="DD/MM/YYYY"
+                        // format="DD/MM/YYYY"
                         />
                       </td>
                       <td className="px-1 py-2 content-start">
@@ -1544,8 +1665,8 @@ const NewOrder = () => {
                           value={
                             orderInfo.product_details[index].in_date
                               ? dayjs(orderInfo.product_details[index].in_date).format(
-                                  'DD-MMM-YYYY hh:mm A'
-                                )
+                                'DD-MMM-YYYY hh:mm A'
+                              )
                               : ''
                           }
                           disabled={product.type !== ProductType.RENTAL || !product._id}
@@ -1557,10 +1678,10 @@ const NewOrder = () => {
                             const newProducts = [...orderInfo.product_details];
                             const duration = val
                               ? getDuration(
-                                  newProducts[index].out_date,
-                                  val,
-                                  newProducts[index].billing_unit
-                                )
+                                newProducts[index].out_date,
+                                val,
+                                newProducts[index].billing_unit
+                              )
                               : 1;
                             newProducts[index] = {
                               ...product,
@@ -1572,7 +1693,7 @@ const NewOrder = () => {
                               product_details: newProducts,
                             });
                           }}
-                          // format="DD/MM/YYYY"
+                        // format="DD/MM/YYYY"
                         />
                       </td>
                       <td className="px-1 py-2 content-start">
@@ -1647,7 +1768,7 @@ const NewOrder = () => {
                           placeholder=""
                           className="w-32 p-2"
                           value={product.rent_per_unit * product.order_quantity * product.duration}
-                          onChange={() => {}}
+                          onChange={() => { }}
                         />
                       </td>
                       <td className="px-1 py-2 content-start">
@@ -1919,42 +2040,39 @@ const NewOrder = () => {
           </div>
         </div>
         <div className="grid grid-cols-[3fr_1fr] gap-2">
-          {/* <CustomInput
-            label="Repay Amount"
-            wrapperClass="w-full"
-            placeholder="Enter Repay Amount"
-            type="number"
-            value={orderInfo.repay_amount}
-            onChange={(val) => {
-              handlePaymentStatus("repay_amount", Number(val));
-              }}
-              /> */}
-          <CustomDatePicker
+          <CustomInput
             label="Repayment Details"
-            value={dayjs(orderInfo.repay_date).format('DD-MMM-YYYY') || ''}
-            // className="w-[11rem]"
-            onChange={(val) => {
-              if (!val && orderInfo.payment_mode === RepaymentMode.NULL) {
-                handleValueChange('status', PaymentStatus.PENDING);
-                handleValueChange('repay_amount', 0);
-              } else {
-                handleValueChange('status', PaymentStatus.PAID);
-                // Calculate repay_amount when date is set
-                if (val) {
-                  const totalDeposits = depositData.reduce((sum, dep) => sum + dep.amount, 0);
-                  const billAmount = calculateFinalAmount();
-                  const repayAmount = Math.max(0, totalDeposits - billAmount);
-                  handleValueChange('repay_amount', repayAmount);
-                }
-              }
-              handleValueChange('repay_date', val);
-            }}
-            format="DD/MM/YYYY"
+            wrapperClass="w-full"
+            placeholder="0"
+            type="number"
+            disabled
+            value={Math.max(0, depositSum + (orderInfo.balance_paid || 0) - netTotal)}
+            onChange={() => { }}
           />
           <div className="flex items-end gap-2">
+            <CustomDatePicker
+              label=''
+              value={dayjs(orderInfo.repay_date).format('DD-MMM-YYYY') || ''}
+              onChange={(val) => {
+                if (!val && orderInfo.payment_mode === RepaymentMode.NULL) {
+                  handleValueChange('status', PaymentStatus.PENDING);
+                  handleValueChange('repay_amount', 0);
+                } else {
+                  handleValueChange('status', PaymentStatus.PAID);
+                  if (val) {
+                    const totalDeposits = depositData.reduce((sum, dep) => sum + dep.amount, 0);
+                    const billAmount = calculateFinalAmount();
+                    const repayAmount = Math.max(0, totalDeposits - billAmount);
+                    handleValueChange('repay_amount', repayAmount);
+                  }
+                }
+                handleValueChange('repay_date', val);
+              }}
+              format="DD/MM/YYYY"
+            />
             <CustomSelect
               label=""
-              // className="w-[8rem]"
+              className="w-[8rem]"
               options={repaymentModeOptions}
               value={
                 repaymentModeOptions.find((mode) => orderInfo.payment_mode === mode.value)?.id || ''
@@ -1992,8 +2110,8 @@ const NewOrder = () => {
                     const newInvoiceId = orderInfo.invoice_id
                       ? orderInfo.invoice_id
                       : await triggerGetLatestInvoiceId({ branch: userBranch })
-                          .unwrap()
-                          .then((response) => response.invoice_id);
+                        .unwrap()
+                        .then((response) => response.invoice_id);
                     handleValueChange('invoice_id', newInvoiceId);
                     handleValueChange('invoice_date', val);
                   } catch {
@@ -2138,13 +2256,14 @@ const NewOrder = () => {
                   } else {
                     setDepositData([]);
                     setOrderInfo(initialRentalOrder);
+                    setSelectedSiteImageFiles([]);
                   }
                 }}
                 variant="outlined"
               />
               <CustomButton
                 label="Verify Delivery Challan"
-                disabled={createOrderDisabled}
+                disabled={createOrderDisabled || isUploadingImages}
                 onClick={() => {
                   setDeliveryChallanOrderLabel(rentalId ? 'Update Order' : 'Create Order');
                   setShowDeliveryChallanModal(true);
@@ -2152,7 +2271,7 @@ const NewOrder = () => {
               />
               <CustomButton
                 label={rentalId ? 'Update Order' : 'Create Order'}
-                disabled={createOrderDisabled}
+                disabled={createOrderDisabled || isUploadingImages}
                 onClick={createNewOrder}
               />
             </div>
@@ -2175,6 +2294,7 @@ const NewOrder = () => {
         createOrder={createNewOrder}
         createOrderLabel={deliveryChallanOrderLabel}
       />
+      <ViewImageModal imageUrl={viewingImageUrl} setImageUrl={(val) => setViewingImageUrl(val)} />
     </div>
   );
 };

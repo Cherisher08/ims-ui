@@ -16,8 +16,8 @@ const branchAddresses: Record<Branch, BranchAddress> = {
     line2: 'Chengalpattu, Chennai - 603103, Tamil Nadu',
   },
   [Branch.KELAMBAKKAM]: {
-    line1: 'No. 1/290, Angalamman Koil Street, Padur,',
-    line2: 'Chengalpattu, Chennai - 603103, Tamil Nadu',
+    line1: 'Kelambakkam to Padur,',
+    line2: 'Thaiyur Bypass - 603 103',
   },
   [Branch.PUDUPAKKAM]: {
     line1: 'No. 1/290, Angalamman Koil Street, Padur,',

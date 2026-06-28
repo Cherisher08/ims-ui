@@ -31,6 +31,8 @@ interface RowData {
   outDate: string;
   customerName: string;
   phoneNumber: string;
+  invoiceNo?: string;
+  orderNo?: string;
   cashIn: number;
   accountIn: number;
   upiIn: number;
@@ -221,6 +223,8 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
             <thead>
               <tr>
                 <th>Date and Time</th>
+                <th>Order No</th>
+                <th>Invoice No</th>
                 <th>Out Date</th>
                 <th>Customer Name</th>
                 <th>Phone Number</th>
@@ -240,6 +244,8 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
           (row) => `
                 <tr>
                   <td>${row.dateTime ? dayjs(row.dateTime).format('DD-MMM-YYYY hh:mm A') : ''}</td>
+                  <td>${row.orderNo || ''}</td>
+                  <td>${row.invoiceNo || ''}</td>
                   <td>${dayjs(row.outDate).format('DD-MMM-YYYY')}</td>
                   <td>${row.customerName}</td>
                   <td>${row.phoneNumber}</td>
@@ -256,7 +262,7 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
         )
         .join('')}
               <tr class="totals">
-                <td colspan="4">Totals</td>
+                <td colspan="7">Totals</td>
                 <td>₹ ${totalsRow.cashIn}</td>
                 <td>₹ ${totalsRow.accountIn}</td>
                 <td>₹ ${totalsRow.upiIn}</td>
@@ -350,11 +356,14 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
         .filter((deposit) => deposit.mode === PaymentMode.INDIAN_BANK)
         .reduce((sum, deposit) => sum + deposit.amount, 0);
 
+
       return {
         dateTime: transactionDate,
         outDate: order.out_date,
         customerName: order.customer?.name || '',
         phoneNumber: order.customer?.personal_number || '',
+        invoiceNo: order.invoice_id || '',
+        orderNo: order.order_id || '',
         cashIn:
           (order.balance_paid_mode === PaymentMode.CASH ? order.balance_paid : 0) +
           cashDepositsPeriod,
@@ -396,6 +405,8 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
     outDate: pettyCash.created_date,
     customerName: pettyCash.customer?.name || '',
     phoneNumber: pettyCash.customer?.personal_number || pettyCash.customer?.office_number || '',
+    invoiceNo: '',
+    orderNo: '',
     cashIn: pettyCash.balance_paid_mode === PaymentMode.CASH ? pettyCash.balance_paid : 0,
     accountIn: pettyCash.balance_paid_mode === PaymentMode.ACCOUNT ? pettyCash.balance_paid : 0,
     upiIn: pettyCash.balance_paid_mode === PaymentMode.UPI ? pettyCash.balance_paid : 0,
@@ -415,6 +426,8 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
   // Compute consolidated totals for numeric columns
   const totalsRow = {
     customerName: 'Totals',
+    invoiceNo: '',
+    orderNo: '',
     cashIn: rowData.reduce((sum, r) => sum + (r.cashIn || 0), 0),
     accountIn: rowData.reduce((sum, r) => sum + (r.accountIn || 0), 0),
     upiIn: rowData.reduce((sum, r) => sum + (r.upiIn || 0), 0),
@@ -444,11 +457,21 @@ const DateSpecificPettyCashDialog: FC<DateSpecificPettyCashDialogProps> = ({
     {
       field: 'dateTime',
       headerName: 'Date and Time',
-      minWidth: 150,
+      minWidth: 200,
       valueFormatter: (params) => {
         const date = params.value ? new Date(params.value) : '';
         return date ? dayjs(date).format('DD-MMM-YYYY hh:mm A') : '';
       },
+    },
+    {
+      field: 'orderNo',
+      headerName: 'Order No',
+      minWidth: 230,
+    },
+    {
+      field: 'invoiceNo',
+      headerName: 'Invoice No',
+      minWidth: 150,
     },
     {
       field: 'outDate',

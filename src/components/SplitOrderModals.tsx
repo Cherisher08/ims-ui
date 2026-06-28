@@ -94,6 +94,8 @@ const initialRentalOrder: RentalOrderInfo = {
   representative_name: '',
   representative_number: '',
   branch: Branch.PADUR,
+  delivery_site_location: '',
+  delivery_site_images: [],
 };
 
 const SplitOrdermodal = ({ open, setOpen, orderInfo }: Props) => {

@@ -150,6 +150,8 @@ export type RentalOrderInfo = OrderInfo & {
   representative_name: string;
   representative_number: string;
   whatsapp_notifications?: WhatsappNotifications;
+  delivery_site_location?: string;
+  delivery_site_images?: string[];
 };
 
 export type SalesOrderInfo = OrderInfo & {

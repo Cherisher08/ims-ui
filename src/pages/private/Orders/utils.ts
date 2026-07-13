@@ -262,10 +262,10 @@ export const calculateFinalAmount = (
   const gstAmount =
     orderInfo.billing_mode === BillingMode.B2B
       ? parseFloat(
-          ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(
-            2
-          )
+        ((totalAmtSum + transportForTax - (discountAmount || 0)) * gstPercentage * 0.01).toFixed(
+          2
         )
+      )
       : 0;
   const roundOff = orderInfo.round_off || 0;
   const damageExpenses = orderInfo.damage_expenses || 0;
@@ -309,13 +309,13 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
       const balanceAmount = Math.max(
         0,
         calculateFinalAmount(order as RentalOrderType) -
-          order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+        order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
       );
       const repaymentAmount = Math.abs(
         Math.min(
           0,
           calculateFinalAmount(order as RentalOrderType) -
-            order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
+          order.deposits.reduce((total, deposit) => total + deposit.amount, 0)
         )
       );
 
@@ -352,8 +352,8 @@ export const exportOrderToExcel = (orders: RentalOrderType[] | RentalOrderInfo[]
             ? products[i].in_date && dayjs(products[i].in_date).isValid()
               ? dayjs(products[i].in_date).format('DD-MMM-YYYY hh:mm A')
               : products[i].type === ProductType.RENTAL
-              ? 'Not Returned'
-              : ''
+                ? 'Not Returned'
+                : ''
             : '',
         Month: dayjs(order.out_date).format('MMMM'),
         'Rental Duration': order.rental_duration?.toString() || '',
@@ -547,9 +547,8 @@ export const transformRentalOrderData = (rentalOrders: RentalOrderInfo[]): Renta
       ...rentalOrder,
       customer: {
         _id: rentalOrder.customer._id,
-        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}${
-          rentalOrder.customer.office_number ? `-${rentalOrder.customer.office_number}` : ''
-        }`,
+        name: `${rentalOrder.customer.name}-${rentalOrder.customer.personal_number}${rentalOrder.customer.office_number ? `-${rentalOrder.customer.office_number}` : ''
+          }`,
       },
     };
   });

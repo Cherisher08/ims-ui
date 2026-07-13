@@ -68,6 +68,8 @@ type CustomTableProps<T> = {
   paginationPageSize?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pinnedBottomRowData?: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  postSortRows?: (params: any) => void;
 };
 
 const CustomTable = <T,>({
@@ -93,6 +95,7 @@ const CustomTable = <T,>({
   onFilterChanged = () => {},
   paginationPageSize = 10,
   pinnedBottomRowData = [],
+  postSortRows,
 }: CustomTableProps<T>) => {
   const [showPinnedBottomRow, setShowPinnedBottomRow] = useState<boolean>(() => !pagination);
   const handleGridReady = useCallback(
@@ -169,6 +172,7 @@ const CustomTable = <T,>({
           onFilterChanged();
         }}
         cellSelection={true}
+        postSortRows={postSortRows}
       />
     </div>
   );

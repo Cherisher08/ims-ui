@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetRentalOrdersQuery } from '../../services/OrderService';
 import { calculateDiscountAmount, calculateProductRent } from '../../services/utility_functions';
@@ -412,6 +412,31 @@ const Dashboard = () => {
     'combined'
   );
   const detailsData = getDetailsData(orders, graphFilter, filter, filterDates);
+
+  const [activeTab, setActiveTab] = useState<'customer' | 'machine' | 'datewise'>('customer');
+  const [tabFromDate, setTabFromDate] = useState<string>(
+    dayjs().startOf('month').format('YYYY-MM-DD')
+  );
+  const [tabToDate, setTabToDate] = useState<string>(
+    dayjs().format('YYYY-MM-DD')
+  );
+  const [customerSubTab, setCustomerSubTab] = useState<'pending' | 'paid'>('pending');
+  const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
+  const [expandedMachines, setExpandedMachines] = useState<Record<string, boolean>>({});
+
+  const toggleCustomerExpand = (custId: string) => {
+    setExpandedCustomers((prev) => ({
+      ...prev,
+      [custId]: !prev[custId],
+    }));
+  };
+
+  const toggleMachineExpand = (name: string) => {
+    setExpandedMachines((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  };
   const filterOptions = [
     { id: '1', value: 'Today' },
     { id: '2', value: 'Last 7 Days' },
@@ -560,6 +585,238 @@ const Dashboard = () => {
     );
     setChartData(pendingData);
   }, [filter, filterDates, graphFilter, orders, showPendingAmountsOnly]);
+
+  // Tab-based data calculations
+  const filteredOrdersForTabs = orders.filter((order) => {
+    if (!order.out_date) return false;
+    const orderDate = dayjs(order.out_date).format('YYYY-MM-DD');
+    return orderDate >= tabFromDate && orderDate <= tabToDate;
+  });
+
+  // 1. Customer details tab data
+  const customersMap: Record<string, {
+    id: string;
+    name: string;
+    mobile: string;
+    totalAmount: number;
+    totalPaid: number;
+    totalPending: number;
+    entriesCount: number;
+    orders: {
+      order_id: string;
+      out_date: string;
+      bill_amount: number;
+      pending_amount: number;
+      status: string;
+    }[];
+  }> = {};
+
+  filteredOrdersForTabs.forEach((order) => {
+    if (!order.customer) return;
+    const custId = order.customer._id;
+    const finalAmount = calculateFinalAmount(order as RentalOrderType, false);
+    const depositSum = order.deposits.reduce((sum, d) => sum + d.amount, 0) || 0;
+    
+    // An order is pending if status is PENDING.
+    const pendingAmount = order.status === PaymentStatus.PENDING ? Math.max(0, finalAmount - depositSum) : 0;
+    const paidAmount = finalAmount - pendingAmount;
+
+    if (!customersMap[custId]) {
+      customersMap[custId] = {
+        id: custId,
+        name: order.customer.name,
+        mobile: order.customer.personal_number || '',
+        totalAmount: 0,
+        totalPaid: 0,
+        totalPending: 0,
+        entriesCount: 0,
+        orders: [],
+      };
+    }
+
+    const custData = customersMap[custId];
+    custData.totalAmount += finalAmount;
+    custData.totalPaid += paidAmount;
+    custData.totalPending += pendingAmount;
+    custData.entriesCount += 1;
+    custData.orders.push({
+      order_id: order.order_id,
+      out_date: order.out_date,
+      bill_amount: finalAmount,
+      pending_amount: pendingAmount,
+      status: order.status,
+    });
+  });
+
+  const customersList = Object.values(customersMap);
+  const pendingCustomers = customersList.filter(c => c.totalPending > 0);
+  const paidCustomers = customersList.filter(c => c.totalPending === 0);
+
+  // 2. Machine details consolidated tab data
+  const machineMap: Record<string, {
+    name: string;
+    totalQuantity: number;
+    totalRent: number;
+    entriesCount: number;
+    orders: {
+      order_id: string;
+      out_date: string;
+      quantity: number;
+      duration: number;
+      rent_per_unit: number;
+      total_rent: number;
+    }[];
+  }> = {};
+
+  filteredOrdersForTabs.forEach((order) => {
+    order.product_details.forEach((p) => {
+      if (p.type !== ProductType.RENTAL) return;
+      const totalRent = calculateProductRent(p);
+      const machineName = p.name;
+
+      if (!machineMap[machineName]) {
+        machineMap[machineName] = {
+          name: machineName,
+          totalQuantity: 0,
+          totalRent: 0,
+          entriesCount: 0,
+          orders: [],
+        };
+      }
+
+      const machData = machineMap[machineName];
+      machData.totalQuantity += p.order_quantity;
+      machData.totalRent += totalRent;
+      machData.entriesCount += 1;
+      machData.orders.push({
+        order_id: order.order_id,
+        out_date: order.out_date,
+        quantity: p.order_quantity,
+        duration: p.duration,
+        rent_per_unit: p.rent_per_unit,
+        total_rent: totalRent,
+      });
+    });
+  });
+
+  const machineList = Object.values(machineMap);
+
+  // 3. Date wise details tab data
+  const dateWiseMap: Record<string, {
+    dateStr: string;
+    orderIds: string[];
+    customerIds: Set<string>;
+    productsCount: number;
+    totalRentalAmount: number;
+  }> = {};
+
+  filteredOrdersForTabs.forEach((order) => {
+    if (!order.out_date) return;
+    const dateKey = dayjs(order.out_date).format('YYYY-MM-DD');
+
+    if (!dateWiseMap[dateKey]) {
+      dateWiseMap[dateKey] = {
+        dateStr: dateKey,
+        orderIds: [],
+        customerIds: new Set(),
+        productsCount: 0,
+        totalRentalAmount: 0,
+      };
+    }
+
+    const dateData = dateWiseMap[dateKey];
+    dateData.orderIds.push(order.order_id);
+    if (order.customer) {
+      dateData.customerIds.add(order.customer._id);
+    }
+
+    order.product_details.forEach((p) => {
+      if (p.type !== ProductType.RENTAL) return;
+      dateData.productsCount += p.order_quantity;
+      dateData.totalRentalAmount += calculateProductRent(p);
+    });
+  });
+
+  const dateWiseList = Object.values(dateWiseMap).sort((a, b) => b.dateStr.localeCompare(a.dateStr));
+
+  const handleExportTabExcel = () => {
+    if (activeTab === 'customer') {
+      const customersToExport = customerSubTab === 'pending' ? pendingCustomers : paidCustomers;
+      const exportData: any[] = [];
+      customersToExport.forEach((c) => {
+        c.orders.forEach((o: any) => {
+          exportData.push({
+            'Customer Name': c.name,
+            'Mobile Number': c.mobile,
+            'Number of Entries': c.entriesCount,
+            'Net Customer Dues': c.totalPending,
+            'Order ID': o.order_id,
+            'Order Out Date': dayjs(o.out_date).format('DD-MMM-YYYY hh:mm A'),
+            'Bill Amount': o.bill_amount,
+            'Pending Dues': o.pending_amount,
+            'Order Status': o.status,
+          });
+        });
+      });
+
+      if (exportData.length === 0) {
+        alert('No customer data available to export');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, `Customer_${customerSubTab}`);
+      XLSX.writeFile(wb, `Customer_Details_${customerSubTab}_${dayjs().format('YYYYMMDD')}.xlsx`);
+    } else if (activeTab === 'machine') {
+      const exportData: any[] = [];
+      machineList.forEach((m) => {
+        m.orders.forEach((o) => {
+          exportData.push({
+            'Machine Name': m.name,
+            'Consolidated Entries': m.entriesCount,
+            'Total Quantity Rented': m.totalQuantity,
+            'Total Machine Revenue': m.totalRent,
+            'Order ID': o.order_id,
+            'Order Out Date': dayjs(o.out_date).format('DD-MMM-YYYY hh:mm A'),
+            'Order Quantity': o.quantity,
+            'Order Duration': o.duration,
+            'Rent Per Unit': o.rent_per_unit,
+            'Order Total Rent': o.total_rent,
+          });
+        });
+      });
+
+      if (exportData.length === 0) {
+        alert('No machine data available to export');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Machine Details');
+      XLSX.writeFile(wb, `Machine_Details_${dayjs().format('YYYYMMDD')}.xlsx`);
+    } else if (activeTab === 'datewise') {
+      const exportData = dateWiseList.map((d) => ({
+        'Date': dayjs(d.dateStr).format('DD-MMM-YYYY'),
+        'Number of Orders': d.orderIds.length,
+        'Order IDs': d.orderIds.join(', '),
+        'Number of Customers': d.customerIds.size,
+        'Number of Products': d.productsCount,
+        'Total Rental Amount': d.totalRentalAmount,
+      }));
+
+      if (exportData.length === 0) {
+        alert('No date-wise data available to export');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Date Wise Details');
+      XLSX.writeFile(wb, `Date_Wise_Details_${dayjs().format('YYYYMMDD')}.xlsx`);
+    }
+  };
 
   const handleExportExcel = () => {
     let exportDetailsData: Record<string, string | number>[] = [];
@@ -823,6 +1080,308 @@ const Dashboard = () => {
                 </>
               )}
             </ul>
+          </div>
+        </div>
+
+        {/* New Tabbed Section */}
+        <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-4 mt-4 w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4 pb-2 border-b border-gray-200">
+            <div className="flex gap-4">
+              <h2 className="text-lg font-bold text-primary">Detailed Analytics</h2>
+              <div className="flex border border-gray-300 rounded-lg overflow-hidden bg-white text-sm">
+                <button
+                  className={`px-3 py-1 font-semibold transition-colors ${
+                    activeTab === 'customer' ? 'bg-primary text-white' : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('customer')}
+                >
+                  Customer Details
+                </button>
+                <button
+                  className={`px-3 py-1 font-semibold transition-colors ${
+                    activeTab === 'machine' ? 'bg-primary text-white' : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('machine')}
+                >
+                  Machine Details
+                </button>
+                <button
+                  className={`px-3 py-1 font-semibold transition-colors ${
+                    activeTab === 'datewise' ? 'bg-primary text-white' : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('datewise')}
+                >
+                  Date Wise Details
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+              <CustomDatePicker
+                label="From"
+                value={tabFromDate}
+                onChange={(date) => setTabFromDate(date)}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+              <CustomDatePicker
+                label="To"
+                value={tabToDate}
+                onChange={(date) => setTabToDate(date)}
+                wrapperClass="flex-row items-center"
+                format="YYYY-MM-DD"
+              />
+              <div
+                className="cursor-pointer bg-blue-100 hover:bg-blue-200 p-2 rounded-md transition-colors flex items-center justify-center h-fit self-end mb-1"
+                onClick={handleExportTabExcel}
+                title="Export Tab Data"
+              >
+                <RiFileExcel2Line size={20} className="text-blue-700" />
+              </div>
+            </div>
+          </div>
+
+          {/* Tab Contents */}
+          <div className="w-full">
+            {activeTab === 'customer' && (
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-2 text-sm">
+                  <button
+                    className={`px-4 py-1.5 rounded-full font-semibold transition-colors ${
+                      customerSubTab === 'pending'
+                        ? 'bg-red-100 text-red-700 border border-red-200'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setCustomerSubTab('pending')}
+                  >
+                    Pending Amount ({pendingCustomers.length})
+                  </button>
+                  <button
+                    className={`px-4 py-1.5 rounded-full font-semibold transition-colors ${
+                      customerSubTab === 'paid'
+                        ? 'bg-green-100 text-green-700 border border-green-200'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setCustomerSubTab('paid')}
+                  >
+                    Paid Amount ({paidCustomers.length})
+                  </button>
+                </div>
+
+                <div className="overflow-auto max-h-[30rem] border border-gray-200 rounded-lg">
+                  <table className="min-w-full text-sm text-center border-collapse bg-white table-fixed">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-gray-200 text-gray-700 font-bold border-b border-gray-300">
+                        <th className="p-2 text-left w-[12%]">Action</th>
+                        <th className="p-2 text-left w-[38%]">Customer Name</th>
+                        <th className="p-2 w-[20%]">Mobile Number</th>
+                        <th className="p-2 w-[15%]">No. of Entries</th>
+                        <th className="p-2 text-right w-[15%]">Total Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(customerSubTab === 'pending' ? pendingCustomers : paidCustomers).length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center text-gray-400 italic py-4">No customers found</td>
+                        </tr>
+                      ) : (
+                        (customerSubTab === 'pending' ? pendingCustomers : paidCustomers).map((cust) => {
+                          const isExpanded = !!expandedCustomers[cust.id];
+                          return (
+                            <React.Fragment key={cust.id}>
+                              <tr className="border-b border-gray-200 hover:bg-gray-50 font-medium">
+                                <td className="p-2 text-left">
+                                  <button
+                                    onClick={() => toggleCustomerExpand(cust.id)}
+                                    className="text-primary hover:bg-gray-100 px-2 py-0.5 rounded text-xs border border-gray-300 transition-colors font-semibold"
+                                  >
+                                    {isExpanded ? 'Hide' : 'Show'}
+                                  </button>
+                                </td>
+                                <td className="p-2 text-left font-semibold text-gray-800">{cust.name}</td>
+                                <td className="p-2 text-gray-600">{cust.mobile || '-'}</td>
+                                <td className="p-2 text-gray-600">{cust.entriesCount}</td>
+                                <td className="p-2 text-right font-semibold text-primary">
+                                  ₹{cust.totalAmount.toFixed(2)}
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr>
+                                  <td colSpan={5} className="bg-gray-50 p-3 border-b border-gray-200">
+                                    <div className="flex flex-col gap-2">
+                                      <h4 className="font-bold text-xs text-gray-600 text-left">Order Details</h4>
+                                      <table className="w-full text-xs text-center border-collapse bg-white border border-gray-200 rounded-lg">
+                                        <thead>
+                                          <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300">
+                                            <th className="p-2 text-left">Order ID</th>
+                                            <th className="p-2">Order Out Date</th>
+                                            <th className="p-2 text-right">Bill Amount</th>
+                                            {customerSubTab === 'pending' && <th className="p-2 text-right">Pending Amount</th>}
+                                            <th className="p-2">Status</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {cust.orders.map((ord, idx) => (
+                                            <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                                              <td className="p-2 text-left font-semibold">{ord.order_id}</td>
+                                              <td className="p-2 text-gray-600">
+                                                {dayjs(ord.out_date).format('DD-MMM-YYYY hh:mm A')}
+                                              </td>
+                                              <td className="p-2 text-right">₹{ord.bill_amount.toFixed(2)}</td>
+                                              {customerSubTab === 'pending' && (
+                                                <td className="p-2 text-right text-red-600 font-medium">
+                                                  ₹{ord.pending_amount.toFixed(2)}
+                                                </td>
+                                              )}
+                                              <td className="p-2">
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                                  ord.status === PaymentStatus.PAID
+                                                    ? 'bg-green-100 text-green-700 border border-green-200'
+                                                    : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                                                }`}>
+                                                  {ord.status}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'machine' && (
+              <div className="overflow-auto max-h-[30rem] border border-gray-200 rounded-lg">
+                <table className="min-w-full text-sm text-center border-collapse bg-white table-fixed">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gray-200 text-gray-700 font-bold border-b border-gray-300">
+                      <th className="p-2 text-left w-[12%]">Action</th>
+                      <th className="p-2 text-left w-[38%]">Machine Name</th>
+                      <th className="p-2 w-[20%]">Total Entries</th>
+                      <th className="p-2 w-[15%]">Total Qty Rented</th>
+                      <th className="p-2 text-right w-[15%]">Total Rental Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {machineList.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center text-gray-400 italic py-4">No machine details found</td>
+                      </tr>
+                    ) : (
+                      machineList.map((mach) => {
+                        const isExpanded = !!expandedMachines[mach.name];
+                        return (
+                          <React.Fragment key={mach.name}>
+                            <tr className="border-b border-gray-200 hover:bg-gray-50 font-medium">
+                              <td className="p-2 text-left">
+                                <button
+                                  onClick={() => toggleMachineExpand(mach.name)}
+                                  className="text-primary hover:bg-gray-100 px-2 py-0.5 rounded text-xs border border-gray-300 transition-colors font-semibold"
+                                >
+                                  {isExpanded ? 'Hide' : 'Show'}
+                                </button>
+                              </td>
+                              <td className="p-2 text-left font-semibold text-gray-800">{mach.name}</td>
+                              <td className="p-2 text-gray-600">{mach.entriesCount}</td>
+                              <td className="p-2 text-gray-600">{mach.totalQuantity}</td>
+                              <td className="p-2 text-right font-semibold text-primary">
+                                ₹{mach.totalRent.toFixed(2)}
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr>
+                                <td colSpan={5} className="bg-gray-50 p-3 border-b border-gray-200">
+                                  <div className="flex flex-col gap-2">
+                                    <h4 className="font-bold text-xs text-gray-600 text-left">Order Details</h4>
+                                    <table className="w-full text-xs text-center border-collapse bg-white border border-gray-200 rounded-lg">
+                                      <thead>
+                                        <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300">
+                                          <th className="p-2 text-left">Order ID</th>
+                                          <th className="p-2">Order Out Date</th>
+                                          <th className="p-2">Quantity</th>
+                                          <th className="p-2">Duration</th>
+                                          <th className="p-2 text-right">Rent per Unit</th>
+                                          <th className="p-2 text-right">Total Rent</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {mach.orders.map((ord, idx) => (
+                                          <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                                            <td className="p-2 text-left font-semibold">{ord.order_id}</td>
+                                            <td className="p-2 text-gray-600">
+                                              {dayjs(ord.out_date).format('DD-MMM-YYYY hh:mm A')}
+                                            </td>
+                                            <td className="p-2 text-gray-600">{ord.quantity}</td>
+                                            <td className="p-2 text-gray-600">{ord.duration}</td>
+                                            <td className="p-2 text-right">₹{ord.rent_per_unit.toFixed(2)}</td>
+                                            <td className="p-2 text-right font-semibold text-primary">₹{ord.total_rent.toFixed(2)}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === 'datewise' && (
+              <div className="overflow-auto max-h-[30rem] border border-gray-200 rounded-lg">
+                <table className="min-w-full text-sm text-center border-collapse bg-white">
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-gray-200 text-gray-700 font-bold border-b border-gray-300">
+                      <th className="p-2 text-left">Date</th>
+                      <th className="p-2">Number of Orders</th>
+                      <th className="p-2 text-left">Order IDs</th>
+                      <th className="p-2">Number of Customers</th>
+                      <th className="p-2">Number of Products</th>
+                      <th className="p-2 text-right">Total Rental Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dateWiseList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center text-gray-400 italic py-4">No date-wise details found</td>
+                      </tr>
+                    ) : (
+                      dateWiseList.map((dw, idx) => (
+                        <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="p-2 text-left font-semibold">
+                            {dayjs(dw.dateStr).format('DD-MMM-YYYY')}
+                          </td>
+                          <td className="p-2 text-gray-600">{dw.orderIds.length}</td>
+                          <td className="p-2 text-left text-xs text-gray-500 max-w-[200px] truncate" title={dw.orderIds.join(', ')}>
+                            {dw.orderIds.join(', ')}
+                          </td>
+                          <td className="p-2 text-gray-600">{dw.customerIds.size}</td>
+                          <td className="p-2 text-gray-600">{dw.productsCount}</td>
+                          <td className="p-2 text-right font-semibold text-primary">
+                            ₹{dw.totalRentalAmount.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>

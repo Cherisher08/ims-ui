@@ -1,6 +1,6 @@
 import { Document, Font, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import dayjs from 'dayjs';
-import { RentalOrderInfo } from '../../../types/order';
+import { BillingUnit, RentalOrderInfo } from '../../../types/order';
 import { Branch } from '../../../types/user';
 import { ProductType } from '../../../types/common';
 import Logo from '/Logo.jpeg';
@@ -86,15 +86,72 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
   if (!data) return null;
 
   const outDate = dayjs(data.out_date);
-  const isBeforeNoon = outDate.isValid() ? outDate.hour() < 12 : true;
+  const hour = outDate.isValid() ? outDate.hour() : 12;
 
-  const englishMessage = isBeforeNoon
-    ? "You should return equipment on or before 7.00 PM. Customers are responsible for equipment's Damage"
-    : "You should return equipment today before 7.00 PM or the next day morning before 7.00 AM. Customers are responsible for equipment's Damage";
+  // Calculate return date based on products' billing units and durations
+  let baseReturnDate = outDate.isValid() ? outDate : null;
+  let hasRental = false;
 
-  const tamilMessage = isBeforeNoon
-    ? "நீங்கள் உபகரணங்களை மாலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். உபகரண சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு."
-    : "நீங்கள் உபகரணங்களை இன்று மாலை 7.00 மணிக்குள் அல்லது மறுநாள் காலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். உபகரண சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு.";
+  if (outDate.isValid() && data.product_details && data.product_details.length > 0) {
+    let maxReturnDate = outDate;
+    data.product_details.forEach((prod) => {
+      if (prod.type === ProductType.SALES) return;
+
+      let prodReturnDate = outDate;
+      const duration = prod.duration || 0;
+      const unit = prod.billing_unit;
+
+      if (unit === BillingUnit.SHIFT) {
+        prodReturnDate = outDate.add(duration * 8, 'hour');
+        hasRental = true;
+      } else if (unit === BillingUnit.DAYS) {
+        prodReturnDate = outDate.add(duration, 'day');
+        hasRental = true;
+      } else if (unit === BillingUnit.WEEKS) {
+        prodReturnDate = outDate.add(duration * 7, 'day');
+        hasRental = true;
+      } else if (unit === BillingUnit.MONTHS) {
+        prodReturnDate = outDate.add(duration * 30, 'day');
+        hasRental = true;
+      }
+
+      if (prodReturnDate.isAfter(maxReturnDate)) {
+        maxReturnDate = prodReturnDate;
+      }
+    });
+
+    if (hasRental) {
+      baseReturnDate = maxReturnDate;
+    }
+  }
+
+  // Fallback to rental_duration if no rental products found
+  if (!hasRental && baseReturnDate && data.rental_duration) {
+    baseReturnDate = baseReturnDate.add(data.rental_duration, 'day');
+  }
+
+  // Determine return time and adjust return date based on entry hour
+  let finalReturnDate = baseReturnDate;
+  let is7AM = false;
+
+  if (outDate.isValid()) {
+    if (hour >= 12 && hour <= 22) {
+      is7AM = true;
+      if (baseReturnDate) {
+        finalReturnDate = baseReturnDate.add(1, 'day');
+      }
+    }
+  }
+
+  const returnDateFormatted = finalReturnDate ? finalReturnDate.format('DD-MM-YYYY') : '-';
+
+  const englishMessage = is7AM
+    ? "You should return equipment on or before 7.00 AM. Customers are responsible for equipment's Damage. Machine working hours per day calculated as 8 hours"
+    : "You should return equipment on or before 7.00 PM. Customers are responsible for equipment's Damage. Machine working hours per day calculated as 8 hours";
+
+  const tamilMessage = is7AM
+    ? "நீங்கள் இயந்திரங்களை காலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி."
+    : "நீங்கள் இயந்திரங்களை மாலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி.";
 
   return (
     <Document>
@@ -222,6 +279,11 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.field}>No.of Working Days</Text>
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{data.rental_duration || '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.field}>Return Date</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{returnDateFormatted}</Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.field}>Deposit with Mode</Text>

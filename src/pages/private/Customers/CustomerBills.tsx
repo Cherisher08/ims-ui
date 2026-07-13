@@ -537,31 +537,158 @@ const CustomerBills = () => {
           </thead>
           <tbody>
             {customerOrders.length > 0 ? (
-              customerOrders.map((order, index) => (
-                <tr key={index} className="border-b min-h-10 border-gray-200">
-                  <td className="px-1 py-1">{order.order_id}</td>
-                  <td className="px-1 py-1">{dayjs(order.out_date).format('DD-MM-YYYY')}</td>
-                  <td className="px-1 py-1">{findOrderType(order as RentalOrderType)}</td>
-                  <td className="px-1 py-1">{findPaymentMode(order as RentalOrderType)}</td>
-                  <td className="px-1 py-1">
-                    {order.deposits.reduce((sum, deposit) => sum + deposit.amount, 0) || '-'}
-                  </td>
-                  <td className="px-1 py-1">{getEffectiveRepayAmount(order) || '-'}</td>
-                  <td
-                    className={`px-1 py-1 ${
-                      calculateFinalAmount(order as RentalOrderType) !== 0 &&
-                      order.status === PaymentStatus.PENDING
-                        ? 'bg-warning'
-                        : ''
-                    }`}
-                  >
-                    {calculateFinalAmount(order as RentalOrderType) > 0
-                      ? calculateFinalAmount(order as RentalOrderType)
-                      : 0}
-                  </td>
-                  <td className="px-1 py-1">{order.balance_paid || '-'}</td>
-                </tr>
-              ))
+              customerOrders.map((order, orderIndex) => {
+                const billAmount =
+                  calculateFinalAmount(order as RentalOrderType) > 0
+                    ? calculateFinalAmount(order as RentalOrderType)
+                    : 0;
+                const repay = getEffectiveRepayAmount(order);
+
+                // Build sub-rows: one per deposit, plus balance_paid, plus repay
+                const subRows: JSX.Element[] = [];
+
+                // Deposit rows
+                order.deposits.forEach((deposit, depIdx) => {
+                  const isFirst = depIdx === 0;
+                  subRows.push(
+                    <tr
+                      key={`${orderIndex}-dep-${depIdx}`}
+                      className={`border-b border-gray-200 min-h-10 ${
+                        isFirst ? '' : 'bg-gray-50'
+                      }`}
+                    >
+                      {/* Order Id — shown only on first sub-row */}
+                      <td className="px-1 py-1">
+                        {isFirst ? order.order_id : ''}
+                      </td>
+                      {/* Date + Time for this deposit */}
+                      <td className="px-1 py-1 whitespace-nowrap">
+                        {deposit.date
+                          ? dayjs(deposit.date).format('DD-MM-YYYY HH:mm')
+                          : '-'}
+                      </td>
+                      {/* Type — shown only on first sub-row */}
+                      <td className="px-1 py-1">
+                        {isFirst ? findOrderType(order as RentalOrderType) : ''}
+                      </td>
+                      {/* Mode for this specific deposit */}
+                      <td className="px-1 py-1">
+                        <span>Deposit - {deposit.mode}</span>
+                      </td>
+                      {/* Deposit amount */}
+                      <td className="px-1 py-1">{deposit.amount}</td>
+                      {/* Repay — empty for deposit rows */}
+                      <td className="px-1 py-1">-</td>
+                      {/* Bill Amount — shown only on first sub-row */}
+                      <td
+                        className={`px-1 py-1 ${
+                          isFirst &&
+                          billAmount !== 0 &&
+                          order.status === PaymentStatus.PENDING
+                            ? 'bg-warning'
+                            : ''
+                        }`}
+                      >
+                        {isFirst ? billAmount : ''}
+                      </td>
+                      {/* Received Amount — shown only on first sub-row */}
+                      <td className="px-1 py-1">
+                        {isFirst ? order.balance_paid || '-' : ''}
+                      </td>
+                    </tr>
+                  );
+                });
+
+                // If there are no deposits, show a single row for the order itself
+                if (order.deposits.length === 0) {
+                  subRows.push(
+                    <tr
+                      key={`${orderIndex}-no-dep`}
+                      className="border-b min-h-10 border-gray-200"
+                    >
+                      <td className="px-1 py-1">{order.order_id}</td>
+                      <td className="px-1 py-1 whitespace-nowrap">
+                        {order.out_date
+                          ? dayjs(order.out_date).format('DD-MM-YYYY HH:mm')
+                          : '-'}
+                      </td>
+                      <td className="px-1 py-1">
+                        {findOrderType(order as RentalOrderType)}
+                      </td>
+                      <td className="px-1 py-1">
+                        {findPaymentMode(order as RentalOrderType)}
+                      </td>
+                      <td className="px-1 py-1">-</td>
+                      <td className="px-1 py-1">{repay || '-'}</td>
+                      <td
+                        className={`px-1 py-1 ${
+                          billAmount !== 0 &&
+                          order.status === PaymentStatus.PENDING
+                            ? 'bg-warning'
+                            : ''
+                        }`}
+                      >
+                        {billAmount}
+                      </td>
+                      <td className="px-1 py-1">
+                        {order.balance_paid || '-'}
+                      </td>
+                    </tr>
+                  );
+                }
+
+                // Balance paid row (if present and > 0)
+                if (order.balance_paid && order.balance_paid > 0) {
+                  subRows.push(
+                    <tr
+                      key={`${orderIndex}-balance`}
+                      className="border-b border-gray-200 min-h-10 bg-blue-50"
+                    >
+                      <td className="px-1 py-1">{order.order_id}</td>
+                      <td className="px-1 py-1 whitespace-nowrap">
+                        {order.balance_paid_date
+                          ? dayjs(order.balance_paid_date).format(
+                              'DD-MM-YYYY HH:mm'
+                            )
+                          : '-'}
+                      </td>
+                      <td className="px-1 py-1"></td>
+                      <td className="px-1 py-1">
+                        Balance - {order.balance_paid_mode}
+                      </td>
+                      <td className="px-1 py-1">{order.balance_paid}</td>
+                      <td className="px-1 py-1">-</td>
+                      <td className="px-1 py-1"></td>
+                      <td className="px-1 py-1">{order.balance_paid}</td>
+                    </tr>
+                  );
+                }
+
+                // Repay row (if present and > 0)
+                if (repay > 0) {
+                  subRows.push(
+                    <tr
+                      key={`${orderIndex}-repay`}
+                      className="border-b border-gray-200 min-h-10 bg-red-50"
+                    >
+                      <td className="px-1 py-1">{order.order_id}</td>
+                      <td className="px-1 py-1 whitespace-nowrap">
+                        {order.repay_date
+                          ? dayjs(order.repay_date).format('DD-MM-YYYY HH:mm')
+                          : '-'}
+                      </td>
+                      <td className="px-1 py-1"></td>
+                      <td className="px-1 py-1">Repay - {order.payment_mode}</td>
+                      <td className="px-1 py-1">-</td>
+                      <td className="px-1 py-1">{repay}</td>
+                      <td className="px-1 py-1"></td>
+                      <td className="px-1 py-1"></td>
+                    </tr>
+                  );
+                }
+
+                return <>{subRows}</>;
+              })
             ) : (
               <tr>
                 <td colSpan={10} className="h-20 text-center py-4">

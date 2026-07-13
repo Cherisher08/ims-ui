@@ -1044,6 +1044,26 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
   //   // }
   // }, [customerList, searchParams, setSearchParams, setSelectedCustomerId]);
 
+  const postSortRows = useCallback((params: any) => {
+    const rowNodes = params.nodes;
+    if (!rowNodes) return;
+    const prebookingNodes: any[] = [];
+    const otherNodes: any[] = [];
+
+    rowNodes.forEach((node: any) => {
+      if (node.data && getOrderStatus(node.data) === OrderStatusType.PREBOOKING) {
+        prebookingNodes.push(node);
+      } else {
+        otherNodes.push(node);
+      }
+    });
+
+    const sortedNodes = [...prebookingNodes, ...otherNodes];
+    for (let i = 0; i < rowNodes.length; i++) {
+      rowNodes[i] = sortedNodes[i];
+    }
+  }, []);
+
   return (
     <>
       <CustomTable
@@ -1062,6 +1082,7 @@ const RentalOrderTable: React.FC<RentalOrderTableProps> = ({
         getRowHeight={handleRowHeight}
         onRowDataUpdated={onRowDataUpdated}
         onFilterChanged={handleFilterChanged}
+        postSortRows={postSortRows}
       />
       <DeleteOrderModal
         deleteOrderOpen={deleteOrderOpen}

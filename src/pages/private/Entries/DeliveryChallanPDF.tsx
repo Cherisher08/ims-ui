@@ -92,43 +92,46 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
   let baseReturnDate = outDate.isValid() ? outDate : null;
   let hasRental = false;
 
-  if (outDate.isValid() && data.product_details && data.product_details.length > 0) {
+  if (outDate.isValid()) {
     let maxReturnDate = outDate;
-    data.product_details.forEach((prod) => {
-      if (prod.type === ProductType.SALES) return;
 
-      let prodReturnDate = outDate;
-      const duration = prod.duration || 0;
-      const unit = prod.billing_unit;
+    // Include rental_duration in the primary calculation
+    if (data.rental_duration && data.rental_duration > 0) {
+      maxReturnDate = outDate.add(data.rental_duration - 1, 'day');
+      hasRental = true;
+    }
 
-      if (unit === BillingUnit.SHIFT) {
-        prodReturnDate = outDate.add(duration * 8, 'hour');
-        hasRental = true;
-      } else if (unit === BillingUnit.DAYS) {
-        prodReturnDate = outDate.add(duration > 0 ? duration - 1 : 0, 'day');
-        hasRental = true;
-      } else if (unit === BillingUnit.WEEKS) {
-        prodReturnDate = outDate.add(duration > 0 ? duration * 7 - 1 : 0, 'day');
-        hasRental = true;
-      } else if (unit === BillingUnit.MONTHS) {
-        prodReturnDate = outDate.add(duration > 0 ? duration * 30 - 1 : 0, 'day');
-        hasRental = true;
-      }
+    if (data.product_details && data.product_details.length > 0) {
+      data.product_details.forEach((prod) => {
+        if (prod.type === ProductType.SALES) return;
 
-      if (prodReturnDate.isAfter(maxReturnDate)) {
-        maxReturnDate = prodReturnDate;
-      }
-    });
+        let prodReturnDate = outDate;
+        const duration = prod.duration || 0;
+        const unit = prod.billing_unit;
+
+        if (unit === BillingUnit.SHIFT) {
+          prodReturnDate = outDate.add(duration * 8, 'hour');
+          hasRental = true;
+        } else if (unit === BillingUnit.DAYS) {
+          prodReturnDate = outDate.add(duration > 0 ? duration - 1 : 0, 'day');
+          hasRental = true;
+        } else if (unit === BillingUnit.WEEKS) {
+          prodReturnDate = outDate.add(duration > 0 ? duration * 7 - 1 : 0, 'day');
+          hasRental = true;
+        } else if (unit === BillingUnit.MONTHS) {
+          prodReturnDate = outDate.add(duration > 0 ? duration * 30 - 1 : 0, 'day');
+          hasRental = true;
+        }
+
+        if (prodReturnDate.isAfter(maxReturnDate)) {
+          maxReturnDate = prodReturnDate;
+        }
+      });
+    }
 
     if (hasRental) {
       baseReturnDate = maxReturnDate;
     }
-  }
-
-  // Fallback to rental_duration if no rental products found
-  if (!hasRental && baseReturnDate && data.rental_duration) {
-    const duration = data.rental_duration;
-    baseReturnDate = baseReturnDate.add(duration > 0 ? duration - 1 : 0, 'day');
   }
 
   // Determine return time and adjust return date based on entry hour

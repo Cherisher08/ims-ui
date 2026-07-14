@@ -105,13 +105,13 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
         prodReturnDate = outDate.add(duration * 8, 'hour');
         hasRental = true;
       } else if (unit === BillingUnit.DAYS) {
-        prodReturnDate = outDate.add(duration, 'day');
+        prodReturnDate = outDate.add(duration > 0 ? duration - 1 : 0, 'day');
         hasRental = true;
       } else if (unit === BillingUnit.WEEKS) {
-        prodReturnDate = outDate.add(duration * 7, 'day');
+        prodReturnDate = outDate.add(duration > 0 ? duration * 7 - 1 : 0, 'day');
         hasRental = true;
       } else if (unit === BillingUnit.MONTHS) {
-        prodReturnDate = outDate.add(duration * 30, 'day');
+        prodReturnDate = outDate.add(duration > 0 ? duration * 30 - 1 : 0, 'day');
         hasRental = true;
       }
 
@@ -127,7 +127,8 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
 
   // Fallback to rental_duration if no rental products found
   if (!hasRental && baseReturnDate && data.rental_duration) {
-    baseReturnDate = baseReturnDate.add(data.rental_duration, 'day');
+    const duration = data.rental_duration;
+    baseReturnDate = baseReturnDate.add(duration > 0 ? duration - 1 : 0, 'day');
   }
 
   // Determine return time and adjust return date based on entry hour
@@ -143,15 +144,21 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
     }
   }
 
-  const returnDateFormatted = finalReturnDate ? finalReturnDate.format('DD-MM-YYYY') : '-';
+  if (finalReturnDate) {
+    if (is7AM) {
+      finalReturnDate = finalReturnDate.hour(7).minute(0).second(0);
+    } else {
+      finalReturnDate = finalReturnDate.hour(19).minute(0).second(0);
+    }
+  }
 
-  const englishMessage = is7AM
-    ? "You should return equipment on or before 7.00 AM. Customers are responsible for equipment's Damage. Machine working hours per day calculated as 8 hours"
-    : "You should return equipment on or before 7.00 PM. Customers are responsible for equipment's Damage. Machine working hours per day calculated as 8 hours";
+  const returnDateFormatted = finalReturnDate ? finalReturnDate.format('DD-MM-YYYY hh:mm A') : '-';
 
-  const tamilMessage = is7AM
-    ? "நீங்கள் இயந்திரங்களை காலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி."
-    : "நீங்கள் இயந்திரங்களை மாலை 7.00 மணிக்குள் திருப்பித் தர வேண்டும். இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி.";
+  const englishMessage =
+    "Customers are responsible for equipment's Damage. Machine working hours per day calculated as 8 hours";
+
+  const tamilMessage =
+    "இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி.";
 
   return (
     <Document>
@@ -281,7 +288,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
               <Text style={styles.value}>{data.rental_duration || '-'}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.field}>Return Date</Text>
+              <Text style={styles.field}>Return before</Text>
               <Text style={styles.colon}>:</Text>
               <Text style={styles.value}>{returnDateFormatted}</Text>
             </View>

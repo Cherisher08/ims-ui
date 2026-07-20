@@ -161,7 +161,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
     "Customers are responsible for equipment's Damage. Machine working hours per day calculated as 8 hours";
 
   const tamilMessage =
-    "இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி.";
+    "இயந்திர சேதத்திற்கு வாடிக்கையாளர்களே பொறுப்பு. இயந்திரத்தின் வேலை நேரம் ஒரு நாளைக்கு 8 மணி நேரம்.";
 
   return (
     <Document>
@@ -236,7 +236,7 @@ const DeliveryChallan = ({ data }: { data: RentalOrderInfo }) => {
             <View style={styles.row}>
               <Text style={styles.field}>Entry Date & Time</Text>
               <Text style={styles.colon}>:</Text>
-              <Text style={styles.value}>{dayjs(data.out_date).format('DD-MM-YYYY HH:mm')}</Text>
+              <Text style={styles.value}>{dayjs(data.out_date).format('DD-MM-YYYY hh:mm A')}</Text>
             </View>
 
             <View style={styles.row}>
